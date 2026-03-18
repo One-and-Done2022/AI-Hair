@@ -38,6 +38,26 @@ def _build_app(tmp_path):
     return create_app()
 
 
+def test_build_prompt_uses_single_image_stable_structure():
+    from app.services import templates
+
+    hairstyle = templates.get_hairstyle("american-spiky")
+    scene = templates.get_scene("lifestyle-interior")
+
+    assert hairstyle is not None
+    assert scene is not None
+
+    prompt = templates.build_prompt(hairstyle, scene)
+
+    assert "生成 1 张高相似度、写实风格的人像写真" in prompt
+    assert "严格保留参考人物的真实身份特征" in prompt
+    assert "微微歪头，一只手自然轻触头发" in prompt
+    assert "白色宽松衬衫" in prompt
+    assert "人物发型改为美式前刺" in prompt
+    assert "背景替换为室内生活感空间" in prompt
+    assert "负向约束：" in prompt
+
+
 def test_auth_upload_job_history_flow(tmp_path):
     app = _build_app(tmp_path)
 
@@ -89,4 +109,3 @@ def test_auth_upload_job_history_flow(tmp_path):
         items = history.json()["items"]
         assert len(items) == 1
         assert items[0]["job_id"] == job_id
-
