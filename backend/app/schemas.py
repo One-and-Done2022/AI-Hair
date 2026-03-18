@@ -26,6 +26,11 @@ class TemplateItem(BaseModel):
     name: str
     description: str
     cover_url: str
+    gender: str | None = None
+    gender_label: str | None = None
+    style_line: str | None = None
+    style_line_label: str | None = None
+    tags: list[str] = Field(default_factory=list)
 
 
 class TemplateCatalogResponse(BaseModel):
@@ -56,4 +61,3 @@ class JobResponse(BaseModel):
 
 class HistoryResponse(BaseModel):
     items: list[JobResponse]
-

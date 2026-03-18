@@ -38,11 +38,11 @@ def _build_app(tmp_path):
     return create_app()
 
 
-def test_build_prompt_uses_single_image_stable_structure():
+def test_build_prompt_uses_faceprompt_single_image_structure():
     from app.services import templates
 
-    hairstyle = templates.get_hairstyle("american-spiky")
-    scene = templates.get_scene("lifestyle-interior")
+    hairstyle = templates.get_hairstyle("male-forward-spikes")
+    scene = templates.get_scene("indoor-film-lifestyle")
 
     assert hairstyle is not None
     assert scene is not None
@@ -50,13 +50,24 @@ def test_build_prompt_uses_single_image_stable_structure():
     prompt = templates.build_prompt(hairstyle, scene)
 
     assert "生成 1 张高相似度、写实风格的人像写真" in prompt
-    assert "严格保留参考人物的真实身份特征" in prompt
     assert "忽略原照片中的背景、原服饰、原发型和原有动作" in prompt
-    assert "微微歪头，一只手自然轻触头发" in prompt
+    assert "只输出 1 张完整成片" in prompt
+    assert "胡桃木门框" in prompt
+    assert "发型改为前刺头" in prompt
     assert "白色宽松衬衫" in prompt
-    assert "人物发型改为美式前刺" in prompt
-    assert "背景替换为室内生活感空间" in prompt
-    assert "负向约束：" in prompt
+    assert "不要拼图排版" in prompt
+
+
+def test_faceprompt_catalog_counts_and_legacy_aliases():
+    from app.services import templates
+
+    assert len(templates.SCENES) == 20
+    assert len(templates.HAIRSTYLES) == 40
+    assert len([item for item in templates.HAIRSTYLES if item["gender"] == "male"]) == 20
+    assert len([item for item in templates.HAIRSTYLES if item["gender"] == "female"]) == 20
+
+    assert templates.get_hairstyle("american-spiky")["id"] == "male-forward-spikes"
+    assert templates.get_scene("lifestyle-interior")["id"] == "indoor-film-lifestyle"
 
 
 def test_auth_upload_job_history_flow(tmp_path):
@@ -79,6 +90,11 @@ def test_auth_upload_job_history_flow(tmp_path):
         templates = client.get("/api/templates")
         assert templates.status_code == 200
         catalog = templates.json()
+        assert len(catalog["hairstyles"]) == 40
+        assert len(catalog["scenes"]) == 20
+        assert len([item for item in catalog["hairstyles"] if item["gender"] == "male"]) == 20
+        assert len([item for item in catalog["hairstyles"] if item["gender"] == "female"]) == 20
+        assert catalog["hairstyles"][0]["style_line_label"]
 
         job_create = client.post(
             "/api/jobs",

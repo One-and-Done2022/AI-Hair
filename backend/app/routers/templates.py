@@ -22,6 +22,11 @@ def list_templates(request: Request) -> TemplateCatalogResponse:
             name=item["name"],
             description=item["description"],
             cover_url=_absolute_cover_url(request, "hairstyles", item["id"]),
+            gender=item.get("gender"),
+            gender_label=item.get("gender_label"),
+            style_line=item.get("style_line"),
+            style_line_label=item.get("style_line_label"),
+            tags=item.get("tags", []),
         )
         for item in templates.HAIRSTYLES
     ]
@@ -31,6 +36,11 @@ def list_templates(request: Request) -> TemplateCatalogResponse:
             name=item["name"],
             description=item["description"],
             cover_url=_absolute_cover_url(request, "scenes", item["id"]),
+            gender=item.get("gender"),
+            gender_label=item.get("gender_label"),
+            style_line=item.get("style_line"),
+            style_line_label=item.get("style_line_label"),
+            tags=item.get("tags", []),
         )
         for item in templates.SCENES
     ]
@@ -53,4 +63,3 @@ def template_cover(category: str, template_id: str) -> Response:
         content=templates.template_cover_svg(category, template),
         media_type="image/svg+xml",
     )
-

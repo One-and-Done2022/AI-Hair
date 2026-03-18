@@ -24,7 +24,9 @@ Page({
     jobId: "",
     status: "pending",
     job: null,
-    polling: false
+    polling: false,
+    resultImageUrl: "",
+    resultImageLoaded: false
   },
 
   onLoad(options) {
@@ -61,13 +63,10 @@ Page({
       const job = await request({
         url: `/api/jobs/${this.data.jobId}`
       });
-      this.setData({
-        job,
-        status: job.status
-      });
       if (job.status === "succeeded" || job.status === "failed") {
         this.stopPolling();
       }
+      this.applyJobState(job);
     } catch (error) {
       this.stopPolling();
       wx.showToast({
@@ -79,14 +78,47 @@ Page({
     }
   },
 
+  applyJobState(job) {
+    const nextImageUrl = job.result_image_url || "";
+    const currentJob = this.data.job;
+    const currentImageUrl = this.data.resultImageUrl || "";
+    const hasMeaningfulChange =
+      !currentJob ||
+      currentJob.updated_at !== job.updated_at ||
+      this.data.status !== job.status ||
+      currentImageUrl !== nextImageUrl;
+
+    if (!hasMeaningfulChange) {
+      return;
+    }
+
+    const nextState = {
+      job,
+      status: job.status
+    };
+
+    if (currentImageUrl !== nextImageUrl) {
+      nextState.resultImageUrl = nextImageUrl;
+      nextState.resultImageLoaded = false;
+    }
+
+    this.setData(nextState);
+  },
+
+  handleResultImageLoad() {
+    if (!this.data.resultImageLoaded) {
+      this.setData({ resultImageLoaded: true });
+    }
+  },
+
   async saveImage() {
-    if (!this.data.job || !this.data.job.result_image_url) {
+    if (!this.data.resultImageUrl) {
       return;
     }
 
     wx.showLoading({ title: "正在保存" });
     wx.downloadFile({
-      url: this.data.job.result_image_url,
+      url: this.data.resultImageUrl,
       success: (result) => {
         wx.saveImageToPhotosAlbum({
           filePath: result.tempFilePath,
@@ -114,4 +146,3 @@ Page({
     });
   }
 });
-

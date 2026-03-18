@@ -20,6 +20,13 @@ function getErrorMessage(error) {
   return "请求失败，请稍后再试";
 }
 
+function findById(items, id) {
+  if (!id) {
+    return null;
+  }
+  return items.find((item) => item.id === id) || null;
+}
+
 Page({
   data: {
     selectedImage: "",
@@ -44,11 +51,17 @@ Page({
       const catalog = await request({ url: "/api/templates" });
       const cachedSelection = wx.getStorageSync("templateSelection") || {};
       const selectedHairstyle =
-        cachedSelection.hairstyle || catalog.hairstyles[0] || null;
-      const selectedScene = cachedSelection.scene || catalog.scenes[0] || null;
+        findById(catalog.hairstyles, cachedSelection.hairstyle && cachedSelection.hairstyle.id) ||
+        catalog.hairstyles[0] ||
+        null;
+      const selectedScene =
+        findById(catalog.scenes, cachedSelection.scene && cachedSelection.scene.id) ||
+        catalog.scenes[0] ||
+        null;
       wx.setStorageSync("templateSelection", {
         hairstyle: selectedHairstyle,
-        scene: selectedScene
+        scene: selectedScene,
+        gender: selectedHairstyle ? selectedHairstyle.gender : "male"
       });
       this.setData({
         selectedHairstyle,
@@ -141,4 +154,3 @@ Page({
     }
   }
 });
-

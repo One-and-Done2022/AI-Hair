@@ -1,123 +1,173 @@
 from __future__ import annotations
 
+import json
 from collections.abc import Iterable
+from functools import lru_cache
+from pathlib import Path
 
 
-HAIRSTYLES = [
-    {
-        "id": "short-texture",
-        "name": "短碎发",
-        "description": "轻盈层次，适合日常街拍风。",
-        "prompt": "人物发型改为干净利落的短碎发，顶部保留自然纹理与轻微蓬松感，层次清晰、发丝真实，整体利落但不僵硬。",
-        "palette": ("#1f4b99", "#5dd4ff"),
-    },
-    {
-        "id": "korean-middle-part",
-        "name": "韩系中分",
-        "description": "柔和包裹脸型，气质偏清爽。",
-        "prompt": "人物发型改为韩系中分，发丝柔顺自然，顶部保留柔和蓬松弧度，两侧顺着脸型落下但不贴头皮，气质干净清爽。",
-        "palette": ("#34495e", "#89c2d9"),
-    },
-    {
-        "id": "french-curl",
-        "name": "法式卷发",
-        "description": "带有随性空气感的卷度。",
-        "prompt": "人物发型改为法式卷发，卷度自然松弛、富有空气感，发量真实，卷发受光自然，整体慵懒但高级。",
-        "palette": ("#8e5a3c", "#f6bd60"),
-    },
-    {
-        "id": "american-spiky",
-        "name": "美式前刺",
-        "description": "顶部前刺明显，轮廓更利落。",
-        "prompt": "人物发型改为美式前刺。前额与头顶约 3 到 5 厘米，是整个造型的视觉核心，顶部发丝直立，具有明确刺感、方向感和层次感；两侧与后区渐变推短，长度约 1 到 2 厘米，贴合头皮，与顶部蓬松感形成清晰对比。发色为自然黑色或深棕色，少量碎发可以掠过额头和脸侧，但不能遮挡五官识别度。",
-        "palette": ("#1c1c1c", "#6f4e37"),
-    },
-    {
-        "id": "wolf-cut",
-        "name": "狼尾层次",
-        "description": "有层次与方向感，偏潮流感。",
-        "prompt": "人物发型改为狼尾层次发型，顶部、侧区与后区层次明确，发尾带轻微外翻和空气感，方向感鲜明但保持真实发丝质感。",
-        "palette": ("#2f4858", "#86bbd8"),
-    },
-]
+DATA_DIR = Path(__file__).resolve().parents[1] / "data" / "faceprompt"
 
-SCENES = [
-    {
-        "id": "cafe",
-        "name": "咖啡馆",
-        "description": "暖色自然光，日常杂志感。",
-        "prompt": "背景替换为暖色自然光下的咖啡馆，保留木质桌椅与轻微景深，整体像生活方式杂志抓拍，背景简洁不抢主体。",
-        "palette": ("#6b4226", "#d9a066"),
-    },
-    {
-        "id": "studio",
-        "name": "极简棚拍",
-        "description": "干净背景，更突出发型变化。",
-        "prompt": "背景替换为极简摄影棚，使用柔和布光和浅灰或米白色背景，画面简洁克制，以人物脸部与发型为唯一重点。",
-        "palette": ("#495057", "#dee2e6"),
-    },
-    {
-        "id": "city-night",
-        "name": "城市夜景",
-        "description": "偏氛围感，带轻微霓虹散景。",
-        "prompt": "背景替换为城市夜景，远处有柔和霓虹散景，主体保持清晰，对比适中，整体具备克制的电影感。",
-        "palette": ("#2b2d42", "#ef233c"),
-    },
-    {
-        "id": "meadow",
-        "name": "自然草地",
-        "description": "清新通透，光线偏自然。",
-        "prompt": "背景替换为户外自然草地与柔和天空，环境通透，光线自然，色彩轻盈但不失真实，整体氛围安静自然。",
-        "palette": ("#386641", "#a7c957"),
-    },
-    {
-        "id": "lifestyle-interior",
-        "name": "室内生活感",
-        "description": "木质家具与自然光，居家感更强。",
-        "prompt": "背景替换为室内生活感空间，浅色墙面，柔和自然窗光，前景可以有少量浅色虚化遮挡；背景虚化中可见实木书架、书本、杯子、实木抽纸盒、黑色木框中的墨绿色装饰画与绿色枝叶，整体安静、克制、高级。",
-        "palette": ("#774936", "#ddb892"),
-    },
-]
+STYLE_LINE_LABELS = {
+    "realistic_editorial": "写实写真",
+    "fashion_editorial": "时尚大片",
+}
 
+GENDER_LABELS = {
+    "male": "男发",
+    "female": "女发",
+    "unisex": "通用",
+}
+
+STYLE_LINE_PALETTES = {
+    "realistic_editorial": ("#6b4f3a", "#dcc3a5"),
+    "fashion_editorial": ("#1f2937", "#8ec5fc"),
+}
+
+HAIRSTYLE_PALETTES = {
+    "male": ("#1f3c88", "#6fa8dc"),
+    "female": ("#7a2848", "#f7b7d2"),
+    "unisex": ("#495057", "#ced4da"),
+}
+
+LEGACY_HAIRSTYLE_ALIASES = {
+    "american-spiky": "male-forward-spikes",
+    "short-texture": "male-french-short-texture",
+    "korean-middle-part": "male-middle-micro-part",
+    "french-curl": "female-french-lazy-waves",
+    "wolf-cut": "male-wolf-tail",
+}
+
+LEGACY_SCENE_ALIASES = {
+    "lifestyle-interior": "indoor-film-lifestyle",
+    "cafe": "cafe-candid-seat",
+    "studio": "studio-solid-backdrop",
+    "city-night": "city-neon-night",
+}
 
 IDENTITY_LOCK_SECTION = (
     "请基于上传参考图中的同一人物生成 1 张高相似度、写实风格的人像写真。"
-    "第一优先级是严格保留参考人物的真实身份特征，不改变人物的脸型、五官比例、"
-    "眼距、鼻梁、嘴型、肤色、年龄感和整体气质，保证一眼看出是同一个人；"
-    "不要换脸，不要改变性别表达，不要生成第二个人。"
+    "第一优先级是严格保留参考人物的真实身份特征，保证一眼看出是同一个人。"
+    "以上传照片中的人物为原型，不改变人物的脸型、五官比例、眼距、鼻梁、嘴型、肤色、年龄感和整体气质，"
+    "不改变性别表达，不换脸，不生成第二个人。"
+    "忽略原照片中的背景、原服饰、原发型和原有动作，仅保留参考人物本身，进行换发和换背景创作。"
+    "主体必须始终是同一位单人肖像，仅对发型、场景、动作、表情和服装进行艺术化创作。"
 )
 
-SUBJECT_REFRAME_SECTION = (
-    "忽略原照片中的背景、原服饰、原发型和原有动作，仅保留参考人物本身，"
-    "进行换发和换背景创作。主体必须始终是同一位单人肖像。"
+OUTPUT_FORMAT_SECTION = (
+    "只输出 1 张完整成片，不要拼图，不要多宫格，不要在同一画面里同时展示多个动作版本或多个发型版本。"
 )
 
-CAMERA_AND_POSE_SECTION = (
-    "画面设定为竖构图，3:4 比例，胸口以上近景或半身近景，镜头轻微靠近。"
-    "人物看向镜头，微微歪头，一只手自然轻触头发，动作自然，像室内生活感抓拍，"
-    "不刻意摆拍。"
-)
-
-STYLING_SECTION = (
-    "服饰设定为白色宽松衬衫，领口自然微敞，内搭浅色上衣，整体简洁、干净、生活化，"
-    "服饰不能喧宾夺主，重点仍然是人物脸部与发型。"
-)
-
-EMOTION_SECTION = (
-    "人物情绪为慵懒、微醺、若有所思，眼神略微放空，嘴唇微张，不刻意微笑；"
-    "皮肤真实自然，不过度磨皮，不过度妆感。"
-)
-
-VISUAL_QUALITY_SECTION = (
-    "成片应具备真实摄影质感、轻胶片氛围与克制色调，发型细节清晰，脸部对焦准确，"
-    "光线自然，整体高级耐看。"
+QUALITY_SECTION = (
+    "皮肤质感真实自然，不过度磨皮，不过度妆感，保留真实面部纹理与发丝细节，"
+    "脸部清晰对焦，光影过渡自然，整体高级、自然、和谐。"
 )
 
 NEGATIVE_CONSTRAINTS_SECTION = (
-    "负向约束：不要改变人物身份，不要生成第二个人，不要夸张美颜，不要网红脸，"
-    "不要卡通感，不要动漫风，不要多余手指，不要畸形手部，不要五官错位，"
-    "不要脸部模糊，不要背景杂乱，不要过强滤镜，不要文字水印。"
+    "不要换脸、不要改变性别表达、不要生成第二个人、不要多人同框、不要双脸、不要身份漂移、"
+    "不要整容感、AI 脸、过度磨皮、塑料皮肤、五官漂移、错位眼睛、手指异常、耳朵变形、"
+    "发际线异常、假发感、不要背景杂乱、光影冲突、不要过强滤镜、过度锐化、不要文字水印、不要拼图排版。"
 )
+
+
+def _load_json(name: str) -> list[dict]:
+    return json.loads((DATA_DIR / name).read_text(encoding="utf-8"))
+
+
+def _normalize_sentence(text: str) -> str:
+    return text.strip().rstrip("。；,.，")
+
+
+def _dedupe_keep_order(items: Iterable[str]) -> list[str]:
+    seen: set[str] = set()
+    result: list[str] = []
+    for item in items:
+        cleaned = item.strip()
+        if not cleaned or cleaned in seen:
+            continue
+        seen.add(cleaned)
+        result.append(cleaned)
+    return result
+
+
+def _resolve_alias(category: str, template_id: str) -> str:
+    if category == "hairstyle":
+        return LEGACY_HAIRSTYLE_ALIASES.get(template_id, template_id)
+    if category == "scene":
+        return LEGACY_SCENE_ALIASES.get(template_id, template_id)
+    return template_id
+
+
+def _pick_palette(category: str, gender: str, style_line: str) -> tuple[str, str]:
+    base_a, base_b = STYLE_LINE_PALETTES.get(style_line, ("#334155", "#cbd5e1"))
+    accent_a, accent_b = HAIRSTYLE_PALETTES.get(gender, HAIRSTYLE_PALETTES["unisex"])
+    if category == "scene":
+        return base_a, base_b
+    return accent_a, accent_b
+
+
+def _build_scene_template(raw: dict) -> dict:
+    style_line = raw["styleLine"]
+    return {
+        "id": raw["id"],
+        "name": raw["title"],
+        "description": raw["summary"],
+        "gender": "unisex",
+        "gender_label": GENDER_LABELS["unisex"],
+        "style_line": style_line,
+        "style_line_label": STYLE_LINE_LABELS.get(style_line, style_line),
+        "tags": raw.get("detailTags", []),
+        "environment": raw["environment"],
+        "lighting": raw["lighting"],
+        "style_mood": raw["styleMood"],
+        "expressions": raw.get("expressions", []),
+        "actions": raw.get("actions", []),
+        "outfit_hints": raw.get("outfitHints", []),
+        "constraints": raw.get("constraints", []),
+        "pairing_advice": raw.get("pairingAdvice", []),
+        "shot_advice": raw["shotAdvice"],
+        "palette": _pick_palette("scene", "unisex", style_line),
+    }
+
+
+def _build_hairstyle_template(raw: dict) -> dict:
+    gender = raw["gender"]
+    style_line = raw["styleLine"]
+    return {
+        "id": raw["id"],
+        "name": raw["title"],
+        "description": raw["summary"],
+        "gender": gender,
+        "gender_label": GENDER_LABELS.get(gender, gender),
+        "style_line": style_line,
+        "style_line_label": STYLE_LINE_LABELS.get(style_line, style_line),
+        "tags": raw.get("detailTags", []),
+        "prompt_core": raw["promptCore"],
+        "constraints": raw.get("constraints", []),
+        "pairing_advice": raw.get("pairingAdvice", []),
+        "shot_advice": raw["shotAdvice"],
+        "expression_action": raw.get("expressionAction", []),
+        "palette": _pick_palette("hairstyle", gender, style_line),
+    }
+
+
+@lru_cache(maxsize=1)
+def _catalog() -> dict[str, list[dict]]:
+    scenes = [_build_scene_template(item) for item in _load_json("scenes.json")]
+    male_hairstyles = [
+        _build_hairstyle_template(item) for item in _load_json("hairstyles_male.json")
+    ]
+    female_hairstyles = [
+        _build_hairstyle_template(item) for item in _load_json("hairstyles_female.json")
+    ]
+    return {
+        "scenes": scenes,
+        "hairstyles": [*male_hairstyles, *female_hairstyles],
+    }
+
+
+SCENES = _catalog()["scenes"]
+HAIRSTYLES = _catalog()["hairstyles"]
 
 
 def _find_template(items: Iterable[dict], template_id: str) -> dict | None:
@@ -128,25 +178,42 @@ def _find_template(items: Iterable[dict], template_id: str) -> dict | None:
 
 
 def get_hairstyle(template_id: str) -> dict | None:
-    return _find_template(HAIRSTYLES, template_id)
+    resolved_id = _resolve_alias("hairstyle", template_id)
+    return _find_template(HAIRSTYLES, resolved_id)
 
 
 def get_scene(template_id: str) -> dict | None:
-    return _find_template(SCENES, template_id)
+    resolved_id = _resolve_alias("scene", template_id)
+    return _find_template(SCENES, resolved_id)
 
 
 def build_prompt(hairstyle: dict, scene: dict) -> str:
+    expression_text = "、".join(_dedupe_keep_order(scene.get("expressions", []))[:3])
+    action_items = _dedupe_keep_order(
+        [*scene.get("actions", []), *hairstyle.get("expression_action", [])]
+    )
+    outfit_text = "；".join(_dedupe_keep_order(scene.get("outfit_hints", []))[:2])
+    constraint_text = "；".join(
+        _dedupe_keep_order([*scene.get("constraints", []), *hairstyle.get("constraints", [])])
+    )
+
     return "\n".join(
         [
             IDENTITY_LOCK_SECTION,
-            SUBJECT_REFRAME_SECTION,
-            CAMERA_AND_POSE_SECTION,
-            hairstyle["prompt"],
-            STYLING_SECTION,
-            EMOTION_SECTION,
-            scene["prompt"],
-            VISUAL_QUALITY_SECTION,
-            NEGATIVE_CONSTRAINTS_SECTION,
+            OUTPUT_FORMAT_SECTION,
+            f"构图：{_normalize_sentence(scene['shot_advice'])}。",
+            (
+                f"场景：{_normalize_sentence(scene['environment'])}。"
+                f" 光线：{_normalize_sentence(scene['lighting'])}。"
+                f" 风格氛围：{_normalize_sentence(scene['style_mood'])}。"
+            ),
+            f"人物表情：{expression_text}。",
+            f"人物动作：{'、'.join(action_items[:5])}。",
+            f"服饰：{outfit_text or '白色宽松衬衫，内搭浅色背心或吊带'}。",
+            f"人物发型：{_normalize_sentence(hairstyle['prompt_core'])}。",
+            f"关键约束：{constraint_text}。",
+            QUALITY_SECTION,
+            f"负面约束：{NEGATIVE_CONSTRAINTS_SECTION}",
         ]
     )
 
@@ -155,6 +222,8 @@ def template_cover_svg(category: str, template: dict) -> str:
     color_a, color_b = template["palette"]
     title = template["name"]
     label = "HAIR" if category == "hairstyles" else "SCENE"
+    meta = template.get("gender_label") if category == "hairstyles" else template.get("style_line_label")
+    description = template["description"]
     return f"""<svg xmlns="http://www.w3.org/2000/svg" width="720" height="480" viewBox="0 0 720 480">
   <defs>
     <linearGradient id="bg" x1="0%" x2="100%" y1="0%" y2="100%">
@@ -165,9 +234,10 @@ def template_cover_svg(category: str, template: dict) -> str:
   <rect width="720" height="480" rx="32" fill="url(#bg)" />
   <circle cx="580" cy="120" r="92" fill="rgba(255,255,255,0.12)" />
   <circle cx="140" cy="380" r="120" fill="rgba(255,255,255,0.08)" />
-  <text x="56" y="96" fill="#ffffff" font-size="28" font-family="Arial, sans-serif" opacity="0.82">{label}</text>
-  <text x="56" y="210" fill="#ffffff" font-size="58" font-family="Arial, sans-serif" font-weight="700">{title}</text>
-  <text x="56" y="272" fill="#ffffff" font-size="24" font-family="Arial, sans-serif" opacity="0.85">{template["description"]}</text>
-  <rect x="56" y="336" width="180" height="52" rx="26" fill="rgba(255,255,255,0.18)" />
-  <text x="90" y="370" fill="#ffffff" font-size="22" font-family="Arial, sans-serif">AI Remix</text>
+  <text x="56" y="88" fill="#ffffff" font-size="28" font-family="Arial, sans-serif" opacity="0.82">{label}</text>
+  <text x="56" y="140" fill="#ffffff" font-size="24" font-family="Arial, sans-serif" opacity="0.9">{meta}</text>
+  <text x="56" y="220" fill="#ffffff" font-size="52" font-family="Arial, sans-serif" font-weight="700">{title}</text>
+  <text x="56" y="286" fill="#ffffff" font-size="24" font-family="Arial, sans-serif" opacity="0.85">{description}</text>
+  <rect x="56" y="346" width="188" height="52" rx="26" fill="rgba(255,255,255,0.18)" />
+  <text x="90" y="380" fill="#ffffff" font-size="22" font-family="Arial, sans-serif">Faceprompt</text>
 </svg>"""

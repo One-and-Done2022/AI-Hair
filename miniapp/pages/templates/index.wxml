@@ -1,25 +1,49 @@
 <view class="screen">
   <view class="panel template-section">
     <view class="section-title">发型模板</view>
-    <view class="subtitle">选择一个预置发型，后端会自动拼装对应提示词。</view>
+    <view class="subtitle">Faceprompt 的 40 组发型已经全部接入，先切换性别，再选择对应发型。</view>
+
+    <view class="gender-switch">
+      <view
+        class="gender-pill {{selectedGender === 'male' ? 'active' : ''}}"
+        bindtap="selectGender"
+        data-gender="male"
+      >
+        男生发型
+      </view>
+      <view
+        class="gender-pill {{selectedGender === 'female' ? 'active' : ''}}"
+        bindtap="selectGender"
+        data-gender="female"
+      >
+        女生发型
+      </view>
+    </view>
+
     <view class="template-list">
       <view
-        wx:for="{{hairstyles}}"
+        wx:for="{{visibleHairstyles}}"
         wx:key="id"
         class="template-card {{selectedHairstyleId === item.id ? 'selected' : ''}}"
         bindtap="selectHairstyle"
         data-id="{{item.id}}"
       >
-        <view class="template-type">HAIR</view>
+        <view class="meta-row">
+          <view class="template-type">{{item.gender_label}}</view>
+          <view class="mini-chip">{{item.style_line_label}}</view>
+        </view>
         <view class="template-name">{{item.name}}</view>
         <view class="template-desc">{{item.description}}</view>
+        <view wx:if="{{item.tags && item.tags.length}}" class="tag-row">
+          <text wx:for="{{item.tags}}" wx:key="*this" class="tag">{{item}}</text>
+        </view>
       </view>
     </view>
   </view>
 
   <view class="panel template-section">
     <view class="section-title">场景模板</view>
-    <view class="subtitle">选择一个背景环境，生成时会同步完成场景替换。</view>
+    <view class="subtitle">20 组 Faceprompt 场景已同步接入，后端会自动拼装环境、光线和动作提示词。</view>
     <view class="template-list">
       <view
         wx:for="{{scenes}}"
@@ -28,13 +52,18 @@
         bindtap="selectScene"
         data-id="{{item.id}}"
       >
-        <view class="template-type scene">SCENE</view>
+        <view class="meta-row">
+          <view class="template-type scene">SCENE</view>
+          <view class="mini-chip scene-chip">{{item.style_line_label}}</view>
+        </view>
         <view class="template-name">{{item.name}}</view>
         <view class="template-desc">{{item.description}}</view>
+        <view wx:if="{{item.tags && item.tags.length}}" class="tag-row">
+          <text wx:for="{{item.tags}}" wx:key="*this" class="tag">{{item}}</text>
+        </view>
       </view>
     </view>
   </view>
 
   <button class="primary-button save-button" bindtap="saveSelection">保存当前选择</button>
 </view>
-

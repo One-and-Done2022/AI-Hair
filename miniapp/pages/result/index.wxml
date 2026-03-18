@@ -19,7 +19,18 @@
   </view>
 
   <view wx:if="{{status === 'succeeded' && job}}" class="panel result-panel">
-    <image class="result-image" src="{{job.result_image_url}}" mode="widthFix"></image>
+    <view class="result-image-frame">
+      <view wx:if="{{!resultImageLoaded}}" class="result-image-skeleton">
+        <view class="result-image-skeleton-text">正在加载最终结果</view>
+      </view>
+      <image
+        wx:if="{{resultImageUrl}}"
+        class="result-image {{resultImageLoaded ? 'loaded' : 'hidden'}}"
+        src="{{resultImageUrl}}"
+        mode="aspectFill"
+        bindload="handleResultImageLoad"
+      ></image>
+    </view>
     <button class="primary-button action-gap" bindtap="saveImage">保存到相册</button>
     <button class="secondary-button" bindtap="createAnother">继续生成新作品</button>
   </view>
@@ -30,4 +41,3 @@
     <button class="secondary-button action-gap" bindtap="createAnother">返回重新发起</button>
   </view>
 </view>
-
