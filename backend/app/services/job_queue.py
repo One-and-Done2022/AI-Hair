@@ -72,7 +72,7 @@ class JobWorker:
         source_path = str(settings.storage_dir / upload["stored_path"])
 
         try:
-            result_bytes = self.generator.generate(
+            generation_result = self.generator.generate(
                 source_image_path=source_path,
                 prompt=job["prompt"],
                 context=GenerationContext(
@@ -80,11 +80,14 @@ class JobWorker:
                     scene_name=scene["name"],
                 ),
             )
-            result_path = storage.save_result_file(job_id, result_bytes)
+            result_bundle = storage.save_result_bundle(
+                job_id,
+                generation_result.candidate_image_bytes,
+            )
             repository.update_job_status(
                 job_id,
                 status="succeeded",
-                result_path=result_path,
+                result_path=result_bundle.primary_path,
             )
         except ImageGenerationError as exc:
             repository.update_job_status(
@@ -100,4 +103,3 @@ class JobWorker:
                 error_code="internal_error",
                 error_message=str(exc),
             )
-

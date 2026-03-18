@@ -29,6 +29,8 @@
           src="{{resultImageUrl}}"
           mode="aspectFill"
           bindload="handleResultImageLoad"
+          bindtap="previewResult"
+          data-url="{{resultImageUrl}}"
         ></image>
       </block>
 
@@ -39,8 +41,25 @@
       </view>
     </view>
 
+    <view wx:if="{{status === 'succeeded' && resultImageUrls.length > 1}}" class="gallery-section">
+      <view class="gallery-title">其他候选结果</view>
+      <view class="gallery-subtitle">顶部已经展示系统筛选出的最佳结果，继续向下可查看另外两张候选图。</view>
+      <block wx:for="{{resultImageUrls}}" wx:key="*this">
+        <view wx:if="{{index > 0}}" class="candidate-card">
+          <view class="candidate-label">候选结果 {{index + 1}}</view>
+          <image
+            class="candidate-image"
+            src="{{item}}"
+            mode="aspectFill"
+            bindtap="previewResult"
+            data-url="{{item}}"
+          ></image>
+        </view>
+      </block>
+    </view>
+
     <button wx:if="{{status === 'succeeded'}}" class="primary-button action-gap" bindtap="saveImage">
-      保存到相册
+      保存推荐结果
     </button>
     <button class="secondary-button" bindtap="createAnother">
       {{status === 'failed' ? '返回重新发起' : '继续生成新作品'}}

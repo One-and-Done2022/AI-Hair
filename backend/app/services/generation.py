@@ -44,10 +44,18 @@ class CandidateScore:
     image_bytes: bytes
 
 
+@dataclass(slots=True)
+class GenerationResult:
+    primary_image_bytes: bytes
+    candidate_image_bytes: list[bytes]
+
+
 class BaseGenerator:
     model_name: str
 
-    def generate(self, source_image_path: str, prompt: str, context: GenerationContext) -> bytes:
+    def generate(
+        self, source_image_path: str, prompt: str, context: GenerationContext
+    ) -> GenerationResult:
         raise NotImplementedError
 
 
@@ -121,7 +129,7 @@ def _score_portrait_candidate(index: int, image_bytes: bytes) -> CandidateScore:
     )
 
 
-def _select_best_candidate(candidates: list[bytes]) -> bytes:
+def _rank_candidates(candidates: list[bytes]) -> list[CandidateScore]:
     if not candidates:
         raise ImageGenerationError("upstream_empty", "Seedream returned no image payload.")
 
@@ -137,15 +145,16 @@ def _select_best_candidate(candidates: list[bytes]) -> bytes:
             candidate.score,
             candidate.summary,
         )
-    best = scored_candidates[0]
-    logger.info("Selected Seedream candidate %s as final output", best.index)
-    return best.image_bytes
+    logger.info("Selected Seedream candidate %s as final output", scored_candidates[0].index)
+    return scored_candidates
 
 
 class MockGenerator(BaseGenerator):
     model_name = "mock-image-generator"
 
-    def generate(self, source_image_path: str, prompt: str, context: GenerationContext) -> bytes:
+    def generate(
+        self, source_image_path: str, prompt: str, context: GenerationContext
+    ) -> GenerationResult:
         candidates: list[bytes] = []
         blur_levels = [10, 18, 26]
         portrait_offsets = [(160, 150), (170, 160), (185, 170)]
@@ -176,7 +185,12 @@ class MockGenerator(BaseGenerator):
                 target.save(output, format="PNG", optimize=True)
                 candidates.append(output.getvalue())
 
-        return _select_best_candidate(candidates)
+        ranked_candidates = _rank_candidates(candidates)
+        ordered_images = [candidate.image_bytes for candidate in ranked_candidates]
+        return GenerationResult(
+            primary_image_bytes=ordered_images[0],
+            candidate_image_bytes=ordered_images,
+        )
 
 
 class SeedreamGenerator(BaseGenerator):
@@ -193,7 +207,9 @@ class SeedreamGenerator(BaseGenerator):
             api_key=settings.ark_api_key,
         )
 
-    def generate(self, source_image_path: str, prompt: str, context: GenerationContext) -> bytes:
+    def generate(
+        self, source_image_path: str, prompt: str, context: GenerationContext
+    ) -> GenerationResult:
         with open(source_image_path, "rb") as handle:
             image_bytes = handle.read()
         image_base64 = base64.b64encode(image_bytes).decode("utf-8")
@@ -227,7 +243,12 @@ class SeedreamGenerator(BaseGenerator):
                 if payload:
                     candidates.append(base64.b64decode(payload))
 
-        return _select_best_candidate(candidates)
+        ranked_candidates = _rank_candidates(candidates)
+        ordered_images = [candidate.image_bytes for candidate in ranked_candidates]
+        return GenerationResult(
+            primary_image_bytes=ordered_images[0],
+            candidate_image_bytes=ordered_images,
+        )
 
 
 def build_generator() -> BaseGenerator:

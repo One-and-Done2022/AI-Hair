@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request, status
 
 from app.dependencies import get_current_user
 from app.schemas import JobCreateRequest, JobResponse
-from app.services import repository, templates
+from app.services import repository, storage, templates
 
 
 router = APIRouter(prefix="/jobs", tags=["jobs"])
@@ -16,14 +16,15 @@ def _job_response(request: Request, job: dict) -> JobResponse:
     upload = repository.get_upload(job["upload_id"])
     base_url = str(request.base_url).rstrip("/")
     upload_url = f"{base_url}/media/{upload['stored_path']}" if upload else None
-    result_image_url = (
-        f"{base_url}/media/{job['result_path']}" if job.get("result_path") else None
-    )
+    result_paths = storage.list_result_candidates(job["id"], job.get("result_path"))
+    result_image_urls = [f"{base_url}/media/{path}" for path in result_paths]
+    result_image_url = result_image_urls[0] if result_image_urls else None
     return JobResponse(
         job_id=job["id"],
         status=job["status"],
         upload_url=upload_url,
         result_image_url=result_image_url,
+        result_image_urls=result_image_urls,
         hairstyle_id=job["hairstyle_id"],
         hairstyle_name=hairstyle["name"] if hairstyle else job["hairstyle_id"],
         scene_id=job["scene_id"],
@@ -73,4 +74,3 @@ def get_job(
     if job is None:
         raise HTTPException(status_code=404, detail="Job not found.")
     return _job_response(request, job)
-

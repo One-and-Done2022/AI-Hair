@@ -105,3 +105,47 @@
   margin-top: 24rpx;
   margin-bottom: 18rpx;
 }
+
+.gallery-section {
+  margin-top: 28rpx;
+}
+
+.gallery-title {
+  font-size: 32rpx;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.gallery-subtitle {
+  margin-top: 10rpx;
+  font-size: 24rpx;
+  color: #64748b;
+  line-height: 1.6;
+}
+
+.candidate-card {
+  margin-top: 22rpx;
+  padding: 20rpx;
+  border-radius: 24rpx;
+  background: linear-gradient(135deg, #ffffff, #f8fafc);
+  box-shadow: 0 14rpx 36rpx rgba(15, 23, 42, 0.06);
+}
+
+.candidate-label {
+  display: inline-flex;
+  padding: 8rpx 16rpx;
+  border-radius: 999rpx;
+  background: #e2e8f0;
+  color: #334155;
+  font-size: 22rpx;
+  font-weight: 700;
+}
+
+.candidate-image {
+  width: 100%;
+  height: 920rpx;
+  margin-top: 18rpx;
+  border-radius: 22rpx;
+  display: block;
+  background: #e2e8f0;
+}

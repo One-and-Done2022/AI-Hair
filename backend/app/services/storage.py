@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import io
+import shutil
 import uuid
 from dataclasses import dataclass
 from pathlib import Path
@@ -34,6 +35,12 @@ class ImageMetadata:
     width: int
     height: int
     extension: str
+
+
+@dataclass(slots=True)
+class SavedResultBundle:
+    primary_path: str
+    candidate_paths: list[str]
 
 
 def _detect_face_count(image_bytes: bytes) -> int | None:
@@ -101,8 +108,7 @@ def save_upload_file(image_bytes: bytes, extension: str) -> str:
     return _write_file(image_bytes, settings.upload_dir / filename)
 
 
-def save_result_file(job_id: str, image_bytes: bytes) -> str:
-    settings = get_settings()
+def _detect_result_extension(image_bytes: bytes) -> str:
     extension = ".png"
     try:
         with Image.open(io.BytesIO(image_bytes)) as image:
@@ -115,6 +121,46 @@ def save_result_file(job_id: str, image_bytes: bytes) -> str:
             extension = ".webp"
     except UnidentifiedImageError:
         extension = ".png"
+    return extension
 
-    filename = f"{job_id}{extension}"
-    return _write_file(image_bytes, settings.result_dir / filename)
+
+def save_result_bundle(job_id: str, candidate_images: list[bytes]) -> SavedResultBundle:
+    if not candidate_images:
+        raise ValueError("candidate_images cannot be empty")
+
+    settings = get_settings()
+    primary_extension = _detect_result_extension(candidate_images[0])
+    primary_path = _write_file(
+        candidate_images[0],
+        settings.result_dir / f"{job_id}{primary_extension}",
+    )
+
+    candidate_dir = settings.result_dir / job_id
+    if candidate_dir.exists():
+        shutil.rmtree(candidate_dir)
+
+    candidate_paths: list[str] = []
+    for index, image_bytes in enumerate(candidate_images, start=1):
+        extension = _detect_result_extension(image_bytes)
+        candidate_paths.append(
+            _write_file(
+                image_bytes,
+                candidate_dir / f"candidate-{index}{extension}",
+            )
+        )
+
+    return SavedResultBundle(primary_path=primary_path, candidate_paths=candidate_paths)
+
+
+def list_result_candidates(job_id: str, primary_path: str | None = None) -> list[str]:
+    settings = get_settings()
+    candidate_dir = settings.result_dir / job_id
+    if candidate_dir.exists():
+        paths = sorted(
+            path.relative_to(settings.storage_dir).as_posix()
+            for path in candidate_dir.iterdir()
+            if path.is_file()
+        )
+        if paths:
+            return paths
+    return [primary_path] if primary_path else []

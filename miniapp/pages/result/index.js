@@ -57,11 +57,22 @@ function hasMetaChanged(currentJob, nextJob) {
   );
 }
 
+function arraysEqual(left, right) {
+  if (left === right) {
+    return true;
+  }
+  if (!Array.isArray(left) || !Array.isArray(right) || left.length !== right.length) {
+    return false;
+  }
+  return left.every((item, index) => item === right[index]);
+}
+
 Page({
   data: {
     status: "pending",
     job: null,
     resultImageUrl: "",
+    resultImageUrls: [],
     resultImageLoaded: false
   },
 
@@ -131,7 +142,13 @@ Page({
 
   applyJobState(job) {
     const nextJob = buildJobMeta(job);
-    const nextImageUrl = job.result_image_url || "";
+    const nextImageUrls =
+      Array.isArray(job.result_image_urls) && job.result_image_urls.length
+        ? job.result_image_urls
+        : job.result_image_url
+          ? [job.result_image_url]
+          : [];
+    const nextImageUrl = nextImageUrls[0] || "";
     const nextState = {};
 
     if (this.data.status !== job.status) {
@@ -140,6 +157,10 @@ Page({
 
     if (hasMetaChanged(this.data.job, nextJob)) {
       nextState.job = nextJob;
+    }
+
+    if (!arraysEqual(this.data.resultImageUrls, nextImageUrls)) {
+      nextState.resultImageUrls = nextImageUrls;
     }
 
     if (this.data.resultImageUrl !== nextImageUrl) {
@@ -156,6 +177,24 @@ Page({
     if (!this.data.resultImageLoaded) {
       this.setData({ resultImageLoaded: true });
     }
+  },
+
+  previewResult(event) {
+    const current = event.currentTarget.dataset.url;
+    const urls = this.data.resultImageUrls.length
+      ? this.data.resultImageUrls
+      : this.data.resultImageUrl
+        ? [this.data.resultImageUrl]
+        : [];
+
+    if (!current || !urls.length) {
+      return;
+    }
+
+    wx.previewImage({
+      current,
+      urls
+    });
   },
 
   async saveImage() {

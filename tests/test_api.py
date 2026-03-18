@@ -56,6 +56,8 @@ def test_build_prompt_uses_faceprompt_single_image_structure():
     assert "发型改为前刺头" in prompt
     assert "白色宽松衬衫" in prompt
     assert "不要拼图排版" in prompt
+    assert "图片需要符合物理逻辑" in prompt
+    assert "不要在画面中多出不合逻辑的手和身体部位" in prompt
 
 
 def test_faceprompt_catalog_counts_and_legacy_aliases():
@@ -120,9 +122,12 @@ def test_auth_upload_job_history_flow(tmp_path):
         assert status_payload is not None
         assert status_payload["status"] == "succeeded"
         assert status_payload["result_image_url"]
+        assert len(status_payload["result_image_urls"]) == 3
+        assert status_payload["result_image_urls"][0] == status_payload["result_image_url"]
 
         history = client.get("/api/history", headers=headers)
         assert history.status_code == 200
         items = history.json()["items"]
         assert len(items) == 1
         assert items[0]["job_id"] == job_id
+        assert len(items[0]["result_image_urls"]) == 3

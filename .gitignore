@@ -7,6 +7,7 @@ __pycache__/
 .mypy_cache/
 *.pyc
 storage/
+.tmp_storage_preview/
 generated_image_*.png
 微信图片_20260318192652_461_95.jpg
 test.py
