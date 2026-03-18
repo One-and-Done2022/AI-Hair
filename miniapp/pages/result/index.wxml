@@ -1,0 +1,33 @@
+<view class="screen">
+  <view class="job-card status-card">
+    <view class="title">AI 生成任务</view>
+    <view class="subtitle">
+      当前状态：
+      <text class="status-text">{{status === 'pending' ? '排队中' : status === 'processing' ? '生成中' : status === 'succeeded' ? '已完成' : '失败'}}</text>
+    </view>
+    <view wx:if="{{job}}" class="meta-group">
+      <view class="meta-item">发型：{{job.hairstyle_name}}</view>
+      <view class="meta-item">场景：{{job.scene_name}}</view>
+      <view class="meta-item">任务 ID：{{job.job_id}}</view>
+    </view>
+  </view>
+
+  <view wx:if="{{status === 'pending' || status === 'processing'}}" class="panel waiting-panel">
+    <view class="pulse-ring"></view>
+    <view class="waiting-title">正在根据你的照片重新设计发型与场景</view>
+    <view class="subtitle">保持页面打开即可，完成后会自动刷新结果。</view>
+  </view>
+
+  <view wx:if="{{status === 'succeeded' && job}}" class="panel result-panel">
+    <image class="result-image" src="{{job.result_image_url}}" mode="widthFix"></image>
+    <button class="primary-button action-gap" bindtap="saveImage">保存到相册</button>
+    <button class="secondary-button" bindtap="createAnother">继续生成新作品</button>
+  </view>
+
+  <view wx:if="{{status === 'failed' && job}}" class="panel fail-panel">
+    <view class="fail-title">生成失败</view>
+    <view class="subtitle">{{job.error_message || '请稍后重新尝试'}}</view>
+    <button class="secondary-button action-gap" bindtap="createAnother">返回重新发起</button>
+  </view>
+</view>
+

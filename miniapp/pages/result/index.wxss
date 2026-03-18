@@ -1,0 +1,67 @@
+.status-card {
+  padding: 30rpx;
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+  color: #ffffff;
+}
+
+.status-card .subtitle {
+  color: rgba(255, 255, 255, 0.84);
+}
+
+.status-text {
+  color: #7dd3fc;
+}
+
+.meta-group {
+  margin-top: 24rpx;
+  display: grid;
+  gap: 12rpx;
+}
+
+.meta-item {
+  font-size: 24rpx;
+  color: rgba(255, 255, 255, 0.82);
+}
+
+.waiting-panel,
+.result-panel,
+.fail-panel {
+  margin-top: 24rpx;
+  padding: 30rpx;
+}
+
+.waiting-panel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding-top: 70rpx;
+  padding-bottom: 70rpx;
+}
+
+.pulse-ring {
+  width: 140rpx;
+  height: 140rpx;
+  border-radius: 999rpx;
+  background: radial-gradient(circle, #38bdf8 0%, #2563eb 58%, rgba(37, 99, 235, 0.08) 70%);
+  box-shadow: 0 0 0 18rpx rgba(37, 99, 235, 0.08);
+}
+
+.waiting-title,
+.fail-title {
+  margin-top: 28rpx;
+  font-size: 32rpx;
+  font-weight: 700;
+}
+
+.result-image {
+  width: 100%;
+  border-radius: 24rpx;
+  background: #e2e8f0;
+}
+
+.action-gap {
+  margin-top: 24rpx;
+  margin-bottom: 18rpx;
+}
+

@@ -1,0 +1,34 @@
+<view class="screen">
+  <view class="panel history-header">
+    <view class="title">我的生成历史</view>
+    <view class="subtitle">按时间倒序展示，每条记录都可以重新打开查看结果。</view>
+  </view>
+
+  <view wx:if="{{items.length === 0}}" class="panel empty-state">
+    <view>还没有生成记录，先去首页上传照片试试。</view>
+  </view>
+
+  <view
+    wx:for="{{items}}"
+    wx:key="job_id"
+    class="history-card history-item"
+    bindtap="openJob"
+    data-job-id="{{item.job_id}}"
+  >
+    <view class="history-top">
+      <view class="history-name">{{item.hairstyle_name}} · {{item.scene_name}}</view>
+      <view class="history-status {{item.status}}">{{item.status}}</view>
+    </view>
+    <view class="history-time">{{item.created_at}}</view>
+    <image
+      wx:if="{{item.result_image_url}}"
+      class="history-image"
+      src="{{item.result_image_url}}"
+      mode="aspectFill"
+    ></image>
+    <view wx:else class="history-placeholder">
+      {{item.status === 'failed' ? '任务失败，点击查看详情' : '任务仍在处理中，点击继续查看'}}
+    </view>
+  </view>
+</view>
+

@@ -1,0 +1,16 @@
+.env
+.env.*
+!.env.example
+.venv/
+__pycache__/
+.pytest_cache/
+.mypy_cache/
+*.pyc
+storage/
+generated_image_*.png
+微信图片_20260318192652_461_95.jpg
+test.py
+project.private.config.json
+.DS_Store
+.idea/
+.vscode/

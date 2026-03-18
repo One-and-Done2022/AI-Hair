@@ -1,0 +1,15 @@
+[Unit]
+Description=AI Hair Remix FastAPI Backend
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/home/lcy/AIFace
+EnvironmentFile=/home/lcy/AIFace/.env
+Environment=PYTHONUNBUFFERED=1
+ExecStart=/home/lcy/AIFace/.venv/bin/uvicorn app.main:app --app-dir /home/lcy/AIFace/backend --host 0.0.0.0 --port 8000
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=default.target
