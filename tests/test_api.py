@@ -51,6 +51,7 @@ def test_build_prompt_uses_single_image_stable_structure():
 
     assert "生成 1 张高相似度、写实风格的人像写真" in prompt
     assert "严格保留参考人物的真实身份特征" in prompt
+    assert "忽略原照片中的背景、原服饰、原发型和原有动作" in prompt
     assert "微微歪头，一只手自然轻触头发" in prompt
     assert "白色宽松衬衫" in prompt
     assert "人物发型改为美式前刺" in prompt
