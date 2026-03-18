@@ -19,12 +19,48 @@ function getErrorMessage(error) {
   return error.message || "请求失败";
 }
 
+function decodeText(value) {
+  if (!value) {
+    return "";
+  }
+  try {
+    return decodeURIComponent(value);
+  } catch (error) {
+    return value;
+  }
+}
+
+function buildJobMeta(job) {
+  if (!job) {
+    return null;
+  }
+  return {
+    job_id: job.job_id || "",
+    hairstyle_name: job.hairstyle_name || "",
+    scene_name: job.scene_name || "",
+    error_message: job.error_message || ""
+  };
+}
+
+function hasMetaChanged(currentJob, nextJob) {
+  if (!currentJob && nextJob) {
+    return true;
+  }
+  if (!currentJob || !nextJob) {
+    return false;
+  }
+  return (
+    currentJob.job_id !== nextJob.job_id ||
+    currentJob.hairstyle_name !== nextJob.hairstyle_name ||
+    currentJob.scene_name !== nextJob.scene_name ||
+    currentJob.error_message !== nextJob.error_message
+  );
+}
+
 Page({
   data: {
-    jobId: "",
     status: "pending",
     job: null,
-    polling: false,
     resultImageUrl: "",
     resultImageLoaded: false
   },
@@ -34,7 +70,22 @@ Page({
       wx.showToast({ title: "缺少任务 ID", icon: "none" });
       return;
     }
-    this.setData({ jobId: options.jobId });
+
+    this.jobId = options.jobId;
+    this.isPolling = false;
+
+    const initialJob = buildJobMeta({
+      job_id: options.jobId,
+      hairstyle_name: decodeText(options.hairstyleName),
+      scene_name: decodeText(options.sceneName),
+      error_message: ""
+    });
+
+    this.setData({
+      status: options.status || "pending",
+      job: initialJob
+    });
+
     this.fetchJob();
     this.timer = setInterval(() => {
       this.fetchJob();
@@ -53,15 +104,15 @@ Page({
   },
 
   async fetchJob() {
-    if (this.data.polling || !this.data.jobId) {
+    if (this.isPolling || !this.jobId) {
       return;
     }
 
-    this.setData({ polling: true });
+    this.isPolling = true;
     try {
       await ensureLogin();
       const job = await request({
-        url: `/api/jobs/${this.data.jobId}`
+        url: `/api/jobs/${this.jobId}`
       });
       if (job.status === "succeeded" || job.status === "failed") {
         this.stopPolling();
@@ -74,35 +125,31 @@ Page({
         icon: "none"
       });
     } finally {
-      this.setData({ polling: false });
+      this.isPolling = false;
     }
   },
 
   applyJobState(job) {
+    const nextJob = buildJobMeta(job);
     const nextImageUrl = job.result_image_url || "";
-    const currentJob = this.data.job;
-    const currentImageUrl = this.data.resultImageUrl || "";
-    const hasMeaningfulChange =
-      !currentJob ||
-      currentJob.updated_at !== job.updated_at ||
-      this.data.status !== job.status ||
-      currentImageUrl !== nextImageUrl;
+    const nextState = {};
 
-    if (!hasMeaningfulChange) {
-      return;
+    if (this.data.status !== job.status) {
+      nextState.status = job.status;
     }
 
-    const nextState = {
-      job,
-      status: job.status
-    };
+    if (hasMetaChanged(this.data.job, nextJob)) {
+      nextState.job = nextJob;
+    }
 
-    if (currentImageUrl !== nextImageUrl) {
+    if (this.data.resultImageUrl !== nextImageUrl) {
       nextState.resultImageUrl = nextImageUrl;
       nextState.resultImageLoaded = false;
     }
 
-    this.setData(nextState);
+    if (Object.keys(nextState).length > 0) {
+      this.setData(nextState);
+    }
   },
 
   handleResultImageLoad() {

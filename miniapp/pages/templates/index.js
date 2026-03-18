@@ -41,7 +41,6 @@ function getDefaultGender(hairstyles, cached) {
 
 function resolveSelectionState(catalog, cached) {
   const allHairstyles = catalog.hairstyles || [];
-  const allScenes = catalog.scenes || [];
   const cachedHairstyle = findById(allHairstyles, cached.hairstyle && cached.hairstyle.id);
   const selectedGender = getDefaultGender(allHairstyles, cached);
   const visibleHairstyles = filterHairstyles(allHairstyles, selectedGender);
@@ -49,15 +48,12 @@ function resolveSelectionState(catalog, cached) {
     findById(visibleHairstyles, cachedHairstyle && cachedHairstyle.id) ||
     visibleHairstyles[0] ||
     null;
-  const selectedScene = findById(allScenes, cached.scene && cached.scene.id) || allScenes[0] || null;
 
   return {
     hairstyles: allHairstyles,
     visibleHairstyles,
-    scenes: allScenes,
     selectedGender,
-    selectedHairstyleId: selectedHairstyle ? selectedHairstyle.id : "",
-    selectedSceneId: selectedScene ? selectedScene.id : ""
+    selectedHairstyleId: selectedHairstyle ? selectedHairstyle.id : ""
   };
 }
 
@@ -66,10 +62,8 @@ Page({
     loading: true,
     hairstyles: [],
     visibleHairstyles: [],
-    scenes: [],
     selectedGender: "male",
-    selectedHairstyleId: "",
-    selectedSceneId: ""
+    selectedHairstyleId: ""
   },
 
   async onLoad() {
@@ -116,35 +110,21 @@ Page({
     });
   },
 
-  selectScene(event) {
-    this.setData({
-      selectedSceneId: event.currentTarget.dataset.id
-    });
-  },
-
-  saveSelection() {
+  goNext() {
     const hairstyle = findById(this.data.hairstyles, this.data.selectedHairstyleId);
-    const scene = findById(this.data.scenes, this.data.selectedSceneId);
-
-    if (!hairstyle || !scene) {
+    if (!hairstyle) {
       wx.showToast({
-        title: "请选择发型和场景",
+        title: "请先选择发型",
         icon: "none"
       });
       return;
     }
 
-    wx.setStorageSync("templateSelection", {
-      hairstyle,
-      scene,
-      gender: this.data.selectedGender
+    wx.navigateTo({
+      url:
+        `/pages/scenes/index?hairstyleId=${hairstyle.id}` +
+        `&hairstyleName=${encodeURIComponent(hairstyle.name)}` +
+        `&gender=${hairstyle.gender}`
     });
-    wx.showToast({
-      title: "模板已更新",
-      icon: "success"
-    });
-    setTimeout(() => {
-      wx.navigateBack();
-    }, 350);
   }
 });

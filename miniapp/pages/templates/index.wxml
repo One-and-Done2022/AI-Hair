@@ -1,7 +1,13 @@
 <view class="screen">
+  <view class="panel step-card">
+    <view class="step-badge">STEP 1</view>
+    <view class="section-title">选择性别与发型</view>
+    <view class="subtitle">先确定男生或女生发型，再进入下一页挑选场景。</view>
+  </view>
+
   <view class="panel template-section">
     <view class="section-title">发型模板</view>
-    <view class="subtitle">Faceprompt 的 40 组发型已经全部接入，先切换性别，再选择对应发型。</view>
+    <view class="subtitle">Faceprompt 的 40 组发型已经全部接入。</view>
 
     <view class="gender-switch">
       <view
@@ -41,29 +47,5 @@
     </view>
   </view>
 
-  <view class="panel template-section">
-    <view class="section-title">场景模板</view>
-    <view class="subtitle">20 组 Faceprompt 场景已同步接入，后端会自动拼装环境、光线和动作提示词。</view>
-    <view class="template-list">
-      <view
-        wx:for="{{scenes}}"
-        wx:key="id"
-        class="template-card {{selectedSceneId === item.id ? 'selected' : ''}}"
-        bindtap="selectScene"
-        data-id="{{item.id}}"
-      >
-        <view class="meta-row">
-          <view class="template-type scene">SCENE</view>
-          <view class="mini-chip scene-chip">{{item.style_line_label}}</view>
-        </view>
-        <view class="template-name">{{item.name}}</view>
-        <view class="template-desc">{{item.description}}</view>
-        <view wx:if="{{item.tags && item.tags.length}}" class="tag-row">
-          <text wx:for="{{item.tags}}" wx:key="*this" class="tag">{{item}}</text>
-        </view>
-      </view>
-    </view>
-  </view>
-
-  <button class="primary-button save-button" bindtap="saveSelection">保存当前选择</button>
+  <button class="primary-button save-button" bindtap="goNext">下一页：选择场景</button>
 </view>

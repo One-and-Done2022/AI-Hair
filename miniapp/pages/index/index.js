@@ -141,7 +141,11 @@ Page({
         }
       });
       wx.navigateTo({
-        url: `/pages/result/index?jobId=${job.job_id}`
+        url:
+          `/pages/result/index?jobId=${job.job_id}` +
+          `&status=${job.status}` +
+          `&hairstyleName=${encodeURIComponent(job.hairstyle_name)}` +
+          `&sceneName=${encodeURIComponent(job.scene_name)}`
       });
     } catch (error) {
       wx.showToast({

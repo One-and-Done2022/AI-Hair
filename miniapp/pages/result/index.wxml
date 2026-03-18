@@ -3,41 +3,47 @@
     <view class="title">AI 生成任务</view>
     <view class="subtitle">
       当前状态：
-      <text class="status-text">{{status === 'pending' ? '排队中' : status === 'processing' ? '生成中' : status === 'succeeded' ? '已完成' : '失败'}}</text>
+      <text class="status-text">{{status === 'succeeded' ? '已完成' : status === 'failed' ? '失败' : '生成中'}}</text>
     </view>
     <view wx:if="{{job}}" class="meta-group">
-      <view class="meta-item">发型：{{job.hairstyle_name}}</view>
-      <view class="meta-item">场景：{{job.scene_name}}</view>
+      <view class="meta-item">发型：{{job.hairstyle_name || '处理中'}}</view>
+      <view class="meta-item">场景：{{job.scene_name || '处理中'}}</view>
       <view class="meta-item">任务 ID：{{job.job_id}}</view>
     </view>
   </view>
 
-  <view wx:if="{{status === 'pending' || status === 'processing'}}" class="panel waiting-panel">
-    <view class="pulse-ring"></view>
-    <view class="waiting-title">正在根据你的照片重新设计发型与场景</view>
-    <view class="subtitle">保持页面打开即可，完成后会自动刷新结果。</view>
-  </view>
-
-  <view wx:if="{{status === 'succeeded' && job}}" class="panel result-panel">
+  <view class="panel stage-panel">
     <view class="result-image-frame">
-      <view wx:if="{{!resultImageLoaded}}" class="result-image-skeleton">
-        <view class="result-image-skeleton-text">正在加载最终结果</view>
+      <view wx:if="{{status === 'failed'}}" class="stage-state stage-state-failed">
+        <view class="fail-title">生成失败</view>
+        <view class="subtitle">{{job && job.error_message ? job.error_message : '请稍后重新尝试'}}</view>
       </view>
-      <image
-        wx:if="{{resultImageUrl}}"
-        class="result-image {{resultImageLoaded ? 'loaded' : 'hidden'}}"
-        src="{{resultImageUrl}}"
-        mode="aspectFill"
-        bindload="handleResultImageLoad"
-      ></image>
-    </view>
-    <button class="primary-button action-gap" bindtap="saveImage">保存到相册</button>
-    <button class="secondary-button" bindtap="createAnother">继续生成新作品</button>
-  </view>
 
-  <view wx:if="{{status === 'failed' && job}}" class="panel fail-panel">
-    <view class="fail-title">生成失败</view>
-    <view class="subtitle">{{job.error_message || '请稍后重新尝试'}}</view>
-    <button class="secondary-button action-gap" bindtap="createAnother">返回重新发起</button>
+      <block wx:elif="{{status === 'succeeded'}}">
+        <view wx:if="{{!resultImageLoaded}}" class="result-image-skeleton">
+          <view class="result-image-skeleton-text">正在加载最终结果</view>
+        </view>
+        <image
+          wx:if="{{resultImageUrl}}"
+          class="result-image {{resultImageLoaded ? 'loaded' : 'hidden'}}"
+          src="{{resultImageUrl}}"
+          mode="aspectFill"
+          bindload="handleResultImageLoad"
+        ></image>
+      </block>
+
+      <view wx:else class="stage-state stage-state-waiting">
+        <view class="pulse-ring"></view>
+        <view class="waiting-title">正在根据你的照片重新设计发型与场景</view>
+        <view class="subtitle">保持页面打开即可，完成后会自动刷新结果。</view>
+      </view>
+    </view>
+
+    <button wx:if="{{status === 'succeeded'}}" class="primary-button action-gap" bindtap="saveImage">
+      保存到相册
+    </button>
+    <button class="secondary-button" bindtap="createAnother">
+      {{status === 'failed' ? '返回重新发起' : '继续生成新作品'}}
+    </button>
   </view>
 </view>

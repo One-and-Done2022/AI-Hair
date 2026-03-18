@@ -1,45 +1,47 @@
 .step-card {
   padding: 30rpx;
   margin-bottom: 24rpx;
-  background: linear-gradient(135deg, #eff6ff, #ecfeff);
+  background: linear-gradient(135deg, #f0fdf4, #ecfeff);
 }
 
 .step-badge {
   display: inline-flex;
   padding: 8rpx 16rpx;
   border-radius: 999rpx;
-  background: rgba(37, 99, 235, 0.12);
-  color: #1d4ed8;
+  background: rgba(13, 148, 136, 0.12);
+  color: #0f766e;
   font-size: 22rpx;
   font-weight: 700;
+}
+
+.summary-card {
+  padding: 30rpx;
+  margin-bottom: 24rpx;
+  background: linear-gradient(135deg, #ffffff, #f8fafc);
+}
+
+.summary-label {
+  color: #64748b;
+  font-size: 24rpx;
+}
+
+.summary-value {
+  margin-top: 12rpx;
+  font-size: 36rpx;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.summary-meta {
+  margin-top: 10rpx;
+  color: #0f766e;
+  font-size: 24rpx;
+  font-weight: 600;
 }
 
 .template-section {
   padding: 30rpx;
   margin-bottom: 24rpx;
-}
-
-.gender-switch {
-  display: flex;
-  gap: 16rpx;
-  margin-top: 24rpx;
-}
-
-.gender-pill {
-  flex: 1;
-  padding: 20rpx 24rpx;
-  border-radius: 999rpx;
-  background: #e2e8f0;
-  color: #475569;
-  font-size: 26rpx;
-  font-weight: 700;
-  text-align: center;
-}
-
-.gender-pill.active {
-  background: linear-gradient(135deg, #2563eb, #0f766e);
-  color: #ffffff;
-  box-shadow: 0 18rpx 40rpx rgba(37, 99, 235, 0.16);
 }
 
 .template-list {
@@ -66,34 +68,24 @@
   flex-wrap: wrap;
 }
 
-.template-type {
+.template-type.scene {
   display: inline-flex;
   padding: 8rpx 16rpx;
   border-radius: 999rpx;
-  background: #dbeafe;
-  color: #1d4ed8;
-  font-size: 22rpx;
-  font-weight: 700;
-}
-
-.template-type.scene {
   background: #dcfce7;
   color: #15803d;
+  font-size: 22rpx;
+  font-weight: 700;
 }
 
 .mini-chip {
   display: inline-flex;
   padding: 8rpx 14rpx;
   border-radius: 999rpx;
-  background: #ede9fe;
-  color: #6d28d9;
-  font-size: 22rpx;
-  font-weight: 600;
-}
-
-.scene-chip {
   background: #ecfccb;
   color: #3f6212;
+  font-size: 22rpx;
+  font-weight: 600;
 }
 
 .template-name {
@@ -124,7 +116,11 @@
   font-size: 22rpx;
 }
 
+.back-button {
+  margin-top: 8rpx;
+}
+
 .save-button {
-  margin-top: 12rpx;
+  margin-top: 18rpx;
   margin-bottom: 40rpx;
 }

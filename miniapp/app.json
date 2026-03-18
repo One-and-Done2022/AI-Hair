@@ -2,6 +2,7 @@
   "pages": [
     "pages/index/index",
     "pages/templates/index",
+    "pages/scenes/index",
     "pages/result/index",
     "pages/history/index"
   ],
@@ -31,4 +32,3 @@
   "style": "v2",
   "sitemapLocation": "sitemap.json"
 }
-

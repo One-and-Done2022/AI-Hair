@@ -1,0 +1,40 @@
+<view class="screen">
+  <view class="panel step-card">
+    <view class="step-badge">STEP 2</view>
+    <view class="section-title">选择场景</view>
+    <view class="subtitle">场景页可以返回上一步继续修改发型，再回来确认场景。</view>
+  </view>
+
+  <view class="panel summary-card">
+    <view class="summary-label">已选发型</view>
+    <view class="summary-value">{{selectedHairstyle ? selectedHairstyle.name : '未选择'}}</view>
+    <view class="summary-meta">{{selectedGender === 'female' ? '女生发型' : '男生发型'}}</view>
+  </view>
+
+  <view class="panel template-section">
+    <view class="section-title">场景模板</view>
+    <view class="subtitle">选择完成后保存，首页会同步更新当前模板。</view>
+    <view class="template-list">
+      <view
+        wx:for="{{scenes}}"
+        wx:key="id"
+        class="template-card {{selectedSceneId === item.id ? 'selected' : ''}}"
+        bindtap="selectScene"
+        data-id="{{item.id}}"
+      >
+        <view class="meta-row">
+          <view class="template-type scene">SCENE</view>
+          <view class="mini-chip scene-chip">{{item.style_line_label}}</view>
+        </view>
+        <view class="template-name">{{item.name}}</view>
+        <view class="template-desc">{{item.description}}</view>
+        <view wx:if="{{item.tags && item.tags.length}}" class="tag-row">
+          <text wx:for="{{item.tags}}" wx:key="*this" class="tag">{{item}}</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <button class="secondary-button back-button" bindtap="goBackStep">返回上一步</button>
+  <button class="primary-button save-button" bindtap="saveSelection">保存当前选择</button>
+</view>
