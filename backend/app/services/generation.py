@@ -30,6 +30,38 @@ def _event_field(event, name: str):
     return getattr(event, name, None)
 
 
+def _extract_b64_payloads(event) -> list[str]:
+    payloads: list[str] = []
+
+    def visit(value) -> None:
+        if value is None:
+            return
+        if isinstance(value, str):
+            return
+        if isinstance(value, dict):
+            for key, item in value.items():
+                if key == "b64_json" and isinstance(item, str) and item:
+                    payloads.append(item)
+                    continue
+                visit(item)
+            return
+        if isinstance(value, (list, tuple)):
+            for item in value:
+                visit(item)
+            return
+
+        nested_payload = getattr(value, "b64_json", None)
+        if isinstance(nested_payload, str) and nested_payload:
+            payloads.append(nested_payload)
+            return
+
+        if hasattr(value, "__dict__"):
+            visit(vars(value))
+
+    visit(event)
+    return payloads
+
+
 @dataclass(slots=True)
 class GenerationContext:
     hairstyle_name: str
@@ -207,18 +239,8 @@ class SeedreamGenerator(BaseGenerator):
             api_key=settings.ark_api_key,
         )
 
-    def generate(
-        self, source_image_path: str, prompt: str, context: GenerationContext
-    ) -> GenerationResult:
-        with open(source_image_path, "rb") as handle:
-            image_bytes = handle.read()
-        image_base64 = base64.b64encode(image_bytes).decode("utf-8")
-
-        suffix = Path(source_image_path).suffix.lower()
-        mime_type = "image/png" if suffix == ".png" else "image/jpeg"
-        image_data = f"data:{mime_type};base64,{image_base64}"
-        candidates: list[bytes] = []
-        stream = self._client.images.generate(
+    def _build_stream(self, *, prompt: str, image_data: str, max_images: int):
+        return self._client.images.generate(
             model=self.model_name,
             prompt=prompt,
             size="2K",
@@ -229,19 +251,74 @@ class SeedreamGenerator(BaseGenerator):
                 "watermark": True,
                 "sequential_image_generation": "auto",
                 "sequential_image_generation_options": {
-                    "max_images": CANDIDATE_IMAGE_COUNT,
+                    "max_images": max_images,
                 },
             },
         )
 
+    def _collect_stream_candidates(self, *, prompt: str, image_data: str, max_images: int) -> list[bytes]:
+        candidates: list[bytes] = []
+        seen_payloads: set[str] = set()
+        stream = self._build_stream(prompt=prompt, image_data=image_data, max_images=max_images)
+
         for event in stream:
             if event is None:
                 continue
-            event_type = _event_field(event, "type")
-            if event_type == "image_generation.partial_succeeded":
-                payload = _event_field(event, "b64_json")
-                if payload:
-                    candidates.append(base64.b64decode(payload))
+            for payload in _extract_b64_payloads(event):
+                if payload in seen_payloads:
+                    continue
+                seen_payloads.add(payload)
+                candidates.append(base64.b64decode(payload))
+        return candidates
+
+    def _top_up_candidates(self, *, prompt: str, image_data: str, existing_count: int) -> list[bytes]:
+        topped_up: list[bytes] = []
+        for index in range(existing_count + 1, CANDIDATE_IMAGE_COUNT + 1):
+            variant_prompt = (
+                f"{prompt}\n"
+                f"候选图补充说明：这是第 {index} 张候选图，保持同一人物与核心设定一致，"
+                "允许表情、动作、头部角度和视线方向有自然差异。"
+            )
+            extra_candidates = self._collect_stream_candidates(
+                prompt=variant_prompt,
+                image_data=image_data,
+                max_images=1,
+            )
+            if not extra_candidates:
+                logger.warning("Seedream top-up request %s returned no candidate.", index)
+                continue
+            topped_up.append(extra_candidates[0])
+        return topped_up
+
+    def generate(
+        self, source_image_path: str, prompt: str, context: GenerationContext
+    ) -> GenerationResult:
+        with open(source_image_path, "rb") as handle:
+            image_bytes = handle.read()
+        image_base64 = base64.b64encode(image_bytes).decode("utf-8")
+
+        suffix = Path(source_image_path).suffix.lower()
+        mime_type = "image/png" if suffix == ".png" else "image/jpeg"
+        image_data = f"data:{mime_type};base64,{image_base64}"
+        candidates = self._collect_stream_candidates(
+            prompt=prompt,
+            image_data=image_data,
+            max_images=CANDIDATE_IMAGE_COUNT,
+        )
+
+        if len(candidates) < CANDIDATE_IMAGE_COUNT:
+            logger.warning(
+                "Seedream returned %s candidate(s) in the primary stream; topping up to %s.",
+                len(candidates),
+                CANDIDATE_IMAGE_COUNT,
+            )
+            candidates.extend(
+                self._top_up_candidates(
+                    prompt=prompt,
+                    image_data=image_data,
+                    existing_count=len(candidates),
+                )
+            )
 
         ranked_candidates = _rank_candidates(candidates)
         ordered_images = [candidate.image_bytes for candidate in ranked_candidates]
