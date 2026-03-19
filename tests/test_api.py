@@ -57,7 +57,9 @@ def test_build_prompt_uses_faceprompt_single_image_structure():
     assert "白色宽松衬衫" in prompt
     assert "不要拼图排版" in prompt
     assert "图片需要符合物理逻辑" in prompt
-    assert "不要在画面中多出不合逻辑的手和身体部位" in prompt
+    assert "不可以有不符合物理逻辑的身体部位" in prompt
+    assert "只选择 1 种主体动作" in prompt
+    assert "不要与主体动作叠加成不合理肢体效果" in prompt
 
 
 def test_faceprompt_catalog_counts_and_legacy_aliases():

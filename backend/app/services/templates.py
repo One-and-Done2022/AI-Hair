@@ -68,6 +68,7 @@ NEGATIVE_CONSTRAINTS_SECTION = (
     "不要整容感、AI 脸、过度磨皮、塑料皮肤、五官漂移、错位眼睛、手指异常、耳朵变形、"
     "发际线异常、假发感、不要背景杂乱、光影冲突、不要过强滤镜、过度锐化、不要文字水印、不要拼图排版。"
     "图片需要符合物理逻辑，不要在画面中多出不合逻辑的手和身体部位。"
+    "不可以有不符合物理逻辑的身体部位（例如同时出现多于两只手的情况）。"
 )
 
 
@@ -89,6 +90,10 @@ def _dedupe_keep_order(items: Iterable[str]) -> list[str]:
         seen.add(cleaned)
         result.append(cleaned)
     return result
+
+
+def _format_option_list(items: Iterable[str]) -> str:
+    return "；".join(_dedupe_keep_order(items))
 
 
 def _resolve_alias(category: str, template_id: str) -> str:
@@ -190,12 +195,17 @@ def get_scene(template_id: str) -> dict | None:
 
 def build_prompt(hairstyle: dict, scene: dict) -> str:
     expression_text = "、".join(_dedupe_keep_order(scene.get("expressions", []))[:3])
-    action_items = _dedupe_keep_order(
-        [*scene.get("actions", []), *hairstyle.get("expression_action", [])]
-    )
+    scene_action_text = _format_option_list(scene.get("actions", [])[:3])
+    hairstyle_action_text = _format_option_list(hairstyle.get("expression_action", [])[:3])
     outfit_text = "；".join(_dedupe_keep_order(scene.get("outfit_hints", []))[:2])
     constraint_text = "；".join(
-        _dedupe_keep_order([*scene.get("constraints", []), *hairstyle.get("constraints", [])])
+        _dedupe_keep_order(
+            [
+                *scene.get("constraints", []),
+                *hairstyle.get("constraints", []),
+                "单张图中只保留一种主体动作，不要把多个互斥手部动作同时放进同一画面",
+            ]
+        )
     )
 
     return "\n".join(
@@ -209,7 +219,14 @@ def build_prompt(hairstyle: dict, scene: dict) -> str:
                 f" 风格氛围：{_normalize_sentence(scene['style_mood'])}。"
             ),
             f"人物表情：{expression_text}。",
-            f"人物动作：{'、'.join(action_items[:5])}。",
+            (
+                "人物动作：单张图中只选择 1 种主体动作，优先从以下动作中任选其一："
+                f"{scene_action_text}。"
+            ),
+            (
+                "发型展示动作参考：如需突出发型，只允许额外参考以下 1 种细节动作，"
+                f"不要与主体动作叠加成不合理肢体效果：{hairstyle_action_text}。"
+            ),
             f"服饰：{outfit_text or '白色宽松衬衫，内搭浅色背心或吊带'}。",
             f"人物发型：{_normalize_sentence(hairstyle['prompt_core'])}。",
             f"关键约束：{constraint_text}。",
