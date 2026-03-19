@@ -58,9 +58,20 @@ pytest -q
 
 - 项目目录选择仓库根目录
 - `miniprogramRoot` 已指向 `miniapp/`
-- Windows 开发者工具远程联调时，将 `miniapp/utils/config.js` 中的 `baseUrl` 指向公网服务地址，例如 `http://1.95.32.219:8000`
+- 当前默认请求地址为 `https://api.lcynas.me`
+- 如果只是临时本地联调，可将 `miniapp/utils/config.js` 中的 `useLocalDebug` 改成 `true`，临时走 `http://1.95.32.219:8000`
 - 开发阶段在开发者工具里关闭“校验合法域名、web-view（业务域名）、TLS 版本以及 HTTPS 证书”
 - 真机预览、体验版和正式版不能直接使用公网 IP + HTTP，后续必须切换到已备案 HTTPS 域名并在小程序后台配置 `request` 合法域名
+
+## HTTPS 部署
+
+仓库已提供 `api.lcynas.me` 的 Nginx 反向代理模板：
+
+- `deploy/nginx/api.lcynas.me.conf`
+
+完整步骤见：
+
+- `docs/wechat-https-deploy.md`
 
 ## systemd 常驻运行
 
