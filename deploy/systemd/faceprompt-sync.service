@@ -1,0 +1,13 @@
+[Unit]
+Description=Faceprompt JSON Sync Watcher
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/home/lcy/AIFace
+ExecStart=/home/lcy/AIFace/scripts/sync_faceprompt.sh --watch --restart
+Restart=always
+RestartSec=2
+
+[Install]
+WantedBy=default.target
