@@ -146,6 +146,28 @@
   transition: opacity 0.24s ease;
 }
 
+.result-badge {
+  position: absolute;
+  top: 24rpx;
+  left: 24rpx;
+  z-index: 2;
+  display: inline-flex;
+  padding: 10rpx 18rpx;
+  border-radius: 999rpx;
+  font-size: 22rpx;
+  font-weight: 700;
+  color: #ffffff;
+  backdrop-filter: blur(10rpx);
+}
+
+.preview-badge {
+  background: rgba(37, 99, 235, 0.82);
+}
+
+.final-badge {
+  background: rgba(15, 23, 42, 0.82);
+}
+
 .result-image-skeleton {
   position: absolute;
   inset: 0;
@@ -159,6 +181,32 @@
 .result-image-skeleton-text {
   color: #64748b;
   font-size: 26rpx;
+}
+
+.preview-notice {
+  margin-top: 24rpx;
+  padding: 24rpx;
+  border-radius: 24rpx;
+  background: linear-gradient(135deg, #eff6ff 0%, #f8fafc 100%);
+  box-shadow: 0 14rpx 36rpx rgba(37, 99, 235, 0.08);
+}
+
+.preview-notice-title {
+  font-size: 30rpx;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.preview-notice-subtitle {
+  margin-top: 12rpx;
+  font-size: 24rpx;
+  line-height: 1.7;
+  color: #475569;
+}
+
+.preview-progress-card {
+  margin-top: 20rpx;
+  background: rgba(255, 255, 255, 0.82);
 }
 
 .action-gap {

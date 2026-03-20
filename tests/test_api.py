@@ -24,6 +24,13 @@ def _build_test_image() -> bytes:
     return buffer.getvalue()
 
 
+def _build_colored_image(color: str) -> bytes:
+    image = Image.new("RGB", (768, 1024), color)
+    buffer = io.BytesIO()
+    image.save(buffer, format="PNG")
+    return buffer.getvalue()
+
+
 def _build_app(tmp_path):
     os.environ["USE_MOCK_GENERATOR"] = "true"
     os.environ["ALLOW_DEV_LOGIN"] = "true"
@@ -164,6 +171,91 @@ def test_auth_upload_job_history_flow(tmp_path):
         assert len(items) == 1
         assert items[0]["job_id"] == job_id
         assert len(items[0]["result_image_urls"]) == 3
+
+
+def test_job_exposes_preview_before_final_result(tmp_path, monkeypatch):
+    os.environ["USE_MOCK_GENERATOR"] = "false"
+    os.environ["ALLOW_DEV_LOGIN"] = "true"
+    os.environ["ENFORCE_FACE_DETECTION"] = "false"
+    os.environ["STORAGE_DIR"] = str(tmp_path / "storage")
+    os.environ["DATABASE_PATH"] = str(tmp_path / "storage" / "app.db")
+
+    from app.config import get_settings
+    from app.main import create_app
+    import app.main as app_main
+    from app.services.generation import GenerationResult
+
+    class SlowPreviewGenerator:
+        model_name = "slow-preview-generator"
+
+        def generate(self, source_image_path, prompt, context, on_preview=None):
+            first = _build_colored_image("#264653")
+            second = _build_colored_image("#2a9d8f")
+            third = _build_colored_image("#e9c46a")
+            if on_preview is not None:
+                on_preview(first)
+            time.sleep(0.45)
+            return GenerationResult(
+                primary_image_bytes=first,
+                candidate_image_bytes=[first, second, third],
+            )
+
+    get_settings.cache_clear()
+    monkeypatch.setattr(app_main, "build_generator", lambda: SlowPreviewGenerator())
+    app = create_app()
+
+    with TestClient(app) as client:
+        login = client.post("/api/auth/wechat/login", json={"code": "dev-test"})
+        token = login.json()["token"]
+        headers = {"Authorization": f"Bearer {token}"}
+
+        upload = client.post(
+            "/api/uploads",
+            headers=headers,
+            files={"file": ("portrait.png", _build_test_image(), "image/png")},
+        )
+        upload_id = upload.json()["upload_id"]
+
+        catalog = client.get("/api/templates").json()
+        job_create = client.post(
+            "/api/jobs",
+            headers=headers,
+            json={
+                "upload_id": upload_id,
+                "hairstyle_id": catalog["hairstyles"][0]["id"],
+                "scene_id": catalog["scenes"][0]["id"],
+            },
+        )
+        job_id = job_create.json()["job_id"]
+
+        preview_payload = None
+        for _ in range(20):
+            job_detail = client.get(f"/api/jobs/{job_id}", headers=headers)
+            assert job_detail.status_code == 200
+            payload = job_detail.json()
+            if payload["status"] == "preview_ready":
+                preview_payload = payload
+                break
+            time.sleep(0.05)
+
+        assert preview_payload is not None
+        assert preview_payload["result_image_url"]
+        assert len(preview_payload["result_image_urls"]) == 1
+        assert preview_payload["result_image_urls"][0] == preview_payload["result_image_url"]
+
+        final_payload = None
+        for _ in range(20):
+            job_detail = client.get(f"/api/jobs/{job_id}", headers=headers)
+            assert job_detail.status_code == 200
+            payload = job_detail.json()
+            if payload["status"] == "succeeded":
+                final_payload = payload
+                break
+            time.sleep(0.05)
+
+        assert final_payload is not None
+        assert len(final_payload["result_image_urls"]) == 3
+        assert final_payload["result_image_urls"][0] == final_payload["result_image_url"]
 
 
 def test_strict_face_detection_rejects_small_face(monkeypatch):

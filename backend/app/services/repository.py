@@ -228,7 +228,7 @@ def requeue_active_jobs() -> list[str]:
     with closing(get_connection()) as connection, connection:
         rows = connection.execute(
             """
-            SELECT id FROM jobs WHERE status IN ('pending', 'processing')
+            SELECT id FROM jobs WHERE status IN ('pending', 'processing', 'preview_ready')
             """
         ).fetchall()
         job_ids = [row["id"] for row in rows]
@@ -237,9 +237,8 @@ def requeue_active_jobs() -> list[str]:
                 """
                 UPDATE jobs
                 SET status = 'pending', error_code = NULL, error_message = NULL, updated_at = ?
-                WHERE status IN ('pending', 'processing')
+                WHERE status IN ('pending', 'processing', 'preview_ready')
                 """,
                 (updated_at,),
             )
     return job_ids
-

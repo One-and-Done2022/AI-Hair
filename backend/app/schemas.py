@@ -46,7 +46,7 @@ class JobCreateRequest(BaseModel):
 
 class JobResponse(BaseModel):
     job_id: str
-    status: Literal["pending", "processing", "succeeded", "failed"]
+    status: Literal["pending", "processing", "preview_ready", "succeeded", "failed"]
     upload_url: str | None = None
     result_image_url: str | None = None
     result_image_urls: list[str] = Field(default_factory=list)

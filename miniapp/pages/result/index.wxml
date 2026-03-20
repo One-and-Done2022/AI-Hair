@@ -3,7 +3,7 @@
     <view class="title">AI 生成任务</view>
     <view class="subtitle">
       当前状态：
-      <text class="status-text">{{status === 'succeeded' ? '已完成' : status === 'failed' ? '失败' : '生成中'}}</text>
+      <text class="status-text">{{statusLabel}}</text>
     </view>
     <view wx:if="{{job}}" class="meta-group">
       <view class="meta-item">发型：{{job.hairstyle_name || '处理中'}}</view>
@@ -19,9 +19,9 @@
         <view class="subtitle">{{job && job.error_message ? job.error_message : '请稍后重新尝试'}}</view>
       </view>
 
-      <block wx:elif="{{status === 'succeeded'}}">
+      <block wx:elif="{{resultImageUrl}}">
         <view wx:if="{{!resultImageLoaded}}" class="result-image-skeleton">
-          <view class="result-image-skeleton-text">正在加载最终结果</view>
+          <view class="result-image-skeleton-text">{{imageLoadingText}}</view>
         </view>
         <image
           wx:if="{{resultImageUrl}}"
@@ -32,6 +32,12 @@
           bindtap="previewResult"
           data-url="{{resultImageUrl}}"
         ></image>
+        <view wx:if="{{status === 'preview_ready'}}" class="result-badge preview-badge">
+          首图预览
+        </view>
+        <view wx:elif="{{status === 'succeeded'}}" class="result-badge final-badge">
+          系统推荐
+        </view>
       </block>
 
       <view wx:else class="stage-state stage-state-waiting">
@@ -50,6 +56,26 @@
             <view class="progress-hint">{{progressHint}}</view>
             <view class="progress-elapsed">已等待 {{elapsedSeconds}} 秒</view>
           </view>
+        </view>
+      </view>
+    </view>
+
+    <view wx:if="{{status === 'preview_ready'}}" class="preview-notice">
+      <view class="preview-notice-title">首张图已先返回</view>
+      <view class="preview-notice-subtitle">
+        你现在看到的是第一张预览图。系统正在后台补齐另外 2 张候选图，并会自动把筛选后的最佳结果刷新到顶部。
+      </view>
+      <view class="progress-card preview-progress-card">
+        <view class="progress-header">
+          <view class="progress-stage">{{progressStage}}</view>
+          <view class="progress-percent">{{progressPercent}}%</view>
+        </view>
+        <view class="progress-track">
+          <view class="progress-fill" style="width: {{progressPercent}}%;"></view>
+        </view>
+        <view class="progress-meta">
+          <view class="progress-hint">{{progressHint}}</view>
+          <view class="progress-elapsed">已等待 {{elapsedSeconds}} 秒</view>
         </view>
       </view>
     </view>

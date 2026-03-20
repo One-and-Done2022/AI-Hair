@@ -5,6 +5,7 @@ import io
 import logging
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Callable
 
 import cv2
 import numpy as np
@@ -16,6 +17,7 @@ from app.config import get_settings
 
 logger = logging.getLogger(__name__)
 CANDIDATE_IMAGE_COUNT = 3
+PreviewCallback = Callable[[bytes], None]
 
 
 class ImageGenerationError(Exception):
@@ -86,7 +88,11 @@ class BaseGenerator:
     model_name: str
 
     def generate(
-        self, source_image_path: str, prompt: str, context: GenerationContext
+        self,
+        source_image_path: str,
+        prompt: str,
+        context: GenerationContext,
+        on_preview: PreviewCallback | None = None,
     ) -> GenerationResult:
         raise NotImplementedError
 
@@ -185,11 +191,16 @@ class MockGenerator(BaseGenerator):
     model_name = "mock-image-generator"
 
     def generate(
-        self, source_image_path: str, prompt: str, context: GenerationContext
+        self,
+        source_image_path: str,
+        prompt: str,
+        context: GenerationContext,
+        on_preview: PreviewCallback | None = None,
     ) -> GenerationResult:
         candidates: list[bytes] = []
         blur_levels = [10, 18, 26]
         portrait_offsets = [(160, 150), (170, 160), (185, 170)]
+        preview_sent = False
 
         with Image.open(source_image_path).convert("RGB") as source:
             for idx in range(CANDIDATE_IMAGE_COUNT):
@@ -215,7 +226,11 @@ class MockGenerator(BaseGenerator):
 
                 output = io.BytesIO()
                 target.save(output, format="PNG", optimize=True)
-                candidates.append(output.getvalue())
+                image_bytes = output.getvalue()
+                candidates.append(image_bytes)
+                if not preview_sent and on_preview is not None:
+                    on_preview(image_bytes)
+                    preview_sent = True
 
         ranked_candidates = _rank_candidates(candidates)
         ordered_images = [candidate.image_bytes for candidate in ranked_candidates]
@@ -256,10 +271,18 @@ class SeedreamGenerator(BaseGenerator):
             },
         )
 
-    def _collect_stream_candidates(self, *, prompt: str, image_data: str, max_images: int) -> list[bytes]:
+    def _collect_stream_candidates(
+        self,
+        *,
+        prompt: str,
+        image_data: str,
+        max_images: int,
+        on_first_candidate: PreviewCallback | None = None,
+    ) -> list[bytes]:
         candidates: list[bytes] = []
         seen_payloads: set[str] = set()
         stream = self._build_stream(prompt=prompt, image_data=image_data, max_images=max_images)
+        preview_sent = False
 
         for event in stream:
             if event is None:
@@ -268,10 +291,21 @@ class SeedreamGenerator(BaseGenerator):
                 if payload in seen_payloads:
                     continue
                 seen_payloads.add(payload)
-                candidates.append(base64.b64decode(payload))
+                image_bytes = base64.b64decode(payload)
+                candidates.append(image_bytes)
+                if not preview_sent and on_first_candidate is not None:
+                    on_first_candidate(image_bytes)
+                    preview_sent = True
         return candidates
 
-    def _top_up_candidates(self, *, prompt: str, image_data: str, existing_count: int) -> list[bytes]:
+    def _top_up_candidates(
+        self,
+        *,
+        prompt: str,
+        image_data: str,
+        existing_count: int,
+        on_first_candidate: PreviewCallback | None = None,
+    ) -> list[bytes]:
         topped_up: list[bytes] = []
         for index in range(existing_count + 1, CANDIDATE_IMAGE_COUNT + 1):
             variant_prompt = (
@@ -283,6 +317,7 @@ class SeedreamGenerator(BaseGenerator):
                 prompt=variant_prompt,
                 image_data=image_data,
                 max_images=1,
+                on_first_candidate=on_first_candidate,
             )
             if not extra_candidates:
                 logger.warning("Seedream top-up request %s returned no candidate.", index)
@@ -291,11 +326,23 @@ class SeedreamGenerator(BaseGenerator):
         return topped_up
 
     def generate(
-        self, source_image_path: str, prompt: str, context: GenerationContext
+        self,
+        source_image_path: str,
+        prompt: str,
+        context: GenerationContext,
+        on_preview: PreviewCallback | None = None,
     ) -> GenerationResult:
         with open(source_image_path, "rb") as handle:
             image_bytes = handle.read()
         image_base64 = base64.b64encode(image_bytes).decode("utf-8")
+        preview_sent = False
+
+        def emit_preview(candidate_bytes: bytes) -> None:
+            nonlocal preview_sent
+            if preview_sent or on_preview is None:
+                return
+            on_preview(candidate_bytes)
+            preview_sent = True
 
         suffix = Path(source_image_path).suffix.lower()
         mime_type = "image/png" if suffix == ".png" else "image/jpeg"
@@ -304,6 +351,7 @@ class SeedreamGenerator(BaseGenerator):
             prompt=prompt,
             image_data=image_data,
             max_images=CANDIDATE_IMAGE_COUNT,
+            on_first_candidate=emit_preview,
         )
 
         if len(candidates) < CANDIDATE_IMAGE_COUNT:
@@ -317,6 +365,7 @@ class SeedreamGenerator(BaseGenerator):
                     prompt=prompt,
                     image_data=image_data,
                     existing_count=len(candidates),
+                    on_first_candidate=emit_preview,
                 )
             )
 

@@ -39,6 +39,11 @@
   color: #b91c1c;
 }
 
+.history-status.preview_ready {
+  background: #e0f2fe;
+  color: #0369a1;
+}
+
 .history-status.pending,
 .history-status.processing {
   background: #dbeafe;
@@ -70,4 +75,3 @@
   color: #475569;
   font-size: 26rpx;
 }
-

@@ -147,12 +147,30 @@ def _detect_result_extension(image_bytes: bytes) -> str:
     return extension
 
 
+def _remove_primary_result_files(job_id: str) -> None:
+    settings = get_settings()
+    for path in settings.result_dir.glob(f"{job_id}.*"):
+        if path.is_file():
+            path.unlink()
+
+
+def save_preview_result(job_id: str, image_bytes: bytes) -> str:
+    settings = get_settings()
+    extension = _detect_result_extension(image_bytes)
+    _remove_primary_result_files(job_id)
+    return _write_file(
+        image_bytes,
+        settings.result_dir / f"{job_id}{extension}",
+    )
+
+
 def save_result_bundle(job_id: str, candidate_images: list[bytes]) -> SavedResultBundle:
     if not candidate_images:
         raise ValueError("candidate_images cannot be empty")
 
     settings = get_settings()
     primary_extension = _detect_result_extension(candidate_images[0])
+    _remove_primary_result_files(job_id)
     primary_path = _write_file(
         candidate_images[0],
         settings.result_dir / f"{job_id}{primary_extension}",

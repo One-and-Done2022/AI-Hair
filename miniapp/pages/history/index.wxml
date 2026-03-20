@@ -17,7 +17,7 @@
   >
     <view class="history-top">
       <view class="history-name">{{item.hairstyle_name}} · {{item.scene_name}}</view>
-      <view class="history-status {{item.status}}">{{item.status}}</view>
+      <view class="history-status {{item.status}}">{{item.status_label}}</view>
     </view>
     <view class="history-time">{{item.created_at}}</view>
     <image
@@ -27,8 +27,7 @@
       mode="aspectFill"
     ></image>
     <view wx:else class="history-placeholder">
-      {{item.status === 'failed' ? '任务失败，点击查看详情' : '任务仍在处理中，点击继续查看'}}
+      {{item.status === 'failed' ? '任务失败，点击查看详情' : item.status === 'preview_ready' ? '首图已返回，点击继续查看候选图补齐进度' : '任务仍在处理中，点击继续查看'}}
     </view>
   </view>
 </view>
-

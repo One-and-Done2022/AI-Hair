@@ -67,9 +67,28 @@ class JobWorker:
             )
             return
 
-        repository.update_job_status(job_id, status="processing")
+        repository.update_job_status(
+            job_id,
+            status="processing",
+            error_code=None,
+            error_message=None,
+        )
         settings = get_settings()
         source_path = str(settings.storage_dir / upload["stored_path"])
+        preview_path: str | None = None
+
+        def handle_preview(image_bytes: bytes) -> None:
+            nonlocal preview_path
+            if preview_path is not None:
+                return
+            preview_path = storage.save_preview_result(job_id, image_bytes)
+            repository.update_job_status(
+                job_id,
+                status="preview_ready",
+                result_path=preview_path,
+                error_code=None,
+                error_message=None,
+            )
 
         try:
             generation_result = self.generator.generate(
@@ -79,6 +98,7 @@ class JobWorker:
                     hairstyle_name=hairstyle["name"],
                     scene_name=scene["name"],
                 ),
+                on_preview=handle_preview,
             )
             result_bundle = storage.save_result_bundle(
                 job_id,
@@ -88,8 +108,19 @@ class JobWorker:
                 job_id,
                 status="succeeded",
                 result_path=result_bundle.primary_path,
+                error_code=None,
+                error_message=None,
             )
         except ImageGenerationError as exc:
+            if preview_path is not None:
+                repository.update_job_status(
+                    job_id,
+                    status="succeeded",
+                    result_path=preview_path,
+                    error_code=None,
+                    error_message=None,
+                )
+                return
             repository.update_job_status(
                 job_id,
                 status="failed",
@@ -97,6 +128,15 @@ class JobWorker:
                 error_message=str(exc),
             )
         except Exception as exc:  # pragma: no cover
+            if preview_path is not None:
+                repository.update_job_status(
+                    job_id,
+                    status="succeeded",
+                    result_path=preview_path,
+                    error_code=None,
+                    error_message=None,
+                )
+                return
             repository.update_job_status(
                 job_id,
                 status="failed",

@@ -67,7 +67,10 @@ function parseTimestamp(value) {
   return Number.isNaN(timestamp) ? null : timestamp;
 }
 
-function getProgressStage(progressRatio) {
+function getProgressStage(progressRatio, status) {
+  if (status === "preview_ready") {
+    return "首图已生成，正在补齐候选图";
+  }
   if (progressRatio < 0.28) {
     return "正在生成第 1 张候选图";
   }
@@ -80,13 +83,36 @@ function getProgressStage(progressRatio) {
   return "正在筛选最自然的一张";
 }
 
+function isTerminalStatus(status) {
+  return status === "succeeded" || status === "failed";
+}
+
+function getStatusLabel(status) {
+  if (status === "succeeded") {
+    return "已完成";
+  }
+  if (status === "preview_ready") {
+    return "首图已生成";
+  }
+  if (status === "failed") {
+    return "失败";
+  }
+  return "生成中";
+}
+
+function getImageLoadingText(status) {
+  return status === "preview_ready" ? "正在加载首张预览" : "正在加载最终结果";
+}
+
 Page({
   data: {
     status: "pending",
+    statusLabel: getStatusLabel("pending"),
     job: null,
     resultImageUrl: "",
     resultImageUrls: [],
     resultImageLoaded: false,
+    imageLoadingText: getImageLoadingText("pending"),
     progressPercent: MIN_VISIBLE_PROGRESS,
     elapsedSeconds: 0,
     remainingSeconds: ESTIMATED_TOTAL_SECONDS,
@@ -113,8 +139,12 @@ Page({
       error_message: ""
     });
 
+    const initialStatus = options.status || "pending";
+
     this.setData({
-      status: options.status || "pending",
+      status: initialStatus,
+      statusLabel: getStatusLabel(initialStatus),
+      imageLoadingText: getImageLoadingText(initialStatus),
       job: initialJob
     });
 
@@ -155,22 +185,39 @@ Page({
   },
 
   updateProgressState() {
-    if (this.data.status === "succeeded" || this.data.status === "failed") {
+    if (isTerminalStatus(this.data.status)) {
       return;
     }
 
     const createdAtMs = this.jobCreatedAtMs || Date.now();
     const elapsedSeconds = Math.max(0, Math.floor((Date.now() - createdAtMs) / 1000));
-    const rawRatio = elapsedSeconds / ESTIMATED_TOTAL_SECONDS;
-    const progressRatio = Math.min(rawRatio, MAX_VISIBLE_PROGRESS / 100);
-    const rawPercent = Math.round(progressRatio * 100);
-    const progressPercent = Math.max(MIN_VISIBLE_PROGRESS, rawPercent);
-    const remainingSeconds = Math.max(0, ESTIMATED_TOTAL_SECONDS - elapsedSeconds);
-    const progressStage = getProgressStage(progressRatio);
-    const progressHint =
-      remainingSeconds > 0
-        ? `预计还需 ${remainingSeconds} 秒，网络波动会略有浮动`
-        : "已进入最后筛选阶段，通常很快就会完成";
+    let progressPercent = MIN_VISIBLE_PROGRESS;
+    let remainingSeconds = Math.max(0, ESTIMATED_TOTAL_SECONDS - elapsedSeconds);
+    let progressStage = getProgressStage(0, this.data.status);
+    let progressHint = "预计总耗时约 75 秒";
+
+    if (this.data.status === "preview_ready") {
+      progressPercent = Math.min(
+        MAX_VISIBLE_PROGRESS,
+        Math.max(72, 72 + Math.round(elapsedSeconds / 4))
+      );
+      remainingSeconds = Math.max(
+        5,
+        Math.round(Math.max(0, ESTIMATED_TOTAL_SECONDS - elapsedSeconds) / 2)
+      );
+      progressStage = getProgressStage(1, this.data.status);
+      progressHint = `你已经可以先看第一张，预计还需 ${remainingSeconds} 秒完成最终筛选`;
+    } else {
+      const rawRatio = elapsedSeconds / ESTIMATED_TOTAL_SECONDS;
+      const progressRatio = Math.min(rawRatio, MAX_VISIBLE_PROGRESS / 100);
+      const rawPercent = Math.round(progressRatio * 100);
+      progressPercent = Math.max(MIN_VISIBLE_PROGRESS, rawPercent);
+      progressStage = getProgressStage(progressRatio, this.data.status);
+      progressHint =
+        remainingSeconds > 0
+          ? `预计还需 ${remainingSeconds} 秒，网络波动会略有浮动`
+          : "已进入最后筛选阶段，通常很快就会完成";
+    }
 
     this.setData({
       elapsedSeconds,
@@ -192,7 +239,7 @@ Page({
       const job = await request({
         url: `/api/jobs/${this.jobId}`
       });
-      if (job.status === "succeeded" || job.status === "failed") {
+      if (isTerminalStatus(job.status)) {
         this.stopPolling();
         this.stopProgressClock();
       }
@@ -219,6 +266,8 @@ Page({
 
     if (this.data.status !== job.status) {
       nextState.status = job.status;
+      nextState.statusLabel = getStatusLabel(job.status);
+      nextState.imageLoadingText = getImageLoadingText(job.status);
     }
 
     const createdAtMs = parseTimestamp(job.created_at);
