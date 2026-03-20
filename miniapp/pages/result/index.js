@@ -1,4 +1,5 @@
 const { ensureLogin } = require("../../utils/auth");
+const { showError } = require("../../utils/errors");
 const { request } = require("../../utils/request");
 
 const POLL_INTERVAL = 2500;
@@ -6,22 +7,6 @@ const PROGRESS_INTERVAL = 1000;
 const ESTIMATED_TOTAL_SECONDS = 75;
 const MAX_VISIBLE_PROGRESS = 96;
 const MIN_VISIBLE_PROGRESS = 6;
-
-function getErrorMessage(error) {
-  if (!error) {
-    return "请求失败";
-  }
-  if (typeof error === "string") {
-    return error;
-  }
-  if (error.detail && error.detail.message) {
-    return error.detail.message;
-  }
-  if (error.detail && typeof error.detail === "string") {
-    return error.detail;
-  }
-  return error.message || "请求失败";
-}
 
 function decodeText(value) {
   if (!value) {
@@ -215,10 +200,7 @@ Page({
     } catch (error) {
       this.stopPolling();
       this.stopProgressClock();
-      wx.showToast({
-        title: getErrorMessage(error),
-        icon: "none"
-      });
+      showError(error, { fallback: "请求失败" });
     } finally {
       this.isPolling = false;
     }

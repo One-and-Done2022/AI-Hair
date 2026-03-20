@@ -1,24 +1,6 @@
 const { ensureLogin } = require("../../utils/auth");
+const { showError } = require("../../utils/errors");
 const { request, uploadFile } = require("../../utils/request");
-
-function getErrorMessage(error) {
-  if (!error) {
-    return "请求失败，请稍后再试";
-  }
-  if (typeof error === "string") {
-    return error;
-  }
-  if (error.detail && error.detail.message) {
-    return error.detail.message;
-  }
-  if (error.detail && typeof error.detail === "string") {
-    return error.detail;
-  }
-  if (error.message) {
-    return error.message;
-  }
-  return "请求失败，请稍后再试";
-}
 
 function findById(items, id) {
   if (!id) {
@@ -68,10 +50,7 @@ Page({
         selectedScene
       });
     } catch (error) {
-      wx.showToast({
-        title: getErrorMessage(error),
-        icon: "none"
-      });
+      showError(error, { fallback: "加载失败，请稍后再试" });
     } finally {
       this.setData({ bootstrapping: false });
     }
@@ -149,9 +128,9 @@ Page({
           `&sceneName=${encodeURIComponent(job.scene_name)}`
       });
     } catch (error) {
-      wx.showToast({
-        title: getErrorMessage(error),
-        icon: "none"
+      showError(error, {
+        fallback: "提交失败，请稍后再试",
+        preferModal: true
       });
     } finally {
       wx.hideLoading();

@@ -1,21 +1,6 @@
 const { ensureLogin } = require("../../utils/auth");
+const { showError } = require("../../utils/errors");
 const { request } = require("../../utils/request");
-
-function getErrorMessage(error) {
-  if (!error) {
-    return "加载失败";
-  }
-  if (typeof error === "string") {
-    return error;
-  }
-  if (error.detail && error.detail.message) {
-    return error.detail.message;
-  }
-  if (error.detail && typeof error.detail === "string") {
-    return error.detail;
-  }
-  return error.message || "加载失败";
-}
 
 function findById(items, id) {
   if (!id) {
@@ -78,10 +63,7 @@ Page({
       const cached = wx.getStorageSync("templateSelection") || {};
       this.setData(resolveSelectionState(catalog, cached));
     } catch (error) {
-      wx.showToast({
-        title: getErrorMessage(error),
-        icon: "none"
-      });
+      showError(error, { fallback: "加载失败" });
     } finally {
       this.setData({ loading: false });
     }
