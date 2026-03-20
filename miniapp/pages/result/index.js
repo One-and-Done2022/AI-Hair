@@ -104,6 +104,13 @@ function getImageLoadingText(status) {
   return status === "preview_ready" ? "正在加载首张预览" : "正在加载最终结果";
 }
 
+function buildSaveChoices(imageUrls) {
+  return (imageUrls || []).map((url, index) => ({
+    url,
+    label: index === 0 ? "系统推荐图（顶部）" : `候选结果 ${index + 1}`
+  }));
+}
+
 Page({
   data: {
     status: "pending",
@@ -320,18 +327,53 @@ Page({
   },
 
   async saveImage() {
-    if (!this.data.resultImageUrl) {
+    const imageUrls = this.data.resultImageUrls.length
+      ? this.data.resultImageUrls
+      : this.data.resultImageUrl
+        ? [this.data.resultImageUrl]
+        : [];
+
+    if (!imageUrls.length) {
+      return;
+    }
+
+    const saveChoices = buildSaveChoices(imageUrls);
+    if (saveChoices.length === 1) {
+      this.downloadAndSaveImage(saveChoices[0].url, saveChoices[0].label);
+      return;
+    }
+
+    wx.showActionSheet({
+      itemList: saveChoices.map((item) => item.label),
+      success: ({ tapIndex }) => {
+        const selectedChoice = saveChoices[tapIndex];
+        if (!selectedChoice) {
+          return;
+        }
+        this.downloadAndSaveImage(selectedChoice.url, selectedChoice.label);
+      },
+      fail: (error) => {
+        if (error && error.errMsg && error.errMsg.includes("cancel")) {
+          return;
+        }
+        wx.showToast({ title: "无法打开保存选项", icon: "none" });
+      }
+    });
+  },
+
+  downloadAndSaveImage(imageUrl, label) {
+    if (!imageUrl) {
       return;
     }
 
     wx.showLoading({ title: "正在保存" });
     wx.downloadFile({
-      url: this.data.resultImageUrl,
+      url: imageUrl,
       success: (result) => {
         wx.saveImageToPhotosAlbum({
           filePath: result.tempFilePath,
           success: () => {
-            wx.showToast({ title: "已保存到相册", icon: "success" });
+            wx.showToast({ title: `${label}已保存`, icon: "success" });
           },
           fail: () => {
             wx.showToast({ title: "保存失败，请检查权限", icon: "none" });

@@ -98,7 +98,7 @@
     </view>
 
     <button wx:if="{{status === 'succeeded'}}" class="primary-button action-gap" bindtap="saveImage">
-      保存推荐结果
+      选择保存图片
     </button>
     <button class="secondary-button" bindtap="createAnother">
       {{status === 'failed' ? '返回重新发起' : '继续生成新作品'}}
