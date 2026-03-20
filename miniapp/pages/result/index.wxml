@@ -38,6 +38,19 @@
         <view class="pulse-ring"></view>
         <view class="waiting-title">正在根据你的照片重新设计发型与场景</view>
         <view class="subtitle">保持页面打开即可，完成后会自动刷新结果。</view>
+        <view class="progress-card">
+          <view class="progress-header">
+            <view class="progress-stage">{{progressStage}}</view>
+            <view class="progress-percent">{{progressPercent}}%</view>
+          </view>
+          <view class="progress-track">
+            <view class="progress-fill" style="width: {{progressPercent}}%;"></view>
+          </view>
+          <view class="progress-meta">
+            <view class="progress-hint">{{progressHint}}</view>
+            <view class="progress-elapsed">已等待 {{elapsedSeconds}} 秒</view>
+          </view>
+        </view>
       </view>
     </view>
 

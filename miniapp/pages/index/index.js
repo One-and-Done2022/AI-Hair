@@ -144,6 +144,7 @@ Page({
         url:
           `/pages/result/index?jobId=${job.job_id}` +
           `&status=${job.status}` +
+          `&createdAt=${encodeURIComponent(job.created_at || "")}` +
           `&hairstyleName=${encodeURIComponent(job.hairstyle_name)}` +
           `&sceneName=${encodeURIComponent(job.scene_name)}`
       });

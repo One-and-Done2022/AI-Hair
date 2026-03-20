@@ -2,6 +2,10 @@ const { ensureLogin } = require("../../utils/auth");
 const { request } = require("../../utils/request");
 
 const POLL_INTERVAL = 2500;
+const PROGRESS_INTERVAL = 1000;
+const ESTIMATED_TOTAL_SECONDS = 75;
+const MAX_VISIBLE_PROGRESS = 96;
+const MIN_VISIBLE_PROGRESS = 6;
 
 function getErrorMessage(error) {
   if (!error) {
@@ -38,7 +42,8 @@ function buildJobMeta(job) {
     job_id: job.job_id || "",
     hairstyle_name: job.hairstyle_name || "",
     scene_name: job.scene_name || "",
-    error_message: job.error_message || ""
+    error_message: job.error_message || "",
+    created_at: job.created_at || ""
   };
 }
 
@@ -53,7 +58,8 @@ function hasMetaChanged(currentJob, nextJob) {
     currentJob.job_id !== nextJob.job_id ||
     currentJob.hairstyle_name !== nextJob.hairstyle_name ||
     currentJob.scene_name !== nextJob.scene_name ||
-    currentJob.error_message !== nextJob.error_message
+    currentJob.error_message !== nextJob.error_message ||
+    currentJob.created_at !== nextJob.created_at
   );
 }
 
@@ -67,13 +73,41 @@ function arraysEqual(left, right) {
   return left.every((item, index) => item === right[index]);
 }
 
+function parseTimestamp(value) {
+  if (!value) {
+    return null;
+  }
+  const normalized = value.replace(/\+00:00$/, "Z");
+  const timestamp = Date.parse(normalized);
+  return Number.isNaN(timestamp) ? null : timestamp;
+}
+
+function getProgressStage(progressRatio) {
+  if (progressRatio < 0.28) {
+    return "正在生成第 1 张候选图";
+  }
+  if (progressRatio < 0.58) {
+    return "正在生成第 2 张候选图";
+  }
+  if (progressRatio < 0.86) {
+    return "正在生成第 3 张候选图";
+  }
+  return "正在筛选最自然的一张";
+}
+
 Page({
   data: {
     status: "pending",
     job: null,
     resultImageUrl: "",
     resultImageUrls: [],
-    resultImageLoaded: false
+    resultImageLoaded: false,
+    progressPercent: MIN_VISIBLE_PROGRESS,
+    elapsedSeconds: 0,
+    remainingSeconds: ESTIMATED_TOTAL_SECONDS,
+    estimatedTotalSeconds: ESTIMATED_TOTAL_SECONDS,
+    progressStage: "正在准备生成",
+    progressHint: "预计总耗时约 75 秒"
   },
 
   onLoad(options) {
@@ -84,9 +118,11 @@ Page({
 
     this.jobId = options.jobId;
     this.isPolling = false;
+    this.jobCreatedAtMs = parseTimestamp(decodeText(options.createdAt)) || Date.now();
 
     const initialJob = buildJobMeta({
       job_id: options.jobId,
+      created_at: decodeText(options.createdAt),
       hairstyle_name: decodeText(options.hairstyleName),
       scene_name: decodeText(options.sceneName),
       error_message: ""
@@ -97,21 +133,67 @@ Page({
       job: initialJob
     });
 
+    this.startProgressClock();
     this.fetchJob();
-    this.timer = setInterval(() => {
+    this.pollTimer = setInterval(() => {
       this.fetchJob();
     }, POLL_INTERVAL);
   },
 
   onUnload() {
     this.stopPolling();
+    this.stopProgressClock();
   },
 
   stopPolling() {
-    if (this.timer) {
-      clearInterval(this.timer);
-      this.timer = null;
+    if (this.pollTimer) {
+      clearInterval(this.pollTimer);
+      this.pollTimer = null;
     }
+  },
+
+  startProgressClock() {
+    this.updateProgressState();
+    if (this.progressTimer) {
+      clearInterval(this.progressTimer);
+    }
+    this.progressTimer = setInterval(() => {
+      this.updateProgressState();
+    }, PROGRESS_INTERVAL);
+  },
+
+  stopProgressClock() {
+    if (this.progressTimer) {
+      clearInterval(this.progressTimer);
+      this.progressTimer = null;
+    }
+  },
+
+  updateProgressState() {
+    if (this.data.status === "succeeded" || this.data.status === "failed") {
+      return;
+    }
+
+    const createdAtMs = this.jobCreatedAtMs || Date.now();
+    const elapsedSeconds = Math.max(0, Math.floor((Date.now() - createdAtMs) / 1000));
+    const rawRatio = elapsedSeconds / ESTIMATED_TOTAL_SECONDS;
+    const progressRatio = Math.min(rawRatio, MAX_VISIBLE_PROGRESS / 100);
+    const rawPercent = Math.round(progressRatio * 100);
+    const progressPercent = Math.max(MIN_VISIBLE_PROGRESS, rawPercent);
+    const remainingSeconds = Math.max(0, ESTIMATED_TOTAL_SECONDS - elapsedSeconds);
+    const progressStage = getProgressStage(progressRatio);
+    const progressHint =
+      remainingSeconds > 0
+        ? `预计还需 ${remainingSeconds} 秒，网络波动会略有浮动`
+        : "已进入最后筛选阶段，通常很快就会完成";
+
+    this.setData({
+      elapsedSeconds,
+      remainingSeconds,
+      progressPercent,
+      progressStage,
+      progressHint
+    });
   },
 
   async fetchJob() {
@@ -127,10 +209,12 @@ Page({
       });
       if (job.status === "succeeded" || job.status === "failed") {
         this.stopPolling();
+        this.stopProgressClock();
       }
       this.applyJobState(job);
     } catch (error) {
       this.stopPolling();
+      this.stopProgressClock();
       wx.showToast({
         title: getErrorMessage(error),
         icon: "none"
@@ -155,6 +239,11 @@ Page({
       nextState.status = job.status;
     }
 
+    const createdAtMs = parseTimestamp(job.created_at);
+    if (createdAtMs) {
+      this.jobCreatedAtMs = createdAtMs;
+    }
+
     if (hasMetaChanged(this.data.job, nextJob)) {
       nextState.job = nextJob;
     }
@@ -171,6 +260,8 @@ Page({
     if (Object.keys(nextState).length > 0) {
       this.setData(nextState);
     }
+
+    this.updateProgressState();
   },
 
   handleResultImageLoad() {
