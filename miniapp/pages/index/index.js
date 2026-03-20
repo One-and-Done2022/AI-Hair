@@ -119,6 +119,21 @@ Page({
     });
   },
 
+  openScenePicker() {
+    const hairstyle = this.data.selectedHairstyle;
+    if (!hairstyle) {
+      this.openTemplatePicker();
+      return;
+    }
+
+    wx.navigateTo({
+      url:
+        `/pages/scenes/index?hairstyleId=${hairstyle.id}` +
+        `&hairstyleName=${encodeURIComponent(hairstyle.name || "")}` +
+        `&gender=${hairstyle.gender || "male"}`
+    });
+  },
+
   async createJob() {
     if (!this.data.selectedImage) {
       wx.showToast({ title: "请先上传照片", icon: "none" });
@@ -164,5 +179,11 @@ Page({
       wx.hideLoading();
       this.setData({ loading: false });
     }
+  },
+
+  goHistory() {
+    wx.switchTab({
+      url: "/pages/history/index"
+    });
   }
 });

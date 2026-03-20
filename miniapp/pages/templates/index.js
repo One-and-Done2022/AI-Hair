@@ -9,8 +9,29 @@ function findById(items, id) {
   return items.find((item) => item.id === id) || null;
 }
 
-function filterHairstyles(hairstyles, gender) {
-  return hairstyles.filter((item) => item.gender === gender);
+const STYLE_LINE_OPTIONS = [
+  { id: "all", label: "全部风格" },
+  { id: "realistic_editorial", label: "写实写真" },
+  { id: "fashion_editorial", label: "时尚大片" }
+];
+
+function decorateTemplate(item) {
+  return {
+    ...item,
+    shortTags: (item.tags || []).slice(0, 2)
+  };
+}
+
+function filterHairstyles(hairstyles, gender, styleLine = "all") {
+  return hairstyles.filter((item) => {
+    if (item.gender !== gender) {
+      return false;
+    }
+    if (styleLine !== "all" && item.style_line !== styleLine) {
+      return false;
+    }
+    return true;
+  });
 }
 
 function getDefaultGender(hairstyles, cached) {
@@ -25,10 +46,11 @@ function getDefaultGender(hairstyles, cached) {
 }
 
 function resolveSelectionState(catalog, cached) {
-  const allHairstyles = catalog.hairstyles || [];
+  const allHairstyles = (catalog.hairstyles || []).map(decorateTemplate);
   const cachedHairstyle = findById(allHairstyles, cached.hairstyle && cached.hairstyle.id);
   const selectedGender = getDefaultGender(allHairstyles, cached);
-  const visibleHairstyles = filterHairstyles(allHairstyles, selectedGender);
+  const selectedStyleLine = "all";
+  const visibleHairstyles = filterHairstyles(allHairstyles, selectedGender, selectedStyleLine);
   const selectedHairstyle =
     findById(visibleHairstyles, cachedHairstyle && cachedHairstyle.id) ||
     visibleHairstyles[0] ||
@@ -37,7 +59,9 @@ function resolveSelectionState(catalog, cached) {
   return {
     hairstyles: allHairstyles,
     visibleHairstyles,
+    styleLineOptions: STYLE_LINE_OPTIONS,
     selectedGender,
+    selectedStyleLine,
     selectedHairstyleId: selectedHairstyle ? selectedHairstyle.id : ""
   };
 }
@@ -47,7 +71,9 @@ Page({
     loading: true,
     hairstyles: [],
     visibleHairstyles: [],
+    styleLineOptions: STYLE_LINE_OPTIONS,
     selectedGender: "male",
+    selectedStyleLine: "all",
     selectedHairstyleId: ""
   },
 
@@ -75,12 +101,33 @@ Page({
       return;
     }
 
-    const visibleHairstyles = filterHairstyles(this.data.hairstyles, gender);
+    const visibleHairstyles = filterHairstyles(
+      this.data.hairstyles,
+      gender,
+      this.data.selectedStyleLine
+    );
     const selectedHairstyle =
       findById(visibleHairstyles, this.data.selectedHairstyleId) || visibleHairstyles[0] || null;
 
     this.setData({
       selectedGender: gender,
+      visibleHairstyles,
+      selectedHairstyleId: selectedHairstyle ? selectedHairstyle.id : ""
+    });
+  },
+
+  selectStyleLine(event) {
+    const styleLine = event.currentTarget.dataset.styleLine || "all";
+    const visibleHairstyles = filterHairstyles(
+      this.data.hairstyles,
+      this.data.selectedGender,
+      styleLine
+    );
+    const selectedHairstyle =
+      findById(visibleHairstyles, this.data.selectedHairstyleId) || visibleHairstyles[0] || null;
+
+    this.setData({
+      selectedStyleLine: styleLine,
       visibleHairstyles,
       selectedHairstyleId: selectedHairstyle ? selectedHairstyle.id : ""
     });

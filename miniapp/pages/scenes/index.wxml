@@ -1,40 +1,85 @@
-<view class="screen">
-  <view class="panel step-card">
-    <view class="step-badge">STEP 2</view>
-    <view class="section-title">选择场景</view>
-    <view class="subtitle">场景页可以返回上一步继续修改发型，再回来确认场景。</view>
+<view class="screen selector-screen">
+  <view class="panel step-hero">
+    <view class="step-badge">STEP 2 / 2</view>
+    <view class="section-title">再选场景</view>
+    <view class="subtitle">你可以随时返回上一步改发型。系统会优先把与当前发型风格更匹配的场景排在前面。</view>
   </view>
 
-  <view class="panel summary-card">
-    <view class="summary-label">已选发型</view>
-    <view class="summary-value">{{selectedHairstyle ? selectedHairstyle.name : '未选择'}}</view>
-    <view class="summary-meta">{{selectedGender === 'female' ? '女生发型' : '男生发型'}}</view>
+  <view class="panel combo-card">
+    <view class="combo-label">当前组合</view>
+    <view class="combo-row">
+      <image
+        wx:if="{{selectedHairstyle && selectedHairstyle.cover_url}}"
+        class="combo-cover"
+        src="{{selectedHairstyle.cover_url}}"
+        mode="aspectFill"
+        lazy-load="true"
+      ></image>
+      <view class="combo-body">
+        <view class="combo-title">{{selectedHairstyle ? selectedHairstyle.name : '未选择发型'}}</view>
+        <view class="combo-meta">{{selectedGender === 'female' ? '女生发型' : '男生发型'}} · {{selectedHairstyle ? selectedHairstyle.style_line_label : '待选择'}}</view>
+      </view>
+      <view class="combo-link" bindtap="goBackStep">修改发型</view>
+    </view>
   </view>
 
-  <view class="panel template-section">
-    <view class="section-title">场景模板</view>
-    <view class="subtitle">选择完成后保存，首页会同步更新当前模板。</view>
-    <view class="template-list">
+  <view class="sticky-toolbar">
+    <view class="panel toolbar-card">
+      <view class="toolbar-note">已按当前发型风格优先推荐场景</view>
+      <scroll-view class="style-switch" scroll-x="true" enable-flex="true" show-scrollbar="false">
+        <view
+          wx:for="{{styleLineOptions}}"
+          wx:key="id"
+          class="style-chip {{selectedStyleLine === item.id ? 'active' : ''}}"
+          bindtap="selectStyleLine"
+          data-style-line="{{item.id}}"
+        >
+          {{item.label}}
+        </view>
+      </scroll-view>
+    </view>
+  </view>
+
+  <view class="panel list-card">
+    <view class="list-head">
+      <view class="section-title">场景模板</view>
+      <view class="list-meta">{{visibleScenes.length}} 个场景</view>
+    </view>
+    <view class="template-grid">
       <view
-        wx:for="{{scenes}}"
+        wx:for="{{visibleScenes}}"
         wx:key="id"
-        class="template-card {{selectedSceneId === item.id ? 'selected' : ''}}"
+        class="template-tile {{selectedSceneId === item.id ? 'selected' : ''}}"
         bindtap="selectScene"
         data-id="{{item.id}}"
       >
-        <view class="meta-row">
-          <view class="template-type scene">SCENE</view>
-          <view class="mini-chip scene-chip">{{item.style_line_label}}</view>
+        <view class="tile-cover-shell">
+          <image
+            class="tile-cover"
+            src="{{item.cover_url}}"
+            mode="aspectFill"
+            lazy-load="true"
+          ></image>
+          <view wx:if="{{item.recommended}}" class="recommended-badge">推荐搭配</view>
+          <view wx:if="{{selectedSceneId === item.id}}" class="selected-check">✓</view>
         </view>
-        <view class="template-name">{{item.name}}</view>
-        <view class="template-desc">{{item.description}}</view>
-        <view wx:if="{{item.tags && item.tags.length}}" class="tag-row">
-          <text wx:for="{{item.tags}}" wx:key="*this" class="tag">{{item}}</text>
+        <view class="tile-body">
+          <view class="tile-meta-row">
+            <view class="tile-chip type-chip scene-type">场景</view>
+            <view class="tile-chip">{{item.style_line_label}}</view>
+          </view>
+          <view class="tile-name">{{item.name}}</view>
+          <view class="tile-desc">{{item.description}}</view>
+          <view wx:if="{{item.shortTags.length}}" class="tile-tag-row">
+            <text wx:for="{{item.shortTags}}" wx:for-item="tag" wx:key="*this" class="tile-tag">{{tag}}</text>
+          </view>
         </view>
       </view>
     </view>
   </view>
 
-  <button class="secondary-button back-button" bindtap="goBackStep">返回上一步</button>
-  <button class="primary-button save-button" bindtap="saveSelection">保存当前选择</button>
+  <view class="action-row">
+    <button class="secondary-button half-button" bindtap="goBackStep">返回改发型</button>
+    <button class="primary-button half-button" bindtap="saveSelection">完成当前组合</button>
+  </view>
 </view>

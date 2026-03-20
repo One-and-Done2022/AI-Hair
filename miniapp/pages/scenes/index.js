@@ -20,13 +20,60 @@ function decodeText(value) {
   }
 }
 
+const STYLE_LINE_OPTIONS = [
+  { id: "all", label: "全部场景" },
+  { id: "realistic_editorial", label: "写实写真" },
+  { id: "fashion_editorial", label: "时尚大片" }
+];
+
+function decorateScene(item, selectedHairstyle) {
+  const isRecommended =
+    !!selectedHairstyle &&
+    !!selectedHairstyle.style_line &&
+    item.style_line === selectedHairstyle.style_line;
+
+  return {
+    ...item,
+    shortTags: (item.tags || []).slice(0, 2),
+    recommended: isRecommended
+  };
+}
+
+function buildVisibleScenes(scenes, styleLine) {
+  const filtered = scenes.filter((item) => {
+    if (styleLine !== "all" && item.style_line !== styleLine) {
+      return false;
+    }
+    return true;
+  });
+
+  return filtered.sort((left, right) => {
+    if (left.recommended === right.recommended) {
+      return 0;
+    }
+    return left.recommended ? -1 : 1;
+  });
+}
+
+function resolveVisibleSceneSelection(scenes, styleLine, selectedSceneId) {
+  const visibleScenes = buildVisibleScenes(scenes, styleLine);
+  const selectedScene = findById(visibleScenes, selectedSceneId) || visibleScenes[0] || null;
+  return {
+    visibleScenes,
+    selectedSceneId: selectedScene ? selectedScene.id : ""
+  };
+}
+
 Page({
   data: {
     loading: true,
     selectedHairstyle: null,
     selectedGender: "",
     scenes: [],
-    selectedSceneId: ""
+    selectedSceneId: "",
+    selectedStyleLine: "all",
+    styleLineOptions: STYLE_LINE_OPTIONS,
+    visibleScenes: []
   },
 
   async onLoad(options) {
@@ -51,6 +98,17 @@ Page({
         findById(catalog.scenes, cached.scene && cached.scene.id) ||
         catalog.scenes[0] ||
         null;
+      const decoratedScenes = (catalog.scenes || []).map((item) =>
+        decorateScene(item, selectedHairstyle)
+      );
+      const selectedStyleLine =
+        (selectedHairstyle && selectedHairstyle.style_line) || "all";
+
+      const sceneSelection = resolveVisibleSceneSelection(
+        decoratedScenes,
+        selectedStyleLine,
+        selectedScene ? selectedScene.id : ""
+      );
 
       this.setData({
         selectedHairstyle: selectedHairstyle
@@ -61,8 +119,10 @@ Page({
               gender: this.gender
             },
         selectedGender: selectedHairstyle ? selectedHairstyle.gender : this.gender,
-        scenes: catalog.scenes || [],
-        selectedSceneId: selectedScene ? selectedScene.id : ""
+        scenes: decoratedScenes,
+        selectedStyleLine,
+        visibleScenes: sceneSelection.visibleScenes,
+        selectedSceneId: sceneSelection.selectedSceneId
       });
     } catch (error) {
       showError(error, { fallback: "加载失败" });
@@ -74,6 +134,20 @@ Page({
   selectScene(event) {
     this.setData({
       selectedSceneId: event.currentTarget.dataset.id
+    });
+  },
+
+  selectStyleLine(event) {
+    const styleLine = event.currentTarget.dataset.styleLine || "all";
+    const sceneSelection = resolveVisibleSceneSelection(
+      this.data.scenes,
+      styleLine,
+      this.data.selectedSceneId
+    );
+    this.setData({
+      selectedStyleLine: styleLine,
+      visibleScenes: sceneSelection.visibleScenes,
+      selectedSceneId: sceneSelection.selectedSceneId
     });
   },
 
