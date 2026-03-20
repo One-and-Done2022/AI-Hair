@@ -58,16 +58,18 @@ pytest -q
 
 - 项目目录选择仓库根目录
 - `miniprogramRoot` 已指向 `miniapp/`
-- 当前默认请求地址为 `https://api.lcynas.me`
+- 当前默认请求地址为 `https://api.foodtop1.com`
 - 如果只是临时本地联调，可将 `miniapp/utils/config.js` 中的 `useLocalDebug` 改成 `true`，临时走 `http://1.95.32.219:8000`
 - 开发阶段在开发者工具里关闭“校验合法域名、web-view（业务域名）、TLS 版本以及 HTTPS 证书”
 - 真机预览、体验版和正式版不能直接使用公网 IP + HTTP，后续必须切换到已备案 HTTPS 域名并在小程序后台配置 `request` 合法域名
 
 ## HTTPS 部署
 
-仓库已提供 `api.lcynas.me` 的 Nginx 反向代理模板：
+仓库已提供 `api.foodtop1.com` 的 Nginx 反向代理模板：
 
-- `deploy/nginx/api.lcynas.me.conf`
+- `deploy/nginx/api.foodtop1.com.conf`
+
+这个模板只维护小程序 API 入口，不包含其他系统级站点或 NAS 反向代理。
 
 完整步骤见：
 

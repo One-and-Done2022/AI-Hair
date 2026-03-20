@@ -16,3 +16,5 @@ project.private.config.json
 .idea/
 .vscode/
 Faceprompt/
+foodtop1.com_certificate.pem
+foodtop1.com_private.key
