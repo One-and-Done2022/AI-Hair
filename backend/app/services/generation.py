@@ -5,14 +5,25 @@ import io
 import logging
 from dataclasses import dataclass
 from pathlib import Path
+from threading import Lock
 from typing import Callable
 
 import cv2
 import numpy as np
-from openai import OpenAI
+from openai import (
+    APIConnectionError,
+    APIError,
+    APIStatusError,
+    AuthenticationError,
+    BadRequestError,
+    InternalServerError,
+    OpenAI,
+    RateLimitError,
+)
 from PIL import Image, ImageDraw, ImageFilter, ImageOps
 
 from app.config import get_settings
+from app.services.key_pool import ApiKeyLease
 
 
 logger = logging.getLogger(__name__)
@@ -22,9 +33,20 @@ PreviewCallback = Callable[[bytes], None]
 
 
 class ImageGenerationError(Exception):
-    def __init__(self, code: str, message: str) -> None:
+    def __init__(
+        self,
+        code: str,
+        message: str,
+        *,
+        retryable: bool = False,
+        retry_after_seconds: int | None = None,
+        disable_key: bool = False,
+    ) -> None:
         super().__init__(message)
         self.code = code
+        self.retryable = retryable
+        self.retry_after_seconds = retry_after_seconds
+        self.disable_key = disable_key
 
 
 def _event_field(event, name: str):
@@ -65,6 +87,128 @@ def _extract_b64_payloads(event) -> list[str]:
     return payloads
 
 
+def _extract_retry_after_seconds(exc: Exception) -> int | None:
+    response = getattr(exc, "response", None)
+    headers = getattr(response, "headers", None)
+    if headers is None:
+        return None
+    retry_after = headers.get("retry-after") or headers.get("Retry-After")
+    if not retry_after:
+        return None
+    try:
+        return max(1, int(float(retry_after)))
+    except (TypeError, ValueError):
+        return None
+
+
+def _extract_status_error_details(exc: APIStatusError) -> tuple[str | None, str | None]:
+    response = getattr(exc, "response", None)
+    if response is None:
+        return None, None
+
+    try:
+        payload = response.json()
+    except Exception:
+        return None, None
+
+    if not isinstance(payload, dict):
+        return None, None
+
+    error = payload.get("error")
+    if not isinstance(error, dict):
+        return None, None
+
+    code = error.get("code")
+    message = error.get("message")
+    return (
+        str(code).strip() if code is not None else None,
+        str(message).strip() if message is not None else None,
+    )
+
+
+def _map_openai_error(exc: Exception) -> ImageGenerationError:
+    if isinstance(exc, RateLimitError):
+        return ImageGenerationError(
+            "rate_limited",
+            str(exc),
+            retryable=True,
+            retry_after_seconds=_extract_retry_after_seconds(exc),
+        )
+
+    if isinstance(exc, AuthenticationError):
+        return ImageGenerationError(
+            "authentication_failed",
+            str(exc),
+            retryable=True,
+            retry_after_seconds=600,
+            disable_key=True,
+        )
+
+    if isinstance(exc, BadRequestError):
+        return ImageGenerationError("bad_request", str(exc))
+
+    if isinstance(exc, APIConnectionError):
+        return ImageGenerationError(
+            "upstream_unreachable",
+            str(exc),
+            retryable=True,
+            retry_after_seconds=30,
+        )
+
+    if isinstance(exc, InternalServerError):
+        return ImageGenerationError(
+            "upstream_internal_error",
+            str(exc),
+            retryable=True,
+            retry_after_seconds=30,
+        )
+
+    if isinstance(exc, APIStatusError):
+        status_code = exc.status_code
+        provider_code, provider_message = _extract_status_error_details(exc)
+        normalized_provider_code = (provider_code or "").strip().lower()
+        normalized_message = f"{provider_message or ''} {exc}".lower()
+
+        if status_code in {401, 403}:
+            return ImageGenerationError(
+                "permission_denied" if status_code == 403 else "authentication_failed",
+                str(exc),
+                retryable=True,
+                retry_after_seconds=600,
+                disable_key=True,
+            )
+
+        if status_code == 404 and (
+            normalized_provider_code == "modelnotopen"
+            or "has not activated the model" in normalized_message
+            or "activate the model service" in normalized_message
+        ):
+            return ImageGenerationError(
+                "model_not_open",
+                str(exc),
+                retryable=True,
+                disable_key=True,
+            )
+
+        retryable = status_code in {408, 409, 429, 500, 502, 503, 504}
+        return ImageGenerationError(
+            f"upstream_status_{status_code}",
+            str(exc),
+            retryable=retryable,
+            retry_after_seconds=_extract_retry_after_seconds(exc),
+        )
+
+    if isinstance(exc, APIError):
+        return ImageGenerationError(
+            "upstream_api_error",
+            str(exc),
+            retryable=True,
+            retry_after_seconds=30,
+        )
+
+    return ImageGenerationError("internal_error", str(exc))
+
+
 @dataclass(slots=True)
 class GenerationContext:
     hairstyle_name: str
@@ -93,6 +237,7 @@ class BaseGenerator:
         source_image_path: str,
         prompt: str,
         context: GenerationContext,
+        provider_key: ApiKeyLease | None = None,
         on_preview: PreviewCallback | None = None,
     ) -> GenerationResult:
         raise NotImplementedError
@@ -196,6 +341,7 @@ class MockGenerator(BaseGenerator):
         source_image_path: str,
         prompt: str,
         context: GenerationContext,
+        provider_key: ApiKeyLease | None = None,
         on_preview: PreviewCallback | None = None,
     ) -> GenerationResult:
         candidates: list[bytes] = []
@@ -244,19 +390,37 @@ class MockGenerator(BaseGenerator):
 class SeedreamGenerator(BaseGenerator):
     def __init__(self) -> None:
         settings = get_settings()
-        if not settings.ark_api_key:
+        if not settings.ark_api_keys:
             raise ImageGenerationError(
-                "missing_api_key", "ARK_API_KEY must be configured when using Seedream."
+                "missing_api_key", "At least one Ark API key must be configured when using Seedream."
             )
 
         self.model_name = settings.ark_image_model
-        self._client = OpenAI(
-            base_url=settings.ark_base_url,
-            api_key=settings.ark_api_key,
-        )
+        self._base_url = settings.ark_base_url
+        self._clients: dict[str, OpenAI] = {}
+        self._client_lock = Lock()
 
-    def _build_stream(self, *, prompt: str, image_data: str, max_images: int):
-        return self._client.images.generate(
+    def _client_for_key(self, provider_key: ApiKeyLease) -> OpenAI:
+        with self._client_lock:
+            client = self._clients.get(provider_key.key_id)
+            if client is not None:
+                return client
+            client = OpenAI(
+                base_url=self._base_url,
+                api_key=provider_key.api_key,
+            )
+            self._clients[provider_key.key_id] = client
+            return client
+
+    def _build_stream(
+        self,
+        *,
+        client: OpenAI,
+        prompt: str,
+        image_data: str,
+        max_images: int,
+    ):
+        return client.images.generate(
             model=self.model_name,
             prompt=prompt,
             size="2K",
@@ -275,6 +439,7 @@ class SeedreamGenerator(BaseGenerator):
     def _collect_stream_candidates(
         self,
         *,
+        client: OpenAI,
         prompt: str,
         image_data: str,
         max_images: int,
@@ -282,7 +447,12 @@ class SeedreamGenerator(BaseGenerator):
     ) -> list[bytes]:
         candidates: list[bytes] = []
         seen_payloads: set[str] = set()
-        stream = self._build_stream(prompt=prompt, image_data=image_data, max_images=max_images)
+        stream = self._build_stream(
+            client=client,
+            prompt=prompt,
+            image_data=image_data,
+            max_images=max_images,
+        )
         preview_sent = False
 
         for event in stream:
@@ -302,6 +472,7 @@ class SeedreamGenerator(BaseGenerator):
     def _top_up_candidates(
         self,
         *,
+        client: OpenAI,
         prompt: str,
         image_data: str,
         existing_count: int,
@@ -315,6 +486,7 @@ class SeedreamGenerator(BaseGenerator):
                 "允许表情、动作、头部角度和视线方向有自然差异。"
             )
             extra_candidates = self._collect_stream_candidates(
+                client=client,
                 prompt=variant_prompt,
                 image_data=image_data,
                 max_images=1,
@@ -331,8 +503,21 @@ class SeedreamGenerator(BaseGenerator):
         source_image_path: str,
         prompt: str,
         context: GenerationContext,
+        provider_key: ApiKeyLease | None = None,
         on_preview: PreviewCallback | None = None,
     ) -> GenerationResult:
+        if provider_key is None:
+            settings = get_settings()
+            if not settings.ark_api_keys:
+                raise ImageGenerationError(
+                    "missing_api_key",
+                    "At least one Ark API key must be configured when using Seedream.",
+                )
+            provider_key = ApiKeyLease(
+                key_id=settings.ark_api_keys[0].key_id,
+                api_key=settings.ark_api_keys[0].api_key,
+            )
+
         with open(source_image_path, "rb") as handle:
             image_bytes = handle.read()
         image_base64 = base64.b64encode(image_bytes).decode("utf-8")
@@ -348,12 +533,26 @@ class SeedreamGenerator(BaseGenerator):
         suffix = Path(source_image_path).suffix.lower()
         mime_type = "image/png" if suffix == ".png" else "image/jpeg"
         image_data = f"data:{mime_type};base64,{image_base64}"
-        candidates = self._collect_stream_candidates(
-            prompt=prompt,
-            image_data=image_data,
-            max_images=PRIMARY_PREVIEW_IMAGE_COUNT,
-            on_first_candidate=emit_preview,
-        )
+        client = self._client_for_key(provider_key)
+
+        try:
+            candidates = self._collect_stream_candidates(
+                client=client,
+                prompt=prompt,
+                image_data=image_data,
+                max_images=PRIMARY_PREVIEW_IMAGE_COUNT,
+                on_first_candidate=emit_preview,
+            )
+        except (
+            RateLimitError,
+            AuthenticationError,
+            BadRequestError,
+            APIConnectionError,
+            InternalServerError,
+            APIStatusError,
+            APIError,
+        ) as exc:
+            raise _map_openai_error(exc) from exc
 
         if len(candidates) < CANDIDATE_IMAGE_COUNT:
             logger.warning(
@@ -361,14 +560,26 @@ class SeedreamGenerator(BaseGenerator):
                 len(candidates),
                 CANDIDATE_IMAGE_COUNT,
             )
-            candidates.extend(
-                self._top_up_candidates(
-                    prompt=prompt,
-                    image_data=image_data,
-                    existing_count=len(candidates),
-                    on_first_candidate=emit_preview,
+            try:
+                candidates.extend(
+                    self._top_up_candidates(
+                        client=client,
+                        prompt=prompt,
+                        image_data=image_data,
+                        existing_count=len(candidates),
+                        on_first_candidate=emit_preview,
+                    )
                 )
-            )
+            except (
+                RateLimitError,
+                AuthenticationError,
+                BadRequestError,
+                APIConnectionError,
+                InternalServerError,
+                APIStatusError,
+                APIError,
+            ) as exc:
+                raise _map_openai_error(exc) from exc
 
         ranked_candidates = _rank_candidates(candidates)
         ordered_images = [candidate.image_bytes for candidate in ranked_candidates]

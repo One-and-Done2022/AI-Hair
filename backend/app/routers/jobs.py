@@ -15,9 +15,17 @@ def _job_response(request: Request, job: dict) -> JobResponse:
     scene = templates.get_scene(job["scene_id"])
     upload = repository.get_upload(job["upload_id"])
     base_url = str(request.base_url).rstrip("/")
-    upload_url = f"{base_url}/media/{upload['stored_path']}" if upload else None
+    upload_url = (
+        storage.media_url(upload["stored_path"], base_url=base_url)
+        if upload
+        else None
+    )
     result_paths = storage.list_result_candidates(job["id"], job.get("result_path"))
-    result_image_urls = [f"{base_url}/media/{path}" for path in result_paths]
+    result_image_urls: list[str] = []
+    for path in result_paths:
+        resolved = storage.media_url(path, base_url=base_url)
+        if resolved:
+            result_image_urls.append(resolved)
     result_image_url = result_image_urls[0] if result_image_urls else None
     return JobResponse(
         job_id=job["id"],

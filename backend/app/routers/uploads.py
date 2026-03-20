@@ -35,11 +35,13 @@ async def create_upload(
         width=metadata.width,
         height=metadata.height,
     )
-    upload_url = str(request.base_url).rstrip("/") + f"/media/{upload['stored_path']}"
+    upload_url = storage.media_url(
+        upload["stored_path"],
+        base_url=str(request.base_url).rstrip("/"),
+    )
     return UploadResponse(
         upload_id=upload["id"],
         upload_url=upload_url,
         width=upload["width"],
         height=upload["height"],
     )
-

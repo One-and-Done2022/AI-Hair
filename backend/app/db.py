@@ -1,77 +1,133 @@
 from __future__ import annotations
 
-import sqlite3
-from contextlib import closing
+from contextlib import contextmanager
+from functools import lru_cache
+
+from sqlalchemy import (
+    Column,
+    ForeignKey,
+    Index,
+    Integer,
+    MetaData,
+    String,
+    Table,
+    Text,
+    create_engine,
+)
+from sqlalchemy.engine import Engine
+from sqlalchemy.orm import Session, sessionmaker
 
 from app.config import get_settings
 
 
-SCHEMA = """
-PRAGMA foreign_keys = ON;
+metadata = MetaData()
 
-CREATE TABLE IF NOT EXISTS users (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    openid TEXT NOT NULL UNIQUE,
-    created_at TEXT NOT NULL
-);
+users = Table(
+    "users",
+    metadata,
+    Column("id", Integer, primary_key=True, autoincrement=True),
+    Column("openid", String(255), nullable=False, unique=True),
+    Column("created_at", String(64), nullable=False),
+)
 
-CREATE TABLE IF NOT EXISTS auth_tokens (
-    token TEXT PRIMARY KEY,
-    user_id INTEGER NOT NULL,
-    created_at TEXT NOT NULL,
-    expires_at TEXT NOT NULL,
-    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-);
+auth_tokens = Table(
+    "auth_tokens",
+    metadata,
+    Column("token", String(255), primary_key=True),
+    Column("user_id", Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False),
+    Column("created_at", String(64), nullable=False),
+    Column("expires_at", String(64), nullable=False),
+)
 
-CREATE TABLE IF NOT EXISTS uploads (
-    id TEXT PRIMARY KEY,
-    user_id INTEGER NOT NULL,
-    original_name TEXT NOT NULL,
-    stored_path TEXT NOT NULL,
-    mime_type TEXT NOT NULL,
-    file_size INTEGER NOT NULL,
-    width INTEGER NOT NULL,
-    height INTEGER NOT NULL,
-    created_at TEXT NOT NULL,
-    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-);
+uploads = Table(
+    "uploads",
+    metadata,
+    Column("id", String(64), primary_key=True),
+    Column("user_id", Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False),
+    Column("original_name", String(255), nullable=False),
+    Column("stored_path", String(1024), nullable=False),
+    Column("mime_type", String(128), nullable=False),
+    Column("file_size", Integer, nullable=False),
+    Column("width", Integer, nullable=False),
+    Column("height", Integer, nullable=False),
+    Column("created_at", String(64), nullable=False),
+)
 
-CREATE TABLE IF NOT EXISTS jobs (
-    id TEXT PRIMARY KEY,
-    user_id INTEGER NOT NULL,
-    upload_id TEXT NOT NULL,
-    hairstyle_id TEXT NOT NULL,
-    scene_id TEXT NOT NULL,
-    status TEXT NOT NULL,
-    prompt TEXT NOT NULL,
-    model_name TEXT NOT NULL,
-    result_path TEXT,
-    error_code TEXT,
-    error_message TEXT,
-    created_at TEXT NOT NULL,
-    updated_at TEXT NOT NULL,
-    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-    FOREIGN KEY (upload_id) REFERENCES uploads(id) ON DELETE CASCADE
-);
+jobs = Table(
+    "jobs",
+    metadata,
+    Column("id", String(64), primary_key=True),
+    Column("user_id", Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False),
+    Column("upload_id", String(64), ForeignKey("uploads.id", ondelete="CASCADE"), nullable=False),
+    Column("hairstyle_id", String(255), nullable=False),
+    Column("scene_id", String(255), nullable=False),
+    Column("status", String(64), nullable=False),
+    Column("prompt", Text, nullable=False),
+    Column("model_name", String(255), nullable=False),
+    Column("assigned_key_id", String(255)),
+    Column("result_path", String(1024)),
+    Column("error_code", String(255)),
+    Column("error_message", Text),
+    Column("created_at", String(64), nullable=False),
+    Column("updated_at", String(64), nullable=False),
+)
 
-CREATE INDEX IF NOT EXISTS idx_auth_tokens_user_id ON auth_tokens(user_id);
-CREATE INDEX IF NOT EXISTS idx_uploads_user_id ON uploads(user_id);
-CREATE INDEX IF NOT EXISTS idx_jobs_user_id ON jobs(user_id);
-CREATE INDEX IF NOT EXISTS idx_jobs_status ON jobs(status);
-"""
+Index("idx_auth_tokens_user_id", auth_tokens.c.user_id)
+Index("idx_uploads_user_id", uploads.c.user_id)
+Index("idx_jobs_user_id", jobs.c.user_id)
+Index("idx_jobs_status", jobs.c.status)
 
 
-def get_connection() -> sqlite3.Connection:
+@lru_cache
+def get_engine() -> Engine:
     settings = get_settings()
     settings.ensure_directories()
-    connection = sqlite3.connect(settings.database_path, check_same_thread=False)
-    connection.row_factory = sqlite3.Row
-    connection.execute("PRAGMA foreign_keys = ON")
-    return connection
+
+    connect_args: dict[str, object] = {}
+    engine_kwargs: dict[str, object] = {
+        "future": True,
+        "pool_pre_ping": True,
+    }
+    if settings.database_url.startswith("sqlite"):
+        connect_args["check_same_thread"] = False
+    else:
+        engine_kwargs.update(
+            pool_size=settings.db_pool_size,
+            max_overflow=settings.db_max_overflow,
+            pool_timeout=settings.db_pool_timeout_seconds,
+            pool_recycle=settings.db_pool_recycle_seconds,
+        )
+
+    return create_engine(
+        settings.database_url,
+        connect_args=connect_args,
+        **engine_kwargs,
+    )
+
+
+@lru_cache
+def get_session_factory() -> sessionmaker[Session]:
+    return sessionmaker(
+        bind=get_engine(),
+        autoflush=False,
+        autocommit=False,
+        expire_on_commit=False,
+        future=True,
+    )
+
+
+@contextmanager
+def session_scope() -> Session:
+    session = get_session_factory()()
+    try:
+        yield session
+        session.commit()
+    except Exception:
+        session.rollback()
+        raise
+    finally:
+        session.close()
 
 
 def init_db() -> None:
-    with closing(get_connection()) as connection:
-        connection.executescript(SCHEMA)
-        connection.commit()
-
+    metadata.create_all(get_engine())

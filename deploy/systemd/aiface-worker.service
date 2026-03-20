@@ -1,0 +1,16 @@
+[Unit]
+Description=AI Hair Remix Background Worker
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/home/lcy/AIFace
+EnvironmentFile=/home/lcy/AIFace/.env
+Environment=PYTHONUNBUFFERED=1
+Environment=PYTHONPATH=/home/lcy/AIFace/backend
+ExecStart=/home/lcy/AIFace/.venv/bin/python -m app.worker
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=default.target

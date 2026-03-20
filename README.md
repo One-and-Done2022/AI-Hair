@@ -1,120 +1,106 @@
 # AI Hair Remix Mini Program
 
-一个本地可跑通的 AI 换发小程序 MVP，包含：
+一个面向微信小程序的 AI 换发项目，当前包含：
 
-- 微信原生小程序前端
-- FastAPI 后端
-- 本地磁盘存储原图与结果图
-- SQLite 用户/上传/任务历史
-- 火山引擎 Seedream 4.5/5.0 接入
+- `backend/`：FastAPI API、任务状态查询、模板下发、图片校验、Seedream 调用
+- `miniapp/`：微信原生小程序前端
+- `tests/`：后端接口测试
+- `deploy/`：Nginx 与 systemd 模板
+- `docs/`：部署与架构文档
 
-## 目录
-
-- `backend/` FastAPI 服务
-- `miniapp/` 微信小程序代码
-- `tests/` 后端接口测试
-
-## 本地启动
-
-1. 创建环境并安装依赖：
+## 本地开发
 
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
-```
-
-2. 配置环境变量：
-
-```bash
 cp .env.example .env
 ```
 
-至少需要设置：
-
-- `ARK_API_KEY`：火山引擎 Ark API Key
-- `WECHAT_APP_ID`、`WECHAT_APP_SECRET`：小程序正式登录时使用
-
-如果只做本地联调，可保留：
+本地联调建议：
 
 - `ALLOW_DEV_LOGIN=true`
 - `USE_MOCK_GENERATOR=true`
-- `ENFORCE_FACE_DETECTION=true`
+- `JOB_QUEUE_BACKEND=local`
+- `RUN_EMBEDDED_WORKER=true`
+- `OBJECT_STORAGE_BACKEND=local`
+- `DATABASE_URL=` 置空，改用 `DATABASE_PATH`
 
-当前默认启用严格人脸检测：上传图必须且仅允许一张清晰人脸，合照、远景人像、脸过小或看不清的图片会被拦截。
-
-3. 启动后端：
+启动后端：
 
 ```bash
 set -a && source .env && set +a
 uvicorn app.main:app --reload --app-dir backend --host 0.0.0.0 --port 8000
 ```
 
-4. 运行测试：
+运行测试：
 
 ```bash
 pytest -q
 ```
 
-5. 打开微信开发者工具：
+微信开发者工具直接打开仓库根目录即可，`project.config.json` 已把 `miniprogramRoot` 指到 `miniapp/`。
 
-- 项目目录选择仓库根目录
-- `miniprogramRoot` 已指向 `miniapp/`
-- 当前默认请求地址为 `https://api.foodtop1.com`
-- 如果只是临时本地联调，可将 `miniapp/utils/config.js` 中的 `useLocalDebug` 改成 `true`，临时走 `http://1.95.32.219:8000`
-- 开发阶段在开发者工具里关闭“校验合法域名、web-view（业务域名）、TLS 版本以及 HTTPS 证书”
-- 真机预览、体验版和正式版不能直接使用公网 IP + HTTP，后续必须切换到已备案 HTTPS 域名并在小程序后台配置 `request` 合法域名
+## 第一版生产架构
 
-## HTTPS 部署
+当前后端已支持第一版生产拆分：
 
-仓库已提供 `api.foodtop1.com` 的 Nginx 反向代理模板：
+- FastAPI 只负责鉴权、上传、创建任务、轮询结果
+- PostgreSQL / MySQL 持久化用户、上传、任务状态
+- Redis 负责任务队列
+- 独立 Worker 进程消费任务
+- OSS 负责原图、预览图、结果图存储
+- 小程序继续通过 `/api/jobs/{job_id}` 轮询任务状态
 
-- `deploy/nginx/api.foodtop1.com.conf`
+完整说明见 [docs/production-architecture.md](/home/lcy/AIFace/docs/production-architecture.md)。
 
-这个模板只维护小程序 API 入口，不包含其他系统级站点或 NAS 反向代理。
+## 生产启动
 
-完整步骤见：
-
-- `docs/wechat-https-deploy.md`
-
-## systemd 常驻运行
-
-仓库内已提供用户级 service 模板：`deploy/systemd/aiface-backend.service`。
-
-启用方式：
+API 服务：
 
 ```bash
-mkdir -p ~/.config/systemd/user
-ln -sf /home/lcy/AIFace/deploy/systemd/aiface-backend.service ~/.config/systemd/user/aiface-backend.service
-loginctl enable-linger "$USER"
-systemctl --user daemon-reload
-systemctl --user enable --now aiface-backend.service
+set -a && source .env && set +a
+uvicorn app.main:app --app-dir backend --host 0.0.0.0 --port 8000
 ```
 
-常用命令：
+独立 Worker：
 
 ```bash
-systemctl --user status aiface-backend.service
-systemctl --user restart aiface-backend.service
-journalctl --user -u aiface-backend.service -n 100 --no-pager
+set -a && source .env && set +a
+PYTHONPATH=/home/lcy/AIFace/backend python -m app.worker
 ```
 
-## Git 使用
+systemd 模板：
 
-首次初始化：
+- [deploy/systemd/aiface-backend.service](/home/lcy/AIFace/deploy/systemd/aiface-backend.service)
+- [deploy/systemd/aiface-worker.service](/home/lcy/AIFace/deploy/systemd/aiface-worker.service)
+
+## Mock 压测
+
+仓库内置了并发压测脚本：
 
 ```bash
-git init -b main
+python3 scripts/load_test.py \
+  --host http://127.0.0.1:8013 \
+  --image "/home/lcy/AIFace/微信图片_20260318192652_461_95.jpg" \
+  --users 8 \
+  --jobs-per-user 1 \
+  --poll-interval 0.2 \
+  --job-timeout 60 \
+  --random-templates
 ```
 
-建议分支：
+本轮生产化改造的 mock 压测结果和解释已经写入 [docs/production-architecture.md](/home/lcy/AIFace/docs/production-architecture.md)。
 
-- `main`
-- `feature/backend-api`
-- `feature/miniapp-ui`
+## HTTPS 与微信域名
+
+- HTTPS 反向代理说明见 [docs/wechat-https-deploy.md](/home/lcy/AIFace/docs/wechat-https-deploy.md)
+- 当前小程序默认接口域名见 `miniapp/utils/config.js`
+
+## Git
 
 提交前确认：
 
-- `.env` 未被纳入版本控制
-- `storage/` 和本地样例图片未被纳入版本控制
+- `.env`、`storage/`、本地样例图、生成图没有被加入版本控制
 - `pytest -q` 通过
+- 小程序界面改动附带截图

@@ -4,7 +4,9 @@ import io
 import shutil
 import uuid
 from dataclasses import dataclass
+from functools import lru_cache
 from pathlib import Path
+from urllib.parse import urlparse
 
 from PIL import Image, UnidentifiedImageError
 
@@ -16,6 +18,11 @@ try:
 except ImportError:  # pragma: no cover
     cv2 = None
     np = None
+
+try:
+    import oss2  # type: ignore
+except ImportError:  # pragma: no cover
+    oss2 = None
 
 
 ALLOWED_MIME_TYPES = {
@@ -46,6 +53,132 @@ class SavedResultBundle:
     candidate_paths: list[str]
 
 
+class ObjectStorageBackend:
+    is_local = False
+
+    def write_bytes(self, object_key: str, data: bytes) -> str:
+        raise NotImplementedError
+
+    def read_bytes(self, object_key: str) -> bytes:
+        raise NotImplementedError
+
+    def delete_prefix(self, prefix: str) -> None:
+        raise NotImplementedError
+
+    def list_keys(self, prefix: str) -> list[str]:
+        raise NotImplementedError
+
+    def public_url(self, object_key: str, *, base_url: str | None = None) -> str:
+        raise NotImplementedError
+
+
+class LocalObjectStorage(ObjectStorageBackend):
+    is_local = True
+
+    def __init__(self, root_dir: Path) -> None:
+        self.root_dir = root_dir
+
+    def write_bytes(self, object_key: str, data: bytes) -> str:
+        destination = self.root_dir / object_key
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        destination.write_bytes(data)
+        return object_key
+
+    def read_bytes(self, object_key: str) -> bytes:
+        return (self.root_dir / object_key).read_bytes()
+
+    def delete_prefix(self, prefix: str) -> None:
+        base_path = self.root_dir / prefix
+        if base_path.is_file():
+            base_path.unlink()
+            return
+
+        if base_path.exists():
+            shutil.rmtree(base_path)
+            return
+
+        parent = base_path.parent
+        if not parent.exists():
+            return
+        for path in parent.iterdir():
+            if path.is_file() and path.name.startswith(base_path.name):
+                path.unlink()
+
+    def list_keys(self, prefix: str) -> list[str]:
+        base_path = self.root_dir / prefix
+        if base_path.is_dir():
+            return sorted(
+                path.relative_to(self.root_dir).as_posix()
+                for path in base_path.iterdir()
+                if path.is_file()
+            )
+
+        parent = base_path.parent
+        if not parent.exists():
+            return []
+        return sorted(
+            path.relative_to(self.root_dir).as_posix()
+            for path in parent.iterdir()
+            if path.is_file() and path.name.startswith(base_path.name)
+        )
+
+    def public_url(self, object_key: str, *, base_url: str | None = None) -> str:
+        if not base_url:
+            raise ValueError("base_url is required when resolving local media URLs.")
+        return f"{base_url.rstrip('/')}/media/{object_key}"
+
+
+class AliyunOssObjectStorage(ObjectStorageBackend):
+    def __init__(
+        self,
+        *,
+        endpoint: str,
+        bucket_name: str,
+        access_key_id: str,
+        access_key_secret: str,
+        public_base_url: str,
+        prefix: str,
+    ) -> None:
+        if oss2 is None:
+            raise RuntimeError("oss2 must be installed when using aliyun_oss storage backend.")
+        if not endpoint or not bucket_name or not access_key_id or not access_key_secret:
+            raise RuntimeError("Aliyun OSS settings are incomplete.")
+
+        self.bucket_name = bucket_name
+        self.prefix = prefix.strip("/")
+        self.public_base_url = public_base_url.strip().rstrip("/")
+        auth = oss2.Auth(access_key_id, access_key_secret)
+        self.bucket = oss2.Bucket(auth, endpoint, bucket_name)
+        self.endpoint = endpoint.rstrip("/")
+
+    def write_bytes(self, object_key: str, data: bytes) -> str:
+        self.bucket.put_object(object_key, data)
+        return object_key
+
+    def read_bytes(self, object_key: str) -> bytes:
+        return self.bucket.get_object(object_key).read()
+
+    def delete_prefix(self, prefix: str) -> None:
+        iterator = oss2.ObjectIteratorV2(self.bucket, prefix=prefix)
+        for object_info in iterator:
+            self.bucket.delete_object(object_info.key)
+
+    def list_keys(self, prefix: str) -> list[str]:
+        return sorted(
+            object_info.key
+            for object_info in oss2.ObjectIteratorV2(self.bucket, prefix=prefix)
+        )
+
+    def public_url(self, object_key: str, *, base_url: str | None = None) -> str:
+        if self.public_base_url:
+            return f"{self.public_base_url}/{object_key}"
+
+        parsed = urlparse(self.endpoint if "://" in self.endpoint else f"https://{self.endpoint}")
+        host = parsed.netloc or parsed.path
+        scheme = parsed.scheme or "https"
+        return f"{scheme}://{self.bucket_name}.{host}/{object_key}"
+
+
 def _detect_faces(image_bytes: bytes) -> tuple[tuple[int, int, int, int], ...] | None:
     if cv2 is None or np is None:
         return None
@@ -61,6 +194,43 @@ def _detect_faces(image_bytes: bytes) -> tuple[tuple[int, int, int, int], ...] |
     )
     faces = cascade.detectMultiScale(grayscale, scaleFactor=1.1, minNeighbors=5)
     return tuple(tuple(int(value) for value in face) for face in faces)
+
+
+@lru_cache
+def get_object_storage() -> ObjectStorageBackend:
+    settings = get_settings()
+    settings.ensure_directories()
+
+    if settings.object_storage_backend == "local":
+        return LocalObjectStorage(settings.storage_dir)
+
+    if settings.object_storage_backend == "aliyun_oss":
+        return AliyunOssObjectStorage(
+            endpoint=settings.oss_endpoint,
+            bucket_name=settings.oss_bucket_name,
+            access_key_id=settings.oss_access_key_id,
+            access_key_secret=settings.oss_access_key_secret,
+            public_base_url=settings.object_storage_public_base_url,
+            prefix=settings.oss_prefix,
+        )
+
+    raise RuntimeError(
+        f"Unsupported OBJECT_STORAGE_BACKEND: {settings.object_storage_backend}"
+    )
+
+
+def is_local_media_backend() -> bool:
+    return get_object_storage().is_local
+
+
+def media_url(object_key: str | None, *, base_url: str | None = None) -> str | None:
+    if not object_key:
+        return None
+    return get_object_storage().public_url(object_key, base_url=base_url)
+
+
+def read_file_bytes(object_key: str) -> bytes:
+    return get_object_storage().read_bytes(object_key)
 
 
 def validate_upload_bytes(image_bytes: bytes, mime_type: str | None) -> ImageMetadata:
@@ -118,19 +288,6 @@ def validate_upload_bytes(image_bytes: bytes, mime_type: str | None) -> ImageMet
     return ImageMetadata(width=width, height=height, extension=ALLOWED_MIME_TYPES[mime_type])
 
 
-def _write_file(data: bytes, destination: Path) -> str:
-    destination.parent.mkdir(parents=True, exist_ok=True)
-    destination.write_bytes(data)
-    settings = get_settings()
-    return str(destination.relative_to(settings.storage_dir))
-
-
-def save_upload_file(image_bytes: bytes, extension: str) -> str:
-    settings = get_settings()
-    filename = f"{uuid.uuid4().hex}{extension}"
-    return _write_file(image_bytes, settings.upload_dir / filename)
-
-
 def _detect_result_extension(image_bytes: bytes) -> str:
     extension = ".png"
     try:
@@ -147,61 +304,51 @@ def _detect_result_extension(image_bytes: bytes) -> str:
     return extension
 
 
-def _remove_primary_result_files(job_id: str) -> None:
+def _object_key(*parts: str) -> str:
     settings = get_settings()
-    for path in settings.result_dir.glob(f"{job_id}.*"):
-        if path.is_file():
-            path.unlink()
+    normalized = [part.strip("/") for part in parts if part.strip("/")]
+    joined = "/".join(normalized)
+    if settings.object_storage_backend == "aliyun_oss" and settings.oss_prefix:
+        return f"{settings.oss_prefix}/{joined}"
+    return joined
+
+
+def save_upload_file(image_bytes: bytes, extension: str) -> str:
+    filename = f"{uuid.uuid4().hex}{extension}"
+    object_key = _object_key("uploads", filename)
+    return get_object_storage().write_bytes(object_key, image_bytes)
 
 
 def save_preview_result(job_id: str, image_bytes: bytes) -> str:
-    settings = get_settings()
     extension = _detect_result_extension(image_bytes)
-    _remove_primary_result_files(job_id)
-    return _write_file(
-        image_bytes,
-        settings.result_dir / f"{job_id}{extension}",
-    )
+    prefix = _object_key("results", job_id)
+    get_object_storage().delete_prefix(prefix)
+    object_key = _object_key("results", job_id, f"preview{extension}")
+    return get_object_storage().write_bytes(object_key, image_bytes)
 
 
 def save_result_bundle(job_id: str, candidate_images: list[bytes]) -> SavedResultBundle:
     if not candidate_images:
         raise ValueError("candidate_images cannot be empty")
 
-    settings = get_settings()
-    primary_extension = _detect_result_extension(candidate_images[0])
-    _remove_primary_result_files(job_id)
-    primary_path = _write_file(
-        candidate_images[0],
-        settings.result_dir / f"{job_id}{primary_extension}",
-    )
-
-    candidate_dir = settings.result_dir / job_id
-    if candidate_dir.exists():
-        shutil.rmtree(candidate_dir)
+    prefix = _object_key("results", job_id)
+    get_object_storage().delete_prefix(prefix)
 
     candidate_paths: list[str] = []
     for index, image_bytes in enumerate(candidate_images, start=1):
         extension = _detect_result_extension(image_bytes)
-        candidate_paths.append(
-            _write_file(
-                image_bytes,
-                candidate_dir / f"candidate-{index}{extension}",
-            )
-        )
+        object_key = _object_key("results", job_id, f"candidate-{index}{extension}")
+        candidate_paths.append(get_object_storage().write_bytes(object_key, image_bytes))
 
-    return SavedResultBundle(primary_path=primary_path, candidate_paths=candidate_paths)
+    return SavedResultBundle(
+        primary_path=candidate_paths[0],
+        candidate_paths=candidate_paths,
+    )
 
 
 def list_result_candidates(job_id: str, primary_path: str | None = None) -> list[str]:
-    settings = get_settings()
-    candidate_dir = settings.result_dir / job_id
-    if candidate_dir.exists():
-        paths = sorted(
-            path.relative_to(settings.storage_dir).as_posix()
-            for path in candidate_dir.iterdir()
-            if path.is_file()
-        )
-        if paths:
-            return paths
+    prefix = _object_key("results", job_id, "candidate-")
+    keys = get_object_storage().list_keys(prefix)
+    if keys:
+        return keys
     return [primary_path] if primary_path else []
