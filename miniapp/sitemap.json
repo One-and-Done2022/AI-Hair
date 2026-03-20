@@ -1,4 +1,9 @@
 {
-  "rules": []
+  "desc": "Disable WeChat indexing for private AI generation pages.",
+  "rules": [
+    {
+      "action": "disallow",
+      "page": "*"
+    }
+  ]
 }
-
