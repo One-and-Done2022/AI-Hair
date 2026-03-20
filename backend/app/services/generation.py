@@ -17,6 +17,7 @@ from app.config import get_settings
 
 logger = logging.getLogger(__name__)
 CANDIDATE_IMAGE_COUNT = 3
+PRIMARY_PREVIEW_IMAGE_COUNT = 1
 PreviewCallback = Callable[[bytes], None]
 
 
@@ -350,13 +351,13 @@ class SeedreamGenerator(BaseGenerator):
         candidates = self._collect_stream_candidates(
             prompt=prompt,
             image_data=image_data,
-            max_images=CANDIDATE_IMAGE_COUNT,
+            max_images=PRIMARY_PREVIEW_IMAGE_COUNT,
             on_first_candidate=emit_preview,
         )
 
         if len(candidates) < CANDIDATE_IMAGE_COUNT:
             logger.warning(
-                "Seedream returned %s candidate(s) in the primary stream; topping up to %s.",
+                "Seedream primary preview request returned %s candidate(s); topping up to %s.",
                 len(candidates),
                 CANDIDATE_IMAGE_COUNT,
             )

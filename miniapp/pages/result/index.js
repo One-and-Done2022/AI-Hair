@@ -2,7 +2,7 @@ const { ensureLogin } = require("../../utils/auth");
 const { showError } = require("../../utils/errors");
 const { request } = require("../../utils/request");
 
-const POLL_INTERVAL = 2500;
+const POLL_INTERVAL = 1200;
 const PROGRESS_INTERVAL = 1000;
 const ESTIMATED_TOTAL_SECONDS = 75;
 const MAX_VISIBLE_PROGRESS = 96;

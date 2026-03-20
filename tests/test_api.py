@@ -258,6 +258,50 @@ def test_job_exposes_preview_before_final_result(tmp_path, monkeypatch):
         assert final_payload["result_image_urls"][0] == final_payload["result_image_url"]
 
 
+def test_seedream_generator_requests_preview_first_then_tops_up(tmp_path, monkeypatch):
+    os.environ["ARK_API_KEY"] = "test-key"
+
+    from app.config import get_settings
+    from app.services.generation import SeedreamGenerator
+
+    get_settings.cache_clear()
+
+    source_path = tmp_path / "source.png"
+    source_path.write_bytes(_build_test_image())
+
+    generator = SeedreamGenerator()
+    preview_image = _build_colored_image("#264653")
+    second_image = _build_colored_image("#2a9d8f")
+    third_image = _build_colored_image("#e9c46a")
+    call_log = []
+    preview_events = []
+
+    def fake_collect(self, *, prompt, image_data, max_images, on_first_candidate=None):
+        call_log.append(("collect", max_images))
+        if on_first_candidate is not None:
+            on_first_candidate(preview_image)
+            preview_events.append("preview")
+        return [preview_image]
+
+    def fake_top_up(self, *, prompt, image_data, existing_count, on_first_candidate=None):
+        call_log.append(("top_up", existing_count))
+        return [second_image, third_image]
+
+    monkeypatch.setattr(SeedreamGenerator, "_collect_stream_candidates", fake_collect)
+    monkeypatch.setattr(SeedreamGenerator, "_top_up_candidates", fake_top_up)
+
+    result = generator.generate(
+        source_image_path=str(source_path),
+        prompt="test prompt",
+        context=None,
+        on_preview=lambda image_bytes: preview_events.append("callback"),
+    )
+
+    assert call_log == [("collect", 1), ("top_up", 1)]
+    assert preview_events == ["callback", "preview"]
+    assert len(result.candidate_image_bytes) == 3
+
+
 def test_strict_face_detection_rejects_small_face(monkeypatch):
     os.environ["ENFORCE_FACE_DETECTION"] = "true"
 
