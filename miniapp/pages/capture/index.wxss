@@ -1,0 +1,63 @@
+.capture-screen {
+  padding-bottom: 40rpx;
+}
+
+.capture-header {
+  padding: 30rpx;
+  margin-bottom: 24rpx;
+  background: linear-gradient(135deg, #fff7ed, #eff6ff);
+}
+
+.capture-panel {
+  padding: 24rpx;
+}
+
+.camera-view,
+.capture-preview {
+  width: 100%;
+  height: 960rpx;
+  border-radius: 28rpx;
+  overflow: hidden;
+  background: #0f172a;
+  display: block;
+}
+
+.capture-tip {
+  margin-top: 20rpx;
+  color: #475569;
+  font-size: 24rpx;
+  line-height: 1.7;
+}
+
+.capture-actions {
+  display: flex;
+  gap: 18rpx;
+  margin-top: 24rpx;
+}
+
+.half-button {
+  flex: 1;
+  padding: 0;
+}
+
+.shutter-button {
+  margin-top: 18rpx;
+}
+
+.permission-card {
+  padding: 36rpx 28rpx;
+  border-radius: 28rpx;
+  background: linear-gradient(180deg, #fff7ed, #fffbeb);
+  text-align: center;
+}
+
+.permission-title {
+  font-size: 34rpx;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.action-gap {
+  margin-top: 24rpx;
+  margin-bottom: 18rpx;
+}

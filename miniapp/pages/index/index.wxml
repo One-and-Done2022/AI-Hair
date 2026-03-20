@@ -17,14 +17,17 @@
       <image class="preview-image" src="{{selectedImage}}" mode="aspectFill"></image>
       <view class="preview-tip">点击预览原图</view>
     </view>
-    <view wx:else class="upload-placeholder" bindtap="chooseImage">
+    <view wx:else class="upload-placeholder" bindtap="openImageSource">
       <view class="upload-icon">+</view>
-      <view class="upload-title">选择单人正脸或半侧脸生活照</view>
-      <view class="subtitle">建议光线清晰、无遮挡、分辨率不少于 512px</view>
+      <view class="upload-title">上传单人生活照或直接自拍</view>
+      <view class="subtitle">建议胸口以上近景、光线清晰、无遮挡、分辨率不少于 512px</view>
     </view>
-    <button class="secondary-button action-button" bindtap="chooseImage">
-      {{selectedImage ? '重新选择照片' : '上传照片'}}
-    </button>
+    <view class="upload-actions">
+      <button class="primary-button half-button" bindtap="takeSelfie">手机自拍</button>
+      <button class="secondary-button half-button" bindtap="chooseImage">
+        {{selectedImage ? '相册换图' : '从相册选择'}}
+      </button>
+    </view>
   </view>
 
   <view class="panel section">
@@ -50,4 +53,3 @@
     3. 开始生成
   </button>
 </view>
-

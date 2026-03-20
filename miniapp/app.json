@@ -1,6 +1,7 @@
 {
   "pages": [
     "pages/index/index",
+    "pages/capture/index",
     "pages/templates/index",
     "pages/scenes/index",
     "pages/result/index",

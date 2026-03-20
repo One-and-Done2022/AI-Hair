@@ -76,6 +76,17 @@
   margin-top: 24rpx;
 }
 
+.upload-actions {
+  display: flex;
+  gap: 18rpx;
+  margin-top: 24rpx;
+}
+
+.half-button {
+  flex: 1;
+  padding: 0;
+}
+
 .selection-card {
   display: flex;
   justify-content: space-between;
@@ -106,4 +117,3 @@
   margin-top: 28rpx;
   margin-bottom: 40rpx;
 }
-

@@ -68,10 +68,38 @@ Page({
     wx.chooseImage({
       count: 1,
       sizeType: ["compressed"],
-      sourceType: ["album", "camera"],
+      sourceType: ["album"],
       success: (result) => {
         const filePath = result.tempFilePaths[0];
         this.setData({ selectedImage: filePath });
+      }
+    });
+  },
+
+  openImageSource() {
+    wx.showActionSheet({
+      itemList: ["手机自拍", "从相册选择"],
+      success: (result) => {
+        if (result.tapIndex === 0) {
+          this.takeSelfie();
+          return;
+        }
+        if (result.tapIndex === 1) {
+          this.chooseImage();
+        }
+      }
+    });
+  },
+
+  takeSelfie() {
+    wx.navigateTo({
+      url: "/pages/capture/index",
+      success: (result) => {
+        result.eventChannel.on("captured", (payload) => {
+          if (payload && payload.filePath) {
+            this.setData({ selectedImage: payload.filePath });
+          }
+        });
       }
     });
   },
