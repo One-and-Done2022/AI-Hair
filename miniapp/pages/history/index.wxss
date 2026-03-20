@@ -1,6 +1,15 @@
 .history-header {
   padding: 30rpx;
   margin-bottom: 24rpx;
+  background:
+    radial-gradient(circle at top right, rgba(191, 219, 254, 0.7), transparent 34%),
+    linear-gradient(135deg, #f8fbff, #eff6ff);
+}
+
+.history-kicker {
+  color: #2563eb;
+  font-size: 22rpx;
+  font-weight: 700;
 }
 
 .history-item {

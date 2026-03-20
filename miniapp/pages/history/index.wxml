@@ -1,5 +1,6 @@
 <view class="screen">
   <view class="panel history-header">
+    <view class="history-kicker">History</view>
     <view class="title">我的生成历史</view>
     <view class="subtitle">按时间倒序展示，每条记录都可以重新打开查看结果。</view>
   </view>

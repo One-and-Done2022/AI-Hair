@@ -62,7 +62,8 @@ function resolveSelectionState(catalog, cached) {
     styleLineOptions: STYLE_LINE_OPTIONS,
     selectedGender,
     selectedStyleLine,
-    selectedHairstyleId: selectedHairstyle ? selectedHairstyle.id : ""
+    selectedHairstyleId: selectedHairstyle ? selectedHairstyle.id : "",
+    selectedHairstyleName: selectedHairstyle ? selectedHairstyle.name : ""
   };
 }
 
@@ -74,7 +75,8 @@ Page({
     styleLineOptions: STYLE_LINE_OPTIONS,
     selectedGender: "male",
     selectedStyleLine: "all",
-    selectedHairstyleId: ""
+    selectedHairstyleId: "",
+    selectedHairstyleName: ""
   },
 
   async onLoad() {
@@ -112,7 +114,8 @@ Page({
     this.setData({
       selectedGender: gender,
       visibleHairstyles,
-      selectedHairstyleId: selectedHairstyle ? selectedHairstyle.id : ""
+      selectedHairstyleId: selectedHairstyle ? selectedHairstyle.id : "",
+      selectedHairstyleName: selectedHairstyle ? selectedHairstyle.name : ""
     });
   },
 
@@ -129,13 +132,17 @@ Page({
     this.setData({
       selectedStyleLine: styleLine,
       visibleHairstyles,
-      selectedHairstyleId: selectedHairstyle ? selectedHairstyle.id : ""
+      selectedHairstyleId: selectedHairstyle ? selectedHairstyle.id : "",
+      selectedHairstyleName: selectedHairstyle ? selectedHairstyle.name : ""
     });
   },
 
   selectHairstyle(event) {
+    const selectedId = event.currentTarget.dataset.id;
+    const selectedHairstyle = findById(this.data.hairstyles, selectedId);
     this.setData({
-      selectedHairstyleId: event.currentTarget.dataset.id
+      selectedHairstyleId: selectedId,
+      selectedHairstyleName: selectedHairstyle ? selectedHairstyle.name : ""
     });
   },
 

@@ -34,17 +34,22 @@ Page({
       const cachedSelection = wx.getStorageSync("templateSelection") || {};
       const selectedHairstyle =
         findById(catalog.hairstyles, cachedSelection.hairstyle && cachedSelection.hairstyle.id) ||
-        catalog.hairstyles[0] ||
         null;
       const selectedScene =
         findById(catalog.scenes, cachedSelection.scene && cachedSelection.scene.id) ||
-        catalog.scenes[0] ||
         null;
-      wx.setStorageSync("templateSelection", {
-        hairstyle: selectedHairstyle,
-        scene: selectedScene,
-        gender: selectedHairstyle ? selectedHairstyle.gender : "male"
-      });
+      if (selectedHairstyle || selectedScene) {
+        wx.setStorageSync("templateSelection", {
+          hairstyle: selectedHairstyle,
+          scene: selectedScene,
+          gender:
+            (selectedHairstyle && selectedHairstyle.gender) ||
+            cachedSelection.gender ||
+            "male"
+        });
+      } else {
+        wx.removeStorageSync("templateSelection");
+      }
       this.setData({
         selectedHairstyle,
         selectedScene

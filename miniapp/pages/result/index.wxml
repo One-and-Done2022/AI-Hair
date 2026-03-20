@@ -3,7 +3,7 @@
     <view class="status-head">
       <view>
         <view class="title">生成结果</view>
-        <view class="subtitle">任务会保存在历史记录中，你可以稍后再回来查看。</view>
+        <view class="subtitle">任务会保存在历史记录中。你可以先看首图，再等候选图自动补齐。</view>
       </view>
       <view class="status-pill">{{statusLabel}}</view>
     </view>
@@ -11,6 +11,11 @@
       <view class="meta-item">发型：{{job.hairstyle_name || '处理中'}}</view>
       <view class="meta-item">场景：{{job.scene_name || '处理中'}}</view>
       <view class="meta-item">任务 ID：{{job.job_id}}</view>
+    </view>
+    <view class="status-chip-row">
+      <view class="status-chip">自动轮询刷新</view>
+      <view class="status-chip">{{status === 'succeeded' ? '推荐结果已就绪' : status === 'preview_ready' ? '首图已先返回' : '支持后台继续生成'}}</view>
+      <view class="status-chip">支持保存与分享</view>
     </view>
   </view>
 
@@ -113,8 +118,9 @@
       <view class="gallery-head">
         <view>
           <view class="gallery-title">候选结果</view>
-          <view class="gallery-subtitle">顶部展示的是系统筛选出的最佳结果，继续滑动可以查看完整候选图。</view>
+          <view class="gallery-subtitle">顶部主图是系统筛选出的最佳结果，继续横向滑动可以查看完整候选图。</view>
         </view>
+        <view class="gallery-count">{{resultImageUrls.length}} 张</view>
       </view>
       <scroll-view class="gallery-scroll" scroll-x="true" enable-flex="true" show-scrollbar="false">
         <view
@@ -125,6 +131,7 @@
           data-url="{{item}}"
         >
           <image class="gallery-thumb-image" src="{{item}}" mode="aspectFill" lazy-load="true"></image>
+          <view class="gallery-thumb-rank">{{index + 1}}</view>
           <view wx:if="{{index === 0}}" class="gallery-thumb-label">系统推荐</view>
           <view wx:else class="gallery-thumb-label">候选 {{index + 1}}</view>
         </view>

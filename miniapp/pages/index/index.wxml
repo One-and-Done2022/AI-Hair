@@ -1,13 +1,30 @@
 <view class="screen landing-screen">
   <view class="hero-card landing-hero">
-    <view class="hero-eyebrow">AIFace Studio</view>
+    <view class="hero-topbar">
+      <view class="hero-eyebrow">AIFace Studio</view>
+      <view class="hero-status">真实身份感优先</view>
+    </view>
     <view class="title">上传一张生活照，生成更自然的换发写真</view>
-    <view class="subtitle">先选发型，再挑场景。系统会尽量保留你的真实脸部特征与整体气质。</view>
+    <view class="subtitle">先选发型，再挑场景。系统会尽量保留你的真实脸部特征、气质和性别表达。</view>
     <button class="hero-cta" bindtap="openImageSource">立即上传照片</button>
     <view class="hero-points">
       <view class="hero-point">单人照片</view>
-      <view class="hero-point">保留身份感</view>
       <view class="hero-point">发型 + 场景双改造</view>
+      <view class="hero-point">生成结果保存在历史</view>
+    </view>
+    <view class="hero-stats">
+      <view class="hero-stat">
+        <view class="hero-stat-value">1 张</view>
+        <view class="hero-stat-label">参考图</view>
+      </view>
+      <view class="hero-stat">
+        <view class="hero-stat-value">2 步</view>
+        <view class="hero-stat-label">选模板</view>
+      </view>
+      <view class="hero-stat">
+        <view class="hero-stat-value">3 张</view>
+        <view class="hero-stat-label">候选结果</view>
+      </view>
     </view>
   </view>
 
@@ -16,6 +33,7 @@
       <view>
         <view class="step-kicker">STEP 1</view>
         <view class="section-title">上传照片</view>
+        <view class="section-copy">上传框本身即可点击。推荐胸口以上近景、自然光、无遮挡。</view>
       </view>
       <view class="section-hint">核心动作</view>
     </view>
@@ -29,20 +47,21 @@
         </view>
       </view>
       <view class="preview-actions">
-        <button class="secondary-button mini-button" bindtap="previewImage">预览</button>
-        <button class="secondary-button mini-button" bindtap="chooseImage">重选照片</button>
+        <button class="secondary-button mini-button" bindtap="previewImage">预览原图</button>
+        <button class="secondary-button mini-button" bindtap="chooseImage">重选相册</button>
         <button class="secondary-button mini-button" bindtap="takeSelfie">重新自拍</button>
       </view>
       <view class="quality-card">
-        <view class="quality-title">当前照片已就绪</view>
-        <view class="quality-copy">建议保持单人、胸口以上、五官无遮挡。满意后可以直接去下一步选择模板。</view>
+        <view class="quality-title">照片已就绪</view>
+        <view class="quality-copy">下一步去选发型与场景。开始生成前，系统会先做人脸校验并检查图片尺寸、比例和清晰度。</view>
       </view>
     </view>
 
     <view wx:else class="upload-dropzone" bindtap="openImageSource">
+      <view class="dropzone-badge">相册 / 自拍</view>
       <view class="dropzone-icon">+</view>
       <view class="dropzone-title">点击上传单人生活照</view>
-      <view class="dropzone-copy">支持相册选择或手机自拍。建议胸口以上近景、光线清晰、无遮挡。</view>
+      <view class="dropzone-copy">支持相册选择或手机自拍。建议胸口以上近景、五官清楚、不要多人同框。</view>
       <view class="dropzone-cta">选择照片</view>
     </view>
 
@@ -51,13 +70,13 @@
         <view class="guide-title">推荐照片</view>
         <view class="guide-line">单人出镜，脸部清楚</view>
         <view class="guide-line">胸口以上，角度自然</view>
-        <view class="guide-line">分辨率至少 512px</view>
+        <view class="guide-line">JPG / PNG，边长至少 512px</view>
       </view>
       <view class="guide-card guide-bad">
         <view class="guide-title">不推荐</view>
         <view class="guide-line">多人同框或脸被遮挡</view>
         <view class="guide-line">过暗、过曝、严重模糊</view>
-        <view class="guide-line">脸太小或比例过长过宽</view>
+        <view class="guide-line">比例过长、脸太小或文件过大</view>
       </view>
     </view>
   </view>
@@ -67,12 +86,31 @@
       <view>
         <view class="step-kicker">STEP 2</view>
         <view class="section-title">选择发型与场景</view>
+        <view class="section-copy">先去发型页确定风格，再到场景页完成搭配。</view>
       </view>
-      <view class="section-hint">先发型后场景</view>
+      <view class="section-hint">两步完成</view>
+    </view>
+
+    <view class="combo-hero">
+      <view class="combo-kicker">当前组合</view>
+      <view class="combo-title">
+        {{selectedHairstyle ? selectedHairstyle.name : '还未选择发型'}}{{selectedScene ? ' · ' + selectedScene.name : ''}}
+      </view>
+      <view class="combo-subtitle">
+        {{selectedHairstyle && selectedScene ? '组合已准备好，可以直接开始生成。' : '还差模板选择，先完成发型和场景搭配。'}}
+      </view>
+      <view class="combo-chip-row">
+        <view class="combo-chip {{selectedHairstyle ? 'ready' : ''}}">
+          {{selectedHairstyle ? '发型已选' : '待选发型'}}
+        </view>
+        <view class="combo-chip {{selectedScene ? 'ready' : ''}}">
+          {{selectedScene ? '场景已选' : '待选场景'}}
+        </view>
+      </view>
     </view>
 
     <view class="selection-stack">
-      <view class="selection-summary-card" bindtap="openTemplatePicker">
+      <view class="selection-summary-card {{selectedHairstyle ? 'selection-ready' : ''}}" bindtap="openTemplatePicker">
         <image
           wx:if="{{selectedHairstyle && selectedHairstyle.cover_url}}"
           class="selection-cover"
@@ -80,15 +118,16 @@
           mode="aspectFill"
           lazy-load="true"
         ></image>
+        <view wx:else class="selection-cover selection-cover-placeholder">发</view>
         <view class="selection-body">
           <view class="selection-label">已选发型</view>
           <view class="selection-value">{{selectedHairstyle ? selectedHairstyle.name : '去选择发型'}}</view>
-          <view class="selection-meta">{{selectedHairstyle ? selectedHairstyle.style_line_label : '推荐先确定整体风格'}}</view>
+          <view class="selection-meta">{{selectedHairstyle ? selectedHairstyle.style_line_label : '先确定整体风格线'}}</view>
         </view>
         <view class="selection-arrow">></view>
       </view>
 
-      <view class="selection-summary-card" bindtap="openScenePicker">
+      <view class="selection-summary-card {{selectedScene ? 'selection-ready scene-ready' : ''}}" bindtap="openScenePicker">
         <image
           wx:if="{{selectedScene && selectedScene.cover_url}}"
           class="selection-cover"
@@ -96,37 +135,41 @@
           mode="aspectFill"
           lazy-load="true"
         ></image>
+        <view wx:else class="selection-cover selection-cover-placeholder scene-placeholder">景</view>
         <view class="selection-body">
           <view class="selection-label">已选场景</view>
           <view class="selection-value">{{selectedScene ? selectedScene.name : '去选择场景'}}</view>
-          <view class="selection-meta">{{selectedScene ? selectedScene.style_line_label : '会根据发型风格推荐搭配'}}</view>
+          <view class="selection-meta">{{selectedScene ? selectedScene.style_line_label : '系统会根据发型风格推荐搭配'}}</view>
         </view>
         <view class="selection-arrow">></view>
       </view>
     </view>
 
     <view class="selection-actions">
-      <button class="secondary-button half-button" bindtap="openTemplatePicker">选发型</button>
-      <button class="secondary-button half-button" bindtap="openScenePicker">选场景</button>
+      <button class="secondary-button half-button" bindtap="openTemplatePicker">先选发型</button>
+      <button class="secondary-button half-button" bindtap="openScenePicker">再选场景</button>
     </view>
   </view>
 
   <view class="panel section-card trust-card">
-    <view class="section-title">开始生成前你会得到什么</view>
+    <view class="section-title">生成前你会得到什么</view>
     <view class="trust-list">
-      <view class="trust-item">系统会先做人脸校验，明显多人照或人脸太小会直接拦截。</view>
-      <view class="trust-item">生成过程中可以返回首页，任务记录会保存在历史页。</view>
-      <view class="trust-item">完成后会提供系统推荐图、候选图以及原图对比入口。</view>
+      <view class="trust-item">生成中可以返回首页，任务状态会保存在历史记录。</view>
+      <view class="trust-item">系统会先返回首图预览，再补齐候选图并筛出推荐结果。</view>
+      <view class="trust-item">结果页支持保存、分享、候选图切换和原图对比。</view>
     </view>
     <button class="secondary-button history-button" bindtap="goHistory">查看历史记录</button>
   </view>
 
-  <button
-    class="primary-button generate-button"
-    loading="{{loading}}"
-    disabled="{{!selectedImage || !selectedHairstyle || !selectedScene || loading}}"
-    bindtap="createJob"
-  >
-    {{selectedImage && selectedHairstyle && selectedScene ? '开始生成写真' : '上传并选择模板后开始生成'}}
-  </button>
+  <view class="generate-bar">
+    <button
+      class="primary-button generate-button"
+      loading="{{loading}}"
+      disabled="{{!selectedImage || !selectedHairstyle || !selectedScene || loading}}"
+      bindtap="createJob"
+    >
+      {{selectedImage && selectedHairstyle && selectedScene ? '开始生成写真' : '上传并选好模板后开始生成'}}
+    </button>
+    <view class="generate-helper">生成结果会自动保存到历史记录，可随时回来查看。</view>
+  </view>
 </view>

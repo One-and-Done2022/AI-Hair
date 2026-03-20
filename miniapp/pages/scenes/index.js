@@ -60,7 +60,8 @@ function resolveVisibleSceneSelection(scenes, styleLine, selectedSceneId) {
   const selectedScene = findById(visibleScenes, selectedSceneId) || visibleScenes[0] || null;
   return {
     visibleScenes,
-    selectedSceneId: selectedScene ? selectedScene.id : ""
+    selectedSceneId: selectedScene ? selectedScene.id : "",
+    selectedSceneName: selectedScene ? selectedScene.name : ""
   };
 }
 
@@ -73,7 +74,8 @@ Page({
     selectedSceneId: "",
     selectedStyleLine: "all",
     styleLineOptions: STYLE_LINE_OPTIONS,
-    visibleScenes: []
+    visibleScenes: [],
+    selectedSceneName: ""
   },
 
   async onLoad(options) {
@@ -122,7 +124,8 @@ Page({
         scenes: decoratedScenes,
         selectedStyleLine,
         visibleScenes: sceneSelection.visibleScenes,
-        selectedSceneId: sceneSelection.selectedSceneId
+        selectedSceneId: sceneSelection.selectedSceneId,
+        selectedSceneName: sceneSelection.selectedSceneName
       });
     } catch (error) {
       showError(error, { fallback: "加载失败" });
@@ -132,8 +135,11 @@ Page({
   },
 
   selectScene(event) {
+    const selectedId = event.currentTarget.dataset.id;
+    const selectedScene = findById(this.data.scenes, selectedId);
     this.setData({
-      selectedSceneId: event.currentTarget.dataset.id
+      selectedSceneId: selectedId,
+      selectedSceneName: selectedScene ? selectedScene.name : ""
     });
   },
 
@@ -147,7 +153,8 @@ Page({
     this.setData({
       selectedStyleLine: styleLine,
       visibleScenes: sceneSelection.visibleScenes,
-      selectedSceneId: sceneSelection.selectedSceneId
+      selectedSceneId: sceneSelection.selectedSceneId,
+      selectedSceneName: sceneSelection.selectedSceneName
     });
   },
 

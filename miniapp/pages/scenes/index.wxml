@@ -6,7 +6,7 @@
   </view>
 
   <view class="panel combo-card">
-    <view class="combo-label">当前组合</view>
+    <view class="combo-label">当前发型</view>
     <view class="combo-row">
       <image
         wx:if="{{selectedHairstyle && selectedHairstyle.cover_url}}"
@@ -25,7 +25,10 @@
 
   <view class="sticky-toolbar">
     <view class="panel toolbar-card">
-      <view class="toolbar-note">已按当前发型风格优先推荐场景</view>
+      <view class="toolbar-top">
+        <view class="toolbar-note">已按当前发型风格优先推荐场景</view>
+        <view class="toolbar-count">{{visibleScenes.length}} 个场景</view>
+      </view>
       <scroll-view class="style-switch" scroll-x="true" enable-flex="true" show-scrollbar="false">
         <view
           wx:for="{{styleLineOptions}}"
@@ -40,10 +43,16 @@
     </view>
   </view>
 
+  <view class="panel current-selection-card">
+    <view class="current-selection-kicker">当前已选</view>
+    <view class="current-selection-title">{{selectedSceneName || '请选择一个场景'}}</view>
+    <view class="current-selection-copy">选好后会返回首页，组合状态会同步更新。</view>
+  </view>
+
   <view class="panel list-card">
     <view class="list-head">
       <view class="section-title">场景模板</view>
-      <view class="list-meta">{{visibleScenes.length}} 个场景</view>
+      <view class="list-meta">推荐会优先置顶</view>
     </view>
     <view class="template-grid">
       <view
@@ -69,17 +78,21 @@
             <view class="tile-chip">{{item.style_line_label}}</view>
           </view>
           <view class="tile-name">{{item.name}}</view>
-          <view class="tile-desc">{{item.description}}</view>
           <view wx:if="{{item.shortTags.length}}" class="tile-tag-row">
             <text wx:for="{{item.shortTags}}" wx:for-item="tag" wx:key="*this" class="tile-tag">{{tag}}</text>
           </view>
+          <view class="tile-desc">{{item.description}}</view>
         </view>
       </view>
     </view>
   </view>
 
-  <view class="action-row">
-    <button class="secondary-button half-button" bindtap="goBackStep">返回改发型</button>
-    <button class="primary-button half-button" bindtap="saveSelection">完成当前组合</button>
+  <view class="action-bar">
+    <button class="secondary-button action-back" bindtap="goBackStep">返回改发型</button>
+    <view class="action-summary">
+      <view class="action-label">已选场景</view>
+      <view class="action-value">{{selectedSceneName || '请选择'}}</view>
+    </view>
+    <button class="primary-button action-confirm" bindtap="saveSelection">完成当前组合</button>
   </view>
 </view>
