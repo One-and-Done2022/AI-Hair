@@ -26,6 +26,14 @@ const UPLOAD_ERROR_MESSAGES = {
   multiple_faces: {
     title: "检测到多人",
     content: "请上传只包含一位人物的照片。"
+  },
+  face_too_small: {
+    title: "人脸不够清晰",
+    content: "请上传胸口以上近景或更近的人像照，确保人物脸部足够清晰、占画面更大。"
+  },
+  face_detection_unavailable: {
+    title: "人脸检测暂不可用",
+    content: "服务器当前无法完成人脸检测，请稍后再试。"
   }
 };
 

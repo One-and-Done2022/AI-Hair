@@ -22,6 +22,9 @@ ALLOWED_MIME_TYPES = {
     "image/jpeg": ".jpg",
     "image/png": ".png",
 }
+MIN_FACE_WIDTH_RATIO = 0.14
+MIN_FACE_HEIGHT_RATIO = 0.14
+MIN_FACE_AREA_RATIO = 0.025
 
 
 class UploadValidationError(Exception):
@@ -43,7 +46,7 @@ class SavedResultBundle:
     candidate_paths: list[str]
 
 
-def _detect_face_count(image_bytes: bytes) -> int | None:
+def _detect_faces(image_bytes: bytes) -> tuple[tuple[int, int, int, int], ...] | None:
     if cv2 is None or np is None:
         return None
 
@@ -57,7 +60,7 @@ def _detect_face_count(image_bytes: bytes) -> int | None:
         cv2.data.haarcascades + "haarcascade_frontalface_default.xml"
     )
     faces = cascade.detectMultiScale(grayscale, scaleFactor=1.1, minNeighbors=5)
-    return len(faces)
+    return tuple(tuple(int(value) for value in face) for face in faces)
 
 
 def validate_upload_bytes(image_bytes: bytes, mime_type: str | None) -> ImageMetadata:
@@ -86,11 +89,31 @@ def validate_upload_bytes(image_bytes: bytes, mime_type: str | None) -> ImageMet
             "bad_aspect_ratio", "Please upload a standard portrait or everyday photo."
         )
 
-    face_count = _detect_face_count(image_bytes)
-    if settings.enforce_face_detection and face_count == 0:
-        raise UploadValidationError("no_face", "No clear face was detected in the image.")
-    if settings.enforce_face_detection and face_count and face_count > 1:
-        raise UploadValidationError("multiple_faces", "Please upload a photo with only one person.")
+    if settings.enforce_face_detection:
+        faces = _detect_faces(image_bytes)
+        if faces is None:
+            raise UploadValidationError(
+                "face_detection_unavailable",
+                "Face detection is temporarily unavailable. Please try again later.",
+            )
+        if len(faces) == 0:
+            raise UploadValidationError("no_face", "No clear face was detected in the image.")
+        if len(faces) > 1:
+            raise UploadValidationError("multiple_faces", "Please upload a photo with only one person.")
+
+        _, _, face_width, face_height = faces[0]
+        face_area_ratio = (face_width * face_height) / float(width * height)
+        face_width_ratio = face_width / float(width)
+        face_height_ratio = face_height / float(height)
+        if (
+            face_width_ratio < MIN_FACE_WIDTH_RATIO
+            or face_height_ratio < MIN_FACE_HEIGHT_RATIO
+            or face_area_ratio < MIN_FACE_AREA_RATIO
+        ):
+            raise UploadValidationError(
+                "face_too_small",
+                "Please upload a chest-up or close-up portrait with one clear face.",
+            )
 
     return ImageMetadata(width=width, height=height, extension=ALLOWED_MIME_TYPES[mime_type])
 

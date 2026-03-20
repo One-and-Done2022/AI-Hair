@@ -39,7 +39,9 @@ cp .env.example .env
 
 - `ALLOW_DEV_LOGIN=true`
 - `USE_MOCK_GENERATOR=true`
-- `ENFORCE_FACE_DETECTION=false`
+- `ENFORCE_FACE_DETECTION=true`
+
+当前默认启用严格人脸检测：上传图必须且仅允许一张清晰人脸，合照、远景人像、脸过小或看不清的图片会被拦截。
 
 3. 启动后端：
 

@@ -74,7 +74,7 @@ def get_settings() -> Settings:
         wechat_app_id=os.getenv("WECHAT_APP_ID", "").strip(),
         wechat_app_secret=os.getenv("WECHAT_APP_SECRET", "").strip(),
         allow_dev_login=_env_bool("ALLOW_DEV_LOGIN", True),
-        enforce_face_detection=_env_bool("ENFORCE_FACE_DETECTION", False),
+        enforce_face_detection=_env_bool("ENFORCE_FACE_DETECTION", True),
         max_upload_size_mb=int(os.getenv("MAX_UPLOAD_SIZE_MB", "10")),
         api_token_ttl_hours=int(os.getenv("API_TOKEN_TTL_HOURS", "72")),
         cors_allow_origins=cors_allow_origins or ["*"],

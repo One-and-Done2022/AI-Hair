@@ -6,6 +6,7 @@ import sys
 import time
 from pathlib import Path
 
+import pytest
 from PIL import Image
 from fastapi.testclient import TestClient
 
@@ -26,6 +27,7 @@ def _build_test_image() -> bytes:
 def _build_app(tmp_path):
     os.environ["USE_MOCK_GENERATOR"] = "true"
     os.environ["ALLOW_DEV_LOGIN"] = "true"
+    os.environ["ENFORCE_FACE_DETECTION"] = "false"
     os.environ["STORAGE_DIR"] = str(tmp_path / "storage")
     os.environ["DATABASE_PATH"] = str(tmp_path / "storage" / "app.db")
 
@@ -133,3 +135,33 @@ def test_auth_upload_job_history_flow(tmp_path):
         assert len(items) == 1
         assert items[0]["job_id"] == job_id
         assert len(items[0]["result_image_urls"]) == 3
+
+
+def test_strict_face_detection_rejects_small_face(monkeypatch):
+    os.environ["ENFORCE_FACE_DETECTION"] = "true"
+
+    from app.config import get_settings
+    from app.services import storage
+
+    get_settings.cache_clear()
+    monkeypatch.setattr(storage, "_detect_faces", lambda _: ((0, 0, 60, 60),))
+
+    with pytest.raises(storage.UploadValidationError) as excinfo:
+        storage.validate_upload_bytes(_build_test_image(), "image/png")
+
+    assert excinfo.value.code == "face_too_small"
+
+
+def test_strict_face_detection_accepts_single_clear_face(monkeypatch):
+    os.environ["ENFORCE_FACE_DETECTION"] = "true"
+
+    from app.config import get_settings
+    from app.services import storage
+
+    get_settings.cache_clear()
+    monkeypatch.setattr(storage, "_detect_faces", lambda _: ((120, 140, 180, 220),))
+
+    metadata = storage.validate_upload_bytes(_build_test_image(), "image/png")
+
+    assert metadata.width == 768
+    assert metadata.height == 1024
