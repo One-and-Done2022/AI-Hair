@@ -49,7 +49,7 @@ def test_build_prompt_uses_faceprompt_single_image_structure():
     assert hairstyle is not None
     assert scene is not None
 
-    prompt = templates.build_prompt(hairstyle, scene)
+    prompt = templates.build_prompt(hairstyle, scene, seed_source="prompt-structure")
 
     assert "生成 1 张高相似度、写实风格的人像写真" in prompt
     assert "忽略原照片中的背景、原服饰、原发型和原有动作" in prompt
@@ -62,6 +62,35 @@ def test_build_prompt_uses_faceprompt_single_image_structure():
     assert "不可以有不符合物理逻辑的身体部位" in prompt
     assert "只选择 1 种主体动作" in prompt
     assert "不要与主体动作叠加成不合理肢体效果" in prompt
+    assert "后端每次只选 1 个主体动作" in prompt
+
+
+def test_prompt_filters_hand_conflicting_hairstyle_actions():
+    from app.services import templates
+
+    compatible_actions = templates._filter_compatible_hairstyle_actions(
+        "双手轻握杯子停顿",
+        ["看镜头微抬下巴", "单手抓起头顶前区发束", "半侧脸回望镜头"],
+    )
+
+    assert compatible_actions == ["看镜头微抬下巴", "半侧脸回望镜头"]
+
+
+def test_build_prompt_uses_one_subject_action_and_one_compatible_detail_action():
+    from app.services import templates
+
+    hairstyle = templates.get_hairstyle("male-forward-spikes")
+    scene = templates.get_scene("morning-window-softlight")
+
+    assert hairstyle is not None
+    assert scene is not None
+
+    prompt = templates.build_prompt(hairstyle, scene, seed_source="hand-conflict-scene")
+
+    assert "靠在窗台边；抬手整理窗边发丝；双手轻握杯子停顿" not in prompt
+    assert "人物动作：单张图中只选择 1 种主体动作，本张图固定为：" in prompt
+    assert "单手抓起头顶前区发束" not in prompt
+    assert "双手抓起顶部卷度" not in prompt
 
 
 def test_faceprompt_catalog_counts_and_legacy_aliases():

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import json
 from collections.abc import Iterable
 from functools import lru_cache
@@ -70,6 +71,44 @@ NEGATIVE_CONSTRAINTS_SECTION = (
     "图片需要符合物理逻辑，不要在画面中多出不合逻辑的手和身体部位。"
     "不可以有不符合物理逻辑的身体部位（例如同时出现多于两只手的情况）。"
 )
+HAND_ACTION_KEYWORDS = (
+    "单手",
+    "双手",
+    "抬手",
+    "扶住",
+    "扶额",
+    "扶椅",
+    "扶背",
+    "手扶",
+    "手指",
+    "指尖",
+    "轻握",
+    "握住",
+    "握杯",
+    "托住",
+    "撑住",
+    "抓起",
+    "抓头发",
+    "抓头顶",
+    "拨开",
+    "拨动",
+    "拨到",
+    "拨发",
+    "拢住",
+    "拢起",
+    "拿起",
+    "拿着",
+    "碰触",
+    "触碰",
+    "按住",
+    "挡住",
+    "压住",
+    "捏",
+    "整理",
+    "挂到耳后",
+    "挂在耳后",
+    "抱臂",
+)
 
 
 def _load_json(name: str) -> list[dict]:
@@ -94,6 +133,62 @@ def _dedupe_keep_order(items: Iterable[str]) -> list[str]:
 
 def _format_option_list(items: Iterable[str]) -> str:
     return "；".join(_dedupe_keep_order(items))
+
+
+def _action_uses_hands(action: str) -> bool:
+    cleaned = action.strip()
+    if not cleaned:
+        return False
+    return cleaned.startswith("手") or any(keyword in cleaned for keyword in HAND_ACTION_KEYWORDS)
+
+
+def _select_one(items: Iterable[str], *, seed_source: str, label: str) -> str:
+    choices = _dedupe_keep_order(items)
+    if not choices:
+        return ""
+    if len(choices) == 1:
+        return choices[0]
+    digest = hashlib.sha256(f"{seed_source}:{label}".encode("utf-8")).hexdigest()
+    index = int(digest[:8], 16) % len(choices)
+    return choices[index]
+
+
+def _filter_compatible_hairstyle_actions(
+    subject_action: str, hairstyle_actions: Iterable[str]
+) -> list[str]:
+    actions = _dedupe_keep_order(hairstyle_actions)
+    if not subject_action or not _action_uses_hands(subject_action):
+        return actions
+    return [action for action in actions if not _action_uses_hands(action)]
+
+
+def _select_prompt_details(
+    hairstyle: dict, scene: dict, *, seed_source: str
+) -> dict[str, str]:
+    selected_expression = _select_one(
+        scene.get("expressions", []),
+        seed_source=seed_source,
+        label=f"{scene['id']}:expression",
+    )
+    selected_scene_action = _select_one(
+        scene.get("actions", []),
+        seed_source=seed_source,
+        label=f"{scene['id']}:subject-action",
+    )
+    compatible_hairstyle_actions = _filter_compatible_hairstyle_actions(
+        selected_scene_action,
+        hairstyle.get("expression_action", []),
+    )
+    selected_hairstyle_action = _select_one(
+        compatible_hairstyle_actions,
+        seed_source=seed_source,
+        label=f"{hairstyle['id']}:detail-action",
+    )
+    return {
+        "expression": selected_expression,
+        "subject_action": selected_scene_action,
+        "hairstyle_action": selected_hairstyle_action,
+    }
 
 
 def _resolve_alias(category: str, template_id: str) -> str:
@@ -193,17 +288,26 @@ def get_scene(template_id: str) -> dict | None:
     return _find_template(SCENES, resolved_id)
 
 
-def build_prompt(hairstyle: dict, scene: dict) -> str:
-    expression_text = "、".join(_dedupe_keep_order(scene.get("expressions", []))[:3])
-    scene_action_text = _format_option_list(scene.get("actions", [])[:3])
-    hairstyle_action_text = _format_option_list(hairstyle.get("expression_action", [])[:3])
+def build_prompt(hairstyle: dict, scene: dict, *, seed_source: str | None = None) -> str:
+    selection_seed = seed_source or f"{hairstyle['id']}:{scene['id']}"
+    selected_details = _select_prompt_details(
+        hairstyle,
+        scene,
+        seed_source=selection_seed,
+    )
+    expression_text = selected_details["expression"] or "自然看向镜头"
+    scene_action_text = selected_details["subject_action"] or "自然站立或静止停顿"
+    hairstyle_action_text = selected_details["hairstyle_action"]
     outfit_text = "；".join(_dedupe_keep_order(scene.get("outfit_hints", []))[:2])
     constraint_text = "；".join(
         _dedupe_keep_order(
             [
                 *scene.get("constraints", []),
                 *hairstyle.get("constraints", []),
+                "后端每次只选 1 个主体动作，不再把多个动作选项同时写进同一条提示词",
                 "单张图中只保留一种主体动作，不要把多个互斥手部动作同时放进同一画面",
+                "如果主体动作已经占用手部，不要再叠加抓头发、拨头发、握杯等额外手部细节动作",
+                "发型细节动作不要与主体动作叠加成不合理肢体效果",
             ]
         )
     )
@@ -218,14 +322,16 @@ def build_prompt(hairstyle: dict, scene: dict) -> str:
                 f" 光线：{_normalize_sentence(scene['lighting'])}。"
                 f" 风格氛围：{_normalize_sentence(scene['style_mood'])}。"
             ),
-            f"人物表情：{expression_text}。",
+            f"人物表情：本张图只选择 1 种主表情，固定为：{expression_text}。",
             (
-                "人物动作：单张图中只选择 1 种主体动作，优先从以下动作中任选其一："
+                "人物动作：单张图中只选择 1 种主体动作，本张图固定为："
                 f"{scene_action_text}。"
             ),
             (
-                "发型展示动作参考：如需突出发型，只允许额外参考以下 1 种细节动作，"
-                f"不要与主体动作叠加成不合理肢体效果：{hairstyle_action_text}。"
+                "发型展示动作参考：如需突出发型，本张图最多只允许额外参考 1 种细节动作，"
+                f"固定为：{hairstyle_action_text}。"
+                if hairstyle_action_text
+                else "发型展示动作参考：本张图不额外叠加发型手部细节动作，以免与主体动作产生手部冲突。"
             ),
             f"服饰：{outfit_text or '白色宽松衬衫，内搭浅色背心或吊带'}。",
             f"人物发型：{_normalize_sentence(hairstyle['prompt_core'])}。",

@@ -51,7 +51,11 @@ def create_job(
     if hairstyle is None or scene is None:
         raise HTTPException(status_code=400, detail="Invalid hairstyle or scene template.")
 
-    prompt = templates.build_prompt(hairstyle, scene)
+    prompt = templates.build_prompt(
+        hairstyle,
+        scene,
+        seed_source=f"{payload.upload_id}:{payload.hairstyle_id}:{payload.scene_id}",
+    )
     job = repository.create_job(
         user_id=current_user["id"],
         upload_id=payload.upload_id,
