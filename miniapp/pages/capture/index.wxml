@@ -1,9 +1,4 @@
 <view class="screen capture-screen">
-  <view class="panel capture-header">
-    <view class="section-title">自拍上传</view>
-    <view class="subtitle">默认使用前置摄像头。建议胸口以上近景，人物占画面更大，便于通过人脸检测。</view>
-  </view>
-
   <view class="panel capture-panel">
     <view wx:if="{{permissionDenied}}" class="permission-card">
       <view class="permission-title">未获得相机权限</view>
@@ -14,7 +9,10 @@
 
     <block wx:elif="{{photoPath}}">
       <image class="capture-preview" src="{{photoPath}}" mode="aspectFill"></image>
-      <view class="capture-tip">确认这张照片作为上传原图后，再进入发型与场景生成流程。</view>
+      <view class="capture-copy-block">
+        <view class="section-title capture-title">自拍上传</view>
+        <view class="capture-tip">确认这张照片作为上传原图后，再进入发型与场景生成流程。</view>
+      </view>
       <view class="capture-actions">
         <button class="secondary-button half-button" bindtap="retakePhoto">重新自拍</button>
         <button class="primary-button half-button" bindtap="confirmPhoto">使用这张照片</button>
@@ -22,20 +20,25 @@
     </block>
 
     <block wx:else>
-      <camera
-        class="camera-view"
-        device-position="{{devicePosition}}"
-        flash="off"
-        binderror="handleCameraError"
-      ></camera>
-      <view class="capture-tip">请保持单人入镜、正脸或半侧脸，避免合照、远景和过暗环境。</view>
-      <view class="capture-actions">
-        <button class="secondary-button half-button" bindtap="chooseFromAlbum">从相册选择</button>
-        <button class="secondary-button half-button" bindtap="switchCamera">切换镜头</button>
+      <view class="camera-shell">
+        <camera
+          class="camera-view"
+          device-position="{{devicePosition}}"
+          flash="off"
+          binderror="handleCameraError"
+        ></camera>
       </view>
       <button class="primary-button shutter-button" loading="{{takingPhoto}}" bindtap="takePhoto">
         立即自拍
       </button>
+      <view class="capture-copy-block">
+        <view class="section-title capture-title">自拍上传</view>
+        <view class="capture-tip">请保持单人入镜、正脸或半侧脸，避免合照、远景和过暗环境。</view>
+      </view>
+      <view class="capture-actions">
+        <button class="secondary-button half-button" bindtap="chooseFromAlbum">从相册选择</button>
+        <button class="secondary-button half-button" bindtap="switchCamera">切换镜头</button>
+      </view>
     </block>
   </view>
 </view>

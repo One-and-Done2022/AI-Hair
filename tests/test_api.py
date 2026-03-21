@@ -721,3 +721,41 @@ def test_strict_face_detection_accepts_single_clear_face(monkeypatch):
 
     assert metadata.width == 768
     assert metadata.height == 1024
+
+
+def test_strict_face_detection_ignores_tiny_secondary_box(monkeypatch):
+    monkeypatch.setenv("ENFORCE_FACE_DETECTION", "true")
+
+    from app.config import get_settings
+    from app.services import storage
+
+    get_settings.cache_clear()
+    monkeypatch.setattr(
+        storage,
+        "_detect_faces",
+        lambda _: ((120, 140, 180, 220), (24, 30, 36, 36)),
+    )
+
+    metadata = storage.validate_upload_bytes(_build_test_image(), "image/png")
+
+    assert metadata.width == 768
+    assert metadata.height == 1024
+
+
+def test_strict_face_detection_rejects_multiple_prominent_faces(monkeypatch):
+    monkeypatch.setenv("ENFORCE_FACE_DETECTION", "true")
+
+    from app.config import get_settings
+    from app.services import storage
+
+    get_settings.cache_clear()
+    monkeypatch.setattr(
+        storage,
+        "_detect_faces",
+        lambda _: ((120, 140, 180, 220), (420, 150, 170, 210)),
+    )
+
+    with pytest.raises(storage.UploadValidationError) as excinfo:
+        storage.validate_upload_bytes(_build_test_image(), "image/png")
+
+    assert excinfo.value.code == "multiple_faces"

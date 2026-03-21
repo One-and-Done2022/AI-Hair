@@ -32,6 +32,11 @@ ALLOWED_MIME_TYPES = {
 MIN_FACE_WIDTH_RATIO = 0.14
 MIN_FACE_HEIGHT_RATIO = 0.14
 MIN_FACE_AREA_RATIO = 0.025
+MIN_PROMINENT_FACE_AREA_RATIO = 0.008
+MIN_PROMINENT_FACE_WIDTH_RATIO = 0.11
+MIN_PROMINENT_FACE_HEIGHT_RATIO = 0.11
+FACE_OVERLAP_IOU_THRESHOLD = 0.35
+SECONDARY_FACE_AREA_SHARE = 0.38
 
 
 class UploadValidationError(Exception):
@@ -188,12 +193,92 @@ def _detect_faces(image_bytes: bytes) -> tuple[tuple[int, int, int, int], ...] |
     if decoded is None:
         return None
 
+    height, width = decoded.shape[:2]
     grayscale = cv2.cvtColor(decoded, cv2.COLOR_BGR2GRAY)
+    grayscale = cv2.equalizeHist(grayscale)
     cascade = cv2.CascadeClassifier(
         cv2.data.haarcascades + "haarcascade_frontalface_default.xml"
     )
-    faces = cascade.detectMultiScale(grayscale, scaleFactor=1.1, minNeighbors=5)
+    min_size = (max(64, int(width * 0.08)), max(64, int(height * 0.08)))
+    faces = cascade.detectMultiScale(
+        grayscale,
+        scaleFactor=1.08,
+        minNeighbors=6,
+        minSize=min_size,
+    )
     return tuple(tuple(int(value) for value in face) for face in faces)
+
+
+def _face_area(face: tuple[int, int, int, int]) -> int:
+    return face[2] * face[3]
+
+
+def _face_iou(
+    left: tuple[int, int, int, int], right: tuple[int, int, int, int]
+) -> float:
+    left_x1, left_y1, left_w, left_h = left
+    right_x1, right_y1, right_w, right_h = right
+    left_x2 = left_x1 + left_w
+    left_y2 = left_y1 + left_h
+    right_x2 = right_x1 + right_w
+    right_y2 = right_y1 + right_h
+
+    overlap_x1 = max(left_x1, right_x1)
+    overlap_y1 = max(left_y1, right_y1)
+    overlap_x2 = min(left_x2, right_x2)
+    overlap_y2 = min(left_y2, right_y2)
+
+    overlap_w = max(0, overlap_x2 - overlap_x1)
+    overlap_h = max(0, overlap_y2 - overlap_y1)
+    overlap_area = overlap_w * overlap_h
+    if overlap_area == 0:
+        return 0.0
+
+    union_area = _face_area(left) + _face_area(right) - overlap_area
+    if union_area <= 0:
+        return 0.0
+    return overlap_area / float(union_area)
+
+
+def _normalize_detected_faces(
+    faces: tuple[tuple[int, int, int, int], ...], width: int, height: int
+) -> tuple[tuple[int, int, int, int], ...]:
+    if not faces:
+        return ()
+
+    image_area = float(width * height)
+    deduplicated: list[tuple[int, int, int, int]] = []
+    for face in sorted(faces, key=_face_area, reverse=True):
+        area_ratio = _face_area(face) / image_area
+        if area_ratio < (MIN_PROMINENT_FACE_AREA_RATIO * 0.45):
+            continue
+        if any(_face_iou(face, kept) >= FACE_OVERLAP_IOU_THRESHOLD for kept in deduplicated):
+            continue
+        deduplicated.append(face)
+
+    if not deduplicated:
+        largest_face = max(faces, key=_face_area)
+        deduplicated = [largest_face]
+
+    if len(deduplicated) <= 1:
+        return tuple(deduplicated)
+
+    largest_area = float(_face_area(deduplicated[0]))
+    prominent_faces = [
+        face
+        for face in deduplicated
+        if (
+            (_face_area(face) / image_area) >= MIN_PROMINENT_FACE_AREA_RATIO
+            or (face[2] / float(width)) >= MIN_PROMINENT_FACE_WIDTH_RATIO
+            or (face[3] / float(height)) >= MIN_PROMINENT_FACE_HEIGHT_RATIO
+            or (_face_area(face) / largest_area) >= SECONDARY_FACE_AREA_SHARE
+        )
+    ]
+
+    if not prominent_faces:
+        return (deduplicated[0],)
+
+    return tuple(prominent_faces)
 
 
 @lru_cache
@@ -266,6 +351,7 @@ def validate_upload_bytes(image_bytes: bytes, mime_type: str | None) -> ImageMet
                 "face_detection_unavailable",
                 "Face detection is temporarily unavailable. Please try again later.",
             )
+        faces = _normalize_detected_faces(faces, width, height)
         if len(faces) == 0:
             raise UploadValidationError("no_face", "No clear face was detected in the image.")
         if len(faces) > 1:

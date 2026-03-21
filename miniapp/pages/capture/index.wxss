@@ -2,37 +2,43 @@
   padding-bottom: 40rpx;
 }
 
-.capture-header {
-  padding: 30rpx;
-  margin-bottom: 24rpx;
-  background: linear-gradient(135deg, #fff7ed, #eff6ff);
+.capture-panel {
+  padding: 18rpx;
 }
 
-.capture-panel {
-  padding: 24rpx;
+.camera-shell {
+  margin-top: 4rpx;
 }
 
 .camera-view,
 .capture-preview {
   width: 100%;
-  height: 960rpx;
-  border-radius: 28rpx;
+  height: 860rpx;
+  border-radius: 30rpx;
   overflow: hidden;
   background: #0f172a;
   display: block;
 }
 
-.capture-tip {
+.capture-copy-block {
   margin-top: 20rpx;
+}
+
+.capture-title {
+  font-size: 32rpx;
+}
+
+.capture-tip {
+  margin-top: 12rpx;
   color: #475569;
-  font-size: 24rpx;
-  line-height: 1.7;
+  font-size: 25rpx;
+  line-height: 1.58;
 }
 
 .capture-actions {
   display: flex;
   gap: 18rpx;
-  margin-top: 24rpx;
+  margin-top: 22rpx;
 }
 
 .half-button {
@@ -42,6 +48,9 @@
 
 .shutter-button {
   margin-top: 18rpx;
+  height: 100rpx;
+  line-height: 1.1;
+  font-size: 30rpx;
 }
 
 .permission-card {
