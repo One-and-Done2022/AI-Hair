@@ -15,10 +15,43 @@ function getStatusLabel(status) {
   return "生成中";
 }
 
+function parseTimestamp(value) {
+  if (!value) {
+    return null;
+  }
+  const normalized = value.replace(/\+00:00$/, "Z");
+  const timestamp = Date.parse(normalized);
+  return Number.isNaN(timestamp) ? null : timestamp;
+}
+
+function pad(value) {
+  return String(value).padStart(2, "0");
+}
+
+function formatCreatedAt(value) {
+  const timestamp = parseTimestamp(value);
+  if (!timestamp) {
+    return value || "";
+  }
+
+  const date = new Date(timestamp);
+  const now = new Date();
+  const sameYear = date.getFullYear() === now.getFullYear();
+  const sameMonth = sameYear && date.getMonth() === now.getMonth();
+  const sameDay = sameMonth && date.getDate() === now.getDate();
+
+  if (sameDay) {
+    return `今天 ${pad(date.getHours())}:${pad(date.getMinutes())}`;
+  }
+
+  return `${date.getMonth() + 1}月${date.getDate()}日 ${pad(date.getHours())}:${pad(date.getMinutes())}`;
+}
+
 function normalizeHistoryItems(items) {
   return (items || []).map((item) => ({
     ...item,
-    status_label: getStatusLabel(item.status)
+    status_label: getStatusLabel(item.status),
+    created_at_label: formatCreatedAt(item.created_at)
   }));
 }
 

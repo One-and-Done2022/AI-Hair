@@ -1,34 +1,37 @@
-<view class="screen">
-  <view class="panel history-header">
-    <view class="history-kicker">History</view>
-    <view class="title">我的生成历史</view>
-    <view class="subtitle">按时间倒序展示，每条记录都可以重新打开查看结果。</view>
+<view class="screen history-screen">
+  <view class="history-copy">
+    <view class="section-kicker">History</view>
+    <view class="title history-title">你的作品记录</view>
+    <view class="subtitle history-subtitle">生成完成后会自动保存在这里。</view>
   </view>
 
-  <view wx:if="{{items.length === 0}}" class="panel empty-state">
+  <view wx:if="{{items.length === 0}}" class="panel empty-state history-empty">
     <view>还没有生成记录，先去首页上传照片试试。</view>
   </view>
 
-  <view
-    wx:for="{{items}}"
-    wx:key="job_id"
-    class="history-card history-item"
-    bindtap="openJob"
-    data-job-id="{{item.job_id}}"
-  >
-    <view class="history-top">
+  <view wx:else class="history-grid">
+    <view
+      wx:for="{{items}}"
+      wx:key="job_id"
+      class="history-card history-item"
+      bindtap="openJob"
+      data-job-id="{{item.job_id}}"
+    >
+      <view class="history-image-shell">
+        <image
+          wx:if="{{item.result_image_url}}"
+          class="history-image"
+          src="{{item.result_image_url}}"
+          mode="aspectFill"
+          lazy-load="true"
+        ></image>
+        <view wx:else class="history-placeholder">
+          {{item.status === 'failed' ? '生成失败' : item.status === 'preview_ready' ? '首图已返回' : '生成中'}}
+        </view>
+        <view class="history-status {{item.status}}">{{item.status_label}}</view>
+      </view>
       <view class="history-name">{{item.hairstyle_name}} · {{item.scene_name}}</view>
-      <view class="history-status {{item.status}}">{{item.status_label}}</view>
-    </view>
-    <view class="history-time">{{item.created_at}}</view>
-    <image
-      wx:if="{{item.result_image_url}}"
-      class="history-image"
-      src="{{item.result_image_url}}"
-      mode="aspectFill"
-    ></image>
-    <view wx:else class="history-placeholder">
-      {{item.status === 'failed' ? '任务失败，点击查看详情' : item.status === 'preview_ready' ? '首图已返回，点击继续查看候选图补齐进度' : '任务仍在处理中，点击继续查看'}}
+      <view class="history-time">{{item.created_at_label}}</view>
     </view>
   </view>
 </view>

@@ -18,7 +18,8 @@ const STYLE_LINE_OPTIONS = [
 function decorateTemplate(item) {
   return {
     ...item,
-    shortTags: (item.tags || []).slice(0, 2)
+    shortTags: (item.tags || []).slice(0, 2),
+    primaryTag: (item.tags || [])[0] || ""
   };
 }
 

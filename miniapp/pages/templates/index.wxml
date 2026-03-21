@@ -1,30 +1,26 @@
 <view class="screen selector-screen">
-  <view class="panel step-hero">
-    <view class="step-badge">STEP 1 / 2</view>
-    <view class="section-title">先选发型</view>
-    <view class="subtitle">先确定性别和发型风格，再去下一页选择最合适的场景。选中状态会固定显示在底部。</view>
+  <view class="selector-copy">
+    <view class="section-kicker">01 / 发型</view>
+    <view class="title selector-title">选择你想尝试的发型</view>
+    <view class="subtitle selector-subtitle">先定风格，再去挑场景。</view>
   </view>
 
   <view class="sticky-toolbar">
-    <view class="panel toolbar-card">
-      <view class="toolbar-top">
-        <view class="toolbar-label">性别筛选</view>
-        <view class="toolbar-count">{{visibleHairstyles.length}} 款可选</view>
-      </view>
+    <view class="toolbar-shell">
       <view class="gender-switch">
-        <view
-          class="gender-pill {{selectedGender === 'male' ? 'active' : ''}}"
-          bindtap="selectGender"
-          data-gender="male"
-        >
-          男生发型
-        </view>
         <view
           class="gender-pill {{selectedGender === 'female' ? 'active' : ''}}"
           bindtap="selectGender"
           data-gender="female"
         >
-          女生发型
+          女生
+        </view>
+        <view
+          class="gender-pill {{selectedGender === 'male' ? 'active' : ''}}"
+          bindtap="selectGender"
+          data-gender="male"
+        >
+          男生
         </view>
       </view>
 
@@ -42,54 +38,37 @@
     </view>
   </view>
 
-  <view class="panel current-selection-card">
-    <view class="current-selection-kicker">当前已选</view>
-    <view class="current-selection-title">{{selectedHairstyleName || '请选择一款发型'}}</view>
-    <view class="current-selection-copy">下一步会根据这款发型优先推荐更匹配的场景。</view>
+  <view wx:if="{{selectedHairstyleName}}" class="panel current-pill-card">
+    <view class="current-label">已选发型</view>
+    <view class="current-value">{{selectedHairstyleName}}</view>
   </view>
 
-  <view class="panel list-card">
-    <view class="list-head">
-      <view class="section-title">发型模板</view>
-      <view class="list-meta">点击卡片即可切换</view>
-    </view>
-    <view class="template-grid">
-      <view
-        wx:for="{{visibleHairstyles}}"
-        wx:key="id"
-        class="template-tile {{selectedHairstyleId === item.id ? 'selected' : ''}}"
-        bindtap="selectHairstyle"
-        data-id="{{item.id}}"
-      >
-        <view class="tile-cover-shell">
-          <image
-            class="tile-cover"
-            src="{{item.cover_url}}"
-            mode="aspectFill"
-            lazy-load="true"
-          ></image>
-          <view wx:if="{{selectedHairstyleId === item.id}}" class="selected-check">✓</view>
-        </view>
-        <view class="tile-body">
-          <view class="tile-meta-row">
-            <view class="tile-chip type-chip">{{item.gender_label}}</view>
-            <view class="tile-chip">{{item.style_line_label}}</view>
-          </view>
-          <view class="tile-name">{{item.name}}</view>
-          <view wx:if="{{item.shortTags.length}}" class="tile-tag-row">
-            <text wx:for="{{item.shortTags}}" wx:for-item="tag" wx:key="*this" class="tile-tag">{{tag}}</text>
-          </view>
-          <view class="tile-desc">{{item.description}}</view>
-        </view>
+  <view class="template-grid">
+    <view
+      wx:for="{{visibleHairstyles}}"
+      wx:key="id"
+      class="template-tile {{selectedHairstyleId === item.id ? 'selected' : ''}}"
+      bindtap="selectHairstyle"
+      data-id="{{item.id}}"
+    >
+      <view class="tile-cover-shell">
+        <image
+          class="tile-cover"
+          src="{{item.cover_url}}"
+          mode="aspectFill"
+          lazy-load="true"
+        ></image>
+        <view wx:if="{{selectedHairstyleId === item.id}}" class="selected-check">已选</view>
+      </view>
+      <view class="tile-name">{{item.name}}</view>
+      <view class="tile-meta-row">
+        <view class="tile-chip primary-chip">{{item.style_line_label}}</view>
+        <view wx:if="{{item.primaryTag}}" class="tile-note">{{item.primaryTag}}</view>
       </view>
     </view>
   </view>
 
   <view class="save-bar">
-    <view class="save-summary">
-      <view class="save-label">已选发型</view>
-      <view class="save-value">{{selectedHairstyleName || '请选择'}}</view>
-    </view>
-    <button class="primary-button save-button" bindtap="goNext">下一步：选择场景</button>
+    <button class="primary-button save-button" bindtap="goNext">下一步</button>
   </view>
 </view>

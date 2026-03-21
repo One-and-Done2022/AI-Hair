@@ -1,15 +1,19 @@
 page {
   background:
-    radial-gradient(circle at top, rgba(191, 219, 254, 0.28), transparent 24%),
-    radial-gradient(circle at bottom right, rgba(204, 251, 241, 0.18), transparent 24%),
-    linear-gradient(180deg, #f7faff 0%, #edf3fb 100%);
-  color: #0f172a;
+    radial-gradient(circle at top left, rgba(238, 214, 205, 0.42), transparent 28%),
+    radial-gradient(circle at bottom right, rgba(245, 232, 224, 0.68), transparent 30%),
+    linear-gradient(180deg, #fbf7f4 0%, #f7f0eb 100%);
+  color: #302520;
   font-family: "PingFang SC", "Helvetica Neue", sans-serif;
+}
+
+button::after {
+  border: none;
 }
 
 .screen {
   min-height: 100vh;
-  padding: 28rpx;
+  padding: 28rpx 28rpx 180rpx;
   box-sizing: border-box;
 }
 
@@ -18,50 +22,70 @@ page {
 .job-card,
 .template-card,
 .history-card {
-  border-radius: 32rpx;
-  background: rgba(255, 255, 255, 0.92);
-  box-shadow: 0 20rpx 52rpx rgba(15, 23, 42, 0.08);
+  border-radius: 36rpx;
+  background: rgba(255, 255, 255, 0.84);
+  box-shadow: 0 24rpx 72rpx rgba(86, 66, 57, 0.08);
 }
 
 .title {
-  font-size: 46rpx;
+  font-size: 54rpx;
   font-weight: 700;
-  line-height: 1.2;
+  line-height: 1.18;
+  color: #302520;
 }
 
 .subtitle {
   margin-top: 14rpx;
-  color: #475569;
+  color: #8d786d;
   font-size: 26rpx;
-  line-height: 1.7;
+  line-height: 1.72;
 }
 
 .section-title {
-  font-size: 30rpx;
+  font-size: 34rpx;
   font-weight: 700;
-  margin-bottom: 20rpx;
+  color: #302520;
+}
+
+.section-kicker {
+  display: inline-flex;
+  align-items: center;
+  padding: 10rpx 20rpx;
+  border-radius: 999rpx;
+  background: #f7ece6;
+  color: #9d6f63;
+  font-size: 22rpx;
+  font-weight: 700;
+  line-height: 1;
 }
 
 .primary-button {
-  height: 92rpx;
-  line-height: 92rpx;
+  height: 94rpx;
+  line-height: 94rpx;
   border-radius: 999rpx;
-  background: linear-gradient(135deg, #173574 0%, #2563eb 62%, #14808f 100%);
+  background: linear-gradient(135deg, #8a6158 0%, #b67a69 100%);
   color: #ffffff;
   font-size: 30rpx;
-  font-weight: 600;
+  font-weight: 700;
   border: none;
-  box-shadow: 0 18rpx 40rpx rgba(37, 99, 235, 0.2);
+  box-shadow: 0 20rpx 48rpx rgba(157, 111, 99, 0.26);
+}
+
+.primary-button[disabled] {
+  background: #d8c9c2;
+  color: rgba(255, 255, 255, 0.92);
+  box-shadow: none;
 }
 
 .secondary-button {
-  height: 88rpx;
-  line-height: 88rpx;
+  height: 84rpx;
+  line-height: 84rpx;
   border-radius: 999rpx;
-  border: 2rpx solid #d7e3f4;
-  color: #0f172a;
-  background: rgba(255, 255, 255, 0.96);
+  border: none;
+  color: #5f4a42;
+  background: #f6ede8;
   font-size: 28rpx;
+  font-weight: 600;
 }
 
 .chip-row {
@@ -71,20 +95,20 @@ page {
 }
 
 .chip {
-  padding: 14rpx 24rpx;
+  padding: 12rpx 22rpx;
   border-radius: 999rpx;
-  background: #e0e7ff;
-  color: #1d4ed8;
-  font-size: 24rpx;
+  background: #f7ece6;
+  color: #9d6f63;
+  font-size: 22rpx;
   font-weight: 600;
 }
 
 .muted {
-  color: #64748b;
+  color: #8d786d;
 }
 
 .empty-state {
-  padding: 80rpx 40rpx;
+  padding: 88rpx 44rpx;
   text-align: center;
-  color: #64748b;
+  color: #8d786d;
 }

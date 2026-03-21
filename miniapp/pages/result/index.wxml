@@ -1,36 +1,31 @@
 <view class="screen result-screen">
-  <view class="job-card status-card">
-    <view class="status-head">
-      <view>
-        <view class="title">生成结果</view>
-        <view class="subtitle">任务会保存在历史记录中。你可以先看首图，再等候选图自动补齐。</view>
-      </view>
-      <view class="status-pill">{{statusLabel}}</view>
-    </view>
-    <view wx:if="{{job}}" class="meta-group">
-      <view class="meta-item">发型：{{job.hairstyle_name || '处理中'}}</view>
-      <view class="meta-item">场景：{{job.scene_name || '处理中'}}</view>
-      <view class="meta-item">任务 ID：{{job.job_id}}</view>
-    </view>
-    <view class="status-chip-row">
-      <view class="status-chip">自动轮询刷新</view>
-      <view class="status-chip">{{status === 'succeeded' ? '推荐结果已就绪' : status === 'preview_ready' ? '首图已先返回' : '支持后台继续生成'}}</view>
-      <view class="status-chip">支持保存与分享</view>
-    </view>
-  </view>
+  <view class="job-card result-hero">
+    <view class="hero-head">
+      <view class="hero-copy">
+        <view class="section-kicker">生成结果</view>
+        <view wx:if="{{status === 'succeeded'}}" class="hero-title">你的新发型已完成</view>
+        <view wx:elif="{{status === 'preview_ready'}}" class="hero-title">首张预览已经出来了</view>
+        <view wx:elif="{{status === 'failed'}}" class="hero-title">这次生成没有完成</view>
+        <view wx:else class="hero-title">正在生成中</view>
 
-  <view class="panel stage-panel">
+        <view wx:if="{{status === 'succeeded'}}" class="hero-subtitle">顶部主图是系统筛选出的推荐结果。</view>
+        <view wx:elif="{{status === 'preview_ready'}}" class="hero-subtitle">你已经可以先看第一张，剩余候选图还在继续生成。</view>
+        <view wx:elif="{{status === 'failed'}}" class="hero-subtitle">{{job && job.error_message ? job.error_message : '请稍后重新尝试。'}}</view>
+        <view wx:else class="hero-subtitle">保持页面打开会自动刷新，也可以稍后从历史记录回来查看。</view>
+      </view>
+      <view class="hero-status">{{statusLabel}}</view>
+    </view>
+
     <view class="stage-rail">
       <view wx:for="{{stageSteps}}" wx:key="label" class="stage-step {{item.state}}">
         <view class="stage-dot"></view>
-        <view class="stage-name">{{item.label}}</view>
       </view>
     </view>
 
     <view class="result-image-frame">
       <view wx:if="{{status === 'failed'}}" class="stage-state stage-state-failed">
         <view class="fail-title">生成失败</view>
-        <view class="subtitle">{{job && job.error_message ? job.error_message : '请稍后重新尝试'}}</view>
+        <view class="hero-subtitle">{{job && job.error_message ? job.error_message : '请稍后重新尝试。'}}</view>
       </view>
 
       <block wx:elif="{{resultImageUrl}}">
@@ -52,102 +47,74 @@
 
       <view wx:else class="stage-state stage-state-waiting">
         <view class="pulse-ring"></view>
-        <view class="waiting-title">正在根据你的照片重做发型与场景</view>
-        <view class="subtitle">保持页面打开会自动刷新；你也可以离开页面，稍后从历史记录重新进入。</view>
-        <view class="progress-card">
-          <view class="progress-header">
-            <view class="progress-stage">{{progressStage}}</view>
-            <view class="progress-percent">{{progressPercent}}%</view>
-          </view>
-          <view class="progress-track">
-            <view class="progress-fill" style="width: {{progressPercent}}%;"></view>
-          </view>
-          <view class="progress-meta">
-            <view class="progress-hint">{{progressHint}}</view>
-            <view class="progress-elapsed">已等待 {{elapsedSeconds}} 秒</view>
-          </view>
-        </view>
+        <view class="waiting-title">AI 正在重做发型与场景</view>
       </view>
     </view>
 
-    <view wx:if="{{status === 'preview_ready'}}" class="preview-notice">
-      <view class="preview-notice-title">首张图已先返回</view>
-      <view class="preview-notice-subtitle">你现在可以先查看第一张预览图。系统正在后台补齐候选图并筛选最终推荐结果。</view>
-      <view class="progress-card preview-progress-card">
-        <view class="progress-header">
-          <view class="progress-stage">{{progressStage}}</view>
-          <view class="progress-percent">{{progressPercent}}%</view>
-        </view>
-        <view class="progress-track">
-          <view class="progress-fill" style="width: {{progressPercent}}%;"></view>
-        </view>
-        <view class="progress-meta">
-          <view class="progress-hint">{{progressHint}}</view>
-          <view class="progress-elapsed">已等待 {{elapsedSeconds}} 秒</view>
-        </view>
+    <view wx:if="{{job}}" class="meta-line">
+      <view class="meta-name">{{job.hairstyle_name || '处理中'}} · {{job.scene_name || '处理中'}}</view>
+      <view class="meta-time">点按图片可查看大图</view>
+    </view>
+  </view>
+
+  <view wx:if="{{status !== 'succeeded' && status !== 'failed'}}" class="panel progress-panel">
+    <view class="progress-head">
+      <view class="progress-stage">{{progressStage}}</view>
+      <view class="progress-percent">{{progressPercent}}%</view>
+    </view>
+    <view class="progress-track">
+      <view class="progress-fill" style="width: {{progressPercent}}%;"></view>
+    </view>
+    <view class="progress-foot">
+      <view class="progress-hint">{{progressHint}}</view>
+      <view class="progress-elapsed">已等待 {{elapsedSeconds}} 秒</view>
+    </view>
+  </view>
+
+  <view wx:if="{{uploadUrl && resultImageUrl}}" class="compare-section">
+    <view class="section-title compare-title">原图对比</view>
+    <view class="compare-grid">
+      <view class="compare-card" bindtap="previewOriginal">
+        <image class="compare-image" src="{{uploadUrl}}" mode="aspectFill" lazy-load="true"></image>
+        <view class="compare-label">原图</view>
+      </view>
+      <view class="compare-card" bindtap="previewResult" data-url="{{resultImageUrl}}">
+        <image class="compare-image" src="{{resultImageUrl}}" mode="aspectFill" lazy-load="true"></image>
+        <view class="compare-label">结果</view>
       </view>
     </view>
+  </view>
 
-    <view wx:if="{{status !== 'succeeded' && status !== 'failed'}}" class="trust-grid">
-      <view class="trust-card">
-        <view class="trust-title">可以离开页面</view>
-        <view class="trust-copy">生成任务会继续进行，稍后可在历史记录页重新打开。</view>
-      </view>
-      <view class="trust-card">
-        <view class="trust-title">失败可重试</view>
-        <view class="trust-copy">如果这次不满意或生成失败，可以返回首页重新提交照片和模板。</view>
-      </view>
+  <view wx:if="{{status === 'succeeded' && resultImageUrls.length}}" class="candidate-section">
+    <view class="candidate-head">
+      <view class="section-title candidate-title">全部候选</view>
+      <view class="candidate-count">{{resultImageUrls.length}} 张</view>
     </view>
-
-    <view wx:if="{{uploadUrl && resultImageUrl}}" class="compare-section">
-      <view class="gallery-title">原图对比</view>
-      <view class="gallery-subtitle">先看原图与当前结果的差异，确认身份感和发型改造是否自然。</view>
-      <view class="compare-grid">
-        <view class="compare-card" bindtap="previewOriginal">
-          <image class="compare-image" src="{{uploadUrl}}" mode="aspectFill" lazy-load="true"></image>
-          <view class="compare-label">原图</view>
-        </view>
-        <view class="compare-card" bindtap="previewResult" data-url="{{resultImageUrl}}">
-          <image class="compare-image" src="{{resultImageUrl}}" mode="aspectFill" lazy-load="true"></image>
-          <view class="compare-label">当前结果</view>
-        </view>
+    <view class="candidate-list">
+      <view
+        wx:for="{{resultImageUrls}}"
+        wx:key="*this"
+        class="candidate-card {{index === 0 ? 'recommended' : ''}}"
+        bindtap="previewResult"
+        data-url="{{item}}"
+      >
+        <image class="candidate-image" src="{{item}}" mode="aspectFill" lazy-load="true"></image>
+        <view wx:if="{{index === 0}}" class="candidate-badge">系统推荐</view>
+        <view wx:else class="candidate-badge">候选 {{index + 1}}</view>
       </view>
     </view>
+  </view>
 
-    <view wx:if="{{status === 'succeeded' && resultImageUrls.length}}" class="gallery-section">
-      <view class="gallery-head">
-        <view>
-          <view class="gallery-title">候选结果</view>
-          <view class="gallery-subtitle">顶部主图是系统筛选出的最佳结果，继续横向滑动可以查看完整候选图。</view>
-        </view>
-        <view class="gallery-count">{{resultImageUrls.length}} 张</view>
-      </view>
-      <scroll-view class="gallery-scroll" scroll-x="true" enable-flex="true" show-scrollbar="false">
-        <view
-          wx:for="{{resultImageUrls}}"
-          wx:key="*this"
-          class="gallery-thumb {{index === 0 ? 'recommended' : ''}}"
-          bindtap="previewResult"
-          data-url="{{item}}"
-        >
-          <image class="gallery-thumb-image" src="{{item}}" mode="aspectFill" lazy-load="true"></image>
-          <view class="gallery-thumb-rank">{{index + 1}}</view>
-          <view wx:if="{{index === 0}}" class="gallery-thumb-label">系统推荐</view>
-          <view wx:else class="gallery-thumb-label">候选 {{index + 1}}</view>
-        </view>
-      </scroll-view>
+  <view wx:if="{{status === 'succeeded'}}" class="action-stack">
+    <button class="primary-button" bindtap="saveImage">保存图片</button>
+    <view class="action-row">
+      <button class="secondary-button half-button" open-type="share">分享</button>
+      <button class="secondary-button half-button" bindtap="createAnother">再生成一组</button>
     </view>
+  </view>
 
-    <view wx:if="{{status === 'succeeded'}}" class="action-grid">
-      <button class="primary-button" bindtap="saveImage">保存图片</button>
-      <button class="secondary-button" bindtap="previewComparison">查看原图对比</button>
-      <button class="secondary-button" open-type="share">分享小程序</button>
-      <button class="secondary-button" bindtap="createAnother">再生成一组</button>
-    </view>
-
-    <view wx:elif="{{status === 'failed'}}" class="action-grid single-column">
-      <button class="primary-button" bindtap="createAnother">返回首页重新生成</button>
-      <button class="secondary-button" bindtap="goHistory">去历史记录查看其他任务</button>
-    </view>
+  <view wx:elif="{{status === 'failed'}}" class="action-stack">
+    <button class="primary-button" bindtap="createAnother">返回首页重新生成</button>
+    <button class="secondary-button" bindtap="goHistory">去历史记录查看</button>
   </view>
 </view>

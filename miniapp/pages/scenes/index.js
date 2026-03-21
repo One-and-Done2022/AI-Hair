@@ -35,6 +35,7 @@ function decorateScene(item, selectedHairstyle) {
   return {
     ...item,
     shortTags: (item.tags || []).slice(0, 2),
+    primaryTag: (item.tags || [])[0] || "",
     recommended: isRecommended
   };
 }
