@@ -9,15 +9,15 @@
   ],
   "window": {
     "navigationBarTitleText": "AI 换发",
-    "navigationBarBackgroundColor": "#fff9f5",
+    "navigationBarBackgroundColor": "#f8f9fd",
     "navigationBarTextStyle": "black",
-    "backgroundColor": "#fbf7f4",
+    "backgroundColor": "#f8f9fd",
     "backgroundTextStyle": "dark"
   },
   "tabBar": {
-    "color": "#9b8578",
-    "selectedColor": "#5f4a42",
-    "backgroundColor": "#fffaf6",
+    "color": "#7a7d80",
+    "selectedColor": "#0058ba",
+    "backgroundColor": "#ffffff",
     "borderStyle": "white",
     "list": [
       {

@@ -1,15 +1,15 @@
 <view class="screen history-screen">
-  <view class="history-copy">
-    <view class="section-kicker">History</view>
-    <view class="title history-title">你的作品记录</view>
-    <view class="subtitle history-subtitle">生成完成后会自动保存在这里。</view>
+  <view class="history-head">
+    <view class="section-kicker">HISTORY</view>
+    <view class="title history-title">我的生成记录</view>
+    <view class="subtitle history-subtitle">按时间倒序展示，点开可继续查看结果。</view>
   </view>
 
-  <view wx:if="{{items.length === 0}}" class="panel empty-state history-empty">
-    <view>还没有生成记录，先去首页上传照片试试。</view>
+  <view wx:if="{{items.length === 0}}" class="panel empty-state">
+    <view>还没有生成记录，先去首页试一张照片。</view>
   </view>
 
-  <view wx:else class="history-grid">
+  <view wx:else class="history-list">
     <view
       wx:for="{{items}}"
       wx:key="job_id"
@@ -17,10 +17,10 @@
       bindtap="openJob"
       data-job-id="{{item.job_id}}"
     >
-      <view class="history-image-shell">
+      <view class="history-cover-shell">
         <image
           wx:if="{{item.result_image_url}}"
-          class="history-image"
+          class="history-cover"
           src="{{item.result_image_url}}"
           mode="aspectFill"
           lazy-load="true"

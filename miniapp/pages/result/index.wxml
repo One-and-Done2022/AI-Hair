@@ -1,31 +1,28 @@
 <view class="screen result-screen">
-  <view class="job-card result-hero">
-    <view class="hero-head">
-      <view class="hero-copy">
-        <view class="section-kicker">生成结果</view>
-        <view wx:if="{{status === 'succeeded'}}" class="hero-title">你的新发型已完成</view>
-        <view wx:elif="{{status === 'preview_ready'}}" class="hero-title">首张预览已经出来了</view>
-        <view wx:elif="{{status === 'failed'}}" class="hero-title">这次生成没有完成</view>
-        <view wx:else class="hero-title">正在生成中</view>
-
-        <view wx:if="{{status === 'succeeded'}}" class="hero-subtitle">顶部主图是系统筛选出的推荐结果。</view>
-        <view wx:elif="{{status === 'preview_ready'}}" class="hero-subtitle">你已经可以先看第一张，剩余候选图还在继续生成。</view>
-        <view wx:elif="{{status === 'failed'}}" class="hero-subtitle">{{job && job.error_message ? job.error_message : '请稍后重新尝试。'}}</view>
-        <view wx:else class="hero-subtitle">保持页面打开会自动刷新，也可以稍后从历史记录回来查看。</view>
-      </view>
-      <view class="hero-status">{{statusLabel}}</view>
+  <view class="progress-shell">
+    <view class="progress-top">
+      <view class="progress-state">{{status === 'succeeded' ? '100% 已完成' : status === 'preview_ready' ? '首图已返回' : status === 'failed' ? '生成失败' : '正在生成中'}}</view>
+      <view class="progress-percent">{{status === 'succeeded' ? '100%' : progressPercent + '%'}}</view>
     </view>
-
-    <view class="stage-rail">
-      <view wx:for="{{stageSteps}}" wx:key="label" class="stage-step {{item.state}}">
-        <view class="stage-dot"></view>
-      </view>
+    <view class="progress-track">
+      <view class="progress-fill" style="width: {{status === 'succeeded' ? 100 : progressPercent}}%;"></view>
     </view>
+  </view>
 
+  <view class="editorial-head">
+    <view wx:if="{{status === 'succeeded'}}" class="title editorial-title">你的新发型已完成</view>
+    <view wx:elif="{{status === 'preview_ready'}}" class="title editorial-title">首张预览已经出来了</view>
+    <view wx:elif="{{status === 'failed'}}" class="title editorial-title">这次生成没有完成</view>
+    <view wx:else class="title editorial-title">AI 正在为你生成结果</view>
+    <view class="subtitle editorial-subtitle">
+      {{status === 'succeeded' ? '顶部主图是系统筛选出的推荐结果。' : status === 'preview_ready' ? '剩余候选图还在继续生成。' : status === 'failed' ? (job && job.error_message ? job.error_message : '请稍后重试。') : '保持页面打开会自动刷新，也可以稍后从历史记录回来查看。'}}
+    </view>
+  </view>
+
+  <view class="job-card hero-card">
     <view class="result-image-frame">
-      <view wx:if="{{status === 'failed'}}" class="stage-state stage-state-failed">
-        <view class="fail-title">生成失败</view>
-        <view class="hero-subtitle">{{job && job.error_message ? job.error_message : '请稍后重新尝试。'}}</view>
+      <view wx:if="{{status === 'failed'}}" class="state-pane state-pane-failed">
+        <view class="state-title">生成失败</view>
       </view>
 
       <block wx:elif="{{resultImageUrl}}">
@@ -41,38 +38,30 @@
           bindtap="previewResult"
           data-url="{{resultImageUrl}}"
         ></image>
-        <view wx:if="{{status === 'preview_ready'}}" class="result-badge preview-badge">首图预览</view>
-        <view wx:elif="{{status === 'succeeded'}}" class="result-badge final-badge">系统推荐</view>
+        <view wx:if="{{status === 'preview_ready'}}" class="image-badge">首图预览</view>
+        <view wx:elif="{{status === 'succeeded'}}" class="image-badge">系统推荐</view>
       </block>
 
-      <view wx:else class="stage-state stage-state-waiting">
-        <view class="pulse-ring"></view>
-        <view class="waiting-title">AI 正在重做发型与场景</view>
+      <view wx:else class="state-pane">
+        <view class="pulse-dot"></view>
+        <view class="state-title">正在生成中</view>
       </view>
     </view>
 
-    <view wx:if="{{job}}" class="meta-line">
-      <view class="meta-name">{{job.hairstyle_name || '处理中'}} · {{job.scene_name || '处理中'}}</view>
-      <view class="meta-time">点按图片可查看大图</view>
+    <view wx:if="{{job}}" class="hero-meta">
+      <view class="hero-meta-title">{{job.hairstyle_name || '处理中'}} · {{job.scene_name || '处理中'}}</view>
+      <view class="hero-meta-copy">点按主图可查看大图</view>
     </view>
   </view>
 
-  <view wx:if="{{status !== 'succeeded' && status !== 'failed'}}" class="panel progress-panel">
-    <view class="progress-head">
-      <view class="progress-stage">{{progressStage}}</view>
-      <view class="progress-percent">{{progressPercent}}%</view>
-    </view>
-    <view class="progress-track">
-      <view class="progress-fill" style="width: {{progressPercent}}%;"></view>
-    </view>
-    <view class="progress-foot">
-      <view class="progress-hint">{{progressHint}}</view>
-      <view class="progress-elapsed">已等待 {{elapsedSeconds}} 秒</view>
-    </view>
+  <view wx:if="{{status !== 'succeeded' && status !== 'failed'}}" class="panel pending-panel">
+    <view class="pending-title">{{progressStage}}</view>
+    <view class="pending-copy">{{progressHint}}</view>
+    <view class="pending-time">已等待 {{elapsedSeconds}} 秒</view>
   </view>
 
   <view wx:if="{{uploadUrl && resultImageUrl}}" class="compare-section">
-    <view class="section-title compare-title">原图对比</view>
+    <view class="section-title">原图对比</view>
     <view class="compare-grid">
       <view class="compare-card" bindtap="previewOriginal">
         <image class="compare-image" src="{{uploadUrl}}" mode="aspectFill" lazy-load="true"></image>
@@ -87,7 +76,7 @@
 
   <view wx:if="{{status === 'succeeded' && resultImageUrls.length}}" class="candidate-section">
     <view class="candidate-head">
-      <view class="section-title candidate-title">全部候选</view>
+      <view class="section-title">全部候选</view>
       <view class="candidate-count">{{resultImageUrls.length}} 张</view>
     </view>
     <view class="candidate-list">
@@ -99,8 +88,7 @@
         data-url="{{item}}"
       >
         <image class="candidate-image" src="{{item}}" mode="aspectFill" lazy-load="true"></image>
-        <view wx:if="{{index === 0}}" class="candidate-badge">系统推荐</view>
-        <view wx:else class="candidate-badge">候选 {{index + 1}}</view>
+        <view class="candidate-badge">{{index === 0 ? '系统推荐' : '候选 ' + (index + 1)}}</view>
       </view>
     </view>
   </view>

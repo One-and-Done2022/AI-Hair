@@ -1,52 +1,67 @@
 <view class="screen landing-screen">
-  <view class="landing-copy">
-    <view class="landing-topline">
-      <view class="section-kicker">AIFace Studio</view>
-      <view class="soft-tag">自然换发</view>
-    </view>
-    <view class="title hero-title">一张生活照，换一组更自然的发型写真</view>
-    <view class="subtitle hero-subtitle">上传照片，选择发型与场景，系统会尽量保留你的真实身份感。</view>
+  <view class="landing-head">
+    <view class="section-kicker">CREATE YOUR LOOK</view>
+    <view class="title hero-title">上传照片，开始你的换发设计</view>
+    <view class="subtitle hero-subtitle">支持相册和自拍。先选发型，再去搭配场景。</view>
   </view>
 
   <view class="panel upload-panel">
-    <view class="section-kicker">上传照片</view>
-
-    <view wx:if="{{selectedImage}}" class="photo-preview-block">
-      <view class="photo-preview-card" bindtap="previewImage">
-        <image class="photo-preview-image" src="{{selectedImage}}" mode="aspectFill"></image>
-        <view class="photo-preview-overlay">
-          <view class="photo-preview-pill">已上传</view>
-          <view class="photo-preview-caption">点击查看原图</view>
-        </view>
+    <view wx:if="{{selectedImage}}" class="preview-shell">
+      <view class="preview-card" bindtap="previewImage">
+        <image class="preview-image" src="{{selectedImage}}" mode="aspectFill"></image>
+        <view class="preview-badge">已上传</view>
       </view>
-
-      <view class="photo-actions">
+      <view class="preview-actions">
         <button class="secondary-button compact-button" bindtap="chooseImage">重选相册</button>
         <button class="secondary-button compact-button" bindtap="takeSelfie">重新自拍</button>
       </view>
     </view>
 
     <view wx:else class="upload-stage" bindtap="openImageSource">
-      <view class="upload-stage-icon">+</view>
-      <view class="upload-stage-title">点击上传单人照片</view>
-      <view class="upload-stage-copy">支持相册和自拍</view>
+      <view class="upload-stage-frame">
+        <view class="upload-stage-deco"></view>
+        <view class="upload-stage-icon">+</view>
+        <view class="upload-stage-title">点击上传照片</view>
+        <view class="upload-stage-copy">支持 JPG、PNG 格式</view>
+      </view>
     </view>
 
-    <view class="guide-row">
-      <view class="guide-pill">单人近景</view>
-      <view class="guide-pill">自然光</view>
-      <view class="guide-pill">无遮挡</view>
-      <view class="guide-pill">JPG / PNG</view>
+    <view class="guide-grid">
+      <view class="guide-card">
+        <view class="guide-thumb">
+          <view class="guide-figure guide-figure-front">
+            <view class="guide-head"></view>
+            <view class="guide-body"></view>
+          </view>
+        </view>
+        <view class="guide-label">正面示例</view>
+      </view>
+      <view class="guide-card">
+        <view class="guide-thumb">
+          <view class="guide-figure guide-figure-side">
+            <view class="guide-head"></view>
+            <view class="guide-body"></view>
+          </view>
+        </view>
+        <view class="guide-label">侧面示例</view>
+      </view>
+      <view class="guide-card guide-card-bad">
+        <view class="guide-thumb guide-thumb-bad">
+          <view class="guide-ban-ring"></view>
+          <view class="guide-ban-line"></view>
+        </view>
+        <view class="guide-label guide-label-bad">不可遮挡</view>
+      </view>
     </view>
   </view>
 
   <view class="panel selection-panel">
-    <view class="selection-head">
+    <view class="selection-top">
       <view>
-        <view class="section-kicker">风格搭配</view>
-        <view class="selection-title">先选发型，再选场景</view>
+        <view class="section-kicker">STYLE SET</view>
+        <view class="section-title selection-title">选择发型与场景</view>
       </view>
-      <view class="selection-state">{{selectedHairstyle && selectedScene ? '已完成' : '待选择'}}</view>
+      <view class="selection-link" bindtap="goHistory">历史</view>
     </view>
 
     <view class="selection-grid">
@@ -58,8 +73,8 @@
           mode="aspectFill"
           lazy-load="true"
         ></image>
-        <view wx:else class="selection-cover selection-placeholder">发</view>
-        <view class="selection-label">发型</view>
+        <view wx:else class="selection-cover selection-placeholder">发型</view>
+        <view class="selection-label">已选发型</view>
         <view class="selection-value">{{selectedHairstyle ? selectedHairstyle.name : '去选择发型'}}</view>
       </view>
 
@@ -71,26 +86,22 @@
           mode="aspectFill"
           lazy-load="true"
         ></image>
-        <view wx:else class="selection-cover selection-placeholder scene-placeholder">景</view>
-        <view class="selection-label">场景</view>
+        <view wx:else class="selection-cover selection-placeholder">场景</view>
+        <view class="selection-label">已选场景</view>
         <view class="selection-value">{{selectedScene ? selectedScene.name : '去选择场景'}}</view>
       </view>
     </view>
-
-    <view class="selection-helper">
-      {{selectedHairstyle && selectedScene ? '搭配已准备好，可以直接开始生成。' : '发型决定整体风格，场景在下一页完成选择。'}}
-    </view>
   </view>
 
-  <view class="generate-bar">
+  <view class="floating-bar">
     <button
-      class="primary-button generate-button"
+      class="primary-button"
       loading="{{loading}}"
       disabled="{{!selectedImage || !selectedHairstyle || !selectedScene || loading}}"
       bindtap="createJob"
     >
       {{selectedImage && selectedHairstyle && selectedScene ? '开始生成' : '请先完成上传与搭配'}}
     </button>
-    <view class="generate-helper">结果会自动保存在历史记录</view>
+    <view class="floating-helper">生成结果会自动保存到历史记录</view>
   </view>
 </view>

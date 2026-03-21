@@ -2,129 +2,73 @@
   padding-bottom: calc(72rpx + env(safe-area-inset-bottom));
 }
 
-.result-hero {
-  padding: 28rpx;
-}
-
-.hero-head {
+.progress-top {
   display: flex;
-  align-items: flex-start;
   justify-content: space-between;
-  gap: 18rpx;
+  align-items: center;
+  margin-bottom: 12rpx;
 }
 
-.hero-copy {
-  flex: 1;
-  min-width: 0;
-}
-
-.hero-title {
-  margin-top: 18rpx;
-  font-size: 42rpx;
-  font-weight: 700;
-  line-height: 1.25;
-  color: #302520;
-}
-
-.hero-subtitle {
-  margin-top: 12rpx;
+.progress-state {
   font-size: 24rpx;
-  line-height: 1.7;
-  color: #8d786d;
-}
-
-.hero-status {
-  flex-shrink: 0;
-  padding: 12rpx 20rpx;
-  border-radius: 999rpx;
-  background: #f6ebe5;
-  color: #9d6f63;
-  font-size: 22rpx;
+  color: #0058ba;
   font-weight: 700;
 }
 
-.stage-rail {
-  margin-top: 24rpx;
-  display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: 12rpx;
+.progress-percent {
+  font-size: 30rpx;
+  color: #0058ba;
+  font-weight: 700;
 }
 
-.stage-step {
+.progress-track {
+  width: 100%;
   height: 10rpx;
   border-radius: 999rpx;
-  background: #eadfd9;
+  background: #dadddf;
   overflow: hidden;
 }
 
-.stage-dot {
-  width: 100%;
+.progress-fill {
   height: 100%;
   border-radius: inherit;
-  background: transparent;
+  background: linear-gradient(90deg, #0058ba 0%, #5091ff 100%);
 }
 
-.stage-step.done .stage-dot {
-  background: linear-gradient(90deg, #a87266 0%, #c58b7a 100%);
+.editorial-head {
+  padding: 34rpx 4rpx 22rpx;
 }
 
-.stage-step.active .stage-dot {
-  background: linear-gradient(90deg, #8a6158 0%, #b67a69 100%);
+.editorial-title {
+  max-width: 620rpx;
 }
 
-.stage-step.failed .stage-dot {
-  background: #cf5f5f;
+.editorial-subtitle {
+  max-width: 580rpx;
+}
+
+.hero-card {
+  padding: 20rpx;
 }
 
 .result-image-frame {
   position: relative;
   width: 100%;
-  height: 920rpx;
-  margin-top: 24rpx;
-  border-radius: 32rpx;
+  height: 900rpx;
+  border-radius: 30rpx;
   overflow: hidden;
-  background: linear-gradient(180deg, #efe4de 0%, #f9f3ef 100%);
+  background: linear-gradient(180deg, #eff1f5 0%, #dadddf 100%);
 }
 
-.stage-state {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  padding: 48rpx;
-}
-
-.stage-state-waiting {
-  background: linear-gradient(180deg, rgba(255, 250, 247, 0.94), rgba(246, 236, 230, 0.98));
-}
-
-.stage-state-failed {
-  background: linear-gradient(180deg, rgba(255, 244, 244, 0.96), rgba(255, 232, 232, 0.98));
-}
-
-.pulse-ring {
-  width: 140rpx;
-  height: 140rpx;
-  border-radius: 999rpx;
-  background: radial-gradient(circle, #f4d4c8 0%, #c58b7a 56%, rgba(197, 139, 122, 0.08) 70%);
-  box-shadow: 0 0 0 18rpx rgba(197, 139, 122, 0.1);
-}
-
-.waiting-title,
-.fail-title {
-  margin-top: 28rpx;
-  font-size: 34rpx;
-  font-weight: 700;
-  color: #302520;
+.result-image,
+.compare-image,
+.candidate-image {
+  display: block;
+  width: 100%;
 }
 
 .result-image {
-  width: 100%;
   height: 100%;
-  display: block;
 }
 
 .result-image.hidden {
@@ -136,161 +80,146 @@
   transition: opacity 0.24s ease;
 }
 
-.result-badge {
-  position: absolute;
-  left: 24rpx;
-  top: 24rpx;
-  z-index: 2;
-  padding: 10rpx 18rpx;
-  border-radius: 999rpx;
-  color: #ffffff;
-  font-size: 22rpx;
-  font-weight: 700;
-}
-
-.preview-badge {
-  background: rgba(182, 122, 105, 0.84);
-}
-
-.final-badge {
-  background: rgba(48, 37, 32, 0.78);
-}
-
 .result-image-skeleton {
   position: absolute;
   inset: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(180deg, #efe4de 0%, #f9f3ef 100%);
-  z-index: 1;
+  background: linear-gradient(180deg, #eff1f5 0%, #dadddf 100%);
 }
 
 .result-image-skeleton-text {
   font-size: 26rpx;
-  color: #8d786d;
+  color: #757778;
 }
 
-.meta-line {
+.image-badge {
+  position: absolute;
+  left: 18rpx;
+  top: 18rpx;
+  padding: 10rpx 18rpx;
+  border-radius: 999rpx;
+  background: rgba(0, 88, 186, 0.84);
+  color: #ffffff;
+  font-size: 22rpx;
+  font-weight: 700;
+}
+
+.state-pane {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 20rpx;
+  background: linear-gradient(180deg, rgba(245, 246, 247, 0.96), rgba(224, 227, 228, 0.98));
+}
+
+.state-pane-failed {
+  background: linear-gradient(180deg, rgba(255, 239, 238, 0.96), rgba(251, 81, 81, 0.12));
+}
+
+.pulse-dot {
+  width: 120rpx;
+  height: 120rpx;
+  border-radius: 999rpx;
+  background: radial-gradient(circle, #6c9fff 0%, #0058ba 62%, rgba(0, 88, 186, 0.08) 70%);
+  box-shadow: 0 0 0 18rpx rgba(0, 88, 186, 0.08);
+}
+
+.state-title {
+  font-size: 34rpx;
+  color: #2c2f30;
+  font-weight: 700;
+}
+
+.hero-meta {
   margin-top: 18rpx;
 }
 
-.meta-name {
+.hero-meta-title {
   font-size: 28rpx;
+  line-height: 1.35;
   font-weight: 700;
-  color: #302520;
+  color: #2c2f30;
 }
 
-.meta-time {
+.hero-meta-copy {
   margin-top: 8rpx;
   font-size: 22rpx;
-  color: #a08679;
+  color: #595c5d;
 }
 
-.progress-panel,
+.pending-panel,
 .compare-section,
 .candidate-section,
 .action-stack {
   margin-top: 24rpx;
 }
 
-.progress-panel {
+.pending-panel {
   padding: 24rpx;
 }
 
-.progress-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16rpx;
-}
-
-.progress-stage {
+.pending-title {
   font-size: 28rpx;
   font-weight: 700;
-  color: #302520;
+  color: #2c2f30;
 }
 
-.progress-percent {
-  font-size: 30rpx;
-  font-weight: 700;
-  color: #9d6f63;
+.pending-copy {
+  margin-top: 10rpx;
+  font-size: 24rpx;
+  line-height: 1.65;
+  color: #595c5d;
 }
 
-.progress-track {
-  width: 100%;
-  height: 14rpx;
-  margin-top: 20rpx;
-  border-radius: 999rpx;
-  background: #f0e4de;
-  overflow: hidden;
-}
-
-.progress-fill {
-  height: 100%;
-  border-radius: inherit;
-  background: linear-gradient(90deg, #8a6158 0%, #c58b7a 100%);
-}
-
-.progress-foot {
-  margin-top: 16rpx;
-  display: flex;
-  justify-content: space-between;
-  gap: 16rpx;
-}
-
-.progress-hint,
-.progress-elapsed {
+.pending-time {
+  margin-top: 12rpx;
   font-size: 22rpx;
-  line-height: 1.6;
-  color: #8d786d;
-}
-
-.compare-title,
-.candidate-title {
-  margin-bottom: 18rpx;
+  color: #757778;
 }
 
 .compare-grid {
+  margin-top: 18rpx;
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 16rpx;
 }
 
 .compare-card {
-  position: relative;
-  overflow: hidden;
   border-radius: 28rpx;
-  background: rgba(255, 255, 255, 0.82);
-  box-shadow: 0 18rpx 42rpx rgba(86, 66, 57, 0.06);
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow: 0 18rpx 44rpx rgba(0, 88, 186, 0.06);
 }
 
 .compare-image {
-  width: 100%;
-  height: 320rpx;
-  display: block;
-  background: #eadfd9;
+  height: 300rpx;
+  background: #eff1f2;
 }
 
 .compare-label {
-  padding: 18rpx 20rpx;
+  padding: 18rpx;
   font-size: 24rpx;
   font-weight: 700;
-  color: #302520;
+  color: #2c2f30;
 }
 
 .candidate-head {
   display: flex;
-  align-items: center;
   justify-content: space-between;
+  align-items: center;
   gap: 16rpx;
 }
 
 .candidate-count {
-  padding: 10rpx 18rpx;
+  padding: 10rpx 16rpx;
   border-radius: 999rpx;
-  background: #f7ece6;
-  color: #9d6f63;
+  background: #eef3fb;
+  color: #0058ba;
   font-size: 22rpx;
   font-weight: 700;
 }
@@ -303,30 +232,28 @@
 
 .candidate-card {
   position: relative;
-  overflow: hidden;
   border-radius: 30rpx;
-  background: rgba(255, 255, 255, 0.82);
-  box-shadow: 0 18rpx 42rpx rgba(86, 66, 57, 0.06);
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow: 0 18rpx 44rpx rgba(0, 88, 186, 0.06);
 }
 
 .candidate-card.recommended {
-  box-shadow: 0 22rpx 52rpx rgba(157, 111, 99, 0.16);
+  box-shadow: 0 20rpx 48rpx rgba(0, 88, 186, 0.12);
 }
 
 .candidate-image {
-  width: 100%;
   height: 760rpx;
-  display: block;
-  background: #eadfd9;
+  background: #eff1f2;
 }
 
 .candidate-badge {
   position: absolute;
-  left: 20rpx;
-  bottom: 20rpx;
+  left: 18rpx;
+  bottom: 18rpx;
   padding: 10rpx 18rpx;
   border-radius: 999rpx;
-  background: rgba(48, 37, 32, 0.68);
+  background: rgba(0, 88, 186, 0.84);
   color: #ffffff;
   font-size: 22rpx;
   font-weight: 700;
@@ -340,14 +267,4 @@
 
 .half-button {
   flex: 1;
-}
-
-@media (max-width: 360px) {
-  .compare-grid {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  .progress-foot {
-    flex-direction: column;
-  }
 }

@@ -1,74 +1,69 @@
 <view class="screen selector-screen">
-  <view class="selector-copy">
-    <view class="section-kicker">01 / 发型</view>
-    <view class="title selector-title">选择你想尝试的发型</view>
-    <view class="subtitle selector-subtitle">先定风格，再去挑场景。</view>
-  </view>
-
-  <view class="sticky-toolbar">
-    <view class="toolbar-shell">
-      <view class="gender-switch">
-        <view
-          class="gender-pill {{selectedGender === 'female' ? 'active' : ''}}"
-          bindtap="selectGender"
-          data-gender="female"
-        >
-          女生
-        </view>
-        <view
-          class="gender-pill {{selectedGender === 'male' ? 'active' : ''}}"
-          bindtap="selectGender"
-          data-gender="male"
-        >
-          男生
-        </view>
-      </view>
-
-      <scroll-view class="style-switch" scroll-x="true" enable-flex="true" show-scrollbar="false">
-        <view
-          wx:for="{{styleLineOptions}}"
-          wx:key="id"
-          class="style-chip {{selectedStyleLine === item.id ? 'active' : ''}}"
-          bindtap="selectStyleLine"
-          data-style-line="{{item.id}}"
-        >
-          {{item.label}}
-        </view>
-      </scroll-view>
+  <view class="progress-shell">
+    <view class="progress-track">
+      <view class="progress-fill progress-fill-step-one"></view>
+    </view>
+    <view class="progress-meta">
+      <view class="progress-step">STEP 1 OF 2</view>
+      <view class="progress-note">选择风格</view>
     </view>
   </view>
 
-  <view wx:if="{{selectedHairstyleName}}" class="panel current-pill-card">
-    <view class="current-label">已选发型</view>
-    <view class="current-value">{{selectedHairstyleName}}</view>
+  <view class="editorial-head">
+    <view class="title editorial-title">步骤 1：<text class="editorial-line">选择你的风格</text></view>
+    <view class="subtitle editorial-subtitle">AI 将根据你的面部特征和所选风格生成建议。</view>
   </view>
+
+  <view class="gender-switch">
+    <view
+      class="gender-pill {{selectedGender === 'female' ? 'active' : ''}}"
+      bindtap="selectGender"
+      data-gender="female"
+    >
+      女生
+    </view>
+    <view
+      class="gender-pill {{selectedGender === 'male' ? 'active' : ''}}"
+      bindtap="selectGender"
+      data-gender="male"
+    >
+      男生
+    </view>
+  </view>
+
+  <scroll-view class="style-switch" scroll-x="true" enable-flex="true" show-scrollbar="false">
+    <view
+      wx:for="{{styleLineOptions}}"
+      wx:key="id"
+      class="style-chip {{selectedStyleLine === item.id ? 'active' : ''}}"
+      bindtap="selectStyleLine"
+      data-style-line="{{item.id}}"
+    >
+      {{item.label}}
+    </view>
+  </scroll-view>
 
   <view class="template-grid">
     <view
       wx:for="{{visibleHairstyles}}"
       wx:key="id"
-      class="template-tile {{selectedHairstyleId === item.id ? 'selected' : ''}}"
+      class="template-tile {{selectedHairstyleId === item.id ? 'selected' : ''}} {{index % 2 === 1 ? 'offset' : ''}}"
       bindtap="selectHairstyle"
       data-id="{{item.id}}"
     >
       <view class="tile-cover-shell">
-        <image
-          class="tile-cover"
-          src="{{item.cover_url}}"
-          mode="aspectFill"
-          lazy-load="true"
-        ></image>
-        <view wx:if="{{selectedHairstyleId === item.id}}" class="selected-check">已选</view>
+        <image class="tile-cover" src="{{item.cover_url}}" mode="aspectFill" lazy-load="true"></image>
+        <view wx:if="{{selectedHairstyleId === item.id}}" class="selected-dot">✓</view>
       </view>
       <view class="tile-name">{{item.name}}</view>
-      <view class="tile-meta-row">
-        <view class="tile-chip primary-chip">{{item.style_line_label}}</view>
-        <view wx:if="{{item.primaryTag}}" class="tile-note">{{item.primaryTag}}</view>
+      <view class="tile-chip-row">
+        <view wx:if="{{item.primaryTag}}" class="tile-chip">{{item.primaryTag}}</view>
+        <view class="tile-chip">{{item.style_line_label}}</view>
       </view>
     </view>
   </view>
 
-  <view class="save-bar">
-    <button class="primary-button save-button" bindtap="goNext">下一步</button>
+  <view class="bottom-bar">
+    <button class="primary-button" bindtap="goNext">下一步</button>
   </view>
 </view>

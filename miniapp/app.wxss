@@ -1,9 +1,9 @@
 page {
   background:
-    radial-gradient(circle at top left, rgba(238, 214, 205, 0.42), transparent 28%),
-    radial-gradient(circle at bottom right, rgba(245, 232, 224, 0.68), transparent 30%),
-    linear-gradient(180deg, #fbf7f4 0%, #f7f0eb 100%);
-  color: #302520;
+    radial-gradient(circle at top right, rgba(108, 159, 255, 0.22), transparent 26%),
+    radial-gradient(circle at bottom left, rgba(216, 226, 255, 0.2), transparent 24%),
+    linear-gradient(180deg, #f8f9fd 0%, #f2f5f9 100%);
+  color: #2c2f30;
   font-family: "PingFang SC", "Helvetica Neue", sans-serif;
 }
 
@@ -17,63 +17,60 @@ button::after {
   box-sizing: border-box;
 }
 
-.hero-card,
 .panel,
 .job-card,
-.template-card,
 .history-card {
-  border-radius: 36rpx;
-  background: rgba(255, 255, 255, 0.84);
-  box-shadow: 0 24rpx 72rpx rgba(86, 66, 57, 0.08);
+  border-radius: 32rpx;
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow: 0 20rpx 52rpx rgba(0, 88, 186, 0.08);
 }
 
 .title {
-  font-size: 54rpx;
+  font-size: 58rpx;
+  line-height: 1.12;
   font-weight: 700;
-  line-height: 1.18;
-  color: #302520;
+  color: #2c2f30;
 }
 
 .subtitle {
   margin-top: 14rpx;
-  color: #8d786d;
-  font-size: 26rpx;
-  line-height: 1.72;
-}
-
-.section-title {
-  font-size: 34rpx;
-  font-weight: 700;
-  color: #302520;
+  font-size: 25rpx;
+  line-height: 1.68;
+  color: #595c5d;
 }
 
 .section-kicker {
   display: inline-flex;
   align-items: center;
-  padding: 10rpx 20rpx;
-  border-radius: 999rpx;
-  background: #f7ece6;
-  color: #9d6f63;
-  font-size: 22rpx;
-  font-weight: 700;
+  color: #0058ba;
+  font-size: 20rpx;
   line-height: 1;
+  font-weight: 700;
+  letter-spacing: 1.6rpx;
+}
+
+.section-title {
+  font-size: 34rpx;
+  line-height: 1.25;
+  font-weight: 700;
+  color: #2c2f30;
 }
 
 .primary-button {
-  height: 94rpx;
-  line-height: 94rpx;
+  height: 96rpx;
+  line-height: 96rpx;
   border-radius: 999rpx;
-  background: linear-gradient(135deg, #8a6158 0%, #b67a69 100%);
-  color: #ffffff;
+  border: none;
+  background: linear-gradient(135deg, #0058ba 0%, #004da4 100%);
+  color: #f0f2ff;
   font-size: 30rpx;
   font-weight: 700;
-  border: none;
-  box-shadow: 0 20rpx 48rpx rgba(157, 111, 99, 0.26);
+  box-shadow: 0 18rpx 40rpx rgba(0, 88, 186, 0.2);
 }
 
 .primary-button[disabled] {
-  background: #d8c9c2;
-  color: rgba(255, 255, 255, 0.92);
+  background: #c8d7f4;
+  color: rgba(240, 242, 255, 0.88);
   box-shadow: none;
 }
 
@@ -82,33 +79,14 @@ button::after {
   line-height: 84rpx;
   border-radius: 999rpx;
   border: none;
-  color: #5f4a42;
-  background: #f6ede8;
+  background: #eef3fb;
+  color: #0058ba;
   font-size: 28rpx;
   font-weight: 600;
 }
 
-.chip-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 16rpx;
-}
-
-.chip {
-  padding: 12rpx 22rpx;
-  border-radius: 999rpx;
-  background: #f7ece6;
-  color: #9d6f63;
-  font-size: 22rpx;
-  font-weight: 600;
-}
-
-.muted {
-  color: #8d786d;
-}
-
 .empty-state {
-  padding: 88rpx 44rpx;
+  padding: 92rpx 44rpx;
   text-align: center;
-  color: #8d786d;
+  color: #595c5d;
 }

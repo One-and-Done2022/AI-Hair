@@ -1,8 +1,17 @@
-<view class="screen selector-screen">
-  <view class="selector-copy">
-    <view class="section-kicker">02 / 场景</view>
-    <view class="title selector-title">选择适合这款发型的场景</view>
-    <view class="subtitle selector-subtitle">完成这一页后会回到首页。</view>
+<view class="screen scene-screen">
+  <view class="progress-shell">
+    <view class="progress-top">
+      <view class="progress-step-text">第二步 / 共三步</view>
+      <view class="progress-percent">66%</view>
+    </view>
+    <view class="progress-track">
+      <view class="progress-fill"></view>
+    </view>
+  </view>
+
+  <view class="editorial-head">
+    <view class="title editorial-title">步骤 2：选择你的场景</view>
+    <view class="subtitle editorial-subtitle">我们的 AI 将在你选择的场景里重现你的形象。</view>
   </view>
 
   <view class="panel combo-card">
@@ -19,57 +28,46 @@
       <view class="combo-title">{{selectedHairstyle ? selectedHairstyle.name : '未选择发型'}}</view>
       <view class="combo-meta">{{selectedHairstyle ? selectedHairstyle.style_line_label : '待选择'}}</view>
     </view>
-    <view class="combo-link" bindtap="goBackStep">改发型</view>
+    <view class="combo-link" bindtap="goBackStep">返回</view>
   </view>
 
-  <view class="sticky-toolbar">
-    <view class="toolbar-shell">
-      <scroll-view class="style-switch" scroll-x="true" enable-flex="true" show-scrollbar="false">
-        <view
-          wx:for="{{styleLineOptions}}"
-          wx:key="id"
-          class="style-chip {{selectedStyleLine === item.id ? 'active' : ''}}"
-          bindtap="selectStyleLine"
-          data-style-line="{{item.id}}"
-        >
-          {{item.label}}
-        </view>
-      </scroll-view>
+  <scroll-view class="style-switch" scroll-x="true" enable-flex="true" show-scrollbar="false">
+    <view
+      wx:for="{{styleLineOptions}}"
+      wx:key="id"
+      class="style-chip {{selectedStyleLine === item.id ? 'active' : ''}}"
+      bindtap="selectStyleLine"
+      data-style-line="{{item.id}}"
+    >
+      {{item.label}}
     </view>
-  </view>
+  </scroll-view>
 
-  <view wx:if="{{selectedSceneName}}" class="panel current-pill-card">
-    <view class="current-label">已选场景</view>
-    <view class="current-value">{{selectedSceneName}}</view>
-  </view>
-
-  <view class="template-grid">
+  <view class="scene-list">
     <view
       wx:for="{{visibleScenes}}"
       wx:key="id"
-      class="template-tile {{selectedSceneId === item.id ? 'selected' : ''}}"
+      class="scene-card {{selectedSceneId === item.id ? 'selected' : ''}}"
       bindtap="selectScene"
       data-id="{{item.id}}"
     >
-      <view class="tile-cover-shell">
-        <image
-          class="tile-cover"
-          src="{{item.cover_url}}"
-          mode="aspectFill"
-          lazy-load="true"
-        ></image>
-        <view wx:if="{{item.recommended}}" class="recommended-badge">推荐</view>
-        <view wx:if="{{selectedSceneId === item.id}}" class="selected-check">已选</view>
+      <view class="scene-cover-shell">
+        <image class="scene-cover" src="{{item.cover_url}}" mode="aspectFill" lazy-load="true"></image>
+        <view wx:if="{{item.recommended}}" class="scene-badge">推荐</view>
+        <view wx:if="{{selectedSceneId === item.id}}" class="scene-check">✓</view>
       </view>
-      <view class="tile-name">{{item.name}}</view>
-      <view class="tile-meta-row">
-        <view class="tile-chip primary-chip">{{item.style_line_label}}</view>
-        <view wx:if="{{item.primaryTag}}" class="tile-note">{{item.primaryTag}}</view>
+      <view class="scene-body">
+        <view class="scene-name">{{item.name}}</view>
+        <view class="scene-desc">{{item.description}}</view>
+        <view class="scene-chip-row">
+          <view class="scene-chip">{{item.style_line_label}}</view>
+          <view wx:if="{{item.primaryTag}}" class="scene-chip">{{item.primaryTag}}</view>
+        </view>
       </view>
     </view>
   </view>
 
-  <view class="save-bar">
-    <button class="primary-button save-button" bindtap="saveSelection">完成选择</button>
+  <view class="bottom-bar">
+    <button class="primary-button" bindtap="saveSelection">下一步</button>
   </view>
 </view>
