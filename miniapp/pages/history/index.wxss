@@ -43,19 +43,19 @@
   text-align: center;
   padding: 32rpx;
   box-sizing: border-box;
-  color: #595c5d;
-  font-size: 24rpx;
+  color: #4d5762;
+  font-size: 26rpx;
 }
 
 .history-status {
   position: absolute;
   left: 18rpx;
   top: 18rpx;
-  padding: 10rpx 16rpx;
+  padding: 12rpx 18rpx;
   border-radius: 999rpx;
   background: rgba(0, 88, 186, 0.82);
   color: #ffffff;
-  font-size: 20rpx;
+  font-size: 22rpx;
   font-weight: 700;
 }
 
@@ -69,9 +69,9 @@
 
 .history-name {
   margin-top: 18rpx;
-  font-size: 25rpx;
+  font-size: 27rpx;
   font-weight: 700;
-  color: #2c2f30;
+  color: #20242a;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -79,6 +79,6 @@
 
 .history-time {
   margin-top: 10rpx;
-  font-size: 20rpx;
-  color: #757778;
+  font-size: 22rpx;
+  color: #5d6670;
 }

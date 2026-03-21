@@ -30,36 +30,46 @@
   </view>
 
   <view class="job-card hero-card">
-    <view class="result-image-frame">
-      <view wx:if="{{status === 'failed'}}" class="state-pane state-pane-failed">
-        <view class="state-title">生成失败</view>
-      </view>
-
-      <block wx:elif="{{resultImageUrl}}">
-        <view wx:if="{{!resultImageLoaded}}" class="result-image-skeleton">
-          <view class="result-image-skeleton-text">{{imageLoadingText}}</view>
+    <view class="hero-frame-shell">
+      <view class="result-image-frame">
+        <view wx:if="{{status === 'failed'}}" class="state-pane state-pane-failed">
+          <view class="state-title">生成失败</view>
         </view>
-        <image
-          wx:if="{{resultImageUrl}}"
-          class="result-image {{resultImageLoaded ? 'loaded' : 'hidden'}}"
-          src="{{resultImageUrl}}"
-          mode="aspectFill"
-          bindload="handleResultImageLoad"
-          bindtap="previewResult"
-          data-url="{{resultImageUrl}}"
-        ></image>
-        <view wx:if="{{status === 'preview_ready'}}" class="image-badge">首图预览</view>
-        <view wx:elif="{{status === 'succeeded'}}" class="image-badge">系统推荐</view>
-      </block>
 
-      <view wx:else class="state-pane">
-        <view class="pulse-dot"></view>
-        <view class="state-title">正在生成</view>
+        <block wx:elif="{{resultImageUrl}}">
+          <view wx:if="{{!resultImageLoaded}}" class="result-image-skeleton">
+            <view class="result-image-skeleton-text">{{imageLoadingText}}</view>
+          </view>
+          <image
+            wx:if="{{resultImageUrl}}"
+            class="result-image {{resultImageLoaded ? 'loaded' : 'hidden'}}"
+            src="{{resultImageUrl}}"
+            mode="aspectFill"
+            bindload="handleResultImageLoad"
+            bindtap="previewResult"
+            data-url="{{resultImageUrl}}"
+          ></image>
+          <view class="result-image-overlay"></view>
+          <view wx:if="{{status === 'preview_ready'}}" class="image-badge">首图预览</view>
+          <view wx:elif="{{status === 'succeeded'}}" class="image-badge">系统推荐</view>
+        </block>
+
+        <view wx:else class="state-pane">
+          <view class="pulse-dot"></view>
+          <view class="state-title">正在生成</view>
+        </view>
       </view>
     </view>
 
     <view wx:if="{{job}}" class="hero-meta">
-      <view class="hero-meta-title">{{job.hairstyle_name || '处理中'}} · {{job.scene_name || '处理中'}}</view>
+      <view class="hero-meta-kicker">RECOMMENDED LOOK</view>
+      <view class="hero-meta-title">
+        {{status === 'succeeded' ? '系统为你挑出的最佳成片' : status === 'preview_ready' ? '首张预览已可先查看' : status === 'failed' ? '本次生成未完成' : '正在生成你的成片'}}
+      </view>
+      <view class="hero-meta-tag-row">
+        <view class="hero-meta-tag">{{job.hairstyle_name || '处理中'}}</view>
+        <view class="hero-meta-tag">{{job.scene_name || '处理中'}}</view>
+      </view>
       <view class="hero-meta-copy">点按主图可查看大图</view>
     </view>
   </view>
@@ -70,8 +80,9 @@
     <view class="pending-time">已等待 {{elapsedSeconds}} 秒</view>
   </view>
 
-  <view wx:if="{{uploadUrl && resultImageUrl}}" class="compare-section">
+  <view wx:if="{{uploadUrl && resultImageUrl}}" class="panel compare-section">
     <view class="section-title">原图对比</view>
+    <view class="section-copy">上传原图与推荐结果并排查看</view>
     <view class="compare-grid">
       <view class="compare-card" bindtap="previewOriginal">
         <image class="compare-image" src="{{uploadUrl}}" mode="aspectFill" lazy-load="true"></image>
@@ -84,11 +95,12 @@
     </view>
   </view>
 
-  <view wx:if="{{status === 'succeeded' && resultImageUrls.length}}" class="candidate-section">
+  <view wx:if="{{status === 'succeeded' && resultImageUrls.length}}" class="panel candidate-section">
     <view class="candidate-head">
       <view class="section-title">全部候选</view>
       <view class="candidate-count">{{resultImageUrls.length}} 张</view>
     </view>
+    <view class="section-copy candidate-copy">推荐结果已置顶，其余候选图可继续上滑查看</view>
     <view class="candidate-list">
       <view
         wx:for="{{resultImageUrls}}"
