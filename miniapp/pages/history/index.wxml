@@ -1,8 +1,6 @@
 <view class="screen works-screen">
   <view class="works-head">
-    <view class="section-kicker">MY WORKS</view>
     <view class="title works-title">作品</view>
-    <view class="subtitle works-subtitle">把重心留给成片。点按查看结果，长按卡片再做收藏、保存或删除。</view>
   </view>
 
   <view class="works-summary-line">
@@ -30,9 +28,6 @@
 
   <view wx:if="{{visibleItems.length === 0}}" class="panel empty-state works-empty">
     <view class="empty-title">{{activeTab === 'favorites' ? '还没有收藏作品' : '还没有生成作品'}}</view>
-    <view class="empty-copy">
-      {{activeTab === 'favorites' ? '先去挑几张满意的结果收藏起来。' : '回到创作页上传照片后就能看到作品。'}}
-    </view>
   </view>
 
   <view wx:else class="works-grid">
@@ -66,7 +61,6 @@
           <view class="work-time">{{item.created_at_label}}</view>
         </view>
         <view class="work-scene">{{item.scene_name}}</view>
-        <view class="work-tip">点按查看成片 · 长按管理作品</view>
       </view>
     </view>
   </view>

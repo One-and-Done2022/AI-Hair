@@ -24,9 +24,6 @@
     <view wx:elif="{{status === 'preview_ready'}}" class="title editorial-title">首张预览已返回</view>
     <view wx:elif="{{status === 'failed'}}" class="title editorial-title">这次生成未完成</view>
     <view wx:else class="title editorial-title">AI 正在生成</view>
-    <view class="subtitle editorial-subtitle">
-      {{status === 'succeeded' ? '顶部主图是系统筛选出的推荐结果。' : status === 'preview_ready' ? '其余候选图仍在继续生成。' : status === 'failed' ? (job && job.error_message ? job.error_message : '请稍后重试。') : '页面会自动刷新，也可以稍后从历史记录查看。'}}
-    </view>
   </view>
 
   <view class="job-card hero-card">
@@ -62,7 +59,6 @@
     </view>
 
     <view wx:if="{{job}}" class="hero-meta">
-      <view class="hero-meta-kicker">RECOMMENDED LOOK</view>
       <view class="hero-meta-title">
         {{status === 'succeeded' ? '系统为你挑出的最佳成片' : status === 'preview_ready' ? '首张预览已可先查看' : status === 'failed' ? '本次生成未完成' : '正在生成你的成片'}}
       </view>
@@ -70,19 +66,16 @@
         <view class="hero-meta-tag">{{job.hairstyle_name || '处理中'}}</view>
         <view class="hero-meta-tag">{{job.scene_name || '处理中'}}</view>
       </view>
-      <view class="hero-meta-copy">点按主图可查看大图</view>
     </view>
   </view>
 
   <view wx:if="{{status !== 'succeeded' && status !== 'failed'}}" class="panel pending-panel">
     <view class="pending-title">{{progressStage}}</view>
-    <view class="pending-copy">{{progressHint}}</view>
     <view class="pending-time">已等待 {{elapsedSeconds}} 秒</view>
   </view>
 
   <view wx:if="{{uploadUrl && resultImageUrl}}" class="panel compare-section">
     <view class="section-title">原图对比</view>
-    <view class="section-copy">上传原图与推荐结果并排查看</view>
     <view class="compare-grid">
       <view class="compare-card" bindtap="previewOriginal">
         <image class="compare-image" src="{{uploadUrl}}" mode="aspectFill" lazy-load="true"></image>
@@ -100,7 +93,6 @@
       <view class="section-title">全部候选</view>
       <view class="candidate-count">{{resultImageUrls.length}} 张</view>
     </view>
-    <view class="section-copy candidate-copy">推荐结果已置顶，其余候选图可继续上滑查看</view>
     <view class="candidate-list">
       <view
         wx:for="{{resultImageUrls}}"

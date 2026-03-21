@@ -1,8 +1,6 @@
 <view class="screen profile-screen">
   <view class="profile-head">
-    <view class="section-kicker">ACCOUNT</view>
     <view class="title profile-title">我的</view>
-    <view class="subtitle profile-subtitle">统一查看账号、额度、会员说明与常用入口。</view>
   </view>
 
   <view wx:if="{{profile}}" class="panel identity-card">
@@ -47,7 +45,6 @@
       <view class="section-title">会员权益</view>
       <view class="mini-link" bindtap="showMemberIntro">查看</view>
     </view>
-    <view class="membership-copy">当前为普通用户，后续可扩展更高次数、优先排队与更多发型模板。</view>
     <button class="primary-button member-button" bindtap="showMemberIntro">开通会员</button>
   </view>
 

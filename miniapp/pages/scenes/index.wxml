@@ -11,7 +11,6 @@
 
   <view class="editorial-head">
     <view class="title editorial-title">步骤 2：选择场景</view>
-    <view class="subtitle editorial-subtitle">确认发型后，再挑一个更匹配的氛围场景。</view>
   </view>
 
   <view class="panel combo-card">

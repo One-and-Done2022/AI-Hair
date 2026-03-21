@@ -2,7 +2,6 @@
   <view class="panel capture-panel">
     <view wx:if="{{permissionDenied}}" class="permission-card">
       <view class="permission-title">未获得相机权限</view>
-      <view class="subtitle">请先在微信权限设置里允许使用相机，或者直接从相册选择一张照片。</view>
       <button class="secondary-button action-gap" bindtap="openSettings">打开权限设置</button>
       <button class="secondary-button" bindtap="chooseFromAlbum">从相册选择</button>
     </view>
@@ -11,7 +10,6 @@
       <image class="capture-preview" src="{{photoPath}}" mode="aspectFill"></image>
       <view class="capture-copy-block">
         <view class="section-title capture-title">自拍上传</view>
-        <view class="capture-tip">确认这张照片作为上传原图后，再进入发型与场景生成流程。</view>
       </view>
       <view class="capture-actions">
         <button class="secondary-button half-button" bindtap="retakePhoto">重新自拍</button>
@@ -33,7 +31,6 @@
       </button>
       <view class="capture-copy-block">
         <view class="section-title capture-title">自拍上传</view>
-        <view class="capture-tip">请保持单人入镜、正脸或半侧脸，避免合照、远景和过暗环境。</view>
       </view>
       <view class="capture-actions">
         <button class="secondary-button half-button" bindtap="chooseFromAlbum">从相册选择</button>

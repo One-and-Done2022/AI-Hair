@@ -5,13 +5,11 @@
     </view>
     <view class="progress-meta">
       <view class="progress-step">STEP 1 OF 2</view>
-      <view class="progress-note">选择风格</view>
     </view>
   </view>
 
   <view class="editorial-head">
     <view class="title editorial-title">步骤 1：选择风格</view>
-    <view class="subtitle editorial-subtitle">先选发型，再进入场景搭配。</view>
   </view>
 
   <view class="gender-switch">
