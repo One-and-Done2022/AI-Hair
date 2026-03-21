@@ -179,8 +179,6 @@ Page({
     });
   },
 
-  noop() {},
-
   openMoreActions(event) {
     const { jobId } = event.currentTarget.dataset;
     const item = this.data.items.find((entry) => entry.job_id === jobId);

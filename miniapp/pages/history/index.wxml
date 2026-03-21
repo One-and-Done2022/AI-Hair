@@ -2,22 +2,13 @@
   <view class="works-head">
     <view class="section-kicker">MY WORKS</view>
     <view class="title works-title">作品</view>
-    <view class="subtitle works-subtitle">查看历史结果，收藏喜欢的版本，保留常用搭配。</view>
+    <view class="subtitle works-subtitle">把重心留给成片。点按查看结果，长按卡片再做收藏、保存或删除。</view>
   </view>
 
-  <view class="panel works-summary">
-    <view class="summary-chip">
-      <view class="summary-value">{{items.length}}</view>
-      <view class="summary-label">全部作品</view>
-    </view>
-    <view class="summary-chip">
-      <view class="summary-value">{{favoriteCount}}</view>
-      <view class="summary-label">已收藏</view>
-    </view>
-    <view class="summary-chip">
-      <view class="summary-value">{{completedCount}}</view>
-      <view class="summary-label">已完成</view>
-    </view>
+  <view class="works-summary-line">
+    <view class="summary-inline">全部 {{items.length}}</view>
+    <view class="summary-inline">收藏 {{favoriteCount}}</view>
+    <view class="summary-inline">完成 {{completedCount}}</view>
   </view>
 
   <view class="tab-strip">
@@ -50,6 +41,7 @@
       wx:key="job_id"
       class="work-card"
       bindtap="openJob"
+      bindlongpress="openMoreActions"
       data-job-id="{{item.job_id}}"
     >
       <view class="work-cover-shell">
@@ -64,37 +56,17 @@
           {{item.status_label}}
         </view>
         <view class="work-status {{item.status}}">{{item.status_label}}</view>
-        <view
-          class="favorite-toggle {{item.isFavorite ? 'active' : ''}}"
-          catchtap="toggleFavorite"
-          data-job-id="{{item.job_id}}"
-        >
-          {{item.isFavorite ? '★' : '☆'}}
-        </view>
+        <view wx:if="{{item.isFavorite}}" class="work-favorite-badge">已收藏</view>
+        <view class="work-overlay"></view>
       </view>
 
       <view class="work-content">
-        <view class="work-name">{{item.hairstyle_name}}</view>
-        <view class="work-scene">{{item.scene_name}}</view>
-        <view class="work-time">{{item.created_at_label}}</view>
-      </view>
-
-      <view class="work-actions">
-        <button
-          class="ghost-action"
-          open-type="share"
-          catchtap="noop"
-          data-job-id="{{item.job_id}}"
-        >
-          分享
-        </button>
-        <view
-          class="ghost-action ghost-action-view"
-          catchtap="openMoreActions"
-          data-job-id="{{item.job_id}}"
-        >
-          更多
+        <view class="work-meta-top">
+          <view class="work-name">{{item.hairstyle_name}}</view>
+          <view class="work-time">{{item.created_at_label}}</view>
         </view>
+        <view class="work-scene">{{item.scene_name}}</view>
+        <view class="work-tip">点按查看成片 · 长按管理作品</view>
       </view>
     </view>
   </view>
