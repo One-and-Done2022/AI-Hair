@@ -1,7 +1,7 @@
 <view class="screen result-screen">
   <view class="progress-shell">
     <view class="progress-top">
-      <view class="progress-state">{{status === 'succeeded' ? '100% 已完成' : status === 'preview_ready' ? '首图已返回' : status === 'failed' ? '生成失败' : '正在生成中'}}</view>
+      <view class="progress-state">{{status === 'succeeded' ? '已完成' : status === 'preview_ready' ? '首图已返回' : status === 'failed' ? '生成失败' : '正在生成'}}</view>
       <view class="progress-percent">{{status === 'succeeded' ? '100%' : progressPercent + '%'}}</view>
     </view>
     <view class="progress-track">
@@ -9,13 +9,23 @@
     </view>
   </view>
 
+  <scroll-view class="stage-strip" scroll-x="true" enable-flex="true" show-scrollbar="false">
+    <view
+      wx:for="{{stageSteps}}"
+      wx:key="label"
+      class="stage-chip {{item.state}}"
+    >
+      {{item.label}}
+    </view>
+  </scroll-view>
+
   <view class="editorial-head">
-    <view wx:if="{{status === 'succeeded'}}" class="title editorial-title">你的新发型已完成</view>
-    <view wx:elif="{{status === 'preview_ready'}}" class="title editorial-title">首张预览已经出来了</view>
-    <view wx:elif="{{status === 'failed'}}" class="title editorial-title">这次生成没有完成</view>
-    <view wx:else class="title editorial-title">AI 正在为你生成结果</view>
+    <view wx:if="{{status === 'succeeded'}}" class="title editorial-title">新发型已完成</view>
+    <view wx:elif="{{status === 'preview_ready'}}" class="title editorial-title">首张预览已返回</view>
+    <view wx:elif="{{status === 'failed'}}" class="title editorial-title">这次生成未完成</view>
+    <view wx:else class="title editorial-title">AI 正在生成</view>
     <view class="subtitle editorial-subtitle">
-      {{status === 'succeeded' ? '顶部主图是系统筛选出的推荐结果。' : status === 'preview_ready' ? '剩余候选图还在继续生成。' : status === 'failed' ? (job && job.error_message ? job.error_message : '请稍后重试。') : '保持页面打开会自动刷新，也可以稍后从历史记录回来查看。'}}
+      {{status === 'succeeded' ? '顶部主图是系统筛选出的推荐结果。' : status === 'preview_ready' ? '其余候选图仍在继续生成。' : status === 'failed' ? (job && job.error_message ? job.error_message : '请稍后重试。') : '页面会自动刷新，也可以稍后从历史记录查看。'}}
     </view>
   </view>
 
@@ -44,7 +54,7 @@
 
       <view wx:else class="state-pane">
         <view class="pulse-dot"></view>
-        <view class="state-title">正在生成中</view>
+        <view class="state-title">正在生成</view>
       </view>
     </view>
 

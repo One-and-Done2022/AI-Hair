@@ -14,6 +14,7 @@ Page({
     selectedImage: "",
     selectedHairstyle: null,
     selectedScene: null,
+    showcaseItems: [],
     loading: false,
     bootstrapping: true
   },
@@ -51,6 +52,12 @@ Page({
         wx.removeStorageSync("templateSelection");
       }
       this.setData({
+        showcaseItems: (catalog.hairstyles || []).slice(0, 4).map((item) => ({
+          id: item.id,
+          name: item.name,
+          coverUrl: item.cover_url,
+          tag: item.style_line_label || ((item.tags || [])[0] || "风格")
+        })),
         selectedHairstyle,
         selectedScene
       });

@@ -147,6 +147,18 @@ Page({
     });
   },
 
+  previewHairstyle(event) {
+    const selectedId = event.currentTarget.dataset.id;
+    const selectedHairstyle = findById(this.data.hairstyles, selectedId);
+    if (!selectedHairstyle || !selectedHairstyle.cover_url) {
+      return;
+    }
+    wx.previewImage({
+      current: selectedHairstyle.cover_url,
+      urls: [selectedHairstyle.cover_url]
+    });
+  },
+
   goNext() {
     const hairstyle = findById(this.data.hairstyles, this.data.selectedHairstyleId);
     if (!hairstyle) {

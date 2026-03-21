@@ -144,6 +144,18 @@ Page({
     });
   },
 
+  previewScene(event) {
+    const selectedId = event.currentTarget.dataset.id;
+    const selectedScene = findById(this.data.scenes, selectedId);
+    if (!selectedScene || !selectedScene.cover_url) {
+      return;
+    }
+    wx.previewImage({
+      current: selectedScene.cover_url,
+      urls: [selectedScene.cover_url]
+    });
+  },
+
   selectStyleLine(event) {
     const styleLine = event.currentTarget.dataset.styleLine || "all";
     const sceneSelection = resolveVisibleSceneSelection(

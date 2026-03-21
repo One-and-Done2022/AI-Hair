@@ -10,8 +10,8 @@
   </view>
 
   <view class="editorial-head">
-    <view class="title editorial-title">步骤 1：<text class="editorial-line">选择你的风格</text></view>
-    <view class="subtitle editorial-subtitle">AI 将根据你的面部特征和所选风格生成建议。</view>
+    <view class="title editorial-title">步骤 1：选择风格</view>
+    <view class="subtitle editorial-subtitle">先选发型，再进入场景搭配。</view>
   </view>
 
   <view class="gender-switch">
@@ -52,7 +52,15 @@
       data-id="{{item.id}}"
     >
       <view class="tile-cover-shell">
-        <image class="tile-cover" src="{{item.cover_url}}" mode="aspectFill" lazy-load="true"></image>
+        <image
+          class="tile-cover"
+          src="{{item.cover_url}}"
+          mode="aspectFill"
+          lazy-load="true"
+          catchtap="previewHairstyle"
+          data-id="{{item.id}}"
+        ></image>
+        <view class="preview-pill" catchtap="previewHairstyle" data-id="{{item.id}}">预览</view>
         <view wx:if="{{selectedHairstyleId === item.id}}" class="selected-dot">✓</view>
       </view>
       <view class="tile-name">{{item.name}}</view>

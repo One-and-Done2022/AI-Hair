@@ -1,8 +1,26 @@
 <view class="screen landing-screen">
   <view class="landing-head">
     <view class="section-kicker">CREATE YOUR LOOK</view>
-    <view class="title hero-title">上传照片，开始你的换发设计</view>
-    <view class="subtitle hero-subtitle">支持相册和自拍。先选发型，再去搭配场景。</view>
+    <view class="title hero-title">上传照片，开始换发</view>
+    <view class="subtitle hero-subtitle">支持相册和自拍，先选发型，再配场景。</view>
+  </view>
+
+  <view wx:if="{{showcaseItems.length}}" class="showcase-section">
+    <view class="showcase-head">
+      <view class="section-kicker">LOOK PREVIEW</view>
+      <view class="showcase-title">效果示例</view>
+    </view>
+    <scroll-view class="showcase-scroll" scroll-x="true" enable-flex="true" show-scrollbar="false">
+      <view
+        wx:for="{{showcaseItems}}"
+        wx:key="id"
+        class="showcase-card"
+      >
+        <image class="showcase-image" src="{{item.coverUrl}}" mode="aspectFill" lazy-load="true"></image>
+        <view class="showcase-tag">{{item.tag}}</view>
+        <view class="showcase-name">{{item.name}}</view>
+      </view>
+    </scroll-view>
   </view>
 
   <view class="panel upload-panel">
@@ -53,13 +71,14 @@
         <view class="guide-label guide-label-bad">不可遮挡</view>
       </view>
     </view>
+    <view class="privacy-note">照片仅用于本次生成与历史记录展示，不会公开原图。</view>
   </view>
 
   <view class="panel selection-panel">
     <view class="selection-top">
       <view>
         <view class="section-kicker">STYLE SET</view>
-        <view class="section-title selection-title">选择发型与场景</view>
+        <view class="section-title selection-title">选择搭配</view>
       </view>
       <view class="selection-link" bindtap="goHistory">历史</view>
     </view>

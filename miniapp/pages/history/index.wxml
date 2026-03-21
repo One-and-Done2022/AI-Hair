@@ -1,8 +1,8 @@
 <view class="screen history-screen">
   <view class="history-head">
     <view class="section-kicker">HISTORY</view>
-    <view class="title history-title">我的生成记录</view>
-    <view class="subtitle history-subtitle">按时间倒序展示，点开可继续查看结果。</view>
+    <view class="title history-title">我的记录</view>
+    <view class="subtitle history-subtitle">按时间查看，点开继续查看结果。</view>
   </view>
 
   <view wx:if="{{items.length === 0}}" class="panel empty-state">

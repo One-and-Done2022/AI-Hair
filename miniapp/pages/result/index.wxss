@@ -10,15 +10,17 @@
 }
 
 .progress-state {
-  font-size: 24rpx;
+  font-size: 22rpx;
   color: #0058ba;
   font-weight: 700;
+  white-space: nowrap;
 }
 
 .progress-percent {
-  font-size: 30rpx;
+  font-size: 26rpx;
   color: #0058ba;
   font-weight: 700;
+  white-space: nowrap;
 }
 
 .progress-track {
@@ -33,6 +35,38 @@
   height: 100%;
   border-radius: inherit;
   background: linear-gradient(90deg, #0058ba 0%, #5091ff 100%);
+}
+
+.stage-strip {
+  margin-top: 16rpx;
+  white-space: nowrap;
+}
+
+.stage-chip {
+  display: inline-flex;
+  margin-right: 12rpx;
+  padding: 10rpx 16rpx;
+  border-radius: 999rpx;
+  background: rgba(255, 255, 255, 0.92);
+  color: #757778;
+  font-size: 18rpx;
+  font-weight: 600;
+  box-shadow: 0 10rpx 24rpx rgba(0, 88, 186, 0.04);
+}
+
+.stage-chip.done {
+  background: rgba(0, 88, 186, 0.12);
+  color: #0058ba;
+}
+
+.stage-chip.active {
+  background: #0058ba;
+  color: #ffffff;
+}
+
+.stage-chip.failed {
+  background: rgba(179, 27, 37, 0.12);
+  color: #b31b25;
 }
 
 .editorial-head {
@@ -90,7 +124,7 @@
 }
 
 .result-image-skeleton-text {
-  font-size: 26rpx;
+  font-size: 24rpx;
   color: #757778;
 }
 
@@ -102,7 +136,7 @@
   border-radius: 999rpx;
   background: rgba(0, 88, 186, 0.84);
   color: #ffffff;
-  font-size: 22rpx;
+  font-size: 20rpx;
   font-weight: 700;
 }
 
@@ -130,9 +164,10 @@
 }
 
 .state-title {
-  font-size: 34rpx;
+  font-size: 30rpx;
   color: #2c2f30;
   font-weight: 700;
+  white-space: nowrap;
 }
 
 .hero-meta {
@@ -140,15 +175,17 @@
 }
 
 .hero-meta-title {
-  font-size: 28rpx;
-  line-height: 1.35;
+  font-size: 24rpx;
   font-weight: 700;
   color: #2c2f30;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .hero-meta-copy {
   margin-top: 8rpx;
-  font-size: 22rpx;
+  font-size: 20rpx;
   color: #595c5d;
 }
 
@@ -164,21 +201,24 @@
 }
 
 .pending-title {
-  font-size: 28rpx;
+  font-size: 24rpx;
   font-weight: 700;
   color: #2c2f30;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .pending-copy {
   margin-top: 10rpx;
-  font-size: 24rpx;
-  line-height: 1.65;
+  font-size: 22rpx;
+  line-height: 1.55;
   color: #595c5d;
 }
 
 .pending-time {
   margin-top: 12rpx;
-  font-size: 22rpx;
+  font-size: 20rpx;
   color: #757778;
 }
 
@@ -203,7 +243,7 @@
 
 .compare-label {
   padding: 18rpx;
-  font-size: 24rpx;
+  font-size: 22rpx;
   font-weight: 700;
   color: #2c2f30;
 }
@@ -220,7 +260,7 @@
   border-radius: 999rpx;
   background: #eef3fb;
   color: #0058ba;
-  font-size: 22rpx;
+  font-size: 20rpx;
   font-weight: 700;
 }
 
@@ -255,7 +295,7 @@
   border-radius: 999rpx;
   background: rgba(0, 88, 186, 0.84);
   color: #ffffff;
-  font-size: 22rpx;
+  font-size: 20rpx;
   font-weight: 700;
 }
 

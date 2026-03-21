@@ -10,8 +10,8 @@
   </view>
 
   <view class="editorial-head">
-    <view class="title editorial-title">步骤 2：选择你的场景</view>
-    <view class="subtitle editorial-subtitle">我们的 AI 将在你选择的场景里重现你的形象。</view>
+    <view class="title editorial-title">步骤 2：选择场景</view>
+    <view class="subtitle editorial-subtitle">确认发型后，再挑一个更匹配的氛围场景。</view>
   </view>
 
   <view class="panel combo-card">
@@ -24,9 +24,10 @@
     ></image>
     <view wx:else class="combo-cover"></view>
     <view class="combo-body">
-      <view class="combo-label">当前发型</view>
+      <view class="combo-label">当前组合</view>
       <view class="combo-title">{{selectedHairstyle ? selectedHairstyle.name : '未选择发型'}}</view>
       <view class="combo-meta">{{selectedHairstyle ? selectedHairstyle.style_line_label : '待选择'}}</view>
+      <view class="combo-current">场景：{{selectedSceneName || '未选择'}}</view>
     </view>
     <view class="combo-link" bindtap="goBackStep">返回</view>
   </view>
@@ -52,7 +53,15 @@
       data-id="{{item.id}}"
     >
       <view class="scene-cover-shell">
-        <image class="scene-cover" src="{{item.cover_url}}" mode="aspectFill" lazy-load="true"></image>
+        <image
+          class="scene-cover"
+          src="{{item.cover_url}}"
+          mode="aspectFill"
+          lazy-load="true"
+          catchtap="previewScene"
+          data-id="{{item.id}}"
+        ></image>
+        <view class="preview-pill" catchtap="previewScene" data-id="{{item.id}}">预览</view>
         <view wx:if="{{item.recommended}}" class="scene-badge">推荐</view>
         <view wx:if="{{selectedSceneId === item.id}}" class="scene-check">✓</view>
       </view>

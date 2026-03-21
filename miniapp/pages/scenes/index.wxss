@@ -10,12 +10,12 @@
 }
 
 .progress-step-text {
-  font-size: 20rpx;
+  font-size: 18rpx;
   color: #757778;
 }
 
 .progress-percent {
-  font-size: 30rpx;
+  font-size: 26rpx;
   color: #0058ba;
   font-weight: 700;
 }
@@ -36,7 +36,11 @@
 }
 
 .editorial-head {
-  padding: 34rpx 4rpx 22rpx;
+  padding: 32rpx 4rpx 20rpx;
+}
+
+.editorial-title {
+  max-width: 620rpx;
 }
 
 .editorial-subtitle {
@@ -64,26 +68,41 @@
 }
 
 .combo-label {
-  font-size: 21rpx;
+  font-size: 19rpx;
   color: #757778;
 }
 
 .combo-title {
   margin-top: 8rpx;
-  font-size: 28rpx;
+  font-size: 24rpx;
   font-weight: 700;
   color: #2c2f30;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .combo-meta {
-  margin-top: 8rpx;
-  font-size: 22rpx;
+  margin-top: 6rpx;
+  font-size: 20rpx;
   color: #595c5d;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.combo-current {
+  margin-top: 6rpx;
+  font-size: 20rpx;
+  color: #757778;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .combo-link {
   color: #0058ba;
-  font-size: 24rpx;
+  font-size: 22rpx;
   font-weight: 700;
 }
 
@@ -99,7 +118,7 @@
   border-radius: 999rpx;
   background: rgba(255, 255, 255, 0.86);
   color: #595c5d;
-  font-size: 22rpx;
+  font-size: 20rpx;
   font-weight: 600;
   box-shadow: 0 10rpx 24rpx rgba(0, 88, 186, 0.04);
 }
@@ -130,6 +149,18 @@
   position: relative;
 }
 
+.preview-pill {
+  position: absolute;
+  left: 16rpx;
+  bottom: 16rpx;
+  padding: 8rpx 14rpx;
+  border-radius: 999rpx;
+  background: rgba(255, 255, 255, 0.9);
+  color: #0058ba;
+  font-size: 18rpx;
+  font-weight: 700;
+}
+
 .scene-cover {
   width: 100%;
   height: 240rpx;
@@ -144,7 +175,7 @@
   top: 16rpx;
   padding: 8rpx 14rpx;
   border-radius: 999rpx;
-  font-size: 20rpx;
+  font-size: 18rpx;
   font-weight: 700;
   color: #ffffff;
 }
@@ -164,17 +195,23 @@
 }
 
 .scene-name {
-  font-size: 30rpx;
-  line-height: 1.35;
+  font-size: 26rpx;
   font-weight: 700;
   color: #2c2f30;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .scene-desc {
   margin-top: 10rpx;
-  font-size: 23rpx;
-  line-height: 1.65;
+  font-size: 21rpx;
+  line-height: 1.55;
   color: #595c5d;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 .scene-chip-row {
@@ -189,7 +226,7 @@
   border-radius: 999rpx;
   background: #eff1f7;
   color: #595c5d;
-  font-size: 19rpx;
+  font-size: 18rpx;
   font-weight: 600;
 }
 

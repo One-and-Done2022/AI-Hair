@@ -69,14 +69,16 @@
 
 .history-name {
   margin-top: 18rpx;
-  font-size: 30rpx;
-  line-height: 1.38;
+  font-size: 25rpx;
   font-weight: 700;
   color: #2c2f30;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .history-time {
   margin-top: 10rpx;
-  font-size: 22rpx;
+  font-size: 20rpx;
   color: #757778;
 }
