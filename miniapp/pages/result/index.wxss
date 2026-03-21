@@ -359,13 +359,13 @@
 
 .action-stack .primary-button {
   height: 104rpx;
-  line-height: 104rpx;
-  font-size: 30rpx;
+  line-height: 1.1;
+  font-size: 31rpx;
 }
 
 .action-stack .secondary-button {
   height: 88rpx;
-  line-height: 88rpx;
+  line-height: 1.1;
 }
 
 .action-row {

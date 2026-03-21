@@ -173,8 +173,9 @@
 .compact-button {
   flex: 1;
   height: 78rpx;
-  line-height: 78rpx;
-  font-size: 27rpx;
+  line-height: 1.1;
+  font-size: 28rpx;
+  padding: 0 22rpx;
 }
 
 .guide-grid {

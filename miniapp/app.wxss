@@ -7,6 +7,16 @@ page {
   font-family: "PingFang SC", "Microsoft YaHei", "Helvetica Neue", sans-serif;
 }
 
+button {
+  box-sizing: border-box;
+  padding: 0 34rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  white-space: nowrap;
+}
+
 button::after {
   border: none;
 }
@@ -60,12 +70,13 @@ button::after {
 
 .primary-button {
   height: 96rpx;
-  line-height: 96rpx;
+  line-height: 1.1;
   border-radius: 999rpx;
   border: none;
   background: linear-gradient(135deg, #0058ba 0%, #004da4 100%);
   color: #ffffff;
-  font-size: 28rpx;
+  font-size: 30rpx;
+  letter-spacing: 0.4rpx;
   font-weight: 700;
   box-shadow: 0 18rpx 40rpx rgba(0, 88, 186, 0.2);
 }
@@ -78,12 +89,13 @@ button::after {
 
 .secondary-button {
   height: 84rpx;
-  line-height: 84rpx;
+  line-height: 1.1;
   border-radius: 999rpx;
   border: none;
   background: #edf3ff;
   color: #0b5ecf;
-  font-size: 26rpx;
+  font-size: 28rpx;
+  letter-spacing: 0.2rpx;
   font-weight: 700;
 }
 
