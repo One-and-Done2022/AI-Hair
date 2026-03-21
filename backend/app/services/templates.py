@@ -8,6 +8,7 @@ from pathlib import Path
 
 
 DATA_DIR = Path(__file__).resolve().parents[1] / "data" / "faceprompt"
+TEMPLATE_COVER_VERSION = "visual-v1"
 
 STYLE_LINE_LABELS = {
     "realistic_editorial": "写实写真",
@@ -342,26 +343,449 @@ def build_prompt(hairstyle: dict, scene: dict, *, seed_source: str | None = None
     )
 
 
+def _template_keyword_blob(template: dict) -> str:
+    return " ".join(
+        [
+            str(template.get("id", "")),
+            str(template.get("name", "")),
+            str(template.get("description", "")),
+            " ".join(template.get("tags", [])),
+        ]
+    ).lower()
+
+
+def _contains_any(text: str, keywords: Iterable[str]) -> bool:
+    return any(keyword in text for keyword in keywords)
+
+
+def _hairstyle_cover_variant(template: dict) -> str:
+    blob = _template_keyword_blob(template)
+    if _contains_any(blob, ("spike", "前刺", "firework", "刺状", "束感")):
+        return "spiky"
+    if _contains_any(blob, ("buzz", "圆寸", "平头", "flat", "栗子头", "铲青")):
+        return "buzz"
+    if _contains_any(blob, ("mullet", "wolf", "狼尾", "鲻", "tail")):
+        return "mullet"
+    if _contains_any(blob, ("bun", "samurai", "苹果头", "topknot")):
+        return "bun"
+    if _contains_any(
+        blob,
+        (
+            "perm",
+            "curl",
+            "wave",
+            "卷",
+            "羊毛",
+            "气垫",
+            "云朵",
+            "水波",
+            "木马",
+            "纹理烫",
+            "锡纸",
+            "羽毛",
+        ),
+    ):
+        return "curls"
+    if _contains_any(
+        blob,
+        (
+            "part",
+            "fringe",
+            "comma",
+            "slick",
+            "pomade",
+            "三七",
+            "中分",
+            "碎盖",
+            "刘海",
+            "摩根",
+        ),
+    ):
+        return "parted"
+    if _contains_any(
+        blob,
+        (
+            "long",
+            "mid",
+            "straight",
+            "锁骨",
+            "中长",
+            "长发",
+            "直发",
+            "waterfall",
+            "hime",
+            "xinzhilei",
+        ),
+    ):
+        return "long"
+    if _contains_any(blob, ("bob", "波波", "short", "短发", "超短", "boyish", "挂耳", "初恋")):
+        return "bob"
+    return "soft"
+
+
+def _scene_cover_variant(template: dict) -> str:
+    blob = _template_keyword_blob(template)
+    if _contains_any(blob, ("bathroom", "浴室", "mirror-morning")):
+        return "bathroom"
+    if _contains_any(blob, ("study", "书房", "walnut")):
+        return "study"
+    if _contains_any(blob, ("cafe", "咖啡")):
+        return "cafe"
+    if _contains_any(blob, ("window", "窗", "雨天", "softlight")):
+        return "window"
+    if _contains_any(blob, ("hotel", "bedside", "床边", "home", "家居")):
+        return "bedroom"
+    if _contains_any(blob, ("hallway", "玄关", "楼道")):
+        return "hallway"
+    if _contains_any(blob, ("studio", "棚拍", "solid-backdrop")):
+        return "studio"
+    if _contains_any(blob, ("metal", "金属", "cold")):
+        return "metal"
+    if _contains_any(blob, ("cinema", "retro")):
+        return "cinema"
+    if _contains_any(blob, ("neon", "夜", "都市", "city")):
+        return "neon"
+    if _contains_any(blob, ("gallery", "white-cube", "展厅")):
+        return "gallery"
+    if _contains_any(blob, ("side-light", "dramatic")):
+        return "side-light"
+    if _contains_any(blob, ("lobby", "大堂", "luxury")):
+        return "lobby"
+    if _contains_any(blob, ("rooftop", "天台", "wind")):
+        return "rooftop"
+    if _contains_any(blob, ("bar", "吧台", "moody")):
+        return "bar"
+    if _contains_any(blob, ("vanity", "backstage", "化妆镜")):
+        return "vanity"
+    return "interior"
+
+
+def _hairstyle_svg_shapes(variant: str) -> tuple[str, str]:
+    fills = {
+        "base": "#1c2433",
+        "shadow": "#121824",
+        "highlight": "#324156",
+    }
+    if variant == "spiky":
+        return (
+            (
+                '<path d="M257 454 C272 354 332 308 360 304 C386 300 452 334 470 448 '
+                'C448 418 430 400 410 382 C402 396 392 360 380 342 C365 360 356 324 344 342 '
+                'C330 360 320 344 306 374 C292 396 276 416 257 454 Z" fill="{base}"/>'
+            ).format(**fills),
+            '<path d="M305 382 C330 350 366 328 404 338 C386 354 362 364 336 388 Z" fill="{highlight}" opacity="0.26"/>'.format(
+                **fills
+            ),
+        )
+    if variant == "buzz":
+        return (
+            '<path d="M266 446 C272 358 324 316 360 312 C396 308 446 350 454 446 C430 378 402 354 360 352 C318 350 288 376 266 446 Z" fill="{base}"/>'.format(
+                **fills
+            ),
+            '<ellipse cx="360" cy="360" rx="82" ry="34" fill="{highlight}" opacity="0.18"/>'.format(
+                **fills
+            ),
+        )
+    if variant == "parted":
+        return (
+            (
+                '<path d="M250 466 C254 354 328 292 364 294 C418 296 466 350 470 462 '
+                'C442 422 428 394 420 350 C394 354 382 362 370 380 C360 400 348 410 332 432 '
+                'C322 404 300 376 276 360 C270 390 262 424 250 466 Z" fill="{base}"/>'
+            ).format(**fills),
+            '<path d="M356 302 C386 312 402 330 412 356 C388 350 370 354 350 372 C352 344 352 324 356 302 Z" fill="{highlight}" opacity="0.24"/>'.format(
+                **fills
+            ),
+        )
+    if variant == "curls":
+        circles = []
+        coords = [
+            (286, 384, 44),
+            (332, 338, 54),
+            (392, 336, 54),
+            (438, 386, 46),
+            (316, 424, 42),
+            (404, 426, 44),
+            (360, 308, 46),
+        ]
+        for cx, cy, r in coords:
+            circles.append(f'<circle cx="{cx}" cy="{cy}" r="{r}" fill="{fills["base"]}"/>')
+        highlight = '<circle cx="328" cy="342" r="18" fill="{0}" opacity="0.18"/><circle cx="404" cy="356" r="20" fill="{0}" opacity="0.16"/>'.format(
+            fills["highlight"]
+        )
+        return ("".join(circles), highlight)
+    if variant == "bob":
+        return (
+            (
+                '<path d="M248 446 C260 344 320 300 360 298 C402 296 462 336 474 446 '
+                'C454 460 438 474 420 500 C406 520 392 538 360 544 C328 538 314 520 300 500 '
+                'C282 474 266 458 248 446 Z" fill="{base}"/>'
+            ).format(**fills),
+            '<path d="M294 368 C320 336 352 320 390 326 C366 348 342 372 318 412 Z" fill="{highlight}" opacity="0.24"/>'.format(
+                **fills
+            ),
+        )
+    if variant == "long":
+        return (
+            (
+                '<path d="M242 454 C250 336 316 286 360 284 C406 282 470 336 478 454 '
+                'C466 544 450 640 438 740 C418 794 390 830 360 838 C330 830 302 794 282 740 '
+                'C270 640 254 544 242 454 Z" fill="{base}"/>'
+            ).format(**fills),
+            '<path d="M304 342 C332 308 380 302 418 324 C392 350 366 380 340 430 Z" fill="{highlight}" opacity="0.2"/>'.format(
+                **fills
+            ),
+        )
+    if variant == "bun":
+        return (
+            (
+                '<circle cx="360" cy="266" r="44" fill="{base}"/>'
+                '<path d="M250 456 C256 348 324 298 360 296 C396 294 462 342 470 456 '
+                'C444 426 426 402 414 360 C390 360 376 372 360 392 C344 372 330 360 306 360 '
+                'C294 402 276 426 250 456 Z" fill="{base}"/>'
+            ).format(**fills),
+            '<circle cx="348" cy="252" r="14" fill="{highlight}" opacity="0.22"/>'.format(**fills),
+        )
+    if variant == "mullet":
+        return (
+            (
+                '<path d="M248 446 C254 344 322 296 360 294 C404 292 466 340 472 446 '
+                'C456 430 442 414 428 396 C422 456 422 546 418 650 C392 714 376 754 360 786 '
+                'C344 754 328 714 302 650 C298 546 298 458 292 400 C278 416 264 432 248 446 Z" fill="{base}"/>'
+            ).format(**fills),
+            '<path d="M320 334 C350 312 384 312 412 330 C388 350 364 360 336 386 Z" fill="{highlight}" opacity="0.22"/>'.format(
+                **fills
+            ),
+        )
+    return (
+        '<path d="M252 454 C260 352 324 304 360 300 C398 296 460 346 468 454 C438 424 414 410 360 408 C306 410 282 424 252 454 Z" fill="{base}"/>'.format(
+            **fills
+        ),
+        '<path d="M304 350 C330 324 364 320 398 334 C376 350 350 366 324 392 Z" fill="{highlight}" opacity="0.2"/>'.format(
+            **fills
+        ),
+    )
+
+
+def _portrait_svg(*, hair_variant: str, accent: str) -> str:
+    hair_base, hair_highlight = _hairstyle_svg_shapes(hair_variant)
+    return f"""
+  <circle cx="360" cy="382" r="178" fill="{accent}" opacity="0.18" />
+  <ellipse cx="360" cy="860" rx="232" ry="122" fill="#ffffff" opacity="0.30" />
+  <path d="M170 960 C210 806 510 806 550 960 Z" fill="#fbfdff" />
+  <path d="M240 960 C260 850 460 850 480 960 Z" fill="#d9e7f6" opacity="0.72" />
+  <rect x="326" y="548" width="68" height="96" rx="32" fill="#efc9b4" />
+  <ellipse cx="360" cy="462" rx="108" ry="132" fill="#f4d4c2" />
+  <ellipse cx="360" cy="486" rx="92" ry="108" fill="#ffdcca" opacity="0.24" />
+  {hair_base}
+  {hair_highlight}
+  <path d="M308 566 C324 612 344 632 360 636 C376 632 396 612 412 566" stroke="#d6a98f" stroke-width="8" stroke-linecap="round" opacity="0.34" />
+"""
+
+
+def _scene_subject_svg() -> str:
+    return """
+  <circle cx="520" cy="506" r="112" fill="#ffffff" opacity="0.12" />
+  <path d="M442 884 C458 786 592 786 608 884 L608 960 L442 960 Z" fill="#f6f8fd" opacity="0.95" />
+  <rect x="504" y="590" width="42" height="66" rx="18" fill="#efc9b4" />
+  <ellipse cx="525" cy="514" rx="72" ry="90" fill="#f4d4c2" />
+  <path d="M456 516 C462 444 506 404 528 404 C560 404 596 446 598 518 C582 566 562 594 526 602 C490 594 470 566 456 516 Z" fill="#202737" />
+  <path d="M470 470 C490 438 530 426 562 446 C540 470 516 490 492 538 Z" fill="#41536a" opacity="0.22" />
+"""
+
+
+def _scene_background_svg(variant: str, color_a: str, color_b: str) -> str:
+    if variant == "window":
+        return f"""
+  <rect x="92" y="92" width="536" height="620" rx="34" fill="#ffffff" opacity="0.10" />
+  <rect x="132" y="130" width="456" height="470" rx="28" fill="#ffffff" opacity="0.18" />
+  <path d="M132 130 C116 178 108 224 108 266 L108 628" stroke="#ffffff" stroke-width="26" stroke-linecap="round" opacity="0.20" />
+  <path d="M588 130 C604 178 612 224 612 266 L612 628" stroke="#ffffff" stroke-width="26" stroke-linecap="round" opacity="0.20" />
+  <path d="M360 130 L360 600" stroke="#ffffff" stroke-width="8" opacity="0.24" />
+  <path d="M132 368 L588 368" stroke="#ffffff" stroke-width="8" opacity="0.24" />
+  <rect x="174" y="704" width="276" height="54" rx="20" fill="#ffffff" opacity="0.16" />
+  <rect x="204" y="666" width="66" height="32" rx="10" fill="#ffffff" opacity="0.18" />
+  <rect x="280" y="678" width="84" height="20" rx="10" fill="#ffffff" opacity="0.16" />
+  <rect x="384" y="664" width="24" height="42" rx="10" fill="#ffffff" opacity="0.18" />
+  <ellipse cx="396" cy="662" rx="18" ry="10" fill="#ffffff" opacity="0.20" />
+"""
+    if variant == "study":
+        return """
+  <rect x="86" y="108" width="204" height="602" rx="28" fill="#4c382a" opacity="0.46" />
+  <rect x="106" y="150" width="164" height="118" rx="18" fill="#ffffff" opacity="0.10" />
+  <rect x="106" y="292" width="164" height="118" rx="18" fill="#ffffff" opacity="0.10" />
+  <rect x="106" y="434" width="164" height="118" rx="18" fill="#ffffff" opacity="0.10" />
+  <rect x="106" y="576" width="164" height="94" rx="18" fill="#ffffff" opacity="0.10" />
+  <rect x="346" y="116" width="220" height="270" rx="24" fill="#ffffff" opacity="0.12" />
+  <rect x="376" y="146" width="160" height="210" rx="18" fill="#19342a" opacity="0.42" />
+  <path d="M564 680 C520 642 498 612 486 570 C528 596 560 618 602 672 Z" fill="#7ecb8c" opacity="0.26" />
+  <rect x="318" y="714" width="250" height="40" rx="20" fill="#6e4d37" opacity="0.34" />
+"""
+    if variant == "cafe":
+        return """
+  <path d="M126 190 C126 112 188 92 256 92 L466 92 C548 92 604 140 604 224 L604 516 L126 516 Z" fill="#ffffff" opacity="0.14" />
+  <circle cx="224" cy="222" r="28" fill="#ffffff" opacity="0.18" />
+  <circle cx="508" cy="234" r="24" fill="#ffffff" opacity="0.14" />
+  <rect x="174" y="648" width="280" height="34" rx="17" fill="#ffffff" opacity="0.18" />
+  <rect x="444" y="618" width="24" height="62" rx="12" fill="#ffffff" opacity="0.18" />
+  <ellipse cx="456" cy="614" rx="22" ry="10" fill="#ffffff" opacity="0.18" />
+  <path d="M502 170 C502 150 514 134 532 126 C526 150 534 170 548 182" stroke="#ffffff" stroke-width="8" stroke-linecap="round" opacity="0.18" />
+"""
+    if variant == "bathroom":
+        return """
+  <rect x="118" y="116" width="484" height="580" rx="30" fill="#ffffff" opacity="0.12" />
+  <rect x="150" y="150" width="420" height="516" rx="26" fill="#ffffff" opacity="0.08" />
+  <ellipse cx="360" cy="340" rx="152" ry="188" fill="#ffffff" opacity="0.20" />
+  <ellipse cx="360" cy="340" rx="132" ry="166" fill="#dbe7f3" opacity="0.18" />
+  <rect x="246" y="610" width="228" height="44" rx="22" fill="#ffffff" opacity="0.18" />
+  <rect x="328" y="574" width="64" height="24" rx="12" fill="#ffffff" opacity="0.18" />
+  <path d="M168 224 L552 224 M168 322 L552 322 M168 420 L552 420 M168 518 L552 518" stroke="#ffffff" stroke-width="6" stroke-opacity="0.10" />
+"""
+    if variant == "bedroom":
+        return """
+  <rect x="120" y="292" width="482" height="212" rx="44" fill="#ffffff" opacity="0.14" />
+  <rect x="156" y="256" width="410" height="84" rx="30" fill="#ffffff" opacity="0.12" />
+  <rect x="184" y="372" width="140" height="70" rx="22" fill="#ffffff" opacity="0.16" />
+  <rect x="338" y="372" width="140" height="70" rx="22" fill="#ffffff" opacity="0.14" />
+  <rect x="508" y="322" width="38" height="142" rx="18" fill="#ffffff" opacity="0.10" />
+  <circle cx="526" cy="292" r="26" fill="#ffffff" opacity="0.16" />
+"""
+    if variant == "hallway":
+        return """
+  <rect x="170" y="96" width="380" height="724" rx="26" fill="#ffffff" opacity="0.10" />
+  <rect x="214" y="148" width="292" height="620" rx="22" fill="#ffffff" opacity="0.18" />
+  <rect x="260" y="214" width="80" height="120" rx="12" fill="#ffffff" opacity="0.14" />
+  <rect x="382" y="182" width="102" height="148" rx="12" fill="#ffffff" opacity="0.12" />
+  <path d="M214 768 L506 768" stroke="#ffffff" stroke-width="8" opacity="0.18" />
+"""
+    if variant == "studio":
+        return """
+  <circle cx="360" cy="320" r="220" fill="#ffffff" opacity="0.10" />
+  <circle cx="360" cy="320" r="150" fill="#ffffff" opacity="0.08" />
+  <ellipse cx="360" cy="816" rx="240" ry="92" fill="#ffffff" opacity="0.12" />
+  <path d="M92 816 C190 734 530 734 628 816" stroke="#ffffff" stroke-width="10" opacity="0.12" fill="none" />
+"""
+    if variant == "metal":
+        return f"""
+  <path d="M90 160 L356 98 L356 418 L90 480 Z" fill="{color_a}" opacity="0.34" />
+  <path d="M364 98 L628 160 L628 480 L364 418 Z" fill="#ffffff" opacity="0.12" />
+  <path d="M132 566 L588 470" stroke="#ffffff" stroke-width="8" opacity="0.14" />
+  <path d="M132 676 L588 580" stroke="#ffffff" stroke-width="8" opacity="0.10" />
+  <path d="M170 774 L552 692" stroke="#ffffff" stroke-width="8" opacity="0.08" />
+"""
+    if variant == "cinema":
+        return """
+  <path d="M92 90 C136 188 142 292 122 420 L92 716 Z" fill="#6f2035" opacity="0.48" />
+  <path d="M628 90 C584 188 578 292 598 420 L628 716 Z" fill="#6f2035" opacity="0.48" />
+  <rect x="154" y="124" width="412" height="502" rx="24" fill="#ffffff" opacity="0.10" />
+  <circle cx="248" cy="718" r="48" fill="#ffffff" opacity="0.10" />
+  <circle cx="360" cy="736" r="54" fill="#ffffff" opacity="0.12" />
+  <circle cx="478" cy="718" r="48" fill="#ffffff" opacity="0.10" />
+"""
+    if variant == "neon":
+        return f"""
+  <rect width="720" height="960" fill="#141a28" opacity="0.52" />
+  <rect x="108" y="176" width="104" height="284" rx="16" fill="#00d5ff" opacity="0.10" />
+  <rect x="236" y="136" width="122" height="324" rx="18" fill="#ffffff" opacity="0.08" />
+  <rect x="384" y="198" width="102" height="262" rx="16" fill="#ff6bcb" opacity="0.12" />
+  <rect x="506" y="150" width="90" height="310" rx="16" fill="#00d5ff" opacity="0.10" />
+  <path d="M126 564 C224 526 322 526 420 564" stroke="#48d8ff" stroke-width="10" stroke-linecap="round" opacity="0.34" />
+  <path d="M294 632 C378 600 458 600 548 632" stroke="#ff74d7" stroke-width="10" stroke-linecap="round" opacity="0.30" />
+"""
+    if variant == "gallery":
+        return """
+  <rect x="106" y="126" width="224" height="356" rx="24" fill="#ffffff" opacity="0.10" />
+  <rect x="390" y="170" width="192" height="264" rx="24" fill="#ffffff" opacity="0.08" />
+  <rect x="314" y="622" width="92" height="156" rx="18" fill="#ffffff" opacity="0.14" />
+  <ellipse cx="360" cy="616" rx="82" ry="28" fill="#ffffff" opacity="0.12" />
+"""
+    if variant == "side-light":
+        return """
+  <path d="M94 112 L316 112 L174 858 L94 858 Z" fill="#ffffff" opacity="0.16" />
+  <path d="M322 96 L626 96 L626 864 L206 864 Z" fill="#0f172a" opacity="0.26" />
+  <path d="M266 112 L422 112 L304 860 L150 860 Z" fill="#ffffff" opacity="0.08" />
+"""
+    if variant == "lobby":
+        return """
+  <rect x="138" y="112" width="58" height="620" rx="18" fill="#ffffff" opacity="0.12" />
+  <rect x="524" y="112" width="58" height="620" rx="18" fill="#ffffff" opacity="0.12" />
+  <rect x="214" y="124" width="292" height="100" rx="22" fill="#ffffff" opacity="0.08" />
+  <circle cx="360" cy="226" r="34" fill="#ffffff" opacity="0.18" />
+  <path d="M360 262 L360 324" stroke="#ffffff" stroke-width="8" opacity="0.18" />
+  <rect x="184" y="736" width="352" height="54" rx="27" fill="#ffffff" opacity="0.10" />
+"""
+    if variant == "rooftop":
+        return """
+  <rect x="90" y="548" width="540" height="18" rx="9" fill="#ffffff" opacity="0.18" />
+  <rect x="122" y="330" width="74" height="218" rx="14" fill="#ffffff" opacity="0.08" />
+  <rect x="214" y="286" width="92" height="262" rx="14" fill="#ffffff" opacity="0.10" />
+  <rect x="326" y="238" width="78" height="310" rx="14" fill="#ffffff" opacity="0.08" />
+  <rect x="420" y="314" width="96" height="234" rx="14" fill="#ffffff" opacity="0.10" />
+  <rect x="536" y="268" width="58" height="280" rx="14" fill="#ffffff" opacity="0.08" />
+  <circle cx="564" cy="138" r="38" fill="#ffffff" opacity="0.14" />
+"""
+    if variant == "bar":
+        return """
+  <rect x="96" y="184" width="528" height="490" rx="28" fill="#ffffff" opacity="0.08" />
+  <rect x="140" y="228" width="440" height="54" rx="18" fill="#ffffff" opacity="0.08" />
+  <rect x="140" y="318" width="440" height="54" rx="18" fill="#ffffff" opacity="0.08" />
+  <rect x="152" y="704" width="416" height="70" rx="22" fill="#ffffff" opacity="0.14" />
+  <rect x="188" y="248" width="24" height="58" rx="10" fill="#ffffff" opacity="0.16" />
+  <rect x="250" y="248" width="28" height="70" rx="10" fill="#ffffff" opacity="0.16" />
+  <rect x="490" y="250" width="28" height="64" rx="10" fill="#ffffff" opacity="0.14" />
+"""
+    if variant == "vanity":
+        bulbs = []
+        for cx in (174, 240, 306, 372, 438, 504, 570):
+            bulbs.append(
+                f'<circle cx="{cx}" cy="186" r="14" fill="#ffffff" opacity="0.24" />'
+                f'<circle cx="{cx}" cy="560" r="14" fill="#ffffff" opacity="0.20" />'
+            )
+        for cy in (248, 320, 392, 464):
+            bulbs.append(
+                f'<circle cx="142" cy="{cy}" r="14" fill="#ffffff" opacity="0.20" />'
+                f'<circle cx="602" cy="{cy}" r="14" fill="#ffffff" opacity="0.20" />'
+            )
+        return """
+  <rect x="162" y="204" width="398" height="338" rx="28" fill="#ffffff" opacity="0.10" />
+""" + "".join(bulbs)
+    return """
+  <rect x="96" y="118" width="528" height="600" rx="34" fill="#ffffff" opacity="0.10" />
+  <rect x="146" y="170" width="428" height="500" rx="30" fill="#ffffff" opacity="0.08" />
+  <rect x="174" y="712" width="268" height="46" rx="18" fill="#ffffff" opacity="0.14" />
+"""
+
+
 def template_cover_svg(category: str, template: dict) -> str:
     color_a, color_b = template["palette"]
-    title = template["name"]
-    label = "HAIR" if category == "hairstyles" else "SCENE"
-    meta = template.get("gender_label") if category == "hairstyles" else template.get("style_line_label")
-    description = template["description"]
-    return f"""<svg xmlns="http://www.w3.org/2000/svg" width="720" height="480" viewBox="0 0 720 480">
+    if category == "hairstyles":
+        body = _portrait_svg(
+            hair_variant=_hairstyle_cover_variant(template),
+            accent=color_b,
+        )
+    else:
+        body = _scene_background_svg(_scene_cover_variant(template), color_a, color_b) + _scene_subject_svg()
+
+    return f"""<svg xmlns="http://www.w3.org/2000/svg" width="720" height="960" viewBox="0 0 720 960">
   <defs>
     <linearGradient id="bg" x1="0%" x2="100%" y1="0%" y2="100%">
       <stop offset="0%" stop-color="{color_a}" />
       <stop offset="100%" stop-color="{color_b}" />
     </linearGradient>
+    <linearGradient id="shine" x1="0%" x2="100%" y1="0%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.22" />
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0" />
+    </linearGradient>
+    <linearGradient id="fadeBottom" x1="0%" x2="0%" y1="0%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0" />
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0.18" />
+    </linearGradient>
   </defs>
-  <rect width="720" height="480" rx="32" fill="url(#bg)" />
-  <circle cx="580" cy="120" r="92" fill="rgba(255,255,255,0.12)" />
-  <circle cx="140" cy="380" r="120" fill="rgba(255,255,255,0.08)" />
-  <text x="56" y="88" fill="#ffffff" font-size="28" font-family="Arial, sans-serif" opacity="0.82">{label}</text>
-  <text x="56" y="140" fill="#ffffff" font-size="24" font-family="Arial, sans-serif" opacity="0.9">{meta}</text>
-  <text x="56" y="220" fill="#ffffff" font-size="52" font-family="Arial, sans-serif" font-weight="700">{title}</text>
-  <text x="56" y="286" fill="#ffffff" font-size="24" font-family="Arial, sans-serif" opacity="0.85">{description}</text>
-  <rect x="56" y="346" width="188" height="52" rx="26" fill="rgba(255,255,255,0.18)" />
-  <text x="90" y="380" fill="#ffffff" font-size="22" font-family="Arial, sans-serif">Faceprompt</text>
+  <rect width="720" height="960" rx="40" fill="url(#bg)" />
+  <rect width="720" height="960" rx="40" fill="#0f172a" opacity="0.08" />
+  <circle cx="602" cy="154" r="128" fill="#ffffff" opacity="0.10" />
+  <circle cx="124" cy="832" r="180" fill="#ffffff" opacity="0.06" />
+  <path d="M0 724 C178 650 354 650 720 826 L720 960 L0 960 Z" fill="url(#fadeBottom)" />
+  <path d="M88 72 C210 40 328 46 430 104 C374 120 308 160 262 212 C210 170 150 122 88 72 Z" fill="url(#shine)" />
+  {body}
 </svg>"""

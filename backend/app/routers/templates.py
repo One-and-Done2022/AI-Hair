@@ -11,7 +11,10 @@ router = APIRouter(prefix="/templates", tags=["templates"])
 
 
 def _absolute_cover_url(request: Request, category: str, template_id: str) -> str:
-    return str(request.url_for("template_cover", category=category, template_id=template_id))
+    base_url = str(
+        request.url_for("template_cover", category=category, template_id=template_id)
+    )
+    return f"{base_url}?v={templates.TEMPLATE_COVER_VERSION}"
 
 
 @router.get("", response_model=TemplateCatalogResponse)

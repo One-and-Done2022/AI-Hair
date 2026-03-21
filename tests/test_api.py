@@ -195,6 +195,26 @@ def test_faceprompt_catalog_counts_and_legacy_aliases():
     assert templates.get_scene("lifestyle-interior")["id"] == "indoor-film-lifestyle"
 
 
+def test_template_cover_svg_uses_visual_layout_without_large_text_overlay():
+    from app.services import templates
+
+    hairstyle = templates.get_hairstyle("male-forward-spikes")
+    scene = templates.get_scene("city-neon-night")
+
+    assert hairstyle is not None
+    assert scene is not None
+
+    hairstyle_svg = templates.template_cover_svg("hairstyles", hairstyle)
+    scene_svg = templates.template_cover_svg("scenes", scene)
+
+    assert 'viewBox="0 0 720 960"' in hairstyle_svg
+    assert 'viewBox="0 0 720 960"' in scene_svg
+    assert hairstyle["name"] not in hairstyle_svg
+    assert scene["name"] not in scene_svg
+    assert "<text" not in hairstyle_svg
+    assert "<text" not in scene_svg
+
+
 def test_settings_resolve_relative_paths_against_repository_root(monkeypatch):
     monkeypatch.setenv("STORAGE_DIR", "tmp-relative-storage")
     monkeypatch.setenv("DATABASE_URL", "sqlite:///tmp-relative-db/app.db")
