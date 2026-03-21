@@ -3,6 +3,9 @@
     <view class="section-kicker">CREATE YOUR LOOK</view>
     <view class="title hero-title">上传照片，开始换发</view>
     <view class="subtitle hero-subtitle">支持相册和自拍，先选发型，再配场景。</view>
+    <view wx:if="{{profileSummary}}" class="quota-pill">
+      剩余次数 {{profileSummary.remaining_quota}} · 本月已用 {{profileSummary.monthly_used}}
+    </view>
   </view>
 
   <view wx:if="{{showcaseItems.length}}" class="showcase-section">
@@ -80,7 +83,7 @@
         <view class="section-kicker">STYLE SET</view>
         <view class="section-title selection-title">选择搭配</view>
       </view>
-      <view class="selection-link" bindtap="goHistory">历史</view>
+      <view class="selection-link" bindtap="goHistory">作品</view>
     </view>
 
     <view class="selection-grid">

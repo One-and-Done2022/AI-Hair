@@ -15,6 +15,20 @@
   max-width: 560rpx;
 }
 
+.quota-pill {
+  margin-top: 18rpx;
+  display: inline-flex;
+  align-items: center;
+  min-height: 52rpx;
+  padding: 0 18rpx;
+  border-radius: 999rpx;
+  background: rgba(255, 255, 255, 0.92);
+  color: #0b5ecf;
+  font-size: 22rpx;
+  font-weight: 700;
+  box-shadow: 0 12rpx 28rpx rgba(0, 88, 186, 0.08);
+}
+
 .showcase-section {
   margin-bottom: 24rpx;
 }

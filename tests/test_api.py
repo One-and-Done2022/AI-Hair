@@ -303,6 +303,25 @@ def test_auth_upload_job_history_flow(tmp_path, monkeypatch):
         assert items[0]["job_id"] == job_id
         assert len(items[0]["result_image_urls"]) == 3
 
+        me = client.get("/api/me", headers=headers)
+        assert me.status_code == 200
+        me_payload = me.json()
+        assert me_payload["user_id"] == login.json()["user_id"]
+        assert me_payload["nickname"] == f"微信用户 {login.json()['user_id']}"
+        assert me_payload["member_status"] == "普通用户"
+        assert me_payload["monthly_used"] == 1
+        assert me_payload["total_jobs"] == 1
+        assert me_payload["completed_jobs"] == 1
+        assert me_payload["processing_jobs"] == 0
+        assert me_payload["remaining_quota"] == 19
+
+        delete_response = client.delete(f"/api/jobs/{job_id}", headers=headers)
+        assert delete_response.status_code == 204
+
+        history_after_delete = client.get("/api/history", headers=headers)
+        assert history_after_delete.status_code == 200
+        assert history_after_delete.json()["items"] == []
+
 
 def test_job_exposes_preview_before_final_result(tmp_path, monkeypatch):
     _configure_runtime_env(tmp_path, monkeypatch, use_mock_generator="false")

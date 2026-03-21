@@ -4,7 +4,7 @@ import secrets
 import uuid
 from datetime import datetime, timedelta, timezone
 
-from sqlalchemy import and_, insert, select, update
+from sqlalchemy import and_, delete, insert, select, update
 
 from app.config import get_settings
 from app.db import auth_tokens, jobs, session_scope, uploads, users
@@ -12,6 +12,19 @@ from app.db import auth_tokens, jobs, session_scope, uploads, users
 
 def utc_now() -> str:
     return datetime.now(timezone.utc).replace(microsecond=0).isoformat()
+
+
+def _parse_iso_datetime(value: str | None) -> datetime | None:
+    if not value:
+        return None
+    normalized = value.replace("Z", "+00:00")
+    try:
+        parsed = datetime.fromisoformat(normalized)
+    except ValueError:
+        return None
+    if parsed.tzinfo is None:
+        return parsed.replace(tzinfo=timezone.utc)
+    return parsed.astimezone(timezone.utc)
 
 
 def _mapping_to_dict(row) -> dict | None:
@@ -175,6 +188,65 @@ def list_jobs_for_user(user_id: int) -> list[dict]:
             .order_by(jobs.c.created_at.desc())
         ).mappings().all()
         return [dict(row) for row in rows]
+
+
+def get_user_profile_summary(user_id: int) -> dict:
+    with session_scope() as session:
+        user_row = session.execute(
+            select(users).where(users.c.id == user_id)
+        ).mappings().one_or_none()
+        if user_row is None:
+            raise ValueError(f"User not found: {user_id}")
+
+        job_rows = session.execute(
+            select(jobs.c.status, jobs.c.created_at).where(jobs.c.user_id == user_id)
+        ).mappings().all()
+
+    total_jobs = len(job_rows)
+    completed_jobs = sum(1 for row in job_rows if row["status"] == "succeeded")
+    processing_jobs = sum(
+        1 for row in job_rows if row["status"] in {"pending", "processing", "preview_ready"}
+    )
+
+    now = datetime.now(timezone.utc)
+    monthly_used = 0
+    for row in job_rows:
+        created_at = _parse_iso_datetime(row["created_at"])
+        if created_at is None:
+            continue
+        if created_at.year == now.year and created_at.month == now.month:
+            monthly_used += 1
+
+    remaining_quota = max(0, 20 - monthly_used)
+
+    return {
+        "user_id": user_row["id"],
+        "nickname": f"微信用户 {user_row['id']}",
+        "member_status": "普通用户",
+        "remaining_quota": remaining_quota,
+        "monthly_used": monthly_used,
+        "total_jobs": total_jobs,
+        "completed_jobs": completed_jobs,
+        "processing_jobs": processing_jobs,
+        "created_at": user_row["created_at"],
+    }
+
+
+def delete_job_for_user(job_id: str, user_id: int) -> dict | None:
+    job = get_job_for_user(job_id, user_id)
+    if job is None:
+        return None
+
+    with session_scope() as session:
+        session.execute(
+            delete(jobs).where(
+                and_(
+                    jobs.c.id == job_id,
+                    jobs.c.user_id == user_id,
+                )
+            )
+        )
+    return job
 
 
 def update_job_status(

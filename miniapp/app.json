@@ -1,11 +1,12 @@
 {
   "pages": [
     "pages/index/index",
+    "pages/history/index",
+    "pages/profile/index",
     "pages/capture/index",
     "pages/templates/index",
     "pages/scenes/index",
-    "pages/result/index",
-    "pages/history/index"
+    "pages/result/index"
   ],
   "window": {
     "navigationBarTitleText": "AI 换发",
@@ -22,11 +23,21 @@
     "list": [
       {
         "pagePath": "pages/index/index",
-        "text": "生成"
+        "text": "创作",
+        "iconPath": "assets/tabbar/create.png",
+        "selectedIconPath": "assets/tabbar/create-active.png"
       },
       {
         "pagePath": "pages/history/index",
-        "text": "历史"
+        "text": "作品",
+        "iconPath": "assets/tabbar/works.png",
+        "selectedIconPath": "assets/tabbar/works-active.png"
+      },
+      {
+        "pagePath": "pages/profile/index",
+        "text": "我的",
+        "iconPath": "assets/tabbar/profile.png",
+        "selectedIconPath": "assets/tabbar/profile-active.png"
       }
     ]
   },

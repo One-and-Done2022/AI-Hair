@@ -62,3 +62,15 @@ class JobResponse(BaseModel):
 
 class HistoryResponse(BaseModel):
     items: list[JobResponse]
+
+
+class MeResponse(BaseModel):
+    user_id: int
+    nickname: str
+    member_status: str
+    remaining_quota: int
+    monthly_used: int
+    total_jobs: int
+    completed_jobs: int
+    processing_jobs: int
+    created_at: str

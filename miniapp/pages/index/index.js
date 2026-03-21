@@ -15,6 +15,7 @@ Page({
     selectedHairstyle: null,
     selectedScene: null,
     showcaseItems: [],
+    profileSummary: null,
     loading: false,
     bootstrapping: true
   },
@@ -31,7 +32,10 @@ Page({
     this.setData({ bootstrapping: true });
     try {
       await ensureLogin();
-      const catalog = await request({ url: "/api/templates" });
+      const [catalog, profileSummary] = await Promise.all([
+        request({ url: "/api/templates" }),
+        request({ url: "/api/me" })
+      ]);
       const cachedSelection = wx.getStorageSync("templateSelection") || {};
       const selectedHairstyle =
         findById(catalog.hairstyles, cachedSelection.hairstyle && cachedSelection.hairstyle.id) ||
@@ -58,6 +62,7 @@ Page({
           coverUrl: item.cover_url,
           tag: item.style_line_label || ((item.tags || [])[0] || "风格")
         })),
+        profileSummary,
         selectedHairstyle,
         selectedScene
       });

@@ -1,0 +1,75 @@
+<view class="screen profile-screen">
+  <view class="profile-head">
+    <view class="section-kicker">ACCOUNT</view>
+    <view class="title profile-title">我的</view>
+    <view class="subtitle profile-subtitle">统一查看账号、额度、会员说明与常用入口。</view>
+  </view>
+
+  <view wx:if="{{profile}}" class="panel identity-card">
+    <view class="avatar-badge">{{profile.avatar_text}}</view>
+    <view class="identity-meta">
+      <view class="identity-name-row">
+        <view class="identity-name">{{profile.nickname}}</view>
+        <view class="identity-tag">{{profile.member_status}}</view>
+      </view>
+      <view class="identity-id">UID {{profile.user_id}}</view>
+      <view class="identity-joined">{{profile.joined_label}}</view>
+    </view>
+  </view>
+
+  <view wx:if="{{profile}}" class="panel quota-card">
+    <view class="card-head">
+      <view class="section-title">额度信息</view>
+      <view class="mini-link" bindtap="showQuotaHelp">说明</view>
+    </view>
+    <view class="quota-grid">
+      <view class="quota-item emphasis">
+        <view class="quota-value">{{profile.remaining_quota}}</view>
+        <view class="quota-label">剩余次数</view>
+      </view>
+      <view class="quota-item">
+        <view class="quota-value">{{profile.monthly_used}}</view>
+        <view class="quota-label">本月已用</view>
+      </view>
+      <view class="quota-item">
+        <view class="quota-value">{{profile.completed_jobs}}</view>
+        <view class="quota-label">完成作品</view>
+      </view>
+      <view class="quota-item">
+        <view class="quota-value">{{profile.processing_jobs}}</view>
+        <view class="quota-label">处理中</view>
+      </view>
+    </view>
+  </view>
+
+  <view wx:if="{{profile}}" class="panel membership-card">
+    <view class="card-head">
+      <view class="section-title">会员权益</view>
+      <view class="mini-link" bindtap="showMemberIntro">查看</view>
+    </view>
+    <view class="membership-copy">当前为普通用户，后续可扩展更高次数、优先排队与更多发型模板。</view>
+    <button class="primary-button member-button" bindtap="showMemberIntro">开通会员</button>
+  </view>
+
+  <view wx:if="{{profile}}" class="panel tools-card">
+    <view class="section-title">工具入口</view>
+    <view class="tool-list">
+      <view class="tool-row" bindtap="openWorks">
+        <view class="tool-label">作品记录</view>
+        <view class="tool-arrow">›</view>
+      </view>
+      <view class="tool-row" bindtap="showComingSoon" data-label="帮助反馈">
+        <view class="tool-label">帮助反馈</view>
+        <view class="tool-arrow">›</view>
+      </view>
+      <view class="tool-row" bindtap="showComingSoon" data-label="设置">
+        <view class="tool-label">设置</view>
+        <view class="tool-arrow">›</view>
+      </view>
+      <view class="tool-row" bindtap="relogin">
+        <view class="tool-label">刷新登录</view>
+        <view class="tool-arrow">›</view>
+      </view>
+    </view>
+  </view>
+</view>

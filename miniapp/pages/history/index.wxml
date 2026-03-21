@@ -1,37 +1,101 @@
-<view class="screen history-screen">
-  <view class="history-head">
-    <view class="section-kicker">HISTORY</view>
-    <view class="title history-title">我的记录</view>
-    <view class="subtitle history-subtitle">按时间查看，点开继续查看结果。</view>
+<view class="screen works-screen">
+  <view class="works-head">
+    <view class="section-kicker">MY WORKS</view>
+    <view class="title works-title">作品</view>
+    <view class="subtitle works-subtitle">查看历史结果，收藏喜欢的版本，保留常用搭配。</view>
   </view>
 
-  <view wx:if="{{items.length === 0}}" class="panel empty-state">
-    <view>还没有生成记录，先去首页试一张照片。</view>
+  <view class="panel works-summary">
+    <view class="summary-chip">
+      <view class="summary-value">{{items.length}}</view>
+      <view class="summary-label">全部作品</view>
+    </view>
+    <view class="summary-chip">
+      <view class="summary-value">{{favoriteCount}}</view>
+      <view class="summary-label">已收藏</view>
+    </view>
+    <view class="summary-chip">
+      <view class="summary-value">{{completedCount}}</view>
+      <view class="summary-label">已完成</view>
+    </view>
   </view>
 
-  <view wx:else class="history-list">
+  <view class="tab-strip">
     <view
-      wx:for="{{items}}"
+      class="tab-chip {{activeTab === 'all' ? 'active' : ''}}"
+      data-tab="all"
+      bindtap="changeTab"
+    >
+      全部作品
+    </view>
+    <view
+      class="tab-chip {{activeTab === 'favorites' ? 'active' : ''}}"
+      data-tab="favorites"
+      bindtap="changeTab"
+    >
+      收藏
+    </view>
+  </view>
+
+  <view wx:if="{{visibleItems.length === 0}}" class="panel empty-state works-empty">
+    <view class="empty-title">{{activeTab === 'favorites' ? '还没有收藏作品' : '还没有生成作品'}}</view>
+    <view class="empty-copy">
+      {{activeTab === 'favorites' ? '先去挑几张满意的结果收藏起来。' : '回到创作页上传照片后就能看到作品。'}}
+    </view>
+  </view>
+
+  <view wx:else class="works-grid">
+    <view
+      wx:for="{{visibleItems}}"
       wx:key="job_id"
-      class="history-card history-item"
+      class="work-card"
       bindtap="openJob"
       data-job-id="{{item.job_id}}"
     >
-      <view class="history-cover-shell">
+      <view class="work-cover-shell">
         <image
-          wx:if="{{item.result_image_url}}"
-          class="history-cover"
-          src="{{item.result_image_url}}"
+          wx:if="{{item.cover_url}}"
+          class="work-cover"
+          src="{{item.cover_url}}"
           mode="aspectFill"
           lazy-load="true"
         ></image>
-        <view wx:else class="history-placeholder">
-          {{item.status === 'failed' ? '生成失败' : item.status === 'preview_ready' ? '首图已返回' : '生成中'}}
+        <view wx:else class="work-cover work-placeholder">
+          {{item.status_label}}
         </view>
-        <view class="history-status {{item.status}}">{{item.status_label}}</view>
+        <view class="work-status {{item.status}}">{{item.status_label}}</view>
+        <view
+          class="favorite-toggle {{item.isFavorite ? 'active' : ''}}"
+          catchtap="toggleFavorite"
+          data-job-id="{{item.job_id}}"
+        >
+          {{item.isFavorite ? '★' : '☆'}}
+        </view>
       </view>
-      <view class="history-name">{{item.hairstyle_name}} · {{item.scene_name}}</view>
-      <view class="history-time">{{item.created_at_label}}</view>
+
+      <view class="work-content">
+        <view class="work-name">{{item.hairstyle_name}}</view>
+        <view class="work-scene">{{item.scene_name}}</view>
+        <view class="work-time">{{item.created_at_label}}</view>
+      </view>
+
+      <view class="work-actions">
+        <button
+          class="ghost-action"
+          open-type="share"
+          catchtap="noop"
+          data-job-id="{{item.job_id}}"
+        >
+          分享
+        </button>
+        <view
+          class="ghost-action ghost-action-view"
+          catchtap="openMoreActions"
+          data-job-id="{{item.job_id}}"
+        >
+          更多
+        </view>
+      </view>
     </view>
   </view>
 </view>

@@ -86,3 +86,13 @@ def get_job(
     if job is None:
         raise HTTPException(status_code=404, detail="Job not found.")
     return _job_response(request, job)
+
+
+@router.delete("/{job_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_job(
+    job_id: str,
+    current_user: dict = Depends(get_current_user),
+) -> None:
+    deleted = repository.delete_job_for_user(job_id, current_user["id"])
+    if deleted is None:
+        raise HTTPException(status_code=404, detail="Job not found.")
