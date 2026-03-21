@@ -1,6 +1,7 @@
 <view class="screen works-screen">
   <view class="works-head">
     <view class="title works-title">作品</view>
+    <view class="subtitle works-subtitle">长按作品卡片可收藏、保存或删除</view>
   </view>
 
   <view class="works-summary-line">

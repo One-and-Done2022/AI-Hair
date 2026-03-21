@@ -40,6 +40,7 @@
         <view class="upload-stage-deco"></view>
         <view class="upload-stage-icon">+</view>
         <view class="upload-stage-title">点击上传照片</view>
+        <view class="upload-stage-copy">支持 JPG、PNG 格式</view>
       </view>
     </view>
 
