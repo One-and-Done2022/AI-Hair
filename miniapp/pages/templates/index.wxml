@@ -12,6 +12,21 @@
     <view class="title editorial-title">步骤 1：选择风格</view>
   </view>
 
+  <view wx:if="{{recommendation}}" class="panel insight-card">
+    <view class="insight-kicker">智能推荐</view>
+    <view class="insight-title">{{recommendation.face_shape.label}}</view>
+    <view class="insight-summary">{{recommendation.summary}}</view>
+    <view class="insight-tag-row">
+      <view
+        wx:for="{{recommendation.feature_tags}}"
+        wx:key="*this"
+        class="insight-tag"
+      >
+        {{item}}
+      </view>
+    </view>
+  </view>
+
   <view class="gender-switch">
     <view
       class="gender-pill {{selectedGender === 'female' ? 'active' : ''}}"
@@ -59,12 +74,14 @@
           data-id="{{item.id}}"
         ></image>
         <view class="preview-pill" catchtap="previewHairstyle" data-id="{{item.id}}">预览</view>
+        <view wx:if="{{item.recommended}}" class="template-badge">推荐</view>
         <view wx:if="{{selectedHairstyleId === item.id}}" class="selected-dot">✓</view>
       </view>
       <view class="tile-name">{{item.name}}</view>
       <view class="tile-chip-row">
         <view wx:if="{{item.primaryTag}}" class="tile-chip">{{item.primaryTag}}</view>
         <view class="tile-chip">{{item.style_line_label}}</view>
+        <view wx:if="{{item.recommended}}" class="tile-chip tile-chip-highlight">智能推荐</view>
       </view>
     </view>
   </view>

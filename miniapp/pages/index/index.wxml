@@ -113,8 +113,8 @@
   <view class="floating-bar">
     <button
       class="primary-button"
-      loading="{{loading}}"
-      disabled="{{!selectedImage || !selectedHairstyle || !selectedScene || loading}}"
+      loading="{{submitting}}"
+      disabled="{{!selectedImage || !selectedHairstyle || !selectedScene || submitting || preparingRecommendation}}"
       bindtap="createJob"
     >
       {{selectedImage && selectedHairstyle && selectedScene ? '开始生成' : '请先完成上传与搭配'}}

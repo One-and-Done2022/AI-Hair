@@ -1,12 +1,31 @@
 const { ensureLogin } = require("../../utils/auth");
-const { showError } = require("../../utils/errors");
+const { getErrorCode, showError } = require("../../utils/errors");
 const { request, uploadFile } = require("../../utils/request");
+
+const CURRENT_UPLOAD_STORAGE_KEY = "currentUpload";
+const SMART_RECOMMENDATION_STORAGE_KEY = "smartRecommendation";
 
 function findById(items, id) {
   if (!id) {
     return null;
   }
   return items.find((item) => item.id === id) || null;
+}
+
+function getCachedUpload(selectedImage) {
+  const cached = wx.getStorageSync(CURRENT_UPLOAD_STORAGE_KEY) || null;
+  if (!cached || !cached.upload_id || cached.local_path !== selectedImage) {
+    return null;
+  }
+  return cached;
+}
+
+function getCachedRecommendation(uploadId) {
+  const cached = wx.getStorageSync(SMART_RECOMMENDATION_STORAGE_KEY) || null;
+  if (!cached || !cached.upload_id || cached.upload_id !== uploadId) {
+    return null;
+  }
+  return cached;
 }
 
 Page({
@@ -16,7 +35,8 @@ Page({
     selectedScene: null,
     showcaseItems: [],
     profileSummary: null,
-    loading: false,
+    submitting: false,
+    preparingRecommendation: false,
     bootstrapping: true
   },
 
@@ -88,7 +108,7 @@ Page({
       sourceType: ["album"],
       success: (result) => {
         const filePath = result.tempFilePaths[0];
-        this.setData({ selectedImage: filePath });
+        this.applySelectedImage(filePath);
       }
     });
   },
@@ -114,11 +134,20 @@ Page({
       success: (result) => {
         result.eventChannel.on("captured", (payload) => {
           if (payload && payload.filePath) {
-            this.setData({ selectedImage: payload.filePath });
+            this.applySelectedImage(payload.filePath);
           }
         });
       }
     });
+  },
+
+  applySelectedImage(filePath) {
+    if (!filePath) {
+      return;
+    }
+    wx.removeStorageSync(CURRENT_UPLOAD_STORAGE_KEY);
+    wx.removeStorageSync(SMART_RECOMMENDATION_STORAGE_KEY);
+    this.setData({ selectedImage: filePath });
   },
 
   previewImage() {
@@ -130,17 +159,112 @@ Page({
     });
   },
 
-  openTemplatePicker() {
+  async ensureCurrentUpload() {
+    const cachedUpload = getCachedUpload(this.data.selectedImage);
+    if (cachedUpload) {
+      return cachedUpload;
+    }
+
+    const upload = await uploadFile({
+      url: "/api/uploads",
+      filePath: this.data.selectedImage,
+      name: "file"
+    });
+    const preparedUpload = {
+      ...upload,
+      local_path: this.data.selectedImage
+    };
+    wx.setStorageSync(CURRENT_UPLOAD_STORAGE_KEY, preparedUpload);
+    return preparedUpload;
+  },
+
+  async ensureRecommendation() {
+    const upload = await this.ensureCurrentUpload();
+    const cachedRecommendation = getCachedRecommendation(upload.upload_id);
+    if (cachedRecommendation) {
+      return cachedRecommendation;
+    }
+
+    try {
+      const recommendation = await request({
+        url: "/api/recommendations",
+        method: "POST",
+        data: {
+          upload_id: upload.upload_id
+        }
+      });
+      const preparedRecommendation = {
+        ...recommendation,
+        local_path: this.data.selectedImage
+      };
+      wx.setStorageSync(SMART_RECOMMENDATION_STORAGE_KEY, preparedRecommendation);
+      return preparedRecommendation;
+    } catch (error) {
+      if (getErrorCode(error) === "recommendation_unavailable") {
+        wx.removeStorageSync(SMART_RECOMMENDATION_STORAGE_KEY);
+        wx.showToast({
+          title: "暂时无法完成智能推荐，可继续手动选择",
+          icon: "none"
+        });
+        return null;
+      }
+      throw error;
+    }
+  },
+
+  async prepareRecommendation() {
+    if (!this.data.selectedImage) {
+      return null;
+    }
+    await ensureLogin();
+    return this.ensureRecommendation();
+  },
+
+  async openTemplatePicker() {
+    if (this.data.selectedImage) {
+      this.setData({ preparingRecommendation: true });
+      wx.showLoading({ title: "正在分析照片" });
+      try {
+        await this.prepareRecommendation();
+      } catch (error) {
+        showError(error, {
+          fallback: "照片分析失败，请换一张试试",
+          preferModal: true
+        });
+        return;
+      } finally {
+        wx.hideLoading();
+        this.setData({ preparingRecommendation: false });
+      }
+    }
+
     wx.navigateTo({
       url: "/pages/templates/index"
     });
   },
 
-  openScenePicker() {
+  async openScenePicker() {
     const hairstyle = this.data.selectedHairstyle;
     if (!hairstyle) {
-      this.openTemplatePicker();
+      await this.openTemplatePicker();
       return;
+    }
+
+    if (this.data.selectedImage) {
+      this.setData({ preparingRecommendation: true });
+      wx.showLoading({ title: "正在分析照片" });
+      try {
+        await this.prepareRecommendation();
+      } catch (error) {
+        showError(error, {
+          fallback: "照片分析失败，请换一张试试",
+          preferModal: true
+        });
+        return;
+      } finally {
+        wx.hideLoading();
+        this.setData({ preparingRecommendation: false });
+      }
     }
 
     wx.navigateTo({
@@ -161,15 +285,11 @@ Page({
       return;
     }
 
-    this.setData({ loading: true });
+    this.setData({ submitting: true });
     wx.showLoading({ title: "正在提交任务" });
     try {
       await ensureLogin();
-      const upload = await uploadFile({
-        url: "/api/uploads",
-        filePath: this.data.selectedImage,
-        name: "file"
-      });
+      const upload = await this.ensureCurrentUpload();
       const job = await request({
         url: "/api/jobs",
         method: "POST",
@@ -194,7 +314,7 @@ Page({
       });
     } finally {
       wx.hideLoading();
-      this.setData({ loading: false });
+      this.setData({ submitting: false });
     }
   },
 

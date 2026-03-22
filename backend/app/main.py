@@ -8,7 +8,7 @@ from fastapi.staticfiles import StaticFiles
 
 from app.config import get_settings
 from app.db import init_db
-from app.routers import auth, history, jobs, me, templates, uploads
+from app.routers import auth, history, jobs, me, recommendations, templates, uploads
 from app.services.dispatch_queue import build_job_queue
 from app.services.generation import build_generator
 from app.services.job_queue import JobWorker
@@ -64,6 +64,7 @@ def create_app() -> FastAPI:
     app.include_router(auth.router, prefix=settings.api_prefix)
     app.include_router(uploads.router, prefix=settings.api_prefix)
     app.include_router(templates.router, prefix=settings.api_prefix)
+    app.include_router(recommendations.router, prefix=settings.api_prefix)
     app.include_router(jobs.router, prefix=settings.api_prefix)
     app.include_router(history.router, prefix=settings.api_prefix)
     app.include_router(me.router, prefix=settings.api_prefix)

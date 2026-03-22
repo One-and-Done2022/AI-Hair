@@ -518,6 +518,106 @@ def test_job_exposes_preview_before_final_result(tmp_path, monkeypatch):
         assert final_payload["result_image_urls"][0] == final_payload["result_image_url"]
 
 
+def test_recommendations_api_returns_payload(tmp_path, monkeypatch):
+    app = _build_app(tmp_path, monkeypatch)
+
+    from app.services import recommendations as recommendation_service
+
+    monkeypatch.setattr(
+        recommendation_service,
+        "build_recommendation_payload",
+        lambda upload: {
+            "face_shape": {"id": "oval", "label": "椭圆脸"},
+            "feature_tags": ["比例均衡", "轮廓柔和"],
+            "summary": "推荐优先选择更能平衡面部比例的发型和场景。",
+            "measurements": {"face_aspect_ratio": 1.36},
+            "recommended_hairstyles": {
+                "male": [
+                    {
+                        "id": "male-forward-spikes",
+                        "name": "前刺短发",
+                        "score": 6,
+                        "reasons": ["适合拉长面部纵向比例"],
+                    }
+                ],
+                "female": [],
+            },
+            "recommended_scenes": [
+                {
+                    "id": "morning-window-softlight",
+                    "name": "晨光窗边",
+                    "score": 5,
+                    "reasons": ["更适合柔和自然的生活感场景"],
+                }
+            ],
+        },
+    )
+
+    with TestClient(app) as client:
+        login = client.post("/api/auth/wechat/login", json={"code": "dev-test"})
+        token = login.json()["token"]
+        headers = {"Authorization": f"Bearer {token}"}
+
+        upload = client.post(
+            "/api/uploads",
+            headers=headers,
+            files={"file": ("portrait.png", _build_test_image(), "image/png")},
+        )
+        assert upload.status_code == 200
+
+        response = client.post(
+            "/api/recommendations",
+            headers=headers,
+            json={"upload_id": upload.json()["upload_id"]},
+        )
+
+        assert response.status_code == 200
+        payload = response.json()
+        assert payload["face_shape"]["label"] == "椭圆脸"
+        assert payload["feature_tags"] == ["比例均衡", "轮廓柔和"]
+        assert payload["recommended_hairstyles"]["male"][0]["id"] == "male-forward-spikes"
+        assert payload["recommended_scenes"][0]["id"] == "morning-window-softlight"
+
+
+def test_recommendations_api_returns_unavailable_error(tmp_path, monkeypatch):
+    app = _build_app(tmp_path, monkeypatch)
+
+    from app.services import recommendations as recommendation_service
+
+    def _raise_recommendation_error(upload):
+        raise recommendation_service.RecommendationError("未识别到清晰人脸")
+
+    monkeypatch.setattr(
+        recommendation_service,
+        "build_recommendation_payload",
+        _raise_recommendation_error,
+    )
+
+    with TestClient(app) as client:
+        login = client.post("/api/auth/wechat/login", json={"code": "dev-test"})
+        token = login.json()["token"]
+        headers = {"Authorization": f"Bearer {token}"}
+
+        upload = client.post(
+            "/api/uploads",
+            headers=headers,
+            files={"file": ("portrait.png", _build_test_image(), "image/png")},
+        )
+        assert upload.status_code == 200
+
+        response = client.post(
+            "/api/recommendations",
+            headers=headers,
+            json={"upload_id": upload.json()["upload_id"]},
+        )
+
+        assert response.status_code == 400
+        assert response.json()["detail"] == {
+            "code": "recommendation_unavailable",
+            "message": "未识别到清晰人脸",
+        }
+
+
 def test_seedream_generator_requests_preview_first_then_tops_up(tmp_path, monkeypatch):
     _configure_runtime_env(tmp_path, monkeypatch, use_mock_generator="false")
     monkeypatch.setenv("ARK_API_KEY", "test-key")

@@ -2,6 +2,9 @@ const { ensureLogin } = require("../../utils/auth");
 const { showError } = require("../../utils/errors");
 const { request } = require("../../utils/request");
 
+const CURRENT_UPLOAD_STORAGE_KEY = "currentUpload";
+const SMART_RECOMMENDATION_STORAGE_KEY = "smartRecommendation";
+
 function findById(items, id) {
   if (!id) {
     return null;
@@ -26,8 +29,31 @@ const STYLE_LINE_OPTIONS = [
   { id: "fashion_editorial", label: "时尚大片" }
 ];
 
-function decorateScene(item, selectedHairstyle) {
-  const isRecommended =
+function getCachedRecommendation() {
+  const recommendation = wx.getStorageSync(SMART_RECOMMENDATION_STORAGE_KEY) || null;
+  const upload = wx.getStorageSync(CURRENT_UPLOAD_STORAGE_KEY) || null;
+  if (!recommendation || !upload || recommendation.upload_id !== upload.upload_id) {
+    return null;
+  }
+  return recommendation;
+}
+
+function buildSceneRecommendationMap(recommendation) {
+  const items = recommendation && recommendation.recommended_scenes
+    ? recommendation.recommended_scenes
+    : [];
+  return items.reduce((result, item, index) => {
+    result[item.id] = {
+      rank: index,
+      reasons: item.reasons || []
+    };
+    return result;
+  }, {});
+}
+
+function decorateScene(item, selectedHairstyle, recommendationMap) {
+  const recommendationMeta = recommendationMap[item.id];
+  const styleMatched =
     !!selectedHairstyle &&
     !!selectedHairstyle.style_line &&
     item.style_line === selectedHairstyle.style_line;
@@ -36,7 +62,9 @@ function decorateScene(item, selectedHairstyle) {
     ...item,
     shortTags: (item.tags || []).slice(0, 2),
     primaryTag: (item.tags || [])[0] || "",
-    recommended: isRecommended
+    recommended: !!recommendationMeta,
+    styleMatched,
+    recommendationRank: recommendationMeta ? recommendationMeta.rank : 999
   };
 }
 
@@ -49,10 +77,16 @@ function buildVisibleScenes(scenes, styleLine) {
   });
 
   return filtered.sort((left, right) => {
-    if (left.recommended === right.recommended) {
-      return 0;
+    if (left.recommended !== right.recommended) {
+      return left.recommended ? -1 : 1;
     }
-    return left.recommended ? -1 : 1;
+    if (left.recommended && right.recommended && left.recommendationRank !== right.recommendationRank) {
+      return left.recommendationRank - right.recommendationRank;
+    }
+    if (left.styleMatched !== right.styleMatched) {
+      return left.styleMatched ? -1 : 1;
+    }
+    return 0;
   });
 }
 
@@ -71,6 +105,7 @@ Page({
     loading: true,
     selectedHairstyle: null,
     selectedGender: "",
+    recommendation: null,
     scenes: [],
     selectedSceneId: "",
     selectedStyleLine: "all",
@@ -101,11 +136,13 @@ Page({
         findById(catalog.scenes, cached.scene && cached.scene.id) ||
         catalog.scenes[0] ||
         null;
+      const recommendation = getCachedRecommendation();
+      const recommendationMap = buildSceneRecommendationMap(recommendation);
       const decoratedScenes = (catalog.scenes || []).map((item) =>
-        decorateScene(item, selectedHairstyle)
+        decorateScene(item, selectedHairstyle, recommendationMap)
       );
       const selectedStyleLine =
-        (selectedHairstyle && selectedHairstyle.style_line) || "all";
+        recommendation ? "all" : ((selectedHairstyle && selectedHairstyle.style_line) || "all");
 
       const sceneSelection = resolveVisibleSceneSelection(
         decoratedScenes,
@@ -122,6 +159,7 @@ Page({
               gender: this.gender
             },
         selectedGender: selectedHairstyle ? selectedHairstyle.gender : this.gender,
+        recommendation,
         scenes: decoratedScenes,
         selectedStyleLine,
         visibleScenes: sceneSelection.visibleScenes,

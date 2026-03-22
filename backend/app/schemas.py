@@ -38,6 +38,28 @@ class TemplateCatalogResponse(BaseModel):
     scenes: list[TemplateItem]
 
 
+class RecommendationFaceShape(BaseModel):
+    id: str
+    label: str
+
+
+class RecommendationItem(BaseModel):
+    id: str
+    name: str
+    score: int
+    reasons: list[str] = Field(default_factory=list)
+
+
+class RecommendationResponse(BaseModel):
+    upload_id: str
+    face_shape: RecommendationFaceShape
+    feature_tags: list[str] = Field(default_factory=list)
+    summary: str
+    measurements: dict[str, float] = Field(default_factory=dict)
+    recommended_hairstyles: dict[str, list[RecommendationItem]] = Field(default_factory=dict)
+    recommended_scenes: list[RecommendationItem] = Field(default_factory=list)
+
+
 class JobCreateRequest(BaseModel):
     upload_id: str = Field(min_length=1)
     hairstyle_id: str = Field(min_length=1)
