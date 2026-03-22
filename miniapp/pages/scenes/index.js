@@ -1,9 +1,10 @@
 const { ensureLogin } = require("../../utils/auth");
 const { showError } = require("../../utils/errors");
 const { request } = require("../../utils/request");
-
-const CURRENT_UPLOAD_STORAGE_KEY = "currentUpload";
-const SMART_RECOMMENDATION_STORAGE_KEY = "smartRecommendation";
+const {
+  ensureRecommendationFromCurrentUpload,
+  getCachedRecommendation
+} = require("../../utils/recommendation");
 
 function findById(items, id) {
   if (!id) {
@@ -28,15 +29,6 @@ const STYLE_LINE_OPTIONS = [
   { id: "realistic_editorial", label: "写实写真" },
   { id: "fashion_editorial", label: "时尚大片" }
 ];
-
-function getCachedRecommendation() {
-  const recommendation = wx.getStorageSync(SMART_RECOMMENDATION_STORAGE_KEY) || null;
-  const upload = wx.getStorageSync(CURRENT_UPLOAD_STORAGE_KEY) || null;
-  if (!recommendation || !upload || recommendation.upload_id !== upload.upload_id) {
-    return null;
-  }
-  return recommendation;
-}
 
 function buildSceneRecommendationMap(recommendation) {
   const items = recommendation && recommendation.recommended_scenes
@@ -150,26 +142,60 @@ Page({
         selectedScene ? selectedScene.id : ""
       );
 
+      this.setData(
+        {
+          selectedHairstyle: selectedHairstyle
+            ? selectedHairstyle
+            : {
+                id: this.hairstyleId,
+                name: this.hairstyleName,
+                gender: this.gender
+              },
+          selectedGender: selectedHairstyle ? selectedHairstyle.gender : this.gender,
+          recommendation,
+          scenes: decoratedScenes,
+          selectedStyleLine,
+          visibleScenes: sceneSelection.visibleScenes,
+          selectedSceneId: sceneSelection.selectedSceneId,
+          selectedSceneName: sceneSelection.selectedSceneName
+        },
+        () => {
+          this.refreshRecommendation();
+        }
+      );
+    } catch (error) {
+      showError(error, { fallback: "加载失败" });
+    } finally {
+      this.setData({ loading: false });
+    }
+  },
+
+  async refreshRecommendation() {
+    try {
+      const recommendation = await ensureRecommendationFromCurrentUpload({ silent: true });
+      if (!recommendation) {
+        return;
+      }
+      const recommendationMap = buildSceneRecommendationMap(recommendation);
+      const scenes = (this.data.scenes || []).map((item) =>
+        decorateScene(item, this.data.selectedHairstyle, recommendationMap)
+      );
+      const selectedStyleLine = "all";
+      const sceneSelection = resolveVisibleSceneSelection(
+        scenes,
+        selectedStyleLine,
+        this.data.selectedSceneId
+      );
       this.setData({
-        selectedHairstyle: selectedHairstyle
-          ? selectedHairstyle
-          : {
-              id: this.hairstyleId,
-              name: this.hairstyleName,
-              gender: this.gender
-            },
-        selectedGender: selectedHairstyle ? selectedHairstyle.gender : this.gender,
         recommendation,
-        scenes: decoratedScenes,
+        scenes,
         selectedStyleLine,
         visibleScenes: sceneSelection.visibleScenes,
         selectedSceneId: sceneSelection.selectedSceneId,
         selectedSceneName: sceneSelection.selectedSceneName
       });
     } catch (error) {
-      showError(error, { fallback: "加载失败" });
-    } finally {
-      this.setData({ loading: false });
+      // 推荐只做增强，不阻断场景选择
     }
   },
 

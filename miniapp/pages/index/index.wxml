@@ -114,7 +114,7 @@
     <button
       class="primary-button"
       loading="{{submitting}}"
-      disabled="{{!selectedImage || !selectedHairstyle || !selectedScene || submitting || preparingRecommendation}}"
+      disabled="{{!selectedImage || !selectedHairstyle || !selectedScene || submitting}}"
       bindtap="createJob"
     >
       {{selectedImage && selectedHairstyle && selectedScene ? '开始生成' : '请先完成上传与搭配'}}

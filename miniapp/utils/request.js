@@ -56,6 +56,7 @@ function request(options) {
     data = {},
     header = {},
     withAuth = true,
+    timeout,
     _retriedAfterAuthRefresh = false
   } = options;
 
@@ -64,6 +65,7 @@ function request(options) {
       url: `${baseUrl}${url}`,
       method,
       data,
+      timeout,
       header: getHeaders(withAuth, header),
       success(response) {
         const payload = parsePayload(response.data);
@@ -79,6 +81,7 @@ function request(options) {
               data,
               header,
               withAuth,
+              timeout,
               _retriedAfterAuthRefresh: true
             }))
             .then(resolve)
@@ -100,6 +103,7 @@ function uploadFile(options) {
     filePath,
     name = "file",
     formData = {},
+    timeout,
     _retriedAfterAuthRefresh = false
   } = options;
 
@@ -108,6 +112,7 @@ function uploadFile(options) {
       url: `${baseUrl}${url}`,
       filePath,
       name,
+      timeout,
       formData,
       header: getHeaders(true),
       success(response) {
@@ -123,6 +128,7 @@ function uploadFile(options) {
               filePath,
               name,
               formData,
+              timeout,
               _retriedAfterAuthRefresh: true
             }))
             .then(resolve)

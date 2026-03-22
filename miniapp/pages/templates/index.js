@@ -1,9 +1,10 @@
 const { ensureLogin } = require("../../utils/auth");
 const { showError } = require("../../utils/errors");
 const { request } = require("../../utils/request");
-
-const CURRENT_UPLOAD_STORAGE_KEY = "currentUpload";
-const SMART_RECOMMENDATION_STORAGE_KEY = "smartRecommendation";
+const {
+  ensureRecommendationFromCurrentUpload,
+  getCachedRecommendation
+} = require("../../utils/recommendation");
 
 function findById(items, id) {
   if (!id) {
@@ -24,15 +25,6 @@ function decorateTemplate(item) {
     shortTags: (item.tags || []).slice(0, 2),
     primaryTag: (item.tags || [])[0] || ""
   };
-}
-
-function getCachedRecommendation() {
-  const recommendation = wx.getStorageSync(SMART_RECOMMENDATION_STORAGE_KEY) || null;
-  const upload = wx.getStorageSync(CURRENT_UPLOAD_STORAGE_KEY) || null;
-  if (!recommendation || !upload || recommendation.upload_id !== upload.upload_id) {
-    return null;
-  }
-  return recommendation;
 }
 
 function buildHairstyleRecommendationMap(recommendation, gender) {
@@ -149,11 +141,41 @@ Page({
       await ensureLogin();
       const catalog = await request({ url: "/api/templates" });
       const cached = wx.getStorageSync("templateSelection") || {};
-      this.setData(resolveSelectionState(catalog, cached, getCachedRecommendation()));
+      this.setData(
+        resolveSelectionState(catalog, cached, getCachedRecommendation()),
+        () => {
+          this.refreshRecommendation();
+        }
+      );
     } catch (error) {
       showError(error, { fallback: "加载失败" });
     } finally {
       this.setData({ loading: false });
+    }
+  },
+
+  async refreshRecommendation() {
+    try {
+      const recommendation = await ensureRecommendationFromCurrentUpload({ silent: true });
+      if (!recommendation) {
+        return;
+      }
+      const visibleHairstyles = filterHairstyles(
+        this.data.hairstyles,
+        this.data.selectedGender,
+        this.data.selectedStyleLine,
+        recommendation
+      );
+      const selectedHairstyle =
+        findById(visibleHairstyles, this.data.selectedHairstyleId) || visibleHairstyles[0] || null;
+      this.setData({
+        recommendation,
+        visibleHairstyles,
+        selectedHairstyleId: selectedHairstyle ? selectedHairstyle.id : "",
+        selectedHairstyleName: selectedHairstyle ? selectedHairstyle.name : ""
+      });
+    } catch (error) {
+      // 推荐只做增强，不阻断模板选择
     }
   },
 
