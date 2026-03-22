@@ -1,0 +1,3 @@
+[submodule "Faceprompt"]
+	path = Faceprompt
+	url = git@github.com:One-and-Done2022/Faceprompt.git

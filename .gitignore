@@ -15,6 +15,5 @@ project.private.config.json
 .DS_Store
 .idea/
 .vscode/
-Faceprompt/
 foodtop1.com_certificate.pem
 foodtop1.com_private.key
