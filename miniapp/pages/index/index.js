@@ -4,7 +4,10 @@ const { request } = require("../../utils/request");
 const {
   clearRecommendationCache,
   ensureCurrentUpload,
-  ensureRecommendation
+  ensureRecommendation,
+  getCachedRecommendation,
+  getCurrentImagePath,
+  setCurrentImagePath
 } = require("../../utils/recommendation");
 
 function findById(items, id) {
@@ -12,6 +15,16 @@ function findById(items, id) {
     return null;
   }
   return items.find((item) => item.id === id) || null;
+}
+
+function getRecommendationGender(selection, selectedHairstyle) {
+  if (selectedHairstyle && (selectedHairstyle.gender === "male" || selectedHairstyle.gender === "female")) {
+    return selectedHairstyle.gender;
+  }
+  if (selection && (selection.gender === "male" || selection.gender === "female")) {
+    return selection.gender;
+  }
+  return "female";
 }
 
 Page({
@@ -22,6 +35,12 @@ Page({
     showcaseItems: [],
     profileSummary: null,
     submitting: false,
+    recommendationLoading: false,
+    recommendation: null,
+    recommendationGender: "female",
+    recommendedHairstyles: [],
+    recommendedScenes: [],
+    recommendationMessage: "",
     bootstrapping: true
   },
 
@@ -41,6 +60,8 @@ Page({
         request({ url: "/api/templates" }),
         request({ url: "/api/me" })
       ]);
+      this.catalog = catalog;
+      const currentImagePath = getCurrentImagePath();
       const cachedSelection = wx.getStorageSync("templateSelection") || {};
       const selectedHairstyle =
         findById(catalog.hairstyles, cachedSelection.hairstyle && cachedSelection.hairstyle.id) ||
@@ -48,6 +69,7 @@ Page({
       const selectedScene =
         findById(catalog.scenes, cachedSelection.scene && cachedSelection.scene.id) ||
         null;
+      const recommendationGender = getRecommendationGender(cachedSelection, selectedHairstyle);
       if (selectedHairstyle || selectedScene) {
         wx.setStorageSync("templateSelection", {
           hairstyle: selectedHairstyle,
@@ -67,9 +89,17 @@ Page({
           coverUrl: item.cover_url,
           tag: item.style_line_label || ((item.tags || [])[0] || "风格")
         })),
+        selectedImage: currentImagePath,
         profileSummary,
         selectedHairstyle,
-        selectedScene
+        selectedScene,
+        recommendationGender
+      });
+      this.syncRecommendationView({
+        recommendation: currentImagePath ? getCachedRecommendation() : null,
+        selectedHairstyle,
+        selectedScene,
+        recommendationGender
       });
     } catch (error) {
       showError(error, { fallback: "加载失败，请稍后再试" });
@@ -80,9 +110,18 @@ Page({
 
   syncSelection() {
     const selection = wx.getStorageSync("templateSelection") || {};
+    const selectedHairstyle = selection.hairstyle || this.data.selectedHairstyle;
+    const selectedScene = selection.scene || this.data.selectedScene;
+    const recommendationGender = getRecommendationGender(selection, selectedHairstyle);
     this.setData({
-      selectedHairstyle: selection.hairstyle || this.data.selectedHairstyle,
-      selectedScene: selection.scene || this.data.selectedScene
+      selectedHairstyle,
+      selectedScene,
+      recommendationGender
+    });
+    this.syncRecommendationView({
+      selectedHairstyle,
+      selectedScene,
+      recommendationGender
     });
   },
 
@@ -131,7 +170,15 @@ Page({
       return;
     }
     clearRecommendationCache();
-    this.setData({ selectedImage: filePath });
+    setCurrentImagePath(filePath);
+    this.setData({
+      selectedImage: filePath,
+      recommendationLoading: false,
+      recommendation: null,
+      recommendedHairstyles: [],
+      recommendedScenes: [],
+      recommendationMessage: ""
+    });
   },
 
   previewImage() {
@@ -143,18 +190,173 @@ Page({
     });
   },
 
-  prefetchRecommendation() {
-    if (!this.data.selectedImage) {
+  buildRecommendedHairstyles(recommendation, gender, selectedHairstyle) {
+    if (!recommendation || !this.catalog) {
+      return [];
+    }
+    const hairstyleItems = recommendation.recommended_hairstyles &&
+      recommendation.recommended_hairstyles[gender]
+      ? recommendation.recommended_hairstyles[gender]
+      : [];
+    return hairstyleItems
+      .map((item) => {
+        const full = findById(this.catalog.hairstyles || [], item.id);
+        if (!full) {
+          return null;
+        }
+        return {
+          ...full,
+          reason: (item.reasons || [])[0] || "",
+          selected: !!selectedHairstyle && selectedHairstyle.id === full.id
+        };
+      })
+      .filter(Boolean);
+  },
+
+  buildRecommendedScenes(recommendation, selectedScene) {
+    if (!recommendation || !this.catalog) {
+      return [];
+    }
+    return (recommendation.recommended_scenes || [])
+      .map((item) => {
+        const full = findById(this.catalog.scenes || [], item.id);
+        if (!full) {
+          return null;
+        }
+        return {
+          ...full,
+          reason: (item.reasons || [])[0] || "",
+          selected: !!selectedScene && selectedScene.id === full.id
+        };
+      })
+      .filter(Boolean);
+  },
+
+  syncRecommendationView(overrides = {}) {
+    const recommendation = Object.prototype.hasOwnProperty.call(overrides, "recommendation")
+      ? overrides.recommendation
+      : this.data.recommendation;
+    const selectedHairstyle = Object.prototype.hasOwnProperty.call(overrides, "selectedHairstyle")
+      ? overrides.selectedHairstyle
+      : this.data.selectedHairstyle;
+    const selectedScene = Object.prototype.hasOwnProperty.call(overrides, "selectedScene")
+      ? overrides.selectedScene
+      : this.data.selectedScene;
+    const recommendationGender = overrides.recommendationGender || this.data.recommendationGender;
+
+    this.setData({
+      recommendation: recommendation || null,
+      recommendationGender,
+      recommendedHairstyles: this.buildRecommendedHairstyles(
+        recommendation,
+        recommendationGender,
+        selectedHairstyle
+      ),
+      recommendedScenes: this.buildRecommendedScenes(recommendation, selectedScene)
+    });
+  },
+
+  selectRecommendationGender(event) {
+    const gender = event.currentTarget.dataset.gender;
+    if (gender !== "male" && gender !== "female") {
       return;
     }
-    ensureRecommendation(this.data.selectedImage, { silent: true }).catch(() => null);
+    this.syncRecommendationView({ recommendationGender: gender });
+  },
+
+  async runRecommendation() {
+    if (!this.data.selectedImage) {
+      wx.showToast({
+        title: "请先上传照片",
+        icon: "none"
+      });
+      return;
+    }
+
+    this.setData({
+      recommendationLoading: true,
+      recommendationMessage: "正在分析照片并生成推荐"
+    });
+    try {
+      const recommendation = await ensureRecommendation(this.data.selectedImage, { silent: false });
+      if (!recommendation) {
+        this.setData({
+          recommendationLoading: false,
+          recommendation: null,
+          recommendedHairstyles: [],
+          recommendedScenes: [],
+          recommendationMessage: "暂时无法完成智能推荐，可继续手动选择"
+        });
+        return;
+      }
+      this.setData({
+        recommendationLoading: false,
+        recommendationMessage: "推荐结果已更新"
+      });
+      this.syncRecommendationView({ recommendation });
+    } catch (error) {
+      this.setData({
+        recommendationLoading: false,
+        recommendationMessage: "推荐失败，可继续手动选择"
+      });
+      showError(error, {
+        fallback: "推荐失败，请稍后再试"
+      });
+    }
+  },
+
+  applyTemplateSelection(nextSelection) {
+    const hairstyle = Object.prototype.hasOwnProperty.call(nextSelection, "hairstyle")
+      ? nextSelection.hairstyle
+      : this.data.selectedHairstyle;
+    const scene = Object.prototype.hasOwnProperty.call(nextSelection, "scene")
+      ? nextSelection.scene
+      : this.data.selectedScene;
+    const gender = getRecommendationGender({ gender: this.data.recommendationGender }, hairstyle);
+
+    wx.setStorageSync("templateSelection", {
+      hairstyle,
+      scene,
+      gender
+    });
+    this.setData({
+      selectedHairstyle: hairstyle,
+      selectedScene: scene
+    });
+    this.syncRecommendationView({
+      selectedHairstyle: hairstyle,
+      selectedScene: scene,
+      recommendationGender: gender
+    });
+  },
+
+  applyRecommendedHairstyle(event) {
+    const hairstyleId = event.currentTarget.dataset.id;
+    const hairstyle = findById((this.catalog && this.catalog.hairstyles) || [], hairstyleId);
+    if (!hairstyle) {
+      return;
+    }
+    this.applyTemplateSelection({ hairstyle });
+    wx.showToast({
+      title: "已应用推荐发型",
+      icon: "success"
+    });
+  },
+
+  applyRecommendedScene(event) {
+    const sceneId = event.currentTarget.dataset.id;
+    const scene = findById((this.catalog && this.catalog.scenes) || [], sceneId);
+    if (!scene) {
+      return;
+    }
+    this.applyTemplateSelection({ scene });
+    wx.showToast({
+      title: "已应用推荐场景",
+      icon: "success"
+    });
   },
 
   openTemplatePicker() {
-    if (this.data.selectedImage) {
-      this.prefetchRecommendation();
-    }
-
     wx.navigateTo({
       url: "/pages/templates/index"
     });
@@ -165,10 +367,6 @@ Page({
     if (!hairstyle) {
       this.openTemplatePicker();
       return;
-    }
-
-    if (this.data.selectedImage) {
-      this.prefetchRecommendation();
     }
 
     wx.navigateTo({

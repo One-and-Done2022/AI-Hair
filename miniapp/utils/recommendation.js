@@ -2,6 +2,7 @@ const { ensureLogin } = require("./auth");
 const { getErrorCode } = require("./errors");
 const { request, uploadFile } = require("./request");
 
+const CURRENT_IMAGE_PATH_STORAGE_KEY = "currentImagePath";
 const CURRENT_UPLOAD_STORAGE_KEY = "currentUpload";
 const SMART_RECOMMENDATION_STORAGE_KEY = "smartRecommendation";
 
@@ -33,12 +34,25 @@ function getCachedRecommendation(uploadId = "") {
 }
 
 function clearRecommendationCache() {
+  wx.removeStorageSync(CURRENT_IMAGE_PATH_STORAGE_KEY);
   wx.removeStorageSync(CURRENT_UPLOAD_STORAGE_KEY);
   wx.removeStorageSync(SMART_RECOMMENDATION_STORAGE_KEY);
   pendingUploadPromise = null;
   pendingUploadPath = "";
   pendingRecommendationPromise = null;
   pendingRecommendationKey = "";
+}
+
+function setCurrentImagePath(localPath) {
+  if (!localPath) {
+    wx.removeStorageSync(CURRENT_IMAGE_PATH_STORAGE_KEY);
+    return;
+  }
+  wx.setStorageSync(CURRENT_IMAGE_PATH_STORAGE_KEY, localPath);
+}
+
+function getCurrentImagePath() {
+  return wx.getStorageSync(CURRENT_IMAGE_PATH_STORAGE_KEY) || "";
 }
 
 async function ensureCurrentUpload(localPath, options = {}) {
@@ -158,6 +172,13 @@ async function ensureRecommendationFromCurrentUpload(options = {}) {
   }
 
   if (!upload || !upload.upload_id) {
+    const localPath = getCurrentImagePath();
+    if (localPath) {
+      return ensureRecommendation(localPath, {
+        silent,
+        recommendationTimeout
+      });
+    }
     if (pendingRecommendationPromise) {
       return pendingRecommendationPromise;
     }
@@ -216,6 +237,8 @@ module.exports = {
   ensureCurrentUpload,
   ensureRecommendation,
   ensureRecommendationFromCurrentUpload,
+  getCurrentImagePath,
   getCachedRecommendation,
-  getCachedUpload
+  getCachedUpload,
+  setCurrentImagePath
 };

@@ -1,10 +1,6 @@
 const { ensureLogin } = require("../../utils/auth");
 const { showError } = require("../../utils/errors");
 const { request } = require("../../utils/request");
-const {
-  ensureRecommendationFromCurrentUpload,
-  getCachedRecommendation
-} = require("../../utils/recommendation");
 
 function findById(items, id) {
   if (!id) {
@@ -27,23 +23,8 @@ function decorateTemplate(item) {
   };
 }
 
-function buildHairstyleRecommendationMap(recommendation, gender) {
-  const groups = recommendation && recommendation.recommended_hairstyles
-    ? recommendation.recommended_hairstyles
-    : {};
-  const items = groups && groups[gender] ? groups[gender] : [];
-  return items.reduce((result, item, index) => {
-    result[item.id] = {
-      rank: index,
-      reasons: item.reasons || []
-    };
-    return result;
-  }, {});
-}
-
-function filterHairstyles(hairstyles, gender, styleLine = "all", recommendation = null) {
-  const recommendationMap = buildHairstyleRecommendationMap(recommendation, gender);
-  const filtered = hairstyles.filter((item) => {
+function filterHairstyles(hairstyles, gender, styleLine = "all") {
+  return hairstyles.filter((item) => {
     if (item.gender !== gender) {
       return false;
     }
@@ -52,31 +33,6 @@ function filterHairstyles(hairstyles, gender, styleLine = "all", recommendation 
     }
     return true;
   });
-
-  return filtered
-    .map((item) => {
-      const decorated = decorateTemplate(item);
-      const recommendationMeta = recommendationMap[item.id];
-      return {
-        ...decorated,
-        recommended: !!recommendationMeta,
-        recommendationRank: recommendationMeta ? recommendationMeta.rank : 999,
-        recommendationReasons: recommendationMeta ? recommendationMeta.reasons : []
-      };
-    })
-    .sort((left, right) => {
-      if (left.recommended !== right.recommended) {
-        return left.recommended ? -1 : 1;
-      }
-      if (
-        left.recommended &&
-        right.recommended &&
-        left.recommendationRank !== right.recommendationRank
-      ) {
-        return left.recommendationRank - right.recommendationRank;
-      }
-      return 0;
-    });
 }
 
 function getDefaultGender(hairstyles, cached) {
@@ -90,17 +46,13 @@ function getDefaultGender(hairstyles, cached) {
   return hairstyles[0] ? hairstyles[0].gender : "male";
 }
 
-function resolveSelectionState(catalog, cached, recommendation) {
+function resolveSelectionState(catalog, cached) {
   const allHairstyles = catalog.hairstyles || [];
   const cachedHairstyle = findById(allHairstyles, cached.hairstyle && cached.hairstyle.id);
   const selectedGender = getDefaultGender(allHairstyles, cached);
   const selectedStyleLine = "all";
-  const visibleHairstyles = filterHairstyles(
-    allHairstyles,
-    selectedGender,
-    selectedStyleLine,
-    recommendation
-  );
+  const visibleHairstyles = filterHairstyles(allHairstyles, selectedGender, selectedStyleLine)
+    .map(decorateTemplate);
   const selectedHairstyle =
     findById(visibleHairstyles, cachedHairstyle && cachedHairstyle.id) ||
     visibleHairstyles[0] ||
@@ -108,7 +60,6 @@ function resolveSelectionState(catalog, cached, recommendation) {
 
   return {
     hairstyles: allHairstyles,
-    recommendation,
     visibleHairstyles,
     styleLineOptions: STYLE_LINE_OPTIONS,
     selectedGender,
@@ -122,7 +73,6 @@ Page({
   data: {
     loading: true,
     hairstyles: [],
-    recommendation: null,
     visibleHairstyles: [],
     styleLineOptions: STYLE_LINE_OPTIONS,
     selectedGender: "male",
@@ -141,41 +91,11 @@ Page({
       await ensureLogin();
       const catalog = await request({ url: "/api/templates" });
       const cached = wx.getStorageSync("templateSelection") || {};
-      this.setData(
-        resolveSelectionState(catalog, cached, getCachedRecommendation()),
-        () => {
-          this.refreshRecommendation();
-        }
-      );
+      this.setData(resolveSelectionState(catalog, cached));
     } catch (error) {
       showError(error, { fallback: "加载失败" });
     } finally {
       this.setData({ loading: false });
-    }
-  },
-
-  async refreshRecommendation() {
-    try {
-      const recommendation = await ensureRecommendationFromCurrentUpload({ silent: true });
-      if (!recommendation) {
-        return;
-      }
-      const visibleHairstyles = filterHairstyles(
-        this.data.hairstyles,
-        this.data.selectedGender,
-        this.data.selectedStyleLine,
-        recommendation
-      );
-      const selectedHairstyle =
-        findById(visibleHairstyles, this.data.selectedHairstyleId) || visibleHairstyles[0] || null;
-      this.setData({
-        recommendation,
-        visibleHairstyles,
-        selectedHairstyleId: selectedHairstyle ? selectedHairstyle.id : "",
-        selectedHairstyleName: selectedHairstyle ? selectedHairstyle.name : ""
-      });
-    } catch (error) {
-      // 推荐只做增强，不阻断模板选择
     }
   },
 
@@ -188,9 +108,8 @@ Page({
     const visibleHairstyles = filterHairstyles(
       this.data.hairstyles,
       gender,
-      this.data.selectedStyleLine,
-      this.data.recommendation
-    );
+      this.data.selectedStyleLine
+    ).map(decorateTemplate);
     const selectedHairstyle =
       findById(visibleHairstyles, this.data.selectedHairstyleId) || visibleHairstyles[0] || null;
 
@@ -207,9 +126,8 @@ Page({
     const visibleHairstyles = filterHairstyles(
       this.data.hairstyles,
       this.data.selectedGender,
-      styleLine,
-      this.data.recommendation
-    );
+      styleLine
+    ).map(decorateTemplate);
     const selectedHairstyle =
       findById(visibleHairstyles, this.data.selectedHairstyleId) || visibleHairstyles[0] || null;
 

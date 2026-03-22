@@ -13,21 +13,6 @@
     <view class="title editorial-title">步骤 2：选择场景</view>
   </view>
 
-  <view wx:if="{{recommendation}}" class="panel insight-card">
-    <view class="insight-kicker">智能推荐</view>
-    <view class="insight-title">{{recommendation.face_shape.label}}</view>
-    <view class="insight-summary">{{recommendation.summary}}</view>
-    <view class="insight-tag-row">
-      <view
-        wx:for="{{recommendation.feature_tags}}"
-        wx:key="*this"
-        class="insight-tag"
-      >
-        {{item}}
-      </view>
-    </view>
-  </view>
-
   <view class="panel combo-card">
     <image
       wx:if="{{selectedHairstyle && selectedHairstyle.cover_url}}"
@@ -76,19 +61,17 @@
           data-id="{{item.id}}"
         ></image>
         <view class="preview-pill" catchtap="previewScene" data-id="{{item.id}}">预览</view>
-        <view wx:if="{{item.recommended}}" class="scene-badge">推荐</view>
         <view wx:if="{{selectedSceneId === item.id}}" class="scene-check">✓</view>
       </view>
       <view class="scene-body">
         <view class="scene-name">{{item.name}}</view>
         <view class="scene-desc">{{item.description}}</view>
         <view class="scene-chip-row">
-        <view class="scene-chip">{{item.style_line_label}}</view>
-        <view wx:if="{{item.primaryTag}}" class="scene-chip">{{item.primaryTag}}</view>
-        <view wx:if="{{item.recommended}}" class="scene-chip scene-chip-highlight">智能推荐</view>
+          <view class="scene-chip">{{item.style_line_label}}</view>
+          <view wx:if="{{item.primaryTag}}" class="scene-chip">{{item.primaryTag}}</view>
+        </view>
       </view>
     </view>
-  </view>
   </view>
 
   <view class="bottom-bar">
