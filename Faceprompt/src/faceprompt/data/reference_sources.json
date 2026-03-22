@@ -1,0 +1,142 @@
+[
+  {
+    "id": "masterclass-portrait-tips",
+    "title": "Portrait Photography Tips",
+    "url": "https://www.masterclass.com/articles/portrait-photography-tips",
+    "kind": "portrait_photography",
+    "notes": "用于提炼室内窗边、镜头距离和环境简化等通用人像原则。"
+  },
+  {
+    "id": "masterclass-jimmy-natural-light",
+    "title": "Jimmy Chin's Photography Tips for Using Natural Light",
+    "url": "https://www.masterclass.com/articles/jimmy-chins-photography-tips-for-using-natural-light",
+    "kind": "portrait_photography",
+    "notes": "用于提炼自然光方向、柔和亮部与早晚时间段的建议。"
+  },
+  {
+    "id": "masterclass-annie-natural-light",
+    "title": "Annie Leibovitz's Photography Tips for Using Natural Light",
+    "url": "https://www.masterclass.com/articles/annie-leibovitzs-photography-tips-for-using-natural-light",
+    "kind": "portrait_photography",
+    "notes": "用于提炼叙事肖像、自然光与少量辅光平衡的思路。"
+  },
+  {
+    "id": "masterclass-annie-working-light",
+    "title": "Working With Light",
+    "url": "https://www.masterclass.com/classes/annie-leibovitz-teaches-photography/chapters/working-with-light",
+    "kind": "portrait_photography",
+    "notes": "用于提炼轻设备、地点真实氛围和布光克制的方向。"
+  },
+  {
+    "id": "masterclass-tyler-natural-light",
+    "title": "Tyler Mitchell's 3 Tips for Shooting in Natural Light",
+    "url": "https://www.masterclass.com/articles/tyler-mitchells-natural-light-photography-tips",
+    "kind": "portrait_photography",
+    "notes": "用于提炼晨昏光线、侧光与背光在情绪人像中的使用。"
+  },
+  {
+    "id": "masterclass-environmental-portrait",
+    "title": "How to Take Environmental Portraits",
+    "url": "https://www.masterclass.com/articles/environmental-portrait-guide",
+    "kind": "portrait_photography",
+    "notes": "用于提炼环境叙事、前中后景关系与场景元素控制。"
+  },
+  {
+    "id": "allure-curtain-bangs",
+    "title": "Why Curtain Bangs Look Amazing on Everyone",
+    "url": "https://www.allure.com/story/curtain-bangs-trend-hairstyles",
+    "kind": "hairstyle_editorial",
+    "notes": "用于提炼八字刘海、面部包裹感与轻盈分缝。"
+  },
+  {
+    "id": "allure-bob-haircut",
+    "title": "9 Bob Haircut Ideas for When You're Ready to Chop Your Strands",
+    "url": "https://www.allure.com/story/bob-haircut",
+    "kind": "hairstyle_editorial",
+    "notes": "用于提炼 sharp bob、内扣 bob 与轻层次 bob 的轮廓特征。"
+  },
+  {
+    "id": "allure-bob-gallery",
+    "title": "The 6 Best Bob Hairstyles",
+    "url": "https://www.allure.com/gallery/bob-haircuts",
+    "kind": "hairstyle_editorial",
+    "notes": "用于提炼短 bob 的厚度、重量线与层次处理。"
+  },
+  {
+    "id": "allure-jennifer-curtain",
+    "title": "Jennifer Garner Just Got Curtain Bangs",
+    "url": "https://www.allure.com/story/jennifer-garner-curtain-bangs-haircut-photos/amp",
+    "kind": "hairstyle_editorial",
+    "notes": "用于提炼自然深棕色 curtain bangs 与生活化写真兼容性。"
+  },
+  {
+    "id": "glamour-french-bob",
+    "title": "The French Bob Hair Trend",
+    "url": "https://www.glamourmagazine.co.uk/gallery/french-bob-hair-trend",
+    "kind": "hairstyle_editorial",
+    "notes": "用于提炼法式 bob 的下巴长度、蓬松感和巴黎感轮廓。"
+  },
+  {
+    "id": "harpersbazaar-french-bob",
+    "title": "The French Bob Is Fall's Most Elegant Hair Trend",
+    "url": "https://www.harpersbazaar.com/french-bob-haircut/",
+    "kind": "hairstyle_editorial",
+    "notes": "用于提炼法式 bob 的短长度、轻纹理和现代化柔和边缘。"
+  },
+  {
+    "id": "marieclaire-wet-bob",
+    "title": "Olivia Palermo's Glossy Bob Is Proof That Wet Hair Can Be Chic",
+    "url": "https://www.marieclaire.com/beauty/olivia-palermo-wet-bob/",
+    "kind": "hairstyle_editorial",
+    "notes": "用于提炼湿发感 bob 的油亮度、后梳方向和分束质感。"
+  },
+  {
+    "id": "marieclaire-wet-blunt-bob",
+    "title": "Sydney Sweeney's Wet Blunt Bob Looks Edgier Than Ever",
+    "url": "https://www.marieclaire.com/beauty/hair/sydney-sweeney-wet-bob-hairstyle/",
+    "kind": "hairstyle_editorial",
+    "notes": "用于提炼 blunt bob 与湿发质感结合时的边线清晰度。"
+  },
+  {
+    "id": "gq-best-short-haircuts",
+    "title": "10 Best Short Haircuts for Men 2025",
+    "url": "https://www.gq.com/story/best-short-haircuts-for-men",
+    "kind": "hairstyle_editorial",
+    "notes": "用于提炼男士短发的低维护轮廓、短顶区与层次变化。"
+  },
+  {
+    "id": "gq-short-back-sides",
+    "title": "A Man Can Never Go Wrong With the Short Back and Sides Haircut",
+    "url": "https://www.gq.com/story/a-man-can-never-go-wrong-with-the-short-back-and-sides-haircut",
+    "kind": "hairstyle_editorial",
+    "notes": "用于提炼短后短侧、渐变衔接与顶部结构差。"
+  },
+  {
+    "id": "gq-relaxed-pompadour",
+    "title": "How to Pull off the Relaxed Pompadour Hairstyle",
+    "url": "https://www.gq.com/story/how-to-pull-off-the-relaxed-pompadour-hairstyle-from-ernest-alexander",
+    "kind": "hairstyle_editorial",
+    "notes": "用于提炼轻松感 pompadour、顶区高度与后梳弧线。"
+  },
+  {
+    "id": "gq-high-fade",
+    "title": "Zayn Malik's High Fade Haircut Recreated by a Master Barber",
+    "url": "https://www.gq.com/video/watch/zayn-malik-s-high-fade-haircut-recreated-by-a-master-barber",
+    "kind": "hairstyle_editorial",
+    "notes": "用于提炼高渐变、结构感 quiff 与头型修饰逻辑。"
+  },
+  {
+    "id": "gq-fade-guide",
+    "title": "The GQ Guide to Fade Haircuts",
+    "url": "https://www.gq.com/story/gq-guide-to-fade-haircuts",
+    "kind": "hairstyle_editorial",
+    "notes": "用于提炼 low fade、mid fade、high fade 与皮肤渐变层次。"
+  },
+  {
+    "id": "gq-barber-language",
+    "title": "What to Say to Your Barber to Get the Haircut You Want",
+    "url": "https://www.gq.com/video/watch/gq-matty-conrad-grooming-review-what-to-say-to-your-barber",
+    "kind": "hairstyle_editorial",
+    "notes": "用于提炼 side part、mullet、taper 等发型术语和沟通点。"
+  }
+]
