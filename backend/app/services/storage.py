@@ -318,6 +318,16 @@ def read_file_bytes(object_key: str) -> bytes:
     return get_object_storage().read_bytes(object_key)
 
 
+def delete_media_object(object_key: str | None) -> None:
+    if not object_key:
+        return
+    get_object_storage().delete_prefix(object_key)
+
+
+def delete_result_bundle(job_id: str) -> None:
+    get_object_storage().delete_prefix(_object_key("results", job_id))
+
+
 def validate_upload_bytes(image_bytes: bytes, mime_type: str | None) -> ImageMetadata:
     settings = get_settings()
     if mime_type not in ALLOWED_MIME_TYPES:

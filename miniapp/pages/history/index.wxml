@@ -1,7 +1,7 @@
 <view class="screen works-screen">
   <view class="works-head">
     <view class="title works-title">作品</view>
-    <view class="subtitle works-subtitle">长按作品卡片可收藏、保存或删除</view>
+    <view class="subtitle works-subtitle">图片与原图仅保留 7 天，历史记录会继续保留；长按作品卡片可收藏、保存或删除</view>
   </view>
 
   <view class="works-summary-line">
@@ -49,9 +49,9 @@
           lazy-load="true"
         ></image>
         <view wx:else class="work-cover work-placeholder">
-          {{item.status_label}}
+          {{item.placeholder_label}}
         </view>
-        <view class="work-status {{item.status}}">{{item.status_label}}</view>
+        <view class="work-status {{item.media_expired ? 'expired' : item.status}}">{{item.media_expired ? '已过期' : item.status_label}}</view>
         <view wx:if="{{item.isFavorite}}" class="work-favorite-badge">已收藏</view>
         <view class="work-overlay"></view>
       </view>

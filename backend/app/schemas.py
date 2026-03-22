@@ -50,6 +50,8 @@ class JobResponse(BaseModel):
     upload_url: str | None = None
     result_image_url: str | None = None
     result_image_urls: list[str] = Field(default_factory=list)
+    media_expired: bool = False
+    media_expires_at: str
     hairstyle_id: str
     hairstyle_name: str
     scene_id: str

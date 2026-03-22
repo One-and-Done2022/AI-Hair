@@ -136,6 +136,10 @@
   background: rgba(0, 106, 43, 0.84);
 }
 
+.work-status.expired {
+  background: rgba(93, 102, 112, 0.84);
+}
+
 .work-favorite-badge {
   position: absolute;
   right: 22rpx;

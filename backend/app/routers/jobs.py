@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request, status
 
 from app.dependencies import get_current_user
 from app.schemas import JobCreateRequest, JobResponse
-from app.services import repository, storage, templates
+from app.services import repository, retention, storage, templates
 
 
 router = APIRouter(prefix="/jobs", tags=["jobs"])
@@ -27,12 +27,16 @@ def _job_response(request: Request, job: dict) -> JobResponse:
         if resolved:
             result_image_urls.append(resolved)
     result_image_url = result_image_urls[0] if result_image_urls else None
+    media_expires_at = retention.media_expires_at(job["created_at"])
+    media_expired = retention.is_media_expired(job["created_at"])
     return JobResponse(
         job_id=job["id"],
         status=job["status"],
         upload_url=upload_url,
         result_image_url=result_image_url,
         result_image_urls=result_image_urls,
+        media_expired=media_expired,
+        media_expires_at=media_expires_at,
         hairstyle_id=job["hairstyle_id"],
         hairstyle_name=hairstyle["name"] if hairstyle else job["hairstyle_id"],
         scene_id=job["scene_id"],
@@ -82,6 +86,7 @@ def get_job(
     request: Request,
     current_user: dict = Depends(get_current_user),
 ) -> JobResponse:
+    retention.purge_expired_media()
     job = repository.get_job_for_user(job_id, current_user["id"])
     if job is None:
         raise HTTPException(status_code=404, detail="Job not found.")
@@ -96,3 +101,9 @@ def delete_job(
     deleted = repository.delete_job_for_user(job_id, current_user["id"])
     if deleted is None:
         raise HTTPException(status_code=404, detail="Job not found.")
+    storage.delete_result_bundle(job_id)
+
+    upload = repository.get_upload(deleted["upload_id"])
+    if upload is not None and repository.count_jobs_for_upload(deleted["upload_id"]) == 0:
+        storage.delete_media_object(upload.get("stored_path"))
+        repository.delete_upload(deleted["upload_id"])

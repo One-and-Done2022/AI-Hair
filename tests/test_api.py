@@ -3,11 +3,13 @@ from __future__ import annotations
 import io
 import sys
 import time
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 import pytest
 from PIL import Image
 from fastapi.testclient import TestClient
+from sqlalchemy import update
 
 
 ROOT_DIR = Path(__file__).resolve().parents[1]
@@ -295,6 +297,8 @@ def test_auth_upload_job_history_flow(tmp_path, monkeypatch):
         assert status_payload["result_image_url"]
         assert len(status_payload["result_image_urls"]) == 3
         assert status_payload["result_image_urls"][0] == status_payload["result_image_url"]
+        assert status_payload["media_expired"] is False
+        assert status_payload["media_expires_at"]
 
         history = client.get("/api/history", headers=headers)
         assert history.status_code == 200
@@ -302,6 +306,7 @@ def test_auth_upload_job_history_flow(tmp_path, monkeypatch):
         assert len(items) == 1
         assert items[0]["job_id"] == job_id
         assert len(items[0]["result_image_urls"]) == 3
+        assert items[0]["media_expired"] is False
 
         me = client.get("/api/me", headers=headers)
         assert me.status_code == 200
@@ -321,6 +326,108 @@ def test_auth_upload_job_history_flow(tmp_path, monkeypatch):
         history_after_delete = client.get("/api/history", headers=headers)
         assert history_after_delete.status_code == 200
         assert history_after_delete.json()["items"] == []
+
+        from app.services import repository
+
+        assert repository.get_job(job_id) is None
+        assert repository.get_upload(upload_id) is None
+        assert list((tmp_path / "storage" / "uploads").iterdir()) == []
+        assert list((tmp_path / "storage" / "results").iterdir()) == []
+
+
+def test_media_cleanup_removes_expired_images_but_keeps_history(tmp_path, monkeypatch):
+    app = _build_app(tmp_path, monkeypatch)
+
+    with TestClient(app) as client:
+        login = client.post("/api/auth/wechat/login", json={"code": "dev-test"})
+        assert login.status_code == 200
+        token = login.json()["token"]
+        headers = {"Authorization": f"Bearer {token}"}
+
+        upload = client.post(
+            "/api/uploads",
+            headers=headers,
+            files={"file": ("portrait.png", _build_test_image(), "image/png")},
+        )
+        assert upload.status_code == 200
+        upload_id = upload.json()["upload_id"]
+
+        catalog = client.get("/api/templates")
+        assert catalog.status_code == 200
+        catalog_payload = catalog.json()
+
+        job_create = client.post(
+            "/api/jobs",
+            headers=headers,
+            json={
+                "upload_id": upload_id,
+                "hairstyle_id": catalog_payload["hairstyles"][0]["id"],
+                "scene_id": catalog_payload["scenes"][0]["id"],
+            },
+        )
+        assert job_create.status_code == 201
+        job_id = job_create.json()["job_id"]
+
+        final_payload = None
+        for _ in range(30):
+            job_detail = client.get(f"/api/jobs/{job_id}", headers=headers)
+            assert job_detail.status_code == 200
+            final_payload = job_detail.json()
+            if final_payload["status"] == "succeeded":
+                break
+            time.sleep(0.1)
+
+        assert final_payload is not None
+        assert final_payload["result_image_url"]
+        assert len(final_payload["result_image_urls"]) == 3
+
+        from app.db import jobs, session_scope, uploads
+        from app.services import repository
+        from app.services.retention import purge_expired_media
+
+        expired_created_at = (
+            datetime.now(timezone.utc) - timedelta(days=8)
+        ).replace(microsecond=0).isoformat()
+
+        with session_scope() as session:
+            session.execute(
+                update(uploads)
+                .where(uploads.c.id == upload_id)
+                .values(created_at=expired_created_at)
+            )
+            session.execute(
+                update(jobs)
+                .where(jobs.c.id == job_id)
+                .values(created_at=expired_created_at, updated_at=expired_created_at)
+            )
+
+        purge_expired_media(force=True)
+
+        expired_job = client.get(f"/api/jobs/{job_id}", headers=headers)
+        assert expired_job.status_code == 200
+        expired_payload = expired_job.json()
+        assert expired_payload["status"] == "succeeded"
+        assert expired_payload["media_expired"] is True
+        assert expired_payload["upload_url"] is None
+        assert expired_payload["result_image_url"] is None
+        assert expired_payload["result_image_urls"] == []
+
+        history = client.get("/api/history", headers=headers)
+        assert history.status_code == 200
+        items = history.json()["items"]
+        assert len(items) == 1
+        assert items[0]["job_id"] == job_id
+        assert items[0]["media_expired"] is True
+        assert items[0]["result_image_url"] is None
+
+        upload_record = repository.get_upload(upload_id)
+        job_record = repository.get_job(job_id)
+        assert upload_record is not None
+        assert job_record is not None
+        assert upload_record["stored_path"] == ""
+        assert job_record["result_path"] is None
+        assert list((tmp_path / "storage" / "uploads").iterdir()) == []
+        assert list((tmp_path / "storage" / "results").iterdir()) == []
 
 
 def test_job_exposes_preview_before_final_result(tmp_path, monkeypatch):

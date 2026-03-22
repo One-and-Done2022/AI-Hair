@@ -30,7 +30,9 @@ function buildJobMeta(job) {
     scene_name: job.scene_name || "",
     error_message: job.error_message || "",
     created_at: job.created_at || "",
-    upload_url: job.upload_url || ""
+    upload_url: job.upload_url || "",
+    media_expired: !!job.media_expired,
+    media_expires_at: job.media_expires_at || ""
   };
 }
 
@@ -47,7 +49,9 @@ function hasMetaChanged(currentJob, nextJob) {
     currentJob.scene_name !== nextJob.scene_name ||
     currentJob.error_message !== nextJob.error_message ||
     currentJob.created_at !== nextJob.created_at ||
-    currentJob.upload_url !== nextJob.upload_url
+    currentJob.upload_url !== nextJob.upload_url ||
+    currentJob.media_expired !== nextJob.media_expired ||
+    currentJob.media_expires_at !== nextJob.media_expires_at
   );
 }
 
@@ -164,6 +168,8 @@ Page({
     uploadUrl: "",
     resultImageUrl: "",
     resultImageUrls: [],
+    mediaExpired: false,
+    mediaExpiresAt: "",
     resultImageLoaded: false,
     imageLoadingText: getImageLoadingText("pending"),
     progressPercent: MIN_VISIBLE_PROGRESS,
@@ -344,6 +350,14 @@ Page({
 
     if (this.data.uploadUrl !== (job.upload_url || "")) {
       nextState.uploadUrl = job.upload_url || "";
+    }
+
+    if (this.data.mediaExpired !== !!job.media_expired) {
+      nextState.mediaExpired = !!job.media_expired;
+    }
+
+    if (this.data.mediaExpiresAt !== (job.media_expires_at || "")) {
+      nextState.mediaExpiresAt = job.media_expires_at || "";
     }
 
     if (!arraysEqual(this.data.resultImageUrls, nextImageUrls)) {

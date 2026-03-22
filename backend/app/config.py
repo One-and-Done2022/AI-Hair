@@ -125,6 +125,7 @@ class Settings:
     allow_dev_login: bool
     enforce_face_detection: bool
     max_upload_size_mb: int
+    media_retention_days: int
     api_token_ttl_hours: int
     cors_allow_origins: list[str]
     storage_dir: Path
@@ -255,6 +256,7 @@ def get_settings() -> Settings:
         allow_dev_login=_env_bool("ALLOW_DEV_LOGIN", True),
         enforce_face_detection=_env_bool("ENFORCE_FACE_DETECTION", True),
         max_upload_size_mb=int(os.getenv("MAX_UPLOAD_SIZE_MB", "10")),
+        media_retention_days=max(1, _env_int("MEDIA_RETENTION_DAYS", 7)),
         api_token_ttl_hours=int(os.getenv("API_TOKEN_TTL_HOURS", "72")),
         cors_allow_origins=cors_allow_origins or ["*"],
         storage_dir=storage_dir,

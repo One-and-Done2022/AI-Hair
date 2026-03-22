@@ -20,7 +20,8 @@
   </scroll-view>
 
   <view class="editorial-head">
-    <view wx:if="{{status === 'succeeded'}}" class="title editorial-title">新发型已完成</view>
+    <view wx:if="{{mediaExpired}}" class="title editorial-title">图片已过期</view>
+    <view wx:elif="{{status === 'succeeded'}}" class="title editorial-title">新发型已完成</view>
     <view wx:elif="{{status === 'preview_ready'}}" class="title editorial-title">首张预览已返回</view>
     <view wx:elif="{{status === 'failed'}}" class="title editorial-title">这次生成未完成</view>
     <view wx:else class="title editorial-title">AI 正在生成</view>
@@ -31,6 +32,10 @@
       <view class="result-image-frame">
         <view wx:if="{{status === 'failed'}}" class="state-pane state-pane-failed">
           <view class="state-title">生成失败</view>
+        </view>
+
+        <view wx:elif="{{mediaExpired}}" class="state-pane state-pane-expired">
+          <view class="state-title">图片已过期</view>
         </view>
 
         <block wx:elif="{{resultImageUrl}}">
@@ -60,13 +65,18 @@
 
     <view wx:if="{{job}}" class="hero-meta">
       <view class="hero-meta-title">
-        {{status === 'succeeded' ? '系统为你挑出的最佳成片' : status === 'preview_ready' ? '首张预览已可先查看' : status === 'failed' ? '本次生成未完成' : '正在生成你的成片'}}
+        {{mediaExpired ? '图片与原图已按 7 天策略自动删除，当前保留生成记录' : status === 'succeeded' ? '系统为你挑出的最佳成片' : status === 'preview_ready' ? '首张预览已可先查看' : status === 'failed' ? '本次生成未完成' : '正在生成你的成片'}}
       </view>
       <view class="hero-meta-tag-row">
         <view class="hero-meta-tag">{{job.hairstyle_name || '处理中'}}</view>
         <view class="hero-meta-tag">{{job.scene_name || '处理中'}}</view>
       </view>
     </view>
+  </view>
+
+  <view wx:if="{{mediaExpired}}" class="panel pending-panel">
+    <view class="pending-title">图片保留 7 天</view>
+    <view class="pending-time">若需继续使用，请重新生成并尽快保存到相册</view>
   </view>
 
   <view wx:if="{{status !== 'succeeded' && status !== 'failed'}}" class="panel pending-panel">
@@ -107,7 +117,12 @@
     </view>
   </view>
 
-  <view wx:if="{{status === 'succeeded'}}" class="action-stack">
+  <view wx:if="{{mediaExpired}}" class="action-stack">
+    <button class="primary-button" bindtap="createAnother">再生成一组</button>
+    <button class="secondary-button" bindtap="goHistory">返回作品页</button>
+  </view>
+
+  <view wx:elif="{{status === 'succeeded'}}" class="action-stack">
     <button class="primary-button" bindtap="saveImage">保存图片</button>
     <view class="action-row">
       <button class="secondary-button half-button" open-type="share">分享</button>

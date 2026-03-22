@@ -62,7 +62,9 @@ function decorateHistoryItems(items, favoriteIds) {
   return (items || []).map((item) => ({
     ...item,
     cover_url: item.result_image_url || item.upload_url || "",
+    media_expired: !!item.media_expired,
     status_label: getStatusLabel(item.status),
+    placeholder_label: item.media_expired ? "图片已过期" : getStatusLabel(item.status),
     created_at_label: formatCreatedAt(item.created_at),
     isFavorite: favoriteIds.includes(item.job_id)
   }));
@@ -188,11 +190,12 @@ Page({
 
     const actionList = [
       item.isFavorite ? "取消收藏" : "收藏作品",
-      "查看作品",
-      item.result_image_url ? "保存图片" : "查看进度",
-      "同款再来",
-      "删除作品"
+      item.result_image_url ? "查看作品" : item.media_expired ? "查看记录" : "查看进度"
     ];
+    if (item.result_image_url) {
+      actionList.push("保存图片");
+    }
+    actionList.push("同款再来", "删除作品");
 
     wx.showActionSheet({
       itemList: actionList,
@@ -202,7 +205,7 @@ Page({
           this.toggleFavorite({ currentTarget: { dataset: { jobId } } });
           return;
         }
-        if (action === "查看作品" || action === "查看进度") {
+        if (action === "查看作品" || action === "查看进度" || action === "查看记录") {
           this.openJob({ currentTarget: { dataset: { jobId } } });
           return;
         }

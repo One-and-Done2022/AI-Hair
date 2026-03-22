@@ -172,6 +172,10 @@
   background: linear-gradient(180deg, rgba(255, 239, 238, 0.96), rgba(251, 81, 81, 0.12));
 }
 
+.state-pane-expired {
+  background: linear-gradient(180deg, rgba(244, 246, 248, 0.98), rgba(205, 212, 218, 0.78));
+}
+
 .pulse-dot {
   width: 120rpx;
   height: 120rpx;

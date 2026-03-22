@@ -4,7 +4,7 @@ import secrets
 import uuid
 from datetime import datetime, timedelta, timezone
 
-from sqlalchemy import and_, delete, insert, select, update
+from sqlalchemy import and_, delete, insert, not_, or_, select, update
 
 from app.config import get_settings
 from app.db import auth_tokens, jobs, session_scope, uploads, users
@@ -247,6 +247,75 @@ def delete_job_for_user(job_id: str, user_id: int) -> dict | None:
             )
         )
     return job
+
+
+def count_jobs_for_upload(upload_id: str) -> int:
+    with session_scope() as session:
+        rows = session.execute(
+            select(jobs.c.id).where(jobs.c.upload_id == upload_id)
+        ).all()
+        return len(rows)
+
+
+def delete_upload(upload_id: str) -> None:
+    with session_scope() as session:
+        session.execute(
+            delete(uploads).where(uploads.c.id == upload_id)
+        )
+
+
+def list_expired_uploads(cutoff_iso: str) -> list[dict]:
+    active_statuses = ("pending", "processing", "preview_ready")
+    with session_scope() as session:
+        rows = session.execute(
+            select(uploads).where(
+                and_(
+                    uploads.c.created_at < cutoff_iso,
+                    uploads.c.stored_path != "",
+                    not_(
+                        uploads.c.id.in_(
+                            select(jobs.c.upload_id).where(jobs.c.status.in_(active_statuses))
+                        )
+                    ),
+                )
+            )
+        ).mappings().all()
+        return [dict(row) for row in rows]
+
+
+def list_expired_jobs_with_media(cutoff_iso: str) -> list[dict]:
+    with session_scope() as session:
+        rows = session.execute(
+            select(jobs).where(
+                and_(
+                    jobs.c.created_at < cutoff_iso,
+                    jobs.c.status.in_(("succeeded", "failed", "preview_ready")),
+                    or_(
+                        jobs.c.result_path.is_not(None),
+                        jobs.c.status == "preview_ready",
+                    ),
+                )
+            )
+        ).mappings().all()
+        return [dict(row) for row in rows]
+
+
+def clear_upload_media(upload_id: str) -> None:
+    with session_scope() as session:
+        session.execute(
+            update(uploads)
+            .where(uploads.c.id == upload_id)
+            .values(stored_path="")
+        )
+
+
+def clear_job_media(job_id: str) -> None:
+    with session_scope() as session:
+        session.execute(
+            update(jobs)
+            .where(jobs.c.id == job_id)
+            .values(result_path=None)
+        )
 
 
 def update_job_status(

@@ -13,7 +13,7 @@ from app.services.dispatch_queue import build_job_queue
 from app.services.generation import build_generator
 from app.services.job_queue import JobWorker
 from app.services.key_pool import ApiKeyPool
-from app.services import storage
+from app.services import retention, storage
 
 
 def create_app() -> FastAPI:
@@ -24,6 +24,7 @@ def create_app() -> FastAPI:
         current_settings = get_settings()
         current_settings.ensure_directories()
         init_db()
+        retention.purge_expired_media(force=True)
         generator = build_generator()
         job_queue = build_job_queue()
         key_pool = None
