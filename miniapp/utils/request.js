@@ -1,5 +1,7 @@
 const { baseUrl } = require("./config");
 
+let refreshingAuthPromise = null;
+
 function getToken() {
   return wx.getStorageSync("authToken");
 }
@@ -27,13 +29,34 @@ function getHeaders(withAuth, extraHeaders) {
   return headers;
 }
 
+function isUnauthorized(response) {
+  return response && response.statusCode === 401;
+}
+
+function refreshAuthToken() {
+  if (refreshingAuthPromise) {
+    return refreshingAuthPromise;
+  }
+
+  refreshingAuthPromise = (async () => {
+    const { clearLogin, ensureLogin } = require("./auth");
+    clearLogin();
+    await ensureLogin(true);
+  })();
+
+  return refreshingAuthPromise.finally(() => {
+    refreshingAuthPromise = null;
+  });
+}
+
 function request(options) {
   const {
     url,
     method = "GET",
     data = {},
     header = {},
-    withAuth = true
+    withAuth = true,
+    _retriedAfterAuthRefresh = false
   } = options;
 
   return new Promise((resolve, reject) => {
@@ -46,6 +69,20 @@ function request(options) {
         const payload = parsePayload(response.data);
         if (response.statusCode >= 200 && response.statusCode < 300) {
           resolve(payload);
+          return;
+        }
+        if (withAuth && !_retriedAfterAuthRefresh && isUnauthorized(response)) {
+          refreshAuthToken()
+            .then(() => request({
+              url,
+              method,
+              data,
+              header,
+              withAuth,
+              _retriedAfterAuthRefresh: true
+            }))
+            .then(resolve)
+            .catch(reject);
           return;
         }
         reject(payload);
@@ -62,7 +99,8 @@ function uploadFile(options) {
     url,
     filePath,
     name = "file",
-    formData = {}
+    formData = {},
+    _retriedAfterAuthRefresh = false
   } = options;
 
   return new Promise((resolve, reject) => {
@@ -76,6 +114,19 @@ function uploadFile(options) {
         const payload = parsePayload(response.data);
         if (response.statusCode >= 200 && response.statusCode < 300) {
           resolve(payload);
+          return;
+        }
+        if (!_retriedAfterAuthRefresh && isUnauthorized(response)) {
+          refreshAuthToken()
+            .then(() => uploadFile({
+              url,
+              filePath,
+              name,
+              formData,
+              _retriedAfterAuthRefresh: true
+            }))
+            .then(resolve)
+            .catch(reject);
           return;
         }
         reject(payload);
@@ -92,4 +143,3 @@ module.exports = {
   request,
   uploadFile
 };
-
