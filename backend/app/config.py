@@ -107,6 +107,16 @@ class Settings:
     ark_base_url: str
     ark_image_model: str
     ark_key_cooldown_seconds: int
+    image_generator_backend: str
+    nano_banana_api_key: str
+    nano_banana_base_url: str
+    nano_banana_model: str
+    nano_banana_2_api_key: str
+    nano_banana_2_base_url: str
+    nano_banana_2_model: str
+    sora_image_api_key: str
+    sora_image_base_url: str
+    sora_image_model: str
     job_worker_concurrency: int
     queue_backend: str
     redis_url: str
@@ -209,6 +219,21 @@ def get_settings() -> Settings:
             "OBJECT_STORAGE_BACKEND must be either 'local' or 'aliyun_oss'."
         )
 
+    image_generator_backend = os.getenv(
+        "IMAGE_GENERATOR_BACKEND",
+        "seedream",
+    ).strip().lower()
+
+    if image_generator_backend not in {
+        "seedream",
+        "nano_banana_pro",
+        "nano_banana_2",
+        "sora_image",
+    }:
+        raise ValueError(
+            "IMAGE_GENERATOR_BACKEND must be one of 'seedream', 'nano_banana_pro', 'nano_banana_2', or 'sora_image'."
+        )
+
     if queue_backend == "local" and not run_embedded_worker:
         raise ValueError(
             "RUN_EMBEDDED_WORKER must stay enabled when JOB_QUEUE_BACKEND=local."
@@ -228,9 +253,31 @@ def get_settings() -> Settings:
             "ARK_BASE_URL", "https://ark.cn-beijing.volces.com/api/v3"
         ).strip(),
         ark_image_model=os.getenv(
-            "ARK_IMAGE_MODEL", "doubao-seedream-4-5-251128"
+            "ARK_IMAGE_MODEL", "doubao-seedream-5-0-260128"
         ).strip(),
         ark_key_cooldown_seconds=_env_int("ARK_API_KEY_COOLDOWN_SECONDS", 120),
+        image_generator_backend=image_generator_backend,
+        nano_banana_api_key=os.getenv("NANO_BANANA_API_KEY", "").strip(),
+        nano_banana_base_url=os.getenv(
+            "NANO_BANANA_BASE_URL", "https://api.apiyi.com"
+        ).strip().rstrip("/"),
+        nano_banana_model=os.getenv(
+            "NANO_BANANA_MODEL", "gemini-3-pro-image-preview"
+        ).strip(),
+        nano_banana_2_api_key=os.getenv("NANO_BANANA_2_API_KEY", "").strip(),
+        nano_banana_2_base_url=os.getenv(
+            "NANO_BANANA_2_BASE_URL", "https://api.apiyi.com"
+        ).strip().rstrip("/"),
+        nano_banana_2_model=os.getenv(
+            "NANO_BANANA_2_MODEL", "gemini-3.1-flash-image-preview"
+        ).strip(),
+        sora_image_api_key=os.getenv("SORA_IMAGE_API_KEY", "").strip(),
+        sora_image_base_url=os.getenv(
+            "SORA_IMAGE_BASE_URL", "https://api.apiyi.com/v1"
+        ).strip().rstrip("/"),
+        sora_image_model=os.getenv(
+            "SORA_IMAGE_MODEL", "sora_image"
+        ).strip(),
         job_worker_concurrency=max(
             1,
             _env_int("JOB_WORKER_CONCURRENCY", default_worker_concurrency),

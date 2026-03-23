@@ -3,12 +3,84 @@ from __future__ import annotations
 import hashlib
 import json
 from collections.abc import Iterable
+from dataclasses import dataclass
 from functools import lru_cache
 from pathlib import Path
 
+from app.config import get_settings
 
 DATA_DIR = Path(__file__).resolve().parents[1] / "data" / "faceprompt"
 TEMPLATE_COVER_VERSION = "visual-v1"
+SUPPORTED_ASPECT_RATIOS = (
+    "1:1",
+    "16:9",
+    "9:16",
+    "4:3",
+    "3:4",
+    "3:2",
+    "2:3",
+    "21:9",
+    "5:4",
+    "4:5",
+    "1:4",
+    "4:1",
+    "1:8",
+    "8:1",
+)
+SUPPORTED_RESOLUTIONS = ("512px", "1K", "2K", "4K")
+DEFAULT_GENERATOR_BACKEND = "seedream"
+DEFAULT_ASPECT_RATIO = "3:4"
+DEFAULT_RESOLUTION = "4K"
+
+GENERATOR_BACKEND_CAPABILITIES = {
+    "seedream": {
+        "label": "Seedream",
+        "description": "参考图写实重绘，适合主流程换发换景。",
+        "supports_reference_image": True,
+        "aspect_ratios": ("3:4", "4:5", "1:1", "9:16"),
+        "resolutions": ("4K",),
+        "default_aspect_ratio": "3:4",
+        "default_resolution": "4K",
+    },
+    "nano_banana_pro": {
+        "label": "Nano Banana Pro",
+        "description": "高自由度图像编辑，支持多种画幅与原生清晰度选项。",
+        "supports_reference_image": True,
+        "aspect_ratios": (
+            "1:1",
+            "16:9",
+            "9:16",
+            "4:3",
+            "3:4",
+            "3:2",
+            "2:3",
+            "21:9",
+            "5:4",
+            "4:5",
+        ),
+        "resolutions": ("1K", "2K", "4K"),
+        "default_aspect_ratio": "3:4",
+        "default_resolution": "4K",
+    },
+    "nano_banana_2": {
+        "label": "Nano Banana 2",
+        "description": "支持超宽比例和 512px 到 4K 清晰度控制。",
+        "supports_reference_image": True,
+        "aspect_ratios": SUPPORTED_ASPECT_RATIOS,
+        "resolutions": SUPPORTED_RESOLUTIONS,
+        "default_aspect_ratio": "3:4",
+        "default_resolution": "4K",
+    },
+    "sora_image": {
+        "label": "Sora Image",
+        "description": "Sora 风格图生图，支持 2:3 / 3:2 / 1:1 三种画幅。",
+        "supports_reference_image": True,
+        "aspect_ratios": ("2:3", "3:2", "1:1"),
+        "resolutions": (),
+        "default_aspect_ratio": "2:3",
+        "default_resolution": None,
+    },
+}
 
 STYLE_LINE_LABELS = {
     "realistic_editorial": "写实写真",
@@ -46,6 +118,7 @@ LEGACY_SCENE_ALIASES = {
     "studio": "studio-solid-backdrop",
     "city-night": "city-neon-night",
 }
+VALID_PROMPT_MODES = {"full_stylize", "hairstyle_only", "scene_only"}
 
 IDENTITY_LOCK_SECTION = (
     "请基于上传参考图中的同一人物生成 1 张高相似度、写实风格的人像写真。"
@@ -56,21 +129,63 @@ IDENTITY_LOCK_SECTION = (
     "主体必须始终是同一位单人肖像，仅对发型、场景、动作、表情和服装进行艺术化创作。"
 )
 
+HAIRSTYLE_ONLY_IDENTITY_LOCK_SECTION = (
+    "请基于上传参考图中的同一人物生成 1 张高相似度、写实风格的人像图。"
+    "第一优先级是严格保留参考人物的真实身份特征，保证一眼看出是同一个人。"
+    "以上传照片中的人物为原型，不改变人物的脸型、五官比例、眼距、鼻梁、嘴型、肤色、年龄感和整体气质，"
+    "不改变性别表达，不换脸，不生成第二个人。"
+    "只更换图中人物的发型，除头发、刘海、鬓角、后颈发区和发际线相关区域外，"
+    "尽量保持原图中的背景、服饰、姿态、表情、构图、镜头距离、光线和氛围不变。"
+)
+
+SCENE_ONLY_IDENTITY_LOCK_SECTION = (
+    "请基于上传参考图中的同一人物生成 1 张高相似度、写实风格的人像写真。"
+    "第一优先级是严格保留参考人物的真实身份特征，保证一眼看出是同一个人。"
+    "以上传照片中的人物为原型，不改变人物的脸型、五官比例、眼距、鼻梁、嘴型、肤色、年龄感和整体气质和发型，"
+    "不改变性别表达，不换脸，不生成第二个人。"
+    "忽略原照片中的背景、原服饰、原有动作，仅保留参考人物本身，进行换背景创作。"
+    "主体必须始终是同一位单人肖像，仅对场景、动作、表情和服装进行艺术化创作。"
+)
+
 OUTPUT_FORMAT_SECTION = (
     "只输出 1 张完整成片，不要拼图，不要多宫格，不要在同一画面里同时展示多个动作版本或多个发型版本。"
 )
 
-QUALITY_SECTION = (
-    "皮肤质感真实自然，不过度磨皮，不过度妆感，保留真实面部纹理与发丝细节，"
+QUALITY_SKIN_TEXTURE_SECTION = (
+    "皮肤质感真实自然，不过度磨皮，不过度妆感，保留真实面部纹理与发丝细节。"
+)
+
+QUALITY_IMAGE_FINISH_SECTION = (
     "脸部清晰对焦，光影过渡自然，整体高级、自然、和谐。"
 )
 
-NEGATIVE_CONSTRAINTS_SECTION = (
+QUALITY_SECTION = QUALITY_SKIN_TEXTURE_SECTION + QUALITY_IMAGE_FINISH_SECTION
+
+HAIRSTYLE_ONLY_CONSTRAINTS_SECTION = (
+    "仅允许修改头发、刘海、鬓角、后颈发区和发际线相关视觉效果，不要改动背景、服饰、表情、动作和构图；"
+    "发型必须贴合原人物头骨结构、头部朝向、耳位位置、肩颈遮挡关系与镜头透视；"
+    "不能把新发型做成悬浮假发、错位发片或不贴合头皮的假发套效果。"
+)
+
+SCENE_ONLY_CONSTRAINTS_SECTION = (
+    "人物发型必须保持参考图中已经生成完成的现有发型，不要二次修改发型种类；"
+    "不要改变发长、顶部体积、刘海、分线、鬓角、后颈发区、卷度、发色和整体轮廓；"
+    "动作、表情、服装、场景和布光变化不能破坏既有发型结构、头皮贴合关系与发丝走向。"
+)
+
+NEGATIVE_IDENTITY_ARTIFACT_SECTION = (
     "不要换脸、不要改变性别表达、不要生成第二个人、不要多人同框、不要双脸、不要身份漂移、"
     "不要整容感、AI 脸、过度磨皮、塑料皮肤、五官漂移、错位眼睛、手指异常、耳朵变形、"
     "发际线异常、假发感、不要背景杂乱、光影冲突、不要过强滤镜、过度锐化、不要文字水印、不要拼图排版。"
+)
+
+NEGATIVE_PHYSICAL_LOGIC_SECTION = (
     "图片需要符合物理逻辑，不要在画面中多出不合逻辑的手和身体部位。"
     "不可以有不符合物理逻辑的身体部位（例如同时出现多于两只手的情况）。"
+)
+
+NEGATIVE_CONSTRAINTS_SECTION = (
+    NEGATIVE_IDENTITY_ARTIFACT_SECTION + NEGATIVE_PHYSICAL_LOGIC_SECTION
 )
 HAND_ACTION_KEYWORDS = (
     "单手",
@@ -111,6 +226,108 @@ HAND_ACTION_KEYWORDS = (
     "抱臂",
 )
 
+HAIR_TOUCH_ACTION_KEYWORDS = (
+    "发丝",
+    "头发",
+    "碎发",
+    "抓头发",
+    "抓起头顶",
+    "抓起顶部",
+    "拨开发丝",
+    "拨开脸侧",
+    "拨发",
+    "整理额前",
+    "整理耳侧",
+    "整理窗边发丝",
+    "轻碰发型",
+    "触碰耳侧发丝",
+)
+
+
+@dataclass(frozen=True)
+class PromptBlock:
+    key: str
+    label: str
+    text: str
+
+
+@dataclass(frozen=True)
+class PromptAssembly:
+    mode: str
+    blocks: tuple[PromptBlock, ...]
+
+    def render(self) -> str:
+        return "\n".join(block.text for block in self.blocks if block.text.strip())
+
+
+@dataclass(frozen=True)
+class PromptRule:
+    mode: str
+    required_blocks: tuple[str, ...]
+    optional_blocks: tuple[str, ...] = ()
+    forbidden_blocks: tuple[str, ...] = ()
+    description: str = ""
+
+
+def get_prompt_block_labels() -> dict[str, str]:
+    return {
+        "identity_lock": "身份锁定",
+        "output_format": "输出形式",
+        "face_strategy": "脸型修饰",
+        "shot": "构图景别",
+        "scene_environment": "场景环境",
+        "scene_lighting": "场景光线",
+        "scene_mood": "场景氛围",
+        "scene_control": "场景控制",
+        "expression": "人物表情",
+        "subject_action": "主体动作",
+        "hairstyle_action": "发型展示动作",
+        "outfit": "人物服饰",
+        "edit_scope": "编辑目标",
+        "hair_target": "目标发型",
+        "hair_lock": "发型锁定",
+        "scene_constraints": "场景约束",
+        "hair_constraints": "发型约束",
+        "hair_edit_scope_constraints": "换发范围约束",
+        "hair_preservation_constraints": "发型保持约束",
+        "hair_shape_constraints": "发型落地约束",
+        "motion_safety_constraints": "动作安全约束",
+        "quality_skin_texture": "肤质细节",
+        "quality_image_finish": "成片质量",
+        "negative_identity_artifact": "身份伪影负面约束",
+        "negative_physical_logic": "物理逻辑负面约束",
+    }
+
+
+def _backend_enabled(backend_id: str) -> bool:
+    settings = get_settings()
+    if backend_id == "seedream":
+        return bool(settings.ark_api_keys)
+    if backend_id == "nano_banana_pro":
+        return bool(settings.nano_banana_api_key)
+    if backend_id == "nano_banana_2":
+        return bool(settings.nano_banana_2_api_key)
+    if backend_id == "sora_image":
+        return bool(settings.sora_image_api_key)
+    return False
+
+
+def get_generation_backend_catalog() -> list[dict]:
+    return [
+        {
+            "id": backend_id,
+            "name": config["label"],
+            "description": config["description"],
+            "enabled": _backend_enabled(backend_id),
+            "supports_reference_image": bool(config["supports_reference_image"]),
+            "aspect_ratios": list(config["aspect_ratios"]),
+            "resolutions": list(config["resolutions"]),
+            "default_aspect_ratio": config["default_aspect_ratio"],
+            "default_resolution": config["default_resolution"],
+        }
+        for backend_id, config in GENERATOR_BACKEND_CAPABILITIES.items()
+    ]
+
 
 def _load_json(name: str) -> list[dict]:
     return json.loads((DATA_DIR / name).read_text(encoding="utf-8"))
@@ -130,6 +347,154 @@ def _dedupe_keep_order(items: Iterable[str]) -> list[str]:
         seen.add(cleaned)
         result.append(cleaned)
     return result
+
+
+def _make_prompt_block(key: str, text: str) -> PromptBlock | None:
+    cleaned = text.strip()
+    if not cleaned:
+        return None
+    labels = get_prompt_block_labels()
+    return PromptBlock(key=key, label=labels.get(key, key), text=cleaned)
+
+
+def _assemble_prompt(mode: str, blocks: list[PromptBlock | None]) -> PromptAssembly:
+    if mode not in VALID_PROMPT_MODES:
+        raise ValueError(f"Unsupported prompt mode: {mode}")
+    assembly = PromptAssembly(
+        mode=mode,
+        blocks=tuple(block for block in blocks if block is not None),
+    )
+    _validate_prompt_assembly(assembly)
+    return assembly
+
+
+def _build_quality_blocks() -> list[PromptBlock | None]:
+    return [
+        _make_prompt_block("quality_skin_texture", QUALITY_SKIN_TEXTURE_SECTION),
+        _make_prompt_block("quality_image_finish", QUALITY_IMAGE_FINISH_SECTION),
+    ]
+
+
+def _build_negative_blocks() -> list[PromptBlock | None]:
+    return [
+        _make_prompt_block("negative_identity_artifact", f"负面约束：{NEGATIVE_IDENTITY_ARTIFACT_SECTION}"),
+        _make_prompt_block("negative_physical_logic", NEGATIVE_PHYSICAL_LOGIC_SECTION),
+    ]
+
+
+def get_prompt_rule_table() -> dict[str, PromptRule]:
+    return {
+        "full_stylize": PromptRule(
+            mode="full_stylize",
+            required_blocks=(
+                "identity_lock",
+                "output_format",
+                "shot",
+                "scene_environment",
+                "scene_lighting",
+                "scene_mood",
+                "expression",
+                "subject_action",
+                "outfit",
+                "hair_target",
+                "scene_constraints",
+                "hair_constraints",
+                "motion_safety_constraints",
+                "quality_skin_texture",
+                "quality_image_finish",
+                "negative_identity_artifact",
+                "negative_physical_logic",
+            ),
+            optional_blocks=("hairstyle_action",),
+            forbidden_blocks=(
+                "edit_scope",
+                "hair_lock",
+                "hair_preservation_constraints",
+                "hair_edit_scope_constraints",
+                "hair_shape_constraints",
+            ),
+            description="完整换发型与换场景创作模式。",
+        ),
+        "hairstyle_only": PromptRule(
+            mode="hairstyle_only",
+            required_blocks=(
+                "identity_lock",
+                "output_format",
+                "edit_scope",
+                "hair_target",
+                "hair_edit_scope_constraints",
+                "hair_shape_constraints",
+                "quality_skin_texture",
+                "quality_image_finish",
+                "negative_identity_artifact",
+                "negative_physical_logic",
+            ),
+            forbidden_blocks=(
+                "face_strategy",
+                "scene_control",
+                "shot",
+                "scene_environment",
+                "scene_lighting",
+                "scene_mood",
+                "expression",
+                "subject_action",
+                "hairstyle_action",
+                "outfit",
+                "hair_lock",
+                "hair_preservation_constraints",
+                "scene_constraints",
+                "hair_constraints",
+                "motion_safety_constraints",
+            ),
+            description="只改发型，不改背景服饰动作构图。",
+        ),
+        "scene_only": PromptRule(
+            mode="scene_only",
+            required_blocks=(
+                "identity_lock",
+                "output_format",
+                "shot",
+                "scene_environment",
+                "scene_lighting",
+                "scene_mood",
+                "expression",
+                "subject_action",
+                "outfit",
+                "hair_lock",
+                "hair_preservation_constraints",
+                "scene_constraints",
+                "motion_safety_constraints",
+                "quality_skin_texture",
+                "quality_image_finish",
+                "negative_identity_artifact",
+                "negative_physical_logic",
+            ),
+            forbidden_blocks=(
+                "hairstyle_action",
+                "hair_target",
+                "hair_edit_scope_constraints",
+                "hair_shape_constraints",
+                "hair_constraints",
+            ),
+            description="锁定现有发型和人脸，只扩展场景动作服饰。",
+        ),
+    }
+
+
+def _validate_prompt_assembly(assembly: PromptAssembly) -> None:
+    rule = get_prompt_rule_table()[assembly.mode]
+    keys = [block.key for block in assembly.blocks]
+    missing = [key for key in rule.required_blocks if key not in keys]
+    if missing:
+        raise ValueError(f"{assembly.mode}: missing required prompt blocks {missing}")
+
+    forbidden = [key for key in keys if key in rule.forbidden_blocks]
+    if forbidden:
+        raise ValueError(f"{assembly.mode}: forbidden prompt blocks present {forbidden}")
+
+    duplicates = [key for key in set(keys) if keys.count(key) > 1]
+    if duplicates:
+        raise ValueError(f"{assembly.mode}: duplicate prompt blocks {sorted(duplicates)}")
 
 
 def _format_option_list(items: Iterable[str]) -> str:
@@ -161,6 +526,16 @@ def _filter_compatible_hairstyle_actions(
     if not subject_action or not _action_uses_hands(subject_action):
         return actions
     return [action for action in actions if not _action_uses_hands(action)]
+
+
+def _filter_scene_actions_for_locked_hairstyle(actions: Iterable[str]) -> list[str]:
+    candidates = _dedupe_keep_order(actions)
+    filtered = [
+        action
+        for action in candidates
+        if not any(keyword in action for keyword in HAIR_TOUCH_ACTION_KEYWORDS)
+    ]
+    return filtered or candidates
 
 
 def _select_prompt_details(
@@ -289,7 +664,117 @@ def get_scene(template_id: str) -> dict | None:
     return _find_template(SCENES, resolved_id)
 
 
-def build_prompt(hairstyle: dict, scene: dict, *, seed_source: str | None = None) -> str:
+def build_prompt_assembly(
+    *,
+    mode: str,
+    hairstyle: dict | None = None,
+    scene: dict | None = None,
+    seed_source: str | None = None,
+    expression_override: str | None = None,
+    subject_action_override: str | None = None,
+    outfit_override: str | None = None,
+) -> PromptAssembly:
+    if mode not in VALID_PROMPT_MODES:
+        raise ValueError(f"Unsupported prompt mode: {mode}")
+
+    if mode == "hairstyle_only":
+        if hairstyle is None:
+            raise ValueError("hairstyle is required for hairstyle_only mode")
+        constraint_items = [
+            _normalize_sentence(item)
+            for item in _dedupe_keep_order(
+                [
+                    HAIRSTYLE_ONLY_CONSTRAINTS_SECTION,
+                    *hairstyle.get("constraints", []),
+                ]
+            )
+        ]
+        edit_scope_constraint_text = _normalize_sentence(HAIRSTYLE_ONLY_CONSTRAINTS_SECTION)
+        shape_constraint_text = "；".join(
+            item for item in constraint_items if item != edit_scope_constraint_text
+        )
+        return _assemble_prompt(
+            "hairstyle_only",
+            [
+                _make_prompt_block("identity_lock", HAIRSTYLE_ONLY_IDENTITY_LOCK_SECTION),
+                _make_prompt_block("output_format", OUTPUT_FORMAT_SECTION),
+                _make_prompt_block("edit_scope", f"换发目标：只更换图中人物的发型为：{hairstyle['name']}。"),
+                _make_prompt_block("hair_target", f"人物发型：{_normalize_sentence(hairstyle['prompt_core'])}。"),
+                _make_prompt_block("hair_edit_scope_constraints", f"编辑范围约束：{edit_scope_constraint_text}。"),
+                _make_prompt_block("hair_shape_constraints", f"发型落地约束：{shape_constraint_text}。"),
+                *_build_quality_blocks(),
+                *_build_negative_blocks(),
+            ],
+        )
+
+    if mode == "scene_only":
+        if scene is None:
+            raise ValueError("scene is required for scene_only mode")
+        selection_seed = seed_source or f"scene-only:{scene['id']}"
+        selected_expression = expression_override or _select_one(
+            scene.get("expressions", []),
+            seed_source=selection_seed,
+            label=f"{scene['id']}:scene-only-expression",
+        )
+        available_actions = (
+            _filter_scene_actions_for_locked_hairstyle(scene.get("actions", []))
+            if not subject_action_override
+            else _dedupe_keep_order(scene.get("actions", []))
+        )
+        selected_subject_action = subject_action_override or _select_one(
+            available_actions,
+            seed_source=selection_seed,
+            label=f"{scene['id']}:scene-only-subject-action",
+        )
+        outfit_text = outfit_override or "；".join(_dedupe_keep_order(scene.get("outfit_hints", []))[:2])
+        scene_constraint_text = "；".join(
+            _normalize_sentence(item) for item in _dedupe_keep_order(scene.get("constraints", []))
+        )
+        hair_preservation_text = _normalize_sentence(SCENE_ONLY_CONSTRAINTS_SECTION)
+        motion_safety_text = "；".join(
+            [
+                "后端每次只选 1 个主体动作，不再把多个动作选项同时写进同一条提示词",
+                "单张图中只保留一种主体动作，不要把多个互斥手部动作同时放进同一画面",
+                "如果主体动作已经占用手部，不要再追加抓头发、拨头发、整理发丝等额外发型细节动作",
+                "不要因为动作、风感或镜头变化把当前发型改成另一种发型",
+            ]
+        )
+        return _assemble_prompt(
+            "scene_only",
+            [
+                _make_prompt_block("identity_lock", SCENE_ONLY_IDENTITY_LOCK_SECTION),
+                _make_prompt_block("output_format", OUTPUT_FORMAT_SECTION),
+                _make_prompt_block("shot", f"构图：{_normalize_sentence(scene['shot_advice'])}。"),
+                _make_prompt_block("scene_environment", f"场景：{_normalize_sentence(scene['environment'])}。"),
+                _make_prompt_block("scene_lighting", f"光线：{_normalize_sentence(scene['lighting'])}。"),
+                _make_prompt_block("scene_mood", f"风格氛围：{_normalize_sentence(scene['style_mood'])}。"),
+                _make_prompt_block(
+                    "expression",
+                    f"人物表情：本张图只选择 1 种主表情，固定为：{selected_expression or '自然看向镜头'}。",
+                ),
+                _make_prompt_block(
+                    "subject_action",
+                    f"人物动作：单张图中只选择 1 种主体动作，本张图固定为：{selected_subject_action or '自然站立或静止停顿'}。",
+                ),
+                _make_prompt_block(
+                    "outfit",
+                    f"服饰：{outfit_text or '米白色针织、浅卡其衬衫或裸色背心'}。",
+                ),
+                _make_prompt_block(
+                    "hair_lock",
+                    "人物发型：保持参考图中已经生成完成的发型不变，不要二次改发，不改变发长、顶部体积、刘海、分线、鬓角、后颈发区、卷度、发色和整体轮廓。",
+                ),
+                _make_prompt_block("hair_preservation_constraints", f"发型保持约束：{hair_preservation_text}。"),
+                _make_prompt_block("scene_constraints", f"场景关键约束：{scene_constraint_text}。"),
+                _make_prompt_block("motion_safety_constraints", f"动作安全约束：{motion_safety_text}。"),
+                *_build_quality_blocks(),
+                *_build_negative_blocks(),
+            ],
+        )
+
+    if hairstyle is None or scene is None:
+        raise ValueError("hairstyle and scene are required for full_stylize mode")
+
     selection_seed = seed_source or f"{hairstyle['id']}:{scene['id']}"
     selected_details = _select_prompt_details(
         hairstyle,
@@ -300,47 +785,210 @@ def build_prompt(hairstyle: dict, scene: dict, *, seed_source: str | None = None
     scene_action_text = selected_details["subject_action"] or "自然站立或静止停顿"
     hairstyle_action_text = selected_details["hairstyle_action"]
     outfit_text = "；".join(_dedupe_keep_order(scene.get("outfit_hints", []))[:2])
-    constraint_text = "；".join(
-        _dedupe_keep_order(
-            [
-                *scene.get("constraints", []),
-                *hairstyle.get("constraints", []),
-                "后端每次只选 1 个主体动作，不再把多个动作选项同时写进同一条提示词",
-                "单张图中只保留一种主体动作，不要把多个互斥手部动作同时放进同一画面",
-                "如果主体动作已经占用手部，不要再叠加抓头发、拨头发、握杯等额外手部细节动作",
-                "发型细节动作不要与主体动作叠加成不合理肢体效果",
-            ]
-        )
+    scene_constraint_text = "；".join(
+        _normalize_sentence(item) for item in _dedupe_keep_order(scene.get("constraints", []))
     )
-
-    return "\n".join(
+    hair_constraint_text = "；".join(
+        _normalize_sentence(item) for item in _dedupe_keep_order(hairstyle.get("constraints", []))
+    )
+    motion_safety_text = "；".join(
         [
-            IDENTITY_LOCK_SECTION,
-            OUTPUT_FORMAT_SECTION,
-            f"构图：{_normalize_sentence(scene['shot_advice'])}。",
-            (
-                f"场景：{_normalize_sentence(scene['environment'])}。"
-                f" 光线：{_normalize_sentence(scene['lighting'])}。"
-                f" 风格氛围：{_normalize_sentence(scene['style_mood'])}。"
-            ),
-            f"人物表情：本张图只选择 1 种主表情，固定为：{expression_text}。",
-            (
-                "人物动作：单张图中只选择 1 种主体动作，本张图固定为："
-                f"{scene_action_text}。"
-            ),
-            (
-                "发型展示动作参考：如需突出发型，本张图最多只允许额外参考 1 种细节动作，"
-                f"固定为：{hairstyle_action_text}。"
-                if hairstyle_action_text
-                else "发型展示动作参考：本张图不额外叠加发型手部细节动作，以免与主体动作产生手部冲突。"
-            ),
-            f"服饰：{outfit_text or '白色宽松衬衫，内搭浅色背心或吊带'}。",
-            f"人物发型：{_normalize_sentence(hairstyle['prompt_core'])}。",
-            f"关键约束：{constraint_text}。",
-            QUALITY_SECTION,
-            f"负面约束：{NEGATIVE_CONSTRAINTS_SECTION}",
+            "后端每次只选 1 个主体动作，不再把多个动作选项同时写进同一条提示词",
+            "单张图中只保留一种主体动作，不要把多个互斥手部动作同时放进同一画面",
+            "如果主体动作已经占用手部，不要再叠加抓头发、拨头发、握杯等额外手部细节动作",
+            "发型细节动作不要与主体动作叠加成不合理肢体效果",
         ]
     )
+    return _assemble_prompt(
+        "full_stylize",
+        [
+            _make_prompt_block("identity_lock", IDENTITY_LOCK_SECTION),
+            _make_prompt_block("output_format", OUTPUT_FORMAT_SECTION),
+            _make_prompt_block("shot", f"构图：{_normalize_sentence(scene['shot_advice'])}。"),
+            _make_prompt_block("scene_environment", f"场景：{_normalize_sentence(scene['environment'])}。"),
+            _make_prompt_block("scene_lighting", f"光线：{_normalize_sentence(scene['lighting'])}。"),
+            _make_prompt_block("scene_mood", f"风格氛围：{_normalize_sentence(scene['style_mood'])}。"),
+            _make_prompt_block(
+                "expression",
+                f"人物表情：本张图只选择 1 种主表情，固定为：{expression_text}。",
+            ),
+            _make_prompt_block(
+                "subject_action",
+                f"人物动作：单张图中只选择 1 种主体动作，本张图固定为：{scene_action_text}。",
+            ),
+            _make_prompt_block(
+                "hairstyle_action",
+                (
+                    "发型展示动作参考：如需突出发型，本张图最多只允许额外参考 1 种细节动作，"
+                    f"固定为：{hairstyle_action_text}。"
+                    if hairstyle_action_text
+                    else "发型展示动作参考：本张图不额外叠加发型手部细节动作，以免与主体动作产生手部冲突。"
+                ),
+            ),
+            _make_prompt_block(
+                "outfit",
+                f"服饰：{outfit_text or '白色宽松衬衫，内搭浅色背心或吊带'}。",
+            ),
+            _make_prompt_block("hair_target", f"人物发型：{_normalize_sentence(hairstyle['prompt_core'])}。"),
+            _make_prompt_block("scene_constraints", f"场景关键约束：{scene_constraint_text}。"),
+            _make_prompt_block("hair_constraints", f"发型关键约束：{hair_constraint_text}。"),
+            _make_prompt_block("motion_safety_constraints", f"动作安全约束：{motion_safety_text}。"),
+            *_build_quality_blocks(),
+            *_build_negative_blocks(),
+        ],
+    )
+
+
+def build_prompt(hairstyle: dict, scene: dict, *, seed_source: str | None = None) -> str:
+    return build_prompt_assembly(
+        mode="full_stylize",
+        hairstyle=hairstyle,
+        scene=scene,
+        seed_source=seed_source,
+    ).render()
+
+
+def build_hairstyle_only_prompt(hairstyle: dict) -> str:
+    return build_prompt_assembly(
+        mode="hairstyle_only",
+        hairstyle=hairstyle,
+    ).render()
+
+
+def build_scene_only_prompt(
+    scene: dict,
+    *,
+    seed_source: str | None = None,
+    expression_override: str | None = None,
+    subject_action_override: str | None = None,
+    outfit_override: str | None = None,
+) -> str:
+    return build_prompt_assembly(
+        mode="scene_only",
+        scene=scene,
+        seed_source=seed_source,
+        expression_override=expression_override,
+        subject_action_override=subject_action_override,
+        outfit_override=outfit_override,
+    ).render()
+
+
+def normalize_generation_options(
+    *,
+    generator_backend: str | None = None,
+    aspect_ratio: str | None = None,
+    resolution: str | None = None,
+) -> dict[str, str | None]:
+    resolved_backend = (generator_backend or DEFAULT_GENERATOR_BACKEND).strip().lower()
+    capability = GENERATOR_BACKEND_CAPABILITIES.get(resolved_backend)
+    if capability is None:
+        raise ValueError(f"Unsupported generator backend: {resolved_backend}")
+
+    default_aspect_ratio = capability["default_aspect_ratio"] or DEFAULT_ASPECT_RATIO
+    resolved_aspect_ratio = (aspect_ratio or default_aspect_ratio).strip()
+    raw_resolution = (resolution or DEFAULT_RESOLUTION).strip()
+    resolved_resolution = "512px" if raw_resolution.lower() == "512px" else raw_resolution.upper()
+
+    if resolved_aspect_ratio not in capability["aspect_ratios"]:
+        raise ValueError(f"Unsupported aspect ratio: {resolved_aspect_ratio}")
+
+    if capability["resolutions"]:
+        default_resolution = capability["default_resolution"] or DEFAULT_RESOLUTION
+        if not resolution:
+            resolved_resolution = default_resolution
+        if resolved_resolution not in capability["resolutions"]:
+            raise ValueError(f"Unsupported resolution: {resolved_resolution}")
+    else:
+        resolved_resolution = None
+
+    return {
+        "generator_backend": resolved_backend,
+        "aspect_ratio": resolved_aspect_ratio,
+        "resolution": resolved_resolution,
+    }
+
+
+def build_job_prompt_payload(
+    hairstyle: dict,
+    scene: dict,
+    *,
+    generator_backend: str | None = None,
+    aspect_ratio: str | None = None,
+    resolution: str | None = None,
+    seed_source: str | None = None,
+) -> str:
+    generation_options = normalize_generation_options(
+        generator_backend=generator_backend,
+        aspect_ratio=aspect_ratio,
+        resolution=resolution,
+    )
+    selection_seed = seed_source or f"{hairstyle['id']}:{scene['id']}"
+    payload = {
+        "version": 1,
+        "full_prompt": build_prompt(
+            hairstyle,
+            scene,
+            seed_source=selection_seed,
+        ),
+        "hairstyle_only_prompt": build_hairstyle_only_prompt(hairstyle),
+        "scene_only_prompt": build_scene_only_prompt(
+            scene,
+            seed_source=f"scene-only:{selection_seed}",
+        ),
+        "output_options": generation_options,
+    }
+    return json.dumps(payload, ensure_ascii=False)
+
+
+def parse_job_prompt_payload(raw_prompt: str) -> dict:
+    normalized_options = normalize_generation_options()
+    if not raw_prompt.strip():
+        return {
+            "version": 0,
+            "full_prompt": "",
+            "hairstyle_only_prompt": "",
+            "scene_only_prompt": "",
+            "output_options": normalized_options,
+        }
+
+    try:
+        payload = json.loads(raw_prompt)
+    except json.JSONDecodeError:
+        return {
+            "version": 0,
+            "full_prompt": raw_prompt,
+            "hairstyle_only_prompt": "",
+            "scene_only_prompt": "",
+            "output_options": normalized_options,
+        }
+
+    if not isinstance(payload, dict):
+        return {
+            "version": 0,
+            "full_prompt": raw_prompt,
+            "hairstyle_only_prompt": "",
+            "scene_only_prompt": "",
+            "output_options": normalized_options,
+        }
+
+    output_options = normalize_generation_options(
+        generator_backend=(payload.get("output_options") or {}).get("generator_backend")
+        if isinstance(payload.get("output_options"), dict)
+        else None,
+        aspect_ratio=(payload.get("output_options") or {}).get("aspect_ratio")
+        if isinstance(payload.get("output_options"), dict)
+        else None,
+        resolution=(payload.get("output_options") or {}).get("resolution")
+        if isinstance(payload.get("output_options"), dict)
+        else None,
+    )
+    return {
+        "version": payload.get("version", 1),
+        "full_prompt": str(payload.get("full_prompt") or ""),
+        "hairstyle_only_prompt": str(payload.get("hairstyle_only_prompt") or ""),
+        "scene_only_prompt": str(payload.get("scene_only_prompt") or ""),
+        "output_options": output_options,
+    }
 
 
 def _template_keyword_blob(template: dict) -> str:

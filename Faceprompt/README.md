@@ -13,9 +13,12 @@
 - 20 类场景数据
 - 20 类男士发型数据
 - 20 类女士发型数据
+- 6 条发型试点结构化控制档案
+- 6 条场景试点控制档案
 - 结构化数据加载、校验、交互式选择、成品提示词渲染
+- 基于脸型特征的试点推荐命令
 - 面向中文模型的统一身份保持规则和负面约束
-- 与线上后端对齐的单张稳定版提示词骨架与动作冲突规避逻辑
+- 与线上后端对齐的单张稳定版提示词骨架、脸型修饰策略段落和动作冲突规避逻辑
 
 当前不是 Web 服务，也不是 GUI 应用。它是一个本地 Python 工具项目，主要通过 CLI 和数据文件工作。
 
@@ -37,6 +40,8 @@ PYTHONPATH=src python3 -m faceprompt.cli summary
 PYTHONPATH=src python3 -m faceprompt.cli list --category scene
 PYTHONPATH=src python3 -m faceprompt.cli list --category hairstyle --gender female
 PYTHONPATH=src python3 -m faceprompt.cli render --scene indoor-film-lifestyle --hairstyle female-french-lazy-waves
+PYTHONPATH=src python3 -m faceprompt.cli render --scene morning-window-softlight --hairstyle female-korean-air-cushion-perm --face-shape long --forehead broad --jawline soft --cheekbone prominent
+PYTHONPATH=src python3 -m faceprompt.cli recommend --gender female --face-shape round --forehead broad --jawline soft --cheekbone prominent --limit 3
 PYTHONPATH=src python3 -m faceprompt.cli interactive
 ```
 
@@ -71,7 +76,7 @@ PYTHONPATH=src python3 -m faceprompt.cli interactive
   这是核心逻辑文件。统一定义基础身份提示词、负面约束、数据加载、记录过滤、提示词渲染和数据校验。
 
 - `src/faceprompt/cli.py`
-  CLI 入口。支持 `summary`、`validate`、`list`、`render`、`interactive`。
+  CLI 入口。支持 `summary`、`validate`、`list`、`render`、`recommend`、`interactive`。
 
 - `src/faceprompt/data/scenes.json`
   20 条场景数据。
@@ -137,6 +142,15 @@ PYTHONPATH=src python3 -m faceprompt.cli interactive
 
 这个行为是有意设计的，因为当前发型列表已经按国内理发店常见分类顺序整理。
 
+### 4. 试点版本新增脸型修饰策略和场景控制
+
+试点版本在最终 prompt 里新增了两个可控段落：
+
+- `脸型修饰策略`：明确“保留原始骨相，只做视觉修饰”
+- `场景控制`：明确风力、湿发观感、背景复杂度、布光硬度和镜面风险
+
+当前做法是把试点机器字段放在 JSON 的 `controlProfile` 内，再在运行时解析成可执行控制规则。
+
 ## 数据模型
 
 运行时统一暴露 `CatalogRecord`。关键字段：
@@ -157,8 +171,11 @@ PYTHONPATH=src python3 -m faceprompt.cli interactive
 - `referenceNotes`
 - `referenceSources`
 - `exampleFinalPrompt`
+- `hairstyleControl`（试点可选）
+- `sceneControl`（试点可选）
 
 场景和发型的组合由 `render_prompt(scene_id, hairstyle_id)` 生成最终中文提示词。
+而试点推荐由 `recommend_pairings(...)` 或 CLI 的 `recommend` 子命令生成。
 
 当前 `render_prompt()` 默认输出的是单张稳定版运行时 prompt，而不是旧版“一次生成 5 张”的草稿式提示词。
 如果你只是想看线上后端现在实际接近什么样的完整提示词，优先用：
@@ -168,22 +185,32 @@ cd Faceprompt
 PYTHONPATH=src python3 -m faceprompt.cli render --scene morning-window-softlight --hairstyle male-forward-spikes
 ```
 
+如果你要按人物脸型先拿推荐组合，再进入最终渲染，可以用：
+
+```bash
+PYTHONPATH=src python3 -m faceprompt.cli recommend --gender female --face-shape round --forehead broad --jawline soft --cheekbone prominent --limit 3
+```
+
 ## 扩展方式
 
 ### 新增或调整发型
 
 1. 修改 `src/faceprompt/data/hairstyles_male.json` 或 `src/faceprompt/data/hairstyles_female.json`
 2. 保持字段完整
-3. 如果顺序变动，确认这是你想要的交互菜单顺序
-4. 运行 `make lint` 和 `make test`
-5. 如果分类文档发生变化，同步更新 `docs/prompt-library.md`
+3. 如果要进入脸型驱动试点，同时补 `controlProfile`
+4. 在 `controlProfile` 里维护脸型适配桶、额头/颧骨/下颌策略、推荐场景和兼容标签
+5. 如果顺序变动，确认这是你想要的交互菜单顺序
+6. 运行 `make lint` 和 `make test`
+7. 如果分类文档发生变化，同步更新 `docs/prompt-library.md`
 
 ### 新增或调整场景
 
 1. 修改 `src/faceprompt/data/scenes.json`
 2. 保持场景里的环境、光线、风格、动作、表情、约束字段完整
-3. 运行 `make lint` 和 `make test`
-4. 如有必要，同步更新 `docs/prompt-library.md`
+3. 如果要进入脸型驱动试点，同时补 `controlProfile`
+4. 在 `controlProfile` 里维护风力、湿发观感、背景复杂度、布光硬度、镜面风险、推荐发型和兼容标签
+5. 运行 `make lint` 和 `make test`
+6. 如有必要，同步更新 `docs/prompt-library.md`
 
 ### 修改统一生成规则
 
@@ -280,8 +307,3 @@ make test
 make interactive
 make render-example
 ```
-<<<<<<< HEAD
-
->>>>>>> 12b5489 (docs: add project handoff readme)
-=======
->>>>>>> 4f01c3c (save local work before submodule migration)

@@ -26,7 +26,11 @@ def main() -> None:
     generator = build_generator()
     job_queue = build_job_queue()
     key_pool = None
-    if not settings.use_mock_generator and settings.ark_api_keys:
+    if (
+        not settings.use_mock_generator
+        and getattr(generator, "supports_key_pool", False)
+        and settings.ark_api_keys
+    ):
         key_pool = ApiKeyPool(
             settings.ark_api_keys,
             default_cooldown_seconds=settings.ark_key_cooldown_seconds,

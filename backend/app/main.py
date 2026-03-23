@@ -28,7 +28,11 @@ def create_app() -> FastAPI:
         generator = build_generator()
         job_queue = build_job_queue()
         key_pool = None
-        if not current_settings.use_mock_generator and current_settings.ark_api_keys:
+        if (
+            not current_settings.use_mock_generator
+            and getattr(generator, "supports_key_pool", False)
+            and current_settings.ark_api_keys
+        ):
             key_pool = ApiKeyPool(
                 current_settings.ark_api_keys,
                 default_cooldown_seconds=current_settings.ark_key_cooldown_seconds,

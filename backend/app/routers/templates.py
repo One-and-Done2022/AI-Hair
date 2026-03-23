@@ -3,7 +3,7 @@ from __future__ import annotations
 from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import Response
 
-from app.schemas import TemplateCatalogResponse, TemplateItem
+from app.schemas import GenerationBackendOption, TemplateCatalogResponse, TemplateItem
 from app.services import templates
 
 
@@ -47,7 +47,15 @@ def list_templates(request: Request) -> TemplateCatalogResponse:
         )
         for item in templates.SCENES
     ]
-    return TemplateCatalogResponse(hairstyles=hairstyles, scenes=scenes)
+    generation_backends = [
+        GenerationBackendOption(**item)
+        for item in templates.get_generation_backend_catalog()
+    ]
+    return TemplateCatalogResponse(
+        hairstyles=hairstyles,
+        scenes=scenes,
+        generation_backends=generation_backends,
+    )
 
 
 @router.get("/covers/{category}/{template_id}.svg", name="template_cover")

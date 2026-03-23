@@ -181,6 +181,55 @@
     </view>
   </view>
 
+  <view class="panel output-panel">
+    <view class="section-title selection-title">输出设置</view>
+    <view class="option-group">
+      <view class="option-label">生成模型</view>
+      <view class="generator-grid">
+        <view
+          wx:for="{{generationBackends}}"
+          wx:key="id"
+          class="generator-card {{selectedGeneratorBackend === item.id ? 'active' : ''}} {{!item.enabled ? 'disabled' : ''}}"
+          data-value="{{item.id}}"
+          bindtap="selectGeneratorBackend"
+        >
+          <view class="generator-name">{{item.name}}</view>
+          <view class="generator-copy">{{item.description}}</view>
+        </view>
+      </view>
+    </view>
+
+    <view class="option-group">
+      <view class="option-label">画幅比例</view>
+      <view class="option-row">
+        <view
+          wx:for="{{aspectRatioOptions}}"
+          wx:key="id"
+          class="option-chip {{selectedAspectRatio === item.id ? 'active' : ''}}"
+          data-value="{{item.id}}"
+          bindtap="selectAspectRatio"
+        >
+          {{item.label}}
+        </view>
+      </view>
+    </view>
+
+    <view wx:if="{{resolutionOptions.length}}" class="option-group">
+      <view class="option-label">输出清晰度</view>
+      <view class="option-row">
+        <view
+          wx:for="{{resolutionOptions}}"
+          wx:key="id"
+          class="option-chip {{selectedResolution === item.id ? 'active' : ''}}"
+          data-value="{{item.id}}"
+          bindtap="selectResolution"
+        >
+          {{item.label}}
+        </view>
+      </view>
+    </view>
+  </view>
+
   <view class="floating-bar">
     <button
       class="primary-button"

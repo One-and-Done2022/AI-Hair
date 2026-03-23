@@ -5,6 +5,7 @@
 
 1. 结构化使用：按场景、发型、动作、约束字段做程序拼装。
 2. 成品使用：通过 CLI 直接渲染与线上后端接近的单张稳定版提示词。
+3. 试点推荐：根据脸型、额头、下颌线和颧骨特征，推荐更合适的发型与场景组合。
 
 默认硬约束：
 - 第一优先级是保留参考人物真实身份特征，必须一眼看出是同一个人。
@@ -29,6 +30,8 @@ PYTHONPATH=src python3 -m faceprompt.cli list --category hairstyle --gender male
 PYTHONPATH=src python3 -m faceprompt.cli render --scene indoor-film-lifestyle --hairstyle female-french-lazy-waves
 PYTHONPATH=src python3 -m faceprompt.cli render --scene morning-window-softlight --hairstyle male-forward-spikes
 PYTHONPATH=src python3 -m faceprompt.cli render --scene morning-window-softlight --hairstyle male-forward-spikes --subject-action "靠在窗台边"
+PYTHONPATH=src python3 -m faceprompt.cli render --scene morning-window-softlight --hairstyle female-korean-air-cushion-perm --face-shape long --forehead broad --jawline soft --cheekbone prominent
+PYTHONPATH=src python3 -m faceprompt.cli recommend --gender female --face-shape round --forehead broad --jawline soft --cheekbone prominent --limit 3
 PYTHONPATH=src python3 -m faceprompt.cli interactive
 ```
 
@@ -134,26 +137,41 @@ PYTHONPATH=src python3 -m faceprompt.cli interactive
 - `referenceNotes`
 - `referenceSources`
 - `exampleFinalPrompt`
+- `hairstyleControl`（试点可选）
+- `sceneControl`（试点可选）
+
+试点结构化控制字段通过 JSON 里的 `controlProfile` 提供：
+
+- 发型侧：`faceShapeFit`、`recommendedForeheads`、`recommendedJawlines`、`recommendedCheekbones`
+- 发型侧：`foreheadStrategy`、`templeCoverage`、`cheekSoftening`、`jawlineExposure`
+- 发型侧：`crownVolume`、`sideVolume`、`partingOptions`、`fringeType`、`lengthZone`、`curlScale`
+- 发型侧：`recommendedSceneIds`、`compatibilityTags`
+- 场景侧：`windLevel`、`humidityLook`、`backgroundComplexity`、`lightingHardness`、`mirrorRisk`
+- 场景侧：`recommendedHairstyleIds`、`compatibleHairstyleTags`
 
 ## 示例
 当前 `render` 输出的是与线上后端同骨架的“单张稳定版”提示词，会按固定顺序拼装：
 
 1. 身份保持骨架
-2. 构图
-3. 场景
-4. 主表情
-5. 主体动作
-6. 发型细节动作参考
-7. 服饰
-8. 发型
-9. 关键约束
-10. 画质约束
-11. 负面约束
+2. 脸型修饰策略
+3. 构图
+4. 场景
+5. 场景控制
+6. 主表情
+7. 主体动作
+8. 发型细节动作参考
+9. 服饰
+10. 发型
+11. 关键约束
+12. 画质约束
+13. 负面约束
 
 注意：
 - JSON 数据文件里保存的是结构化片段，不是最终成品 prompt。
 - 完整提示词的拼装逻辑在 `src/faceprompt/catalog.py`。
 - 线上后端也会做“手部冲突检查”，避免同时出现多于两只手这类不合物理逻辑的动作组合。
+- 试点版本会额外强调“保留原始骨相，只允许做视觉修饰”，避免模型把“修脸”理解成真实改骨相。
+- `recommend` 命令当前是试点能力，优先使用带 `controlProfile` 的 6 个发型和 6 个场景记录。
 
 适合先用 `list` 找到 `scene` 和 `hairstyle` 的 `id`，再用 `render` 输出成品提示词。
 

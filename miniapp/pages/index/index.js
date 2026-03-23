@@ -10,6 +10,10 @@ const {
   setCurrentImagePath
 } = require("../../utils/recommendation");
 
+function toOptionItems(items) {
+  return (items || []).map((item) => ({ id: item, label: item }));
+}
+
 function findById(items, id) {
   if (!id) {
     return null;
@@ -27,6 +31,40 @@ function getRecommendationGender(selection, selectedHairstyle) {
   return "female";
 }
 
+function findBackendById(items, id) {
+  return findById(items || [], id);
+}
+
+function buildGenerationSelection(backends, cachedOptions = {}) {
+  const availableBackends = (backends || []).filter((item) => item.enabled);
+  const fallbackBackends = availableBackends.length ? availableBackends : (backends || []);
+  const selectedBackend =
+    findBackendById(fallbackBackends, cachedOptions.generator_backend) || fallbackBackends[0] || null;
+  const aspectRatios = selectedBackend ? selectedBackend.aspect_ratios || [] : [];
+  const resolutions = selectedBackend ? selectedBackend.resolutions || [] : [];
+  const selectedAspectRatio =
+    (aspectRatios.includes(cachedOptions.aspect_ratio) && cachedOptions.aspect_ratio) ||
+    (selectedBackend && selectedBackend.default_aspect_ratio) ||
+    aspectRatios[0] ||
+    "3:4";
+  const selectedResolution = resolutions.length
+    ? (
+        (resolutions.includes(cachedOptions.resolution) && cachedOptions.resolution) ||
+        (selectedBackend && selectedBackend.default_resolution) ||
+        resolutions[0]
+      )
+    : "";
+
+  return {
+    selectedBackend,
+    selectedGeneratorBackend: selectedBackend ? selectedBackend.id : "",
+    selectedAspectRatio,
+    selectedResolution,
+    aspectRatioOptions: toOptionItems(aspectRatios),
+    resolutionOptions: toOptionItems(resolutions)
+  };
+}
+
 Page({
   data: {
     selectedImage: "",
@@ -41,7 +79,13 @@ Page({
     recommendedHairstyles: [],
     recommendedScenes: [],
     recommendationMessage: "",
-    bootstrapping: true
+    bootstrapping: true,
+    generationBackends: [],
+    selectedGeneratorBackend: "",
+    aspectRatioOptions: [],
+    resolutionOptions: [],
+    selectedAspectRatio: "3:4",
+    selectedResolution: "4K"
   },
 
   async onLoad() {
@@ -63,6 +107,11 @@ Page({
       this.catalog = catalog;
       const currentImagePath = getCurrentImagePath();
       const cachedSelection = wx.getStorageSync("templateSelection") || {};
+      const cachedGenerationOptions = wx.getStorageSync("generationOptions") || {};
+      const generationSelection = buildGenerationSelection(
+        catalog.generation_backends || [],
+        cachedGenerationOptions
+      );
       const selectedHairstyle =
         findById(catalog.hairstyles, cachedSelection.hairstyle && cachedSelection.hairstyle.id) ||
         null;
@@ -93,7 +142,18 @@ Page({
         profileSummary,
         selectedHairstyle,
         selectedScene,
-        recommendationGender
+        recommendationGender,
+        generationBackends: catalog.generation_backends || [],
+        selectedGeneratorBackend: generationSelection.selectedGeneratorBackend,
+        aspectRatioOptions: generationSelection.aspectRatioOptions,
+        resolutionOptions: generationSelection.resolutionOptions,
+        selectedAspectRatio: generationSelection.selectedAspectRatio,
+        selectedResolution: generationSelection.selectedResolution
+      });
+      wx.setStorageSync("generationOptions", {
+        generator_backend: generationSelection.selectedGeneratorBackend,
+        aspect_ratio: generationSelection.selectedAspectRatio,
+        resolution: generationSelection.selectedResolution
       });
       this.syncRecommendationView({
         recommendation: currentImagePath ? getCachedRecommendation() : null,
@@ -377,6 +437,63 @@ Page({
     });
   },
 
+  selectAspectRatio(event) {
+    const aspectRatio = event.currentTarget.dataset.value;
+    if (!aspectRatio) {
+      return;
+    }
+    this.setData({ selectedAspectRatio: aspectRatio });
+    wx.setStorageSync("generationOptions", {
+      generator_backend: this.data.selectedGeneratorBackend,
+      aspect_ratio: aspectRatio,
+      resolution: this.data.selectedResolution
+    });
+  },
+
+  selectResolution(event) {
+    const resolution = event.currentTarget.dataset.value;
+    if (!resolution) {
+      return;
+    }
+    this.setData({ selectedResolution: resolution });
+    wx.setStorageSync("generationOptions", {
+      generator_backend: this.data.selectedGeneratorBackend,
+      aspect_ratio: this.data.selectedAspectRatio,
+      resolution
+    });
+  },
+
+  selectGeneratorBackend(event) {
+    const backendId = event.currentTarget.dataset.value;
+    const backend = findBackendById(this.data.generationBackends, backendId);
+    if (!backend) {
+      return;
+    }
+    if (!backend.enabled) {
+      wx.showToast({
+        title: "该模型暂未配置",
+        icon: "none"
+      });
+      return;
+    }
+
+    const selection = buildGenerationSelection(this.data.generationBackends, {
+      generator_backend: backendId
+    });
+    this.setData({
+      selectedGeneratorBackend: selection.selectedGeneratorBackend,
+      aspectRatioOptions: selection.aspectRatioOptions,
+      resolutionOptions: selection.resolutionOptions,
+      selectedAspectRatio: selection.selectedAspectRatio,
+      selectedResolution: selection.selectedResolution
+    });
+    wx.setStorageSync("generationOptions", {
+      generator_backend: selection.selectedGeneratorBackend,
+      aspect_ratio: selection.selectedAspectRatio,
+      resolution: selection.selectedResolution
+    });
+  },
+
   async createJob() {
     if (!this.data.selectedImage) {
       wx.showToast({ title: "请先上传照片", icon: "none" });
@@ -398,7 +515,10 @@ Page({
         data: {
           upload_id: upload.upload_id,
           hairstyle_id: this.data.selectedHairstyle.id,
-          scene_id: this.data.selectedScene.id
+          scene_id: this.data.selectedScene.id,
+          generator_backend: this.data.selectedGeneratorBackend,
+          aspect_ratio: this.data.selectedAspectRatio,
+          resolution: this.data.selectedResolution || null
         }
       });
       wx.navigateTo({

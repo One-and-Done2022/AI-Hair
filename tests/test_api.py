@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import base64
 import io
 import sys
 import time
@@ -48,6 +49,16 @@ def _configure_runtime_env(tmp_path, monkeypatch, *, use_mock_generator: str = "
     monkeypatch.delenv("ARK_API_KEY_MAX_CONCURRENCY", raising=False)
     monkeypatch.delenv("ARK_API_KEY_DEFAULT_WEIGHT", raising=False)
     monkeypatch.delenv("ARK_API_KEY_COOLDOWN_SECONDS", raising=False)
+    monkeypatch.delenv("IMAGE_GENERATOR_BACKEND", raising=False)
+    monkeypatch.delenv("NANO_BANANA_API_KEY", raising=False)
+    monkeypatch.delenv("NANO_BANANA_BASE_URL", raising=False)
+    monkeypatch.delenv("NANO_BANANA_MODEL", raising=False)
+    monkeypatch.delenv("NANO_BANANA_2_API_KEY", raising=False)
+    monkeypatch.delenv("NANO_BANANA_2_BASE_URL", raising=False)
+    monkeypatch.delenv("NANO_BANANA_2_MODEL", raising=False)
+    monkeypatch.delenv("SORA_IMAGE_API_KEY", raising=False)
+    monkeypatch.delenv("SORA_IMAGE_BASE_URL", raising=False)
+    monkeypatch.delenv("SORA_IMAGE_MODEL", raising=False)
     monkeypatch.delenv("JOB_WORKER_CONCURRENCY", raising=False)
     monkeypatch.delenv("DB_POOL_SIZE", raising=False)
     monkeypatch.delenv("DB_MAX_OVERFLOW", raising=False)
@@ -157,6 +168,156 @@ def test_build_prompt_uses_faceprompt_single_image_structure():
     assert "后端每次只选 1 个主体动作" in prompt
 
 
+def test_build_and_parse_job_prompt_payload_preserves_output_options():
+    from app.services import templates
+
+    hairstyle = templates.get_hairstyle("male-forward-spikes")
+    scene = templates.get_scene("morning-window-softlight")
+
+    assert hairstyle is not None
+    assert scene is not None
+
+    payload = templates.build_job_prompt_payload(
+        hairstyle,
+        scene,
+        generator_backend="nano_banana_2",
+        aspect_ratio="3:4",
+        resolution="4K",
+        seed_source="job-payload",
+    )
+    parsed = templates.parse_job_prompt_payload(payload)
+
+    assert parsed["output_options"] == {
+        "generator_backend": "nano_banana_2",
+        "aspect_ratio": "3:4",
+        "resolution": "4K",
+    }
+    assert "full_prompt" in parsed
+    assert "hairstyle_only_prompt" in parsed
+    assert "scene_only_prompt" in parsed
+
+
+def test_build_prompt_assembly_returns_structured_blocks():
+    from app.services import templates
+
+    hairstyle = templates.get_hairstyle("male-forward-spikes")
+    scene = templates.get_scene("morning-window-softlight")
+
+    assert hairstyle is not None
+    assert scene is not None
+
+    assembly = templates.build_prompt_assembly(
+        mode="full_stylize",
+        hairstyle=hairstyle,
+        scene=scene,
+        seed_source="api-assembly",
+    )
+
+    assert assembly.mode == "full_stylize"
+    assert [block.key for block in assembly.blocks] == [
+        "identity_lock",
+        "output_format",
+        "shot",
+        "scene_environment",
+        "scene_lighting",
+        "scene_mood",
+        "expression",
+        "subject_action",
+        "hairstyle_action",
+        "outfit",
+        "hair_target",
+        "scene_constraints",
+        "hair_constraints",
+        "motion_safety_constraints",
+        "quality_skin_texture",
+        "quality_image_finish",
+        "negative_identity_artifact",
+        "negative_physical_logic",
+    ]
+    assert assembly.render() == templates.build_prompt(hairstyle, scene, seed_source="api-assembly")
+    assert assembly.blocks[0].label == "身份锁定"
+    assert assembly.blocks[3].label == "场景环境"
+
+
+def test_prompt_block_labels_use_english_keys_and_chinese_labels():
+    from app.services import templates
+
+    labels = templates.get_prompt_block_labels()
+
+    assert labels["identity_lock"] == "身份锁定"
+    assert labels["scene_environment"] == "场景环境"
+    assert labels["hair_lock"] == "发型锁定"
+    assert labels["negative_physical_logic"] == "物理逻辑负面约束"
+
+
+def test_prompt_rule_table_declares_mode_boundaries():
+    from app.services import templates
+
+    rules = templates.get_prompt_rule_table()
+
+    assert "scene_only" in rules
+    assert "hairstyle_only" in rules
+    assert "hair_lock" in rules["scene_only"].required_blocks
+    assert "hair_target" in rules["hairstyle_only"].required_blocks
+    assert "hair_target" in rules["scene_only"].forbidden_blocks
+    assert "scene_environment" in rules["hairstyle_only"].forbidden_blocks
+    assert "shot" in rules["hairstyle_only"].forbidden_blocks
+    assert "scene_control" in rules["hairstyle_only"].forbidden_blocks
+    assert "face_strategy" in rules["hairstyle_only"].forbidden_blocks
+
+
+def test_build_hairstyle_only_prompt_uses_identity_lock_and_hair_swap_structure():
+    from app.services import templates
+
+    hairstyle = templates.get_hairstyle("male-forward-spikes")
+
+    assert hairstyle is not None
+
+    prompt = templates.build_hairstyle_only_prompt(hairstyle)
+
+    assert "只更换图中人物的发型" in prompt
+    assert "换发目标：只更换图中人物的发型为：前刺头。" in prompt
+    assert "人物发型：发型改为前刺头" in prompt
+    assert "尽量保持原图中的背景、服饰、姿态、表情、构图、镜头距离、光线和氛围不变" in prompt
+    assert "不能把新发型做成悬浮假发" in prompt
+    assert "负面约束：不要换脸、不要改变性别表达、不要生成第二个人" in prompt
+
+
+def test_build_scene_only_prompt_locks_existing_hairstyle_and_updates_scene():
+    from app.services import templates
+
+    scene = templates.get_scene("morning-window-softlight")
+
+    assert scene is not None
+
+    prompt = templates.build_scene_only_prompt(scene, seed_source="scene-only-lock")
+
+    assert "不改变人物的脸型、五官比例、眼距、鼻梁、嘴型、肤色、年龄感和整体气质和发型" in prompt
+    assert "忽略原照片中的背景、原服饰、原有动作" in prompt
+    assert "人物发型：保持参考图中已经生成完成的发型不变" in prompt
+    assert "不要因为动作、风感或镜头变化把当前发型改成另一种发型" in prompt
+    assert "抬手整理窗边发丝" not in prompt
+
+
+def test_scene_only_prompt_assembly_exposes_hair_lock_block():
+    from app.services import templates
+
+    scene = templates.get_scene("walnut-study-portrait")
+
+    assert scene is not None
+
+    assembly = templates.build_prompt_assembly(
+        mode="scene_only",
+        scene=scene,
+        seed_source="scene-only-api-assembly",
+    )
+
+    assert assembly.mode == "scene_only"
+    hair_blocks = [block.text for block in assembly.blocks if block.key == "hair_lock"]
+    assert len(hair_blocks) == 1
+    assert "保持参考图中已经生成完成的发型不变" in hair_blocks[0]
+
+
 def test_prompt_filters_hand_conflicting_hairstyle_actions():
     from app.services import templates
 
@@ -166,6 +327,16 @@ def test_prompt_filters_hand_conflicting_hairstyle_actions():
     )
 
     assert compatible_actions == ["看镜头微抬下巴", "半侧脸回望镜头"]
+
+
+def test_scene_only_prompt_filters_hair_touching_subject_actions():
+    from app.services import templates
+
+    compatible_actions = templates._filter_scene_actions_for_locked_hairstyle(
+        ["靠在窗台边", "抬手整理窗边发丝", "双手轻握杯子停顿"]
+    )
+
+    assert compatible_actions == ["靠在窗台边", "双手轻握杯子停顿"]
 
 
 def test_build_prompt_uses_one_subject_action_and_one_compatible_detail_action():
@@ -267,6 +438,7 @@ def test_auth_upload_job_history_flow(tmp_path, monkeypatch):
         catalog = templates.json()
         assert len(catalog["hairstyles"]) == 40
         assert len(catalog["scenes"]) == 20
+        assert len(catalog["generation_backends"]) == 4
         assert len([item for item in catalog["hairstyles"] if item["gender"] == "male"]) == 20
         assert len([item for item in catalog["hairstyles"] if item["gender"] == "female"]) == 20
         assert catalog["hairstyles"][0]["style_line_label"]
@@ -278,6 +450,7 @@ def test_auth_upload_job_history_flow(tmp_path, monkeypatch):
                 "upload_id": upload_id,
                 "hairstyle_id": catalog["hairstyles"][0]["id"],
                 "scene_id": catalog["scenes"][0]["id"],
+                "generator_backend": "seedream",
             },
         )
         assert job_create.status_code == 201
@@ -297,6 +470,7 @@ def test_auth_upload_job_history_flow(tmp_path, monkeypatch):
         assert status_payload["result_image_url"]
         assert len(status_payload["result_image_urls"]) == 3
         assert status_payload["result_image_urls"][0] == status_payload["result_image_url"]
+        assert status_payload["generator_backend"] == "seedream"
         assert status_payload["media_expired"] is False
         assert status_payload["media_expires_at"]
 
@@ -333,6 +507,42 @@ def test_auth_upload_job_history_flow(tmp_path, monkeypatch):
         assert repository.get_upload(upload_id) is None
         assert list((tmp_path / "storage" / "uploads").iterdir()) == []
         assert list((tmp_path / "storage" / "results").iterdir()) == []
+
+
+def test_job_accepts_extended_output_options(tmp_path, monkeypatch):
+    app = _build_app(tmp_path, monkeypatch)
+
+    with TestClient(app) as client:
+        login = client.post("/api/auth/wechat/login", json={"code": "dev-test"})
+        token = login.json()["token"]
+        headers = {"Authorization": f"Bearer {token}"}
+
+        upload = client.post(
+            "/api/uploads",
+            headers=headers,
+            files={"file": ("portrait.png", _build_test_image(), "image/png")},
+        )
+        upload_id = upload.json()["upload_id"]
+
+        catalog = client.get("/api/templates").json()
+        job_create = client.post(
+            "/api/jobs",
+            headers=headers,
+            json={
+                "upload_id": upload_id,
+                "hairstyle_id": catalog["hairstyles"][0]["id"],
+                "scene_id": catalog["scenes"][0]["id"],
+                "generator_backend": "nano_banana_2",
+                "aspect_ratio": "1:8",
+                "resolution": "512px",
+            },
+        )
+
+        assert job_create.status_code == 201
+        payload = job_create.json()
+        assert payload["generator_backend"] == "nano_banana_2"
+        assert payload["aspect_ratio"] == "1:8"
+        assert payload["resolution"] == "512px"
 
 
 def test_media_cleanup_removes_expired_images_but_keeps_history(tmp_path, monkeypatch):
@@ -621,6 +831,7 @@ def test_recommendations_api_returns_unavailable_error(tmp_path, monkeypatch):
 def test_seedream_generator_requests_preview_first_then_tops_up(tmp_path, monkeypatch):
     _configure_runtime_env(tmp_path, monkeypatch, use_mock_generator="false")
     monkeypatch.setenv("ARK_API_KEY", "test-key")
+    monkeypatch.setenv("ARK_IMAGE_MODEL", "doubao-seedream-4-5-251128")
 
     from app.config import get_settings
     from app.services.generation import SeedreamGenerator
@@ -671,6 +882,305 @@ def test_seedream_generator_requests_preview_first_then_tops_up(tmp_path, monkey
     assert call_log == [("collect", 1), ("top_up", 1)]
     assert preview_events == ["callback", "preview"]
     assert len(result.candidate_image_bytes) == 3
+
+
+def test_seedream_5_generator_uses_rest_images_generation_api(tmp_path, monkeypatch):
+    _configure_runtime_env(tmp_path, monkeypatch, use_mock_generator="false")
+    monkeypatch.setenv("ARK_API_KEY", "test-key")
+    monkeypatch.setenv("ARK_IMAGE_MODEL", "doubao-seedream-5-0-260128")
+
+    from app.config import get_settings
+    from app.services.generation import GenerationContext, SeedreamGenerator
+    from app.services.key_pool import ApiKeyLease
+
+    get_settings.cache_clear()
+
+    source_path = tmp_path / "source.png"
+    source_path.write_bytes(_build_test_image())
+
+    request_log = {"post": [], "get": []}
+
+    class FakePostResponse:
+        status_code = 200
+
+        def json(self):
+            index = len(request_log["post"])
+            return {
+                "data": [
+                    {
+                        "url": f"https://cdn.example.com/seedream5-{index}.png",
+                    }
+                ]
+            }
+
+    class FakeGetResponse:
+        def __init__(self, url):
+            self.content = _build_colored_image("#264653" if url.endswith("-1.png") else "#2a9d8f")
+
+        def raise_for_status(self):
+            return None
+
+    def fake_post(url, *, headers=None, json=None, timeout=None):
+        request_log["post"].append(
+            {
+                "url": url,
+                "headers": headers,
+                "json": json,
+                "timeout": timeout,
+            }
+        )
+        return FakePostResponse()
+
+    def fake_get(url, *, timeout=None):
+        request_log["get"].append({"url": url, "timeout": timeout})
+        return FakeGetResponse(url)
+
+    monkeypatch.setattr("app.services.generation.httpx.post", fake_post)
+    monkeypatch.setattr("app.services.generation.httpx.get", fake_get)
+
+    previews = []
+    result = SeedreamGenerator().generate(
+        source_image_path=str(source_path),
+        prompt="test seedream 5 prompt",
+        context=GenerationContext(
+            hairstyle_name="前刺短发",
+            scene_name="窗边生活感",
+            aspect_ratio="3:4",
+            resolution="4K",
+        ),
+        provider_key=ApiKeyLease(key_id="default", api_key="test-key"),
+        on_preview=lambda image_bytes: previews.append(image_bytes),
+    )
+
+    assert len(request_log["post"]) == 3
+    first_request = request_log["post"][0]
+    assert first_request["url"].endswith("/images/generations")
+    assert first_request["headers"]["Authorization"] == "Bearer test-key"
+    assert first_request["json"]["model"] == "doubao-seedream-5-0-260128"
+    assert first_request["json"]["response_format"] == "url"
+    assert first_request["json"]["stream"] is False
+    assert first_request["json"]["sequential_image_generation"] == "disabled"
+    assert first_request["json"]["size"] == "2K"
+    assert first_request["json"]["image"].startswith("data:image/png;base64,")
+    assert len(request_log["get"]) == 3
+    assert len(previews) == 1
+    assert len(result.candidate_image_bytes) == 3
+
+
+def test_nano_banana_generator_uses_native_image_config(tmp_path, monkeypatch):
+    _configure_runtime_env(tmp_path, monkeypatch, use_mock_generator="false")
+    monkeypatch.setenv("IMAGE_GENERATOR_BACKEND", "nano_banana_pro")
+    monkeypatch.setenv("NANO_BANANA_API_KEY", "nano-test-key")
+
+    from app.config import get_settings
+    from app.services.generation import GenerationContext, NanoBananaProGenerator
+
+    get_settings.cache_clear()
+
+    source_path = tmp_path / "source.png"
+    source_path.write_bytes(_build_test_image())
+
+    request_log = {}
+
+    class FakeResponse:
+        status_code = 200
+
+        def json(self):
+            return {
+                "candidates": [
+                    {
+                        "content": {
+                            "parts": [
+                                {
+                                    "inlineData": {
+                                        "mimeType": "image/png",
+                                        "data": base64.b64encode(_build_colored_image("#264653")).decode("utf-8"),
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                ]
+            }
+
+    def fake_post(url, *, headers=None, json=None, timeout=None):
+        request_log["url"] = url
+        request_log["headers"] = headers
+        request_log["json"] = json
+        request_log["timeout"] = timeout
+        return FakeResponse()
+
+    monkeypatch.setattr("app.services.generation.httpx.post", fake_post)
+
+    generator = NanoBananaProGenerator()
+    previews = []
+    result = generator.generate(
+        source_image_path=str(source_path),
+        prompt="test nano prompt",
+        context=GenerationContext(
+            hairstyle_name="法式慵懒卷",
+            scene_name="咖啡馆抓拍座位人像",
+            aspect_ratio="3:4",
+            resolution="4K",
+        ),
+        on_preview=lambda image_bytes: previews.append(image_bytes),
+    )
+
+    assert request_log["url"].endswith(":generateContent")
+    assert request_log["headers"]["Authorization"] == "Bearer nano-test-key"
+    assert request_log["json"]["generationConfig"]["imageConfig"] == {
+        "aspectRatio": "3:4",
+        "imageSize": "4K",
+    }
+    assert request_log["timeout"] == 360
+    assert len(previews) == 1
+    assert len(result.candidate_image_bytes) == 1
+
+
+def test_nano_banana_2_generator_uses_native_image_config(tmp_path, monkeypatch):
+    _configure_runtime_env(tmp_path, monkeypatch, use_mock_generator="false")
+    monkeypatch.setenv("IMAGE_GENERATOR_BACKEND", "nano_banana_2")
+    monkeypatch.setenv("NANO_BANANA_2_API_KEY", "nano-2-test-key")
+
+    from app.config import get_settings
+    from app.services.generation import GenerationContext, NanoBanana2Generator
+
+    get_settings.cache_clear()
+
+    source_path = tmp_path / "source.png"
+    source_path.write_bytes(_build_test_image())
+
+    request_log = {}
+
+    class FakeResponse:
+        status_code = 200
+
+        def json(self):
+            return {
+                "candidates": [
+                    {
+                        "content": {
+                            "parts": [
+                                {
+                                    "inlineData": {
+                                        "mimeType": "image/png",
+                                        "data": base64.b64encode(_build_colored_image("#8338ec")).decode("utf-8"),
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                ]
+            }
+
+    def fake_post(url, *, headers=None, json=None, timeout=None):
+        request_log["url"] = url
+        request_log["headers"] = headers
+        request_log["json"] = json
+        request_log["timeout"] = timeout
+        return FakeResponse()
+
+    monkeypatch.setattr("app.services.generation.httpx.post", fake_post)
+
+    generator = NanoBanana2Generator()
+    previews = []
+    result = generator.generate(
+        source_image_path=str(source_path),
+        prompt="test nano banana 2 prompt",
+        context=GenerationContext(
+            hairstyle_name="法式慵懒卷",
+            scene_name="咖啡馆抓拍座位人像",
+            aspect_ratio="1:8",
+            resolution="512px",
+        ),
+        on_preview=lambda image_bytes: previews.append(image_bytes),
+    )
+
+    assert request_log["url"].endswith(":generateContent")
+    assert request_log["headers"]["Authorization"] == "Bearer nano-2-test-key"
+    assert request_log["json"]["generationConfig"]["imageConfig"] == {
+        "aspectRatio": "1:8",
+        "imageSize": "512px",
+    }
+    assert request_log["timeout"] == 120
+    assert len(previews) == 1
+    assert len(result.candidate_image_bytes) == 1
+
+
+def test_sora_image_generator_uses_chat_completion_with_reference_image(tmp_path, monkeypatch):
+    _configure_runtime_env(tmp_path, monkeypatch, use_mock_generator="false")
+    monkeypatch.setenv("IMAGE_GENERATOR_BACKEND", "sora_image")
+    monkeypatch.setenv("SORA_IMAGE_API_KEY", "sora-test-key")
+
+    from app.config import get_settings
+    from app.services.generation import GenerationContext, SoraImageGenerator
+
+    get_settings.cache_clear()
+
+    source_path = tmp_path / "source.png"
+    source_path.write_bytes(_build_test_image())
+
+    request_log = {}
+
+    class FakePostResponse:
+        status_code = 200
+
+        def json(self):
+            return {
+                "choices": [
+                    {
+                        "message": {
+                            "content": "![gen_image](https://cdn.example.com/generated/sora.png)"
+                        }
+                    }
+                ]
+            }
+
+    class FakeGetResponse:
+        content = _build_colored_image("#ef476f")
+
+        def raise_for_status(self):
+            return None
+
+    def fake_post(url, *, headers=None, json=None, timeout=None):
+        request_log["url"] = url
+        request_log["headers"] = headers
+        request_log["json"] = json
+        request_log["timeout"] = timeout
+        return FakePostResponse()
+
+    def fake_get(url, *, timeout=None):
+        request_log["download_url"] = url
+        request_log["download_timeout"] = timeout
+        return FakeGetResponse()
+
+    monkeypatch.setattr("app.services.generation.httpx.post", fake_post)
+    monkeypatch.setattr("app.services.generation.httpx.get", fake_get)
+
+    generator = SoraImageGenerator()
+    previews = []
+    result = generator.generate(
+        source_image_path=str(source_path),
+        prompt="test sora prompt",
+        context=GenerationContext(
+            hairstyle_name="法式慵懒卷",
+            scene_name="咖啡馆抓拍座位人像",
+            aspect_ratio="2:3",
+            resolution=None,
+        ),
+        on_preview=lambda image_bytes: previews.append(image_bytes),
+    )
+
+    assert request_log["url"].endswith("/chat/completions")
+    assert request_log["headers"]["Authorization"] == "Bearer sora-test-key"
+    content = request_log["json"]["messages"][0]["content"]
+    assert content[0]["type"] == "text"
+    assert "〖2:3〗" in content[0]["text"]
+    assert content[1]["type"] == "image_url"
+    assert content[1]["image_url"]["url"].startswith("data:image/png;base64,")
+    assert request_log["download_url"] == "https://cdn.example.com/generated/sora.png"
+    assert len(previews) == 1
+    assert len(result.candidate_image_bytes) == 1
 
 
 def test_map_openai_error_disables_key_for_model_not_open():

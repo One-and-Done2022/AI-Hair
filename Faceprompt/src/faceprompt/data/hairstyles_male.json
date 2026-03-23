@@ -11,6 +11,28 @@
     "pairingAdvice": ["极简纯色棚拍", "都市夜色霓虹人像", "后台化妆镜前人像"],
     "shotAdvice": "适合 3:4 竖构图、胸口以上近景和平视或略低机位，突出前额纹理和下颌线。",
     "expressionAction": ["看镜头微抬下巴", "单手抓起头顶前区发束", "半侧脸回望镜头"],
+    "controlProfile": {
+      "faceShapeFit": {
+        "best": ["oval", "round"],
+        "ok": ["heart", "square"],
+        "avoid": ["long", "diamond"]
+      },
+      "recommendedForeheads": ["balanced", "broad"],
+      "recommendedJawlines": ["defined", "angular"],
+      "recommendedCheekbones": ["soft", "balanced"],
+      "foreheadStrategy": "保留 30% 到 50% 额头露出，不要整片后梳或完全盖额",
+      "templeCoverage": "以前区碎束轻压太阳穴上缘，两侧继续收紧",
+      "cheekSoftening": "不要在颧弓外侧堆体积，避免横向放大脸宽",
+      "jawlineExposure": "耳侧和下颌线保持清楚外露，强化利落感",
+      "crownVolume": "中等偏高，集中在头顶前区",
+      "sideVolume": "低，侧区紧贴头型",
+      "partingOptions": ["前区向前统一梳理", "轻微偏中前推"],
+      "fringeType": "前区短碎刺状刘海",
+      "lengthZone": "短发",
+      "curlScale": "直发纹理",
+      "compatibilityTags": ["sharp_texture", "hard_light_ready", "urban_night"],
+      "recommendedSceneIds": ["studio-solid-backdrop", "city-neon-night", "cold-metal-space"]
+    },
     "referenceNotes": "重点是前区束感和干净侧区的反差，画面气质应当轻快干练，不做厚重韩式刘海。",
     "referenceSourceIds": ["gq-high-fade", "gq-fade-guide", "gq-short-back-sides"]
   },
@@ -176,6 +198,28 @@
     "pairingAdvice": ["清晨窗边软光人像", "酒店房间松弛感人像", "后台化妆镜前人像"],
     "shotAdvice": "适合平视近景和轻微偏侧拍，突出分线与额前弧度。",
     "expressionAction": ["温和看镜头", "抬手拨开额前弧度刘海", "半侧身回望"],
+    "controlProfile": {
+      "faceShapeFit": {
+        "best": ["round", "square", "heart"],
+        "ok": ["oval", "diamond"],
+        "avoid": ["long"]
+      },
+      "recommendedForeheads": ["balanced", "broad"],
+      "recommendedJawlines": ["soft", "defined"],
+      "recommendedCheekbones": ["balanced", "prominent"],
+      "foreheadStrategy": "用三七分和爱心弧度切开额头比例，不做整片大露额",
+      "templeCoverage": "让较长一侧刘海自然扫过太阳穴和颧骨外缘",
+      "cheekSoftening": "在颧骨上缘保留轻薄包裹层次，避免脸侧过空",
+      "jawlineExposure": "下颌线保留一半到三分之二，不要全部包死",
+      "crownVolume": "中等，发根轻撑起但不夸张",
+      "sideVolume": "中等偏低，脸侧保留柔和包裹",
+      "partingOptions": ["三七分", "轻偏分"],
+      "fringeType": "带爱心弧度的侧分刘海",
+      "lengthZone": "中短发",
+      "curlScale": "微弯",
+      "compatibilityTags": ["soft_parting", "face_framing", "lifestyle_softlight"],
+      "recommendedSceneIds": ["morning-window-softlight", "cafe-candid-seat", "indoor-film-lifestyle"]
+    },
     "referenceNotes": "韩系三七分强调柔和精致的额前线条，而不是硬朗商务感。",
     "referenceSourceIds": ["gq-barber-language", "gq-best-short-haircuts", "gq-short-back-sides"]
   },
@@ -191,6 +235,28 @@
     "pairingAdvice": ["清晨窗边软光人像", "室内生活感胶片写真", "咖啡馆抓拍座位人像"],
     "shotAdvice": "适合平视近景和轻微侧脸，突出额前 C 弯与眉眼距离。",
     "expressionAction": ["轻轻看镜头", "抬手碰触逗号刘海", "低头后缓慢抬眼"],
+    "controlProfile": {
+      "faceShapeFit": {
+        "best": ["round", "heart", "diamond"],
+        "ok": ["oval", "long"],
+        "avoid": ["square"]
+      },
+      "recommendedForeheads": ["balanced", "broad"],
+      "recommendedJawlines": ["soft", "defined"],
+      "recommendedCheekbones": ["soft", "balanced"],
+      "foreheadStrategy": "用单侧 C 弯刘海切开额头宽度，露额比例控制在三分之一到二分之一",
+      "templeCoverage": "弯钩刘海贴近太阳穴上缘，另一侧轻轻后收",
+      "cheekSoftening": "脸侧不做厚重蓬松，只保留轻薄过渡",
+      "jawlineExposure": "下颌线适度外露，避免太多头发堆在下巴附近",
+      "crownVolume": "中等，前顶区有轻微支撑",
+      "sideVolume": "低到中等，保持干净服帖",
+      "partingOptions": ["逗号偏分", "轻侧分"],
+      "fringeType": "单侧 C 弯逗号刘海",
+      "lengthZone": "中短发",
+      "curlScale": "轻微内弯",
+      "compatibilityTags": ["soft_parting", "fringe_correction", "lifestyle_softlight"],
+      "recommendedSceneIds": ["morning-window-softlight", "indoor-film-lifestyle", "cafe-candid-seat"]
+    },
     "referenceNotes": "逗号刘海要精致且轻盈，关键是前额单侧弯钩而不是整片卷曲。",
     "referenceSourceIds": ["gq-barber-language", "gq-best-short-haircuts", "gq-short-back-sides"]
   },

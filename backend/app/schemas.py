@@ -36,6 +36,19 @@ class TemplateItem(BaseModel):
 class TemplateCatalogResponse(BaseModel):
     hairstyles: list[TemplateItem]
     scenes: list[TemplateItem]
+    generation_backends: list["GenerationBackendOption"] = Field(default_factory=list)
+
+
+class GenerationBackendOption(BaseModel):
+    id: str
+    name: str
+    description: str
+    enabled: bool
+    supports_reference_image: bool = True
+    aspect_ratios: list[str] = Field(default_factory=list)
+    resolutions: list[str] = Field(default_factory=list)
+    default_aspect_ratio: str
+    default_resolution: str | None = None
 
 
 class RecommendationFaceShape(BaseModel):
@@ -64,6 +77,14 @@ class JobCreateRequest(BaseModel):
     upload_id: str = Field(min_length=1)
     hairstyle_id: str = Field(min_length=1)
     scene_id: str = Field(min_length=1)
+    generator_backend: Literal[
+        "seedream",
+        "nano_banana_pro",
+        "nano_banana_2",
+        "sora_image",
+    ] = "seedream"
+    aspect_ratio: str | None = "3:4"
+    resolution: str | None = "4K"
 
 
 class JobResponse(BaseModel):
@@ -78,6 +99,9 @@ class JobResponse(BaseModel):
     hairstyle_name: str
     scene_id: str
     scene_name: str
+    generator_backend: str | None = None
+    aspect_ratio: str | None = None
+    resolution: str | None = None
     error_code: str | None = None
     error_message: str | None = None
     created_at: str

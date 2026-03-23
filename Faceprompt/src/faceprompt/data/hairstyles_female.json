@@ -11,6 +11,28 @@
     "pairingAdvice": ["极简纯色棚拍", "画廊白盒子空间人像", "戏剧化强侧光人像"],
     "shotAdvice": "适合平视或略低机位近景，突出下颌线和发尾切线。",
     "expressionAction": ["冷静直视镜头", "轻轻转动下颌展示切线", "抬手按住耳侧轮廓"],
+    "controlProfile": {
+      "faceShapeFit": {
+        "best": ["oval", "heart", "long"],
+        "ok": ["diamond"],
+        "avoid": ["round", "square"]
+      },
+      "recommendedForeheads": ["narrow", "balanced"],
+      "recommendedJawlines": ["defined", "soft"],
+      "recommendedCheekbones": ["soft", "balanced"],
+      "foreheadStrategy": "根据脸型选择中分或利落偏分，保持额头边界干净，不做厚重刘海",
+      "templeCoverage": "耳前线条贴合太阳穴，保持平整切线",
+      "cheekSoftening": "尽量不加脸侧碎层，只用整齐切线塑造轮廓",
+      "jawlineExposure": "下颌线大面积露出，让切线和骨相一起成立",
+      "crownVolume": "低到中等，顶部服帖",
+      "sideVolume": "中等且整齐，依靠平齐重量线成形",
+      "partingOptions": ["中分", "利落偏分"],
+      "fringeType": "无刘海或极窄侧分刘海",
+      "lengthZone": "下巴到颈部短 bob",
+      "curlScale": "直发",
+      "compatibilityTags": ["precise_outline", "fashion_minimal", "hard_light_ready"],
+      "recommendedSceneIds": ["studio-solid-backdrop", "cold-metal-space", "gallery-white-cube"]
+    },
     "referenceNotes": "一刀切波波头的重点是干净重量线和极简平面感，不能做成柔软内扣 bob。",
     "referenceSourceIds": ["allure-bob-gallery", "allure-bob-haircut", "harpersbazaar-french-bob"]
   },
@@ -86,6 +108,28 @@
     "pairingAdvice": ["室内生活感胶片写真", "咖啡馆抓拍座位人像", "傍晚家居逆光人像"],
     "shotAdvice": "适合胸口以上近景和平视构图，保留锁骨和脸侧层次。",
     "expressionAction": ["温和看镜头", "抬手整理脸侧层次", "微侧身回看"],
+    "controlProfile": {
+      "faceShapeFit": {
+        "best": ["round", "square", "diamond"],
+        "ok": ["oval", "heart"],
+        "avoid": ["long"]
+      },
+      "recommendedForeheads": ["balanced", "broad"],
+      "recommendedJawlines": ["soft", "angular"],
+      "recommendedCheekbones": ["balanced", "prominent"],
+      "foreheadStrategy": "通过中分或轻偏分拉开额头比例，不做厚重齐刘海",
+      "templeCoverage": "脸侧高层次从颧骨上缘开始落下，柔化太阳穴空缺",
+      "cheekSoftening": "把高层次集中在颧骨到下颌区间，形成轻包脸",
+      "jawlineExposure": "下颌线保留若隐若现的边界，不要完全遮挡",
+      "crownVolume": "中等，顶部自然服帖",
+      "sideVolume": "中等，脸侧层次清楚但不过度膨胀",
+      "partingOptions": ["中分", "轻偏分"],
+      "fringeType": "长脸侧羽毛层次",
+      "lengthZone": "锁骨发",
+      "curlScale": "自然微弯",
+      "compatibilityTags": ["layered_face_framing", "soft_motion", "lifestyle_softlight"],
+      "recommendedSceneIds": ["indoor-film-lifestyle", "cafe-candid-seat", "morning-window-softlight"]
+    },
     "referenceNotes": "这类锁骨发的重点是高层次修脸和轻薄发尾，而不是厚重的一刀切中长发。",
     "referenceSourceIds": ["allure-bob-haircut", "allure-curtain-bangs", "masterclass-portrait-tips"]
   },
@@ -176,6 +220,28 @@
     "pairingAdvice": ["清晨窗边软光人像", "酒店房间松弛感人像", "咖啡馆抓拍座位人像"],
     "shotAdvice": "适合平视近景，突出高颅顶和两侧包脸效果。",
     "expressionAction": ["温柔看镜头", "抬手整理头顶发根", "轻轻侧头展示头包脸轮廓"],
+    "controlProfile": {
+      "faceShapeFit": {
+        "best": ["long", "square", "diamond"],
+        "ok": ["round", "oval"],
+        "avoid": ["heart"]
+      },
+      "recommendedForeheads": ["balanced", "broad"],
+      "recommendedJawlines": ["soft", "angular"],
+      "recommendedCheekbones": ["prominent", "balanced"],
+      "foreheadStrategy": "以中分或八字边缘控制露额比例，前区保持轻薄不要贴额",
+      "templeCoverage": "两侧卷度从太阳穴外侧自然包裹，形成头包脸",
+      "cheekSoftening": "利用柔和弧线把颧骨外缘包进整体轮廓",
+      "jawlineExposure": "下颌线只露出下半段，保留柔和包裹感",
+      "crownVolume": "中等偏高，发根明显支撑",
+      "sideVolume": "中等偏高，但卷度必须柔和",
+      "partingOptions": ["中分", "八字边缘分线"],
+      "fringeType": "轻薄八字边缘",
+      "lengthZone": "锁骨下到胸上中长发",
+      "curlScale": "柔和中大卷",
+      "compatibilityTags": ["soft_volume", "head_wrapping", "lifestyle_softlight"],
+      "recommendedSceneIds": ["morning-window-softlight", "indoor-film-lifestyle", "cafe-candid-seat"]
+    },
     "referenceNotes": "气垫烫的关键在发根支撑和柔和弧线，必须看起来自然且修饰脸型。",
     "referenceSourceIds": ["allure-curtain-bangs", "allure-jennifer-curtain", "masterclass-portrait-tips"]
   },

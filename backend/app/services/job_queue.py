@@ -3,12 +3,18 @@ from __future__ import annotations
 import logging
 import os
 import tempfile
+from threading import Lock
 from threading import Event, Thread
 
 from app.config import get_settings
 from app.services import repository, storage, templates
 from app.services.dispatch_queue import BaseJobQueue, build_job_queue
-from app.services.generation import BaseGenerator, GenerationContext, ImageGenerationError
+from app.services.generation import (
+    BaseGenerator,
+    GenerationContext,
+    ImageGenerationError,
+    build_generator,
+)
 from app.services.key_pool import ApiKeyLease, ApiKeyPool
 
 
@@ -30,6 +36,14 @@ class JobWorker:
         self.job_queue = job_queue or build_job_queue()
         self._stop_event = Event()
         self._threads: list[Thread] = []
+        self._runtime_lock = Lock()
+        settings = get_settings()
+        self._generator_cache: dict[str, BaseGenerator] = {
+            settings.image_generator_backend: generator,
+        }
+        self._key_pool_cache: dict[str, ApiKeyPool | None] = {
+            settings.image_generator_backend: key_pool,
+        }
 
     def start(self) -> None:
         if any(thread.is_alive() for thread in self._threads):
@@ -99,6 +113,11 @@ class JobWorker:
             error_message=None,
         )
         settings = get_settings()
+        prompt_payload = templates.parse_job_prompt_payload(job.get("prompt") or "")
+        generator_backend = str(
+            prompt_payload["output_options"].get("generator_backend") or settings.image_generator_backend
+        )
+        runtime_generator, runtime_key_pool = self._resolve_runtime(generator_backend)
         source_bytes = storage.read_file_bytes(upload["stored_path"])
         suffix = os.path.splitext(upload["stored_path"])[1] or ".jpg"
         source_temp = tempfile.NamedTemporaryFile(delete=False, suffix=suffix)
@@ -108,14 +127,14 @@ class JobWorker:
         source_path = source_temp.name
         preview_path: str | None = None
         attempted_key_ids: set[str] = set()
-        max_attempts = self.key_pool.active_size if self.key_pool is not None else 1
+        max_attempts = runtime_key_pool.active_size if runtime_key_pool is not None else 1
         last_generation_error: ImageGenerationError | None = None
         last_unexpected_error: Exception | None = None
 
         try:
             for _ in range(max_attempts):
-                provider_key = self._acquire_provider_key(attempted_key_ids)
-                if self.key_pool is not None and provider_key is None:
+                provider_key = self._acquire_provider_key(runtime_key_pool, attempted_key_ids)
+                if runtime_key_pool is not None and provider_key is None:
                     break
 
                 if provider_key is not None:
@@ -138,18 +157,23 @@ class JobWorker:
                     )
 
                 try:
-                    generation_result = self.generator.generate(
+                    generation_result = runtime_generator.generate(
                         source_image_path=source_path,
-                        prompt=job["prompt"],
+                        prompt=prompt_payload["full_prompt"],
                         context=GenerationContext(
                             hairstyle_name=hairstyle["name"],
                             scene_name=scene["name"],
+                            aspect_ratio=prompt_payload["output_options"]["aspect_ratio"],
+                            resolution=prompt_payload["output_options"]["resolution"],
+                            full_prompt=prompt_payload["full_prompt"],
+                            hairstyle_only_prompt=prompt_payload["hairstyle_only_prompt"],
+                            scene_only_prompt=prompt_payload["scene_only_prompt"],
                         ),
                         provider_key=provider_key,
                         on_preview=handle_preview,
                     )
-                    if self.key_pool is not None and provider_key is not None:
-                        self.key_pool.release_success(provider_key.key_id)
+                    if runtime_key_pool is not None and provider_key is not None:
+                        runtime_key_pool.release_success(provider_key.key_id)
 
                     result_bundle = storage.save_result_bundle(
                         job_id,
@@ -165,9 +189,9 @@ class JobWorker:
                     return
                 except ImageGenerationError as exc:
                     last_generation_error = exc
-                    if self.key_pool is not None and provider_key is not None:
+                    if runtime_key_pool is not None and provider_key is not None:
                         if exc.disable_key:
-                            self.key_pool.disable_key(
+                            runtime_key_pool.disable_key(
                                 provider_key.key_id,
                                 reason=str(exc),
                             )
@@ -177,7 +201,7 @@ class JobWorker:
                                 exc.code,
                             )
                         else:
-                            self.key_pool.release_error(
+                            runtime_key_pool.release_error(
                                 provider_key.key_id,
                                 cooldown_seconds=exc.retry_after_seconds,
                             )
@@ -194,7 +218,7 @@ class JobWorker:
                         return
 
                     if (
-                        self.key_pool is not None
+                        runtime_key_pool is not None
                         and provider_key is not None
                         and (exc.retryable or exc.disable_key)
                     ):
@@ -202,8 +226,8 @@ class JobWorker:
                     break
                 except Exception as exc:  # pragma: no cover
                     last_unexpected_error = exc
-                    if self.key_pool is not None and provider_key is not None:
-                        self.key_pool.release_error(
+                    if runtime_key_pool is not None and provider_key is not None:
+                        runtime_key_pool.release_error(
                             provider_key.key_id,
                             cooldown_seconds=settings.ark_key_cooldown_seconds,
                         )
@@ -219,7 +243,7 @@ class JobWorker:
                         )
                         return
 
-                    if self.key_pool is not None and provider_key is not None:
+                    if runtime_key_pool is not None and provider_key is not None:
                         continue
                     break
 
@@ -258,17 +282,43 @@ class JobWorker:
 
     def _acquire_provider_key(
         self,
+        key_pool: ApiKeyPool | None,
         attempted_key_ids: set[str],
     ) -> ApiKeyLease | None:
-        if self.key_pool is None:
+        if key_pool is None:
             return None
 
-        excluded = attempted_key_ids if len(attempted_key_ids) < self.key_pool.size else set()
+        excluded = attempted_key_ids if len(attempted_key_ids) < key_pool.size else set()
         while not self._stop_event.is_set():
-            lease = self.key_pool.acquire(
+            lease = key_pool.acquire(
                 excluded_key_ids=excluded,
                 timeout=0.5,
             )
             if lease is not None:
                 return lease
         return None
+
+    def _resolve_runtime(self, backend: str) -> tuple[BaseGenerator, ApiKeyPool | None]:
+        settings = get_settings()
+        with self._runtime_lock:
+            generator = self._generator_cache.get(backend)
+            if generator is None:
+                generator = build_generator(backend)
+                self._generator_cache[backend] = generator
+
+            key_pool = self._key_pool_cache.get(backend)
+            if backend not in self._key_pool_cache:
+                if (
+                    not settings.use_mock_generator
+                    and getattr(generator, "supports_key_pool", False)
+                    and settings.ark_api_keys
+                ):
+                    key_pool = ApiKeyPool(
+                        settings.ark_api_keys,
+                        default_cooldown_seconds=settings.ark_key_cooldown_seconds,
+                    )
+                else:
+                    key_pool = None
+                self._key_pool_cache[backend] = key_pool
+
+            return generator, key_pool

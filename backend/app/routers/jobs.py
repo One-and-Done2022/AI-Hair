@@ -2,8 +2,10 @@ from __future__ import annotations
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 
+from app.config import get_settings
 from app.dependencies import get_current_user
 from app.schemas import JobCreateRequest, JobResponse
+from app.services.generation import ImageGenerationError, build_generator
 from app.services import repository, retention, storage, templates
 
 
@@ -13,6 +15,7 @@ router = APIRouter(prefix="/jobs", tags=["jobs"])
 def _job_response(request: Request, job: dict) -> JobResponse:
     hairstyle = templates.get_hairstyle(job["hairstyle_id"])
     scene = templates.get_scene(job["scene_id"])
+    prompt_payload = templates.parse_job_prompt_payload(job.get("prompt") or "")
     upload = repository.get_upload(job["upload_id"])
     base_url = str(request.base_url).rstrip("/")
     upload_url = (
@@ -41,6 +44,9 @@ def _job_response(request: Request, job: dict) -> JobResponse:
         hairstyle_name=hairstyle["name"] if hairstyle else job["hairstyle_id"],
         scene_id=job["scene_id"],
         scene_name=scene["name"] if scene else job["scene_id"],
+        generator_backend=prompt_payload["output_options"]["generator_backend"],
+        aspect_ratio=prompt_payload["output_options"]["aspect_ratio"],
+        resolution=prompt_payload["output_options"]["resolution"],
         error_code=job.get("error_code"),
         error_message=job.get("error_message"),
         created_at=job["created_at"],
@@ -63,18 +69,30 @@ def create_job(
     if hairstyle is None or scene is None:
         raise HTTPException(status_code=400, detail="Invalid hairstyle or scene template.")
 
-    prompt = templates.build_prompt(
-        hairstyle,
-        scene,
-        seed_source=f"{payload.upload_id}:{payload.hairstyle_id}:{payload.scene_id}",
-    )
+    try:
+        settings = get_settings()
+        if payload.generator_backend == settings.image_generator_backend:
+            selected_generator = request.app.state.generator
+        else:
+            selected_generator = build_generator(payload.generator_backend)
+        prompt = templates.build_job_prompt_payload(
+            hairstyle,
+            scene,
+            generator_backend=payload.generator_backend,
+            aspect_ratio=payload.aspect_ratio,
+            resolution=payload.resolution,
+            seed_source=f"{payload.upload_id}:{payload.hairstyle_id}:{payload.scene_id}",
+        )
+    except (ValueError, ImageGenerationError) as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
     job = repository.create_job(
         user_id=current_user["id"],
         upload_id=payload.upload_id,
         hairstyle_id=payload.hairstyle_id,
         scene_id=payload.scene_id,
         prompt=prompt,
-        model_name=request.app.state.generator.model_name,
+        model_name=selected_generator.model_name,
     )
     request.app.state.job_worker.enqueue(job["id"])
     return _job_response(request, job)

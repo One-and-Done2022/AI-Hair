@@ -4,7 +4,19 @@ import argparse
 import sys
 from typing import Callable
 
-from .catalog import catalog_summary, list_records, render_prompt, validate_catalog
+from .catalog import (
+    VALID_CHEEKBONES,
+    VALID_FACE_SHAPES,
+    VALID_FOREHEAD_TYPES,
+    VALID_JAWLINES,
+    catalog_summary,
+    list_records,
+    recommend_pairings,
+    render_hairstyle_only_prompt,
+    render_prompt,
+    render_scene_only_prompt,
+    validate_catalog,
+)
 
 STYLE_LINE_LABELS = {
     "realistic_editorial": "真实高级写真",
@@ -39,7 +51,39 @@ def _build_parser() -> argparse.ArgumentParser:
     render_parser.add_argument("--expression")
     render_parser.add_argument("--subject-action")
     render_parser.add_argument("--hairstyle-action")
+    render_parser.add_argument("--face-shape", choices=sorted(VALID_FACE_SHAPES))
+    render_parser.add_argument("--forehead", choices=sorted(VALID_FOREHEAD_TYPES))
+    render_parser.add_argument("--jawline", choices=sorted(VALID_JAWLINES))
+    render_parser.add_argument("--cheekbone", choices=sorted(VALID_CHEEKBONES))
     render_parser.add_argument("--seed-source")
+
+    hairstyle_only_parser = subparsers.add_parser(
+        "render-hairstyle-only",
+        help="Render a hairstyle-only prompt that preserves the original image",
+    )
+    hairstyle_only_parser.add_argument("--hairstyle", required=True)
+
+    scene_only_parser = subparsers.add_parser(
+        "render-scene-only",
+        help="Render a scene-only prompt that preserves face and current hairstyle",
+    )
+    scene_only_parser.add_argument("--scene", required=True)
+    scene_only_parser.add_argument("--outfit")
+    scene_only_parser.add_argument("--expression")
+    scene_only_parser.add_argument("--subject-action")
+    scene_only_parser.add_argument("--seed-source")
+
+    recommend_parser = subparsers.add_parser("recommend", help="Recommend hairstyle and scene pairings")
+    recommend_parser.add_argument("--gender", required=True, choices=["male", "female"])
+    recommend_parser.add_argument("--face-shape", required=True, choices=sorted(VALID_FACE_SHAPES))
+    recommend_parser.add_argument("--forehead", choices=sorted(VALID_FOREHEAD_TYPES))
+    recommend_parser.add_argument("--jawline", choices=sorted(VALID_JAWLINES))
+    recommend_parser.add_argument("--cheekbone", choices=sorted(VALID_CHEEKBONES))
+    recommend_parser.add_argument(
+        "--style-line",
+        choices=["realistic_editorial", "fashion_editorial"],
+    )
+    recommend_parser.add_argument("--limit", type=int, default=5)
 
     subparsers.add_parser("interactive", help="Interactively choose gender, scene, and hairstyle")
 
@@ -161,6 +205,10 @@ def main(argv: list[str] | None = None) -> int:
             "expression_override": args.expression,
             "subject_action_override": args.subject_action,
             "hairstyle_action_override": args.hairstyle_action,
+            "face_shape": args.face_shape,
+            "forehead": args.forehead,
+            "jawline": args.jawline,
+            "cheekbone": args.cheekbone,
             "seed_source": args.seed_source,
         }
         print(
@@ -170,6 +218,45 @@ def main(argv: list[str] | None = None) -> int:
                 **render_kwargs,
             )
         )
+        return 0
+
+    if args.command == "render-hairstyle-only":
+        print(render_hairstyle_only_prompt(args.hairstyle))
+        return 0
+
+    if args.command == "render-scene-only":
+        print(
+            render_scene_only_prompt(
+                args.scene,
+                outfit_override=args.outfit,
+                expression_override=args.expression,
+                subject_action_override=args.subject_action,
+                seed_source=args.seed_source,
+            )
+        )
+        return 0
+
+    if args.command == "recommend":
+        recommendations = recommend_pairings(
+            gender=args.gender,
+            face_shape=args.face_shape,
+            forehead=args.forehead,
+            jawline=args.jawline,
+            cheekbone=args.cheekbone,
+            style_line=args.style_line,
+            limit=args.limit,
+        )
+        if not recommendations:
+            print("没有可用的试点推荐结果。", file=sys.stderr)
+            return 1
+
+        for index, item in enumerate(recommendations, start=1):
+            print(
+                f"{index}. 发型：{item.hairstyleTitle} ({item.hairstyleId}) | "
+                f"场景：{item.sceneTitle} ({item.sceneId}) | 评分：{item.totalScore}"
+            )
+            print(f"   理由：{'；'.join(item.reasons)}")
+            print(f"   命令：{item.exampleCommand}")
         return 0
 
     if args.command == "interactive":
