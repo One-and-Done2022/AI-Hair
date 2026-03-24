@@ -1,0 +1,137 @@
+<view class="screen scene-tool-screen">
+  <view class="scene-tool-head">
+    <view class="title scene-tool-title">场景草案工具</view>
+    <view class="subtitle scene-tool-subtitle">
+      上传参考场景图，自动拆出 scene_only block，并生成可追加到 scenes.json 的 scene_draft。
+    </view>
+  </view>
+
+  <view class="panel tool-upload-card">
+    <view wx:if="{{selectedImage}}" class="preview-shell">
+      <view class="preview-card" bindtap="previewImage">
+        <image class="preview-image" src="{{selectedImage}}" mode="aspectFill"></image>
+      </view>
+      <view class="preview-actions">
+        <button class="secondary-button compact-button" bindtap="chooseImage">重选图片</button>
+        <button class="secondary-button compact-button" bindtap="clearImage">清空结果</button>
+      </view>
+    </view>
+
+    <view wx:else class="upload-stage" bindtap="chooseImage">
+      <view class="upload-stage-frame">
+        <view class="upload-stage-icon">+</view>
+        <view class="upload-stage-title">上传场景参考图</view>
+        <view class="upload-stage-copy">支持 JPG、PNG，建议选择构图完整的热门场景图</view>
+      </view>
+    </view>
+  </view>
+
+  <view class="panel tool-form-card">
+    <view class="section-title">草案控制</view>
+
+    <view class="form-group">
+      <view class="form-label">场景标题</view>
+      <input
+        class="form-input"
+        placeholder="可留空，系统自动命名"
+        value="{{titleInput}}"
+        maxlength="40"
+        bindinput="handleTitleInput"
+      />
+    </view>
+
+    <view class="form-group">
+      <view class="form-label">风格线</view>
+      <view class="style-row">
+        <view
+          class="style-pill {{selectedStyleLine === 'realistic_editorial' ? 'active' : ''}}"
+          data-value="realistic_editorial"
+          bindtap="selectStyleLine"
+        >
+          写实写真
+        </view>
+        <view
+          class="style-pill {{selectedStyleLine === 'fashion_editorial' ? 'active' : ''}}"
+          data-value="fashion_editorial"
+          bindtap="selectStyleLine"
+        >
+          时尚大片
+        </view>
+      </view>
+    </view>
+
+    <view class="form-group">
+      <view class="form-label">细节标签</view>
+      <textarea
+        class="form-textarea"
+        placeholder="可留空；用分号分隔，如 室内；窗边；自然光"
+        value="{{detailTagsInput}}"
+        maxlength="120"
+        auto-height="true"
+        bindinput="handleDetailTagsInput"
+      />
+    </view>
+
+    <view class="form-group">
+      <view class="form-label">发型搭配建议</view>
+      <textarea
+        class="form-textarea"
+        placeholder="可留空；用分号分隔，如 法式慵懒卷；蓬松锁骨发"
+        value="{{pairingAdviceInput}}"
+        maxlength="160"
+        auto-height="true"
+        bindinput="handlePairingAdviceInput"
+      />
+    </view>
+
+    <view class="form-group">
+      <view class="form-label">备注说明</view>
+      <textarea
+        class="form-textarea"
+        placeholder="可留空；会写入 referenceNotes"
+        value="{{referenceNotesInput}}"
+        maxlength="180"
+        auto-height="true"
+        bindinput="handleReferenceNotesInput"
+      />
+    </view>
+
+    <button
+      class="primary-button wide-button"
+      bindtap="analyzeScene"
+      loading="{{analyzing}}"
+      disabled="{{!selectedImage || analyzing}}"
+    >
+      {{selectedImage ? '生成场景草案' : '先上传参考图'}}
+    </button>
+  </view>
+
+  <view wx:if="{{uploadId || modelName}}" class="panel tool-meta-card">
+    <view wx:if="{{uploadId}}" class="meta-line">upload_id：{{uploadId}}</view>
+    <view wx:if="{{modelName}}" class="meta-line">模型：{{modelName}}</view>
+  </view>
+
+  <view wx:if="{{blockItems.length}}" class="panel block-card">
+    <view class="card-head">
+      <view class="section-title">拆解结果</view>
+      <view class="mini-link" bindtap="copyFullResponse">复制完整响应</view>
+    </view>
+    <view class="block-list">
+      <view wx:for="{{blockItems}}" wx:key="key" class="block-item">
+        <view class="block-label">{{item.label}}</view>
+        <view class="block-value">{{item.value}}</view>
+      </view>
+    </view>
+  </view>
+
+  <view wx:if="{{sceneDraftJson}}" class="panel json-card">
+    <view class="card-head">
+      <view class="section-title">scene_draft JSON</view>
+      <view class="mini-link" bindtap="copySceneDraft">复制 JSON</view>
+    </view>
+    <view class="json-box">{{sceneDraftJson}}</view>
+    <view class="tool-note">
+      复制后可在服务器执行：`python3 scripts/add_scene_draft.py --input your-scene.json`
+    </view>
+  </view>
+</view>

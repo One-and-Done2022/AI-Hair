@@ -117,6 +117,10 @@ class Settings:
     sora_image_api_key: str
     sora_image_base_url: str
     sora_image_model: str
+    image_understanding_api_key: str
+    image_understanding_base_url: str
+    image_understanding_model: str
+    image_understanding_timeout_seconds: int
     job_worker_concurrency: int
     queue_backend: str
     redis_url: str
@@ -278,6 +282,19 @@ def get_settings() -> Settings:
         sora_image_model=os.getenv(
             "SORA_IMAGE_MODEL", "sora_image"
         ).strip(),
+        image_understanding_api_key=os.getenv(
+            "IMAGE_UNDERSTANDING_API_KEY", ""
+        ).strip(),
+        image_understanding_base_url=os.getenv(
+            "IMAGE_UNDERSTANDING_BASE_URL", "https://api.apiyi.com/v1"
+        ).strip().rstrip("/"),
+        image_understanding_model=os.getenv(
+            "IMAGE_UNDERSTANDING_MODEL", "gemini-3-pro-preview"
+        ).strip(),
+        image_understanding_timeout_seconds=max(
+            30,
+            _env_int("IMAGE_UNDERSTANDING_TIMEOUT_SECONDS", 120),
+        ),
         job_worker_concurrency=max(
             1,
             _env_int("JOB_WORKER_CONCURRENCY", default_worker_concurrency),

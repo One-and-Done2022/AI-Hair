@@ -73,6 +73,65 @@ class RecommendationResponse(BaseModel):
     recommended_scenes: list[RecommendationItem] = Field(default_factory=list)
 
 
+class SceneUnderstandingRequest(BaseModel):
+    upload_id: str = Field(min_length=1)
+    scene_id: str | None = None
+    title: str | None = None
+    style_line: Literal["realistic_editorial", "fashion_editorial"] | None = None
+    detail_tags: list[str] = Field(default_factory=list)
+    pairing_advice: list[str] = Field(default_factory=list)
+    reference_source_ids: list[str] = Field(default_factory=list)
+    reference_notes: str | None = None
+
+
+class SceneUnderstandingBlocks(BaseModel):
+    shot: str
+    scene_environment: str
+    scene_lighting: str
+    scene_mood: str
+    expression: str
+    subject_action: str
+    outfit: str
+    scene_constraints: str
+
+
+class SceneControlProfile(BaseModel):
+    windLevel: str
+    humidityLook: str
+    backgroundComplexity: str
+    lightingHardness: str
+    mirrorRisk: str
+    compatibleHairstyleTags: list[str] = Field(default_factory=list)
+    recommendedHairstyleIds: list[str] = Field(default_factory=list)
+
+
+class SceneDraft(BaseModel):
+    id: str
+    title: str
+    styleLine: str
+    summary: str
+    environment: str
+    lighting: str
+    styleMood: str
+    detailTags: list[str] = Field(default_factory=list)
+    expressions: list[str] = Field(default_factory=list)
+    actions: list[str] = Field(default_factory=list)
+    outfitHints: list[str] = Field(default_factory=list)
+    pairingAdvice: list[str] = Field(default_factory=list)
+    shotAdvice: str
+    constraints: list[str] = Field(default_factory=list)
+    controlProfile: SceneControlProfile
+    referenceNotes: str
+    referenceSourceIds: list[str] = Field(default_factory=list)
+
+
+class SceneUnderstandingResponse(BaseModel):
+    upload_id: str
+    model_name: str
+    blocks: SceneUnderstandingBlocks
+    scene_draft: SceneDraft
+
+
 class JobCreateRequest(BaseModel):
     upload_id: str = Field(min_length=1)
     hairstyle_id: str = Field(min_length=1)

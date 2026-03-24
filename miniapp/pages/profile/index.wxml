@@ -55,6 +55,10 @@
         <view class="tool-label">作品记录</view>
         <view class="tool-arrow">›</view>
       </view>
+      <view class="tool-row" bindtap="openSceneTool">
+        <view class="tool-label">场景草案工具</view>
+        <view class="tool-arrow">›</view>
+      </view>
       <view class="tool-row" bindtap="showComingSoon" data-label="帮助反馈">
         <view class="tool-label">帮助反馈</view>
         <view class="tool-arrow">›</view>

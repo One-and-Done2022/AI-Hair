@@ -51,6 +51,12 @@ Page({
     });
   },
 
+  openSceneTool() {
+    wx.navigateTo({
+      url: "/pages/scene-tool/index"
+    });
+  },
+
   showQuotaHelp() {
     wx.showModal({
       title: "额度说明",

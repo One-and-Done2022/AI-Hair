@@ -104,3 +104,27 @@ python3 scripts/load_test.py \
 - `.env`、`storage/`、本地样例图、生成图没有被加入版本控制
 - `pytest -q` 通过
 - 小程序界面改动附带截图
+
+## 场景草案工具
+
+后端已支持把场景参考图拆成 `scene_only` block，并返回可直接落到 `scenes.json` 的 `scene_draft`。
+
+小程序侧入口：
+
+- `我的 -> 场景草案工具`
+
+服务端落库脚本：
+
+```bash
+python3 scripts/add_scene_draft.py --input /path/to/scene-response.json
+```
+
+如果输入文件是完整接口响应，脚本会自动提取其中的 `scene_draft`；如果已经是纯 `scene_draft` JSON，也可以直接使用。
+
+需要立即同步到后端数据目录时：
+
+```bash
+python3 scripts/add_scene_draft.py --input /path/to/scene-response.json --sync
+```
+
+如果你当前的 `faceprompt-sync.service` 已经在后台监听，通常只写入 `Faceprompt/src/faceprompt/data/scenes.json` 就够了，不必额外执行 `--sync`。

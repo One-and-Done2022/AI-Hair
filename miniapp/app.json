@@ -3,6 +3,7 @@
     "pages/index/index",
     "pages/history/index",
     "pages/profile/index",
+    "pages/scene-tool/index",
     "pages/capture/index",
     "pages/templates/index",
     "pages/scenes/index",

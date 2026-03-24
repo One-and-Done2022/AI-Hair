@@ -1515,3 +1515,95 @@ def test_strict_face_detection_rejects_multiple_prominent_faces(monkeypatch):
         storage.validate_upload_bytes(_build_test_image(), "image/png")
 
     assert excinfo.value.code == "multiple_faces"
+
+
+def test_scene_understanding_endpoint_returns_blocks_and_scene_draft(tmp_path, monkeypatch):
+    app = _build_app(tmp_path, monkeypatch)
+
+    class FakeImageUnderstandingService:
+        def __init__(self):
+            self.model_name = "gemini-3-pro-preview"
+
+        def extract_scene_blocks(self, image_bytes: bytes):
+            assert image_bytes
+            from app.services.image_understanding import SceneUnderstandingResult
+
+            return SceneUnderstandingResult(
+                blocks={
+                    "shot": "3:4 竖构图，胸口以上近景，平视镜头。",
+                    "scene_environment": "室内留白墙面与木质家具背景，窗边区域干净克制。",
+                    "scene_lighting": "窗边柔和自然光从侧前方进入，整体亮部通透。",
+                    "scene_mood": "安静、松弛、生活感高级。",
+                    "expression": "温和看向镜头。",
+                    "subject_action": "靠坐在椅子上轻微侧身。",
+                    "outfit": "米白色针织上衣。",
+                    "scene_constraints": "背景保持简洁留白；不要加入复杂前景。",
+                },
+                raw_response="{}",
+                model_name="gemini-3-pro-preview",
+            )
+
+    monkeypatch.setattr(
+        "app.routers.scene_understanding.image_understanding.ImageUnderstandingService",
+        FakeImageUnderstandingService,
+    )
+
+    with TestClient(app) as client:
+        login = client.post("/api/auth/wechat/login", json={"code": "dev-test"})
+        assert login.status_code == 200
+        token = login.json()["token"]
+        headers = {"Authorization": f"Bearer {token}"}
+
+        upload = client.post(
+            "/api/uploads",
+            headers=headers,
+            files={"file": ("scene-ref.png", _build_test_image(), "image/png")},
+        )
+        assert upload.status_code == 200
+        upload_id = upload.json()["upload_id"]
+
+        response = client.post(
+            "/api/scene-understanding",
+            headers=headers,
+            json={
+                "upload_id": upload_id,
+                "title": "窗边安静人像",
+                "detail_tags": ["室内", "窗边", "自然光"],
+                "pairing_advice": ["法式慵懒卷", "蓬松锁骨发"],
+            },
+        )
+
+        assert response.status_code == 200
+        payload = response.json()
+        assert payload["upload_id"] == upload_id
+        assert payload["model_name"] == "gemini-3-pro-preview"
+        assert payload["blocks"]["scene_environment"].startswith("室内留白墙面")
+        assert payload["scene_draft"]["title"] == "窗边安静人像"
+        assert payload["scene_draft"]["detailTags"] == ["室内", "窗边", "自然光"]
+        assert payload["scene_draft"]["pairingAdvice"] == ["法式慵懒卷", "蓬松锁骨发"]
+        assert payload["scene_draft"]["controlProfile"]["lightingHardness"] == "soft"
+
+
+def test_scene_understanding_endpoint_requires_owned_upload(tmp_path, monkeypatch):
+    app = _build_app(tmp_path, monkeypatch)
+
+    with TestClient(app) as client:
+        first_login = client.post("/api/auth/wechat/login", json={"code": "dev-user-1"})
+        second_login = client.post("/api/auth/wechat/login", json={"code": "dev-user-2"})
+        headers_one = {"Authorization": f"Bearer {first_login.json()['token']}"}
+        headers_two = {"Authorization": f"Bearer {second_login.json()['token']}"}
+
+        upload = client.post(
+            "/api/uploads",
+            headers=headers_one,
+            files={"file": ("scene-ref.png", _build_test_image(), "image/png")},
+        )
+        assert upload.status_code == 200
+
+        response = client.post(
+            "/api/scene-understanding",
+            headers=headers_two,
+            json={"upload_id": upload.json()["upload_id"]},
+        )
+
+        assert response.status_code == 404
