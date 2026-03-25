@@ -128,3 +128,74 @@ python3 scripts/add_scene_draft.py --input /path/to/scene-response.json --sync
 ```
 
 如果你当前的 `faceprompt-sync.service` 已经在后台监听，通常只写入 `Faceprompt/src/faceprompt/data/scenes.json` 就够了，不必额外执行 `--sync`。
+
+## 内部场景审核流水线
+
+仓库已内置一套内部自动化流程，用于把热门场景参考图转换成“可审核的官方场景候选”。
+
+### 1. 丢图进 inbox
+
+把参考图放进：
+
+```bash
+storage/scene_pipeline/inbox/
+```
+
+审核示例人物固定使用：
+
+- `assets/male.jpg`
+- `assets/female.jpg`
+
+### 2. 生成审核包
+
+```bash
+set -a && source .env && set +a
+python3 scripts/scene_pipeline.py
+```
+
+它会自动完成：
+
+- 用 Gemini 3 Pro 理解场景图并提取 block
+- 生成 `scene_draft.json`
+- 用男女两张官方示例人物图分别跑一次 `scene_only` 审核图
+
+输出目录：
+
+```bash
+storage/scene_pipeline/review/<scene_id>/
+```
+
+其中会包含：
+
+- `source.*`
+- `blocks.json`
+- `scene_draft.json`
+- `scene_only_prompt.txt`
+- `review_male.*`
+- `review_female.*`
+- `metadata.json`
+
+### 3. 审核通过或驳回
+
+通过并写入官方场景库：
+
+```bash
+python3 scripts/review_scene_pipeline.py approve <scene_id> --sync
+```
+
+如果需要同步后顺带重启后端：
+
+```bash
+python3 scripts/review_scene_pipeline.py approve <scene_id> --sync --restart
+```
+
+驳回：
+
+```bash
+python3 scripts/review_scene_pipeline.py reject <scene_id> --reason "审核图不稳定"
+```
+
+归档目录：
+
+- 通过：`storage/scene_pipeline/approved/`
+- 驳回：`storage/scene_pipeline/rejected/`

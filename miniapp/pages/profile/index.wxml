@@ -55,7 +55,7 @@
         <view class="tool-label">作品记录</view>
         <view class="tool-arrow">›</view>
       </view>
-      <view class="tool-row" bindtap="openSceneTool">
+      <view wx:if="{{enableInternalSceneTool}}" class="tool-row" bindtap="openSceneTool">
         <view class="tool-label">场景草案工具</view>
         <view class="tool-arrow">›</view>
       </view>

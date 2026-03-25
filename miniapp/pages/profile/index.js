@@ -1,6 +1,7 @@
 const { ensureLogin, clearLogin } = require("../../utils/auth");
 const { showError } = require("../../utils/errors");
 const { request } = require("../../utils/request");
+const { enableInternalSceneTool } = require("../../utils/config");
 
 function formatJoinedAt(value) {
   if (!value) {
@@ -19,7 +20,8 @@ function formatJoinedAt(value) {
 Page({
   data: {
     loading: false,
-    profile: null
+    profile: null,
+    enableInternalSceneTool
   },
 
   async onShow() {

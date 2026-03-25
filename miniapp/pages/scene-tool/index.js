@@ -1,6 +1,7 @@
 const { ensureLogin } = require("../../utils/auth");
 const { showError } = require("../../utils/errors");
 const { request, uploadFile } = require("../../utils/request");
+const { enableInternalSceneTool } = require("../../utils/config");
 
 const BLOCK_LABELS = {
   shot: "构图景别",
@@ -48,6 +49,24 @@ Page({
   },
 
   async onLoad() {
+    if (!enableInternalSceneTool) {
+      wx.showToast({
+        title: "该工具暂未开放",
+        icon: "none"
+      });
+      setTimeout(() => {
+        wx.navigateBack({
+          delta: 1,
+          fail: () => {
+            wx.switchTab({
+              url: "/pages/profile/index"
+            });
+          }
+        });
+      }, 300);
+      return;
+    }
+
     try {
       await ensureLogin();
     } catch (error) {

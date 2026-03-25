@@ -607,6 +607,10 @@ def _build_scene_template(raw: dict) -> dict:
     }
 
 
+def build_scene_template_from_record(raw: dict) -> dict:
+    return _build_scene_template(raw)
+
+
 def _build_hairstyle_template(raw: dict) -> dict:
     gender = raw["gender"]
     style_line = raw["styleLine"]
