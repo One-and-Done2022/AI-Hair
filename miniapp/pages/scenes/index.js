@@ -20,6 +20,13 @@ function decodeText(value) {
   }
 }
 
+function buildHairstyleMeta(item) {
+  if (!item) {
+    return "";
+  }
+  return item.category_label || item.style_line_label || "";
+}
+
 const STYLE_LINE_OPTIONS = [
   { id: "all", label: "全部场景" },
   { id: "realistic_editorial", label: "写实写真" },
@@ -57,6 +64,7 @@ Page({
   data: {
     loading: true,
     selectedHairstyle: null,
+    selectedHairstyleMeta: "",
     selectedGender: "",
     scenes: [],
     selectedSceneId: "",
@@ -105,6 +113,7 @@ Page({
               name: this.hairstyleName,
               gender: this.gender
             },
+        selectedHairstyleMeta: buildHairstyleMeta(selectedHairstyle),
         selectedGender: selectedHairstyle ? selectedHairstyle.gender : this.gender,
         scenes: decoratedScenes,
         selectedStyleLine,

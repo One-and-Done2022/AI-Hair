@@ -14,6 +14,15 @@
     "pairingAdvice": ["松散层次长发", "自然蓬松中短层次", "低马尾松散版"],
     "shotAdvice": "3:4 竖构图，胸口以上近景，平视或轻微俯拍，允许少量门框前景遮挡",
     "constraints": ["背景元素保持精简且有呼吸感", "窗光必须自然柔和", "人物与木质环境基调保持统一"],
+    "controlProfile": {
+      "windLevel": "still",
+      "humidityLook": "balanced",
+      "backgroundComplexity": "low",
+      "lightingHardness": "soft",
+      "mirrorRisk": "none",
+      "compatibleHairstyleTags": ["lifestyle_softlight", "soft_motion", "layered_face_framing"],
+      "recommendedHairstyleIds": ["female-collarbone-xinzhilei", "female-korean-air-cushion-perm", "male-korean-37-part"]
+    },
     "referenceNotes": "前景虚化和木色静物是生活感高级人像的关键，背景不要堆得过满。",
     "referenceSourceIds": ["masterclass-portrait-tips", "masterclass-annie-natural-light", "masterclass-environmental-portrait"]
   },
@@ -32,6 +41,15 @@
     "pairingAdvice": ["空气刘海长发", "低层次黑长直", "韩系逗号刘海"],
     "shotAdvice": "3:4 竖构图，胸口以上近景，平视或略微偏侧，保留窗框线条",
     "constraints": ["窗边留白区域要足够干净", "清晨光不应过黄", "发丝边缘高光要柔和"],
+    "controlProfile": {
+      "windLevel": "still",
+      "humidityLook": "balanced",
+      "backgroundComplexity": "low",
+      "lightingHardness": "soft",
+      "mirrorRisk": "none",
+      "compatibleHairstyleTags": ["lifestyle_softlight", "soft_volume", "face_framing", "fringe_correction"],
+      "recommendedHairstyleIds": ["female-korean-air-cushion-perm", "male-korean-37-part", "male-comma-bangs"]
+    },
     "referenceNotes": "窗边软光适合突出眼神与皮肤，不需要复杂道具就能有故事感。",
     "referenceSourceIds": ["masterclass-jimmy-natural-light", "masterclass-tyler-natural-light", "masterclass-portrait-tips"]
   },
@@ -68,6 +86,15 @@
     "pairingAdvice": ["锁骨发外翻层次", "美式前刺", "中分 curtain"],
     "shotAdvice": "3:4 竖构图，胸口以上近景，桌面元素位于画面下沿，背景轻虚化",
     "constraints": ["混合光不能导致肤色脏灰", "桌面道具只保留少量高质感物件", "人物始终是画面核心"],
+    "controlProfile": {
+      "windLevel": "low",
+      "humidityLook": "balanced",
+      "backgroundComplexity": "medium",
+      "lightingHardness": "soft",
+      "mirrorRisk": "low",
+      "compatibleHairstyleTags": ["urban_lifestyle", "soft_parting", "layered_face_framing"],
+      "recommendedHairstyleIds": ["female-collarbone-xinzhilei", "male-korean-37-part", "male-comma-bangs"]
+    },
     "referenceNotes": "桌面器物和窗边座位最容易建立真实抓拍语境，但需要控制反光和杂色。",
     "referenceSourceIds": ["masterclass-portrait-tips", "masterclass-jimmy-natural-light", "masterclass-environmental-portrait"]
   },
@@ -194,6 +221,15 @@
     "pairingAdvice": ["美式前刺", "法式 bob", "slick back"],
     "shotAdvice": "3:4 竖构图，胸口以上近景，平视或略低机位，背景纯净无杂物",
     "constraints": ["背景必须绝对干净", "光线层次要利落", "服装和发型不能互相抢主次"],
+    "controlProfile": {
+      "windLevel": "still",
+      "humidityLook": "dry",
+      "backgroundComplexity": "low",
+      "lightingHardness": "balanced",
+      "mirrorRisk": "none",
+      "compatibleHairstyleTags": ["fashion_minimal", "hard_light_ready", "precise_outline"],
+      "recommendedHairstyleIds": ["female-blunt-bob", "male-forward-spikes"]
+    },
     "referenceNotes": "纯色棚拍是发型识别最稳定的场景，适合做精确轮廓展示。",
     "referenceSourceIds": ["masterclass-annie-working-light", "masterclass-portrait-tips", "masterclass-environmental-portrait"]
   },
@@ -212,6 +248,15 @@
     "pairingAdvice": ["quiff", "wet straight", "high ponytail wisps"],
     "shotAdvice": "3:4 竖构图，胸口以上近景，镜头略低，保留少量金属线条",
     "constraints": ["金属反光不能压过脸部", "色温维持偏冷但肤色仍需健康", "背景结构尽量简洁"],
+    "controlProfile": {
+      "windLevel": "still",
+      "humidityLook": "dry",
+      "backgroundComplexity": "low",
+      "lightingHardness": "hard",
+      "mirrorRisk": "low",
+      "compatibleHairstyleTags": ["hard_light_ready", "precise_outline", "sharp_texture"],
+      "recommendedHairstyleIds": ["female-blunt-bob", "male-forward-spikes"]
+    },
     "referenceNotes": "冷金属空间最适合展现锋利发型和轮廓分明的五官。",
     "referenceSourceIds": ["masterclass-annie-working-light", "masterclass-portrait-tips", "masterclass-environmental-portrait"]
   },
@@ -248,6 +293,15 @@
     "pairingAdvice": ["american spiky", "wolf cut", "wet blunt bob"],
     "shotAdvice": "3:4 竖构图，胸口以上近景，背景车灯和霓虹做散景",
     "constraints": ["霓虹色不能污染肤色", "背景必须虚化到不喧宾夺主", "主光优先保证五官清晰"],
+    "controlProfile": {
+      "windLevel": "low",
+      "humidityLook": "balanced",
+      "backgroundComplexity": "medium",
+      "lightingHardness": "balanced",
+      "mirrorRisk": "low",
+      "compatibleHairstyleTags": ["urban_night", "sharp_texture", "soft_motion"],
+      "recommendedHairstyleIds": ["male-forward-spikes", "female-collarbone-xinzhilei"]
+    },
     "referenceNotes": "霓虹夜景适合轮廓明确、纹理强的发型，但主脸光必须稳定。",
     "referenceSourceIds": ["masterclass-portrait-tips", "masterclass-annie-working-light", "masterclass-environmental-portrait"]
   },

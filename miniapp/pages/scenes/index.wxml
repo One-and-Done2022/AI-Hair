@@ -25,7 +25,7 @@
     <view class="combo-body">
       <view class="combo-label">当前组合</view>
       <view class="combo-title">{{selectedHairstyle ? selectedHairstyle.name : '未选择发型'}}</view>
-      <view class="combo-meta">{{selectedHairstyle ? selectedHairstyle.style_line_label : '待选择'}}</view>
+      <view class="combo-meta">{{selectedHairstyleMeta || '待选择'}}</view>
       <view class="combo-current">场景：{{selectedSceneName || '未选择'}}</view>
     </view>
     <view class="combo-link" bindtap="goBackStep">返回</view>

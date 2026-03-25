@@ -9,30 +9,44 @@ function findById(items, id) {
   return items.find((item) => item.id === id) || null;
 }
 
-const STYLE_LINE_OPTIONS = [
-  { id: "all", label: "全部风格" },
-  { id: "realistic_editorial", label: "写实写真" },
-  { id: "fashion_editorial", label: "时尚大片" }
-];
-
 function decorateTemplate(item) {
   return {
     ...item,
-    shortTags: (item.tags || []).slice(0, 2),
     primaryTag: (item.tags || [])[0] || ""
   };
 }
 
-function filterHairstyles(hairstyles, gender, styleLine = "all") {
+function filterHairstyles(hairstyles, gender, categoryKey = "all") {
   return hairstyles.filter((item) => {
     if (item.gender !== gender) {
       return false;
     }
-    if (styleLine !== "all" && item.style_line !== styleLine) {
+    if (categoryKey !== "all" && item.category_key !== categoryKey) {
       return false;
     }
     return true;
   });
+}
+
+function buildCategoryOptions(hairstyles, gender) {
+  const options = [{ id: "all", label: "全部分类" }];
+  const seen = new Set();
+
+  hairstyles.forEach((item) => {
+    if (item.gender !== gender) {
+      return;
+    }
+    if (!item.category_key || !item.category_label || seen.has(item.category_key)) {
+      return;
+    }
+    seen.add(item.category_key);
+    options.push({
+      id: item.category_key,
+      label: item.category_label
+    });
+  });
+
+  return options;
 }
 
 function getDefaultGender(hairstyles, cached) {
@@ -50,8 +64,12 @@ function resolveSelectionState(catalog, cached) {
   const allHairstyles = catalog.hairstyles || [];
   const cachedHairstyle = findById(allHairstyles, cached.hairstyle && cached.hairstyle.id);
   const selectedGender = getDefaultGender(allHairstyles, cached);
-  const selectedStyleLine = "all";
-  const visibleHairstyles = filterHairstyles(allHairstyles, selectedGender, selectedStyleLine)
+  const categoryOptions = buildCategoryOptions(allHairstyles, selectedGender);
+  const selectedCategoryKey =
+    cachedHairstyle && cachedHairstyle.category_key
+      ? cachedHairstyle.category_key
+      : "all";
+  const visibleHairstyles = filterHairstyles(allHairstyles, selectedGender, selectedCategoryKey)
     .map(decorateTemplate);
   const selectedHairstyle =
     findById(visibleHairstyles, cachedHairstyle && cachedHairstyle.id) ||
@@ -61,9 +79,9 @@ function resolveSelectionState(catalog, cached) {
   return {
     hairstyles: allHairstyles,
     visibleHairstyles,
-    styleLineOptions: STYLE_LINE_OPTIONS,
+    categoryOptions,
     selectedGender,
-    selectedStyleLine,
+    selectedCategoryKey,
     selectedHairstyleId: selectedHairstyle ? selectedHairstyle.id : "",
     selectedHairstyleName: selectedHairstyle ? selectedHairstyle.name : ""
   };
@@ -74,9 +92,9 @@ Page({
     loading: true,
     hairstyles: [],
     visibleHairstyles: [],
-    styleLineOptions: STYLE_LINE_OPTIONS,
+    categoryOptions: [],
     selectedGender: "male",
-    selectedStyleLine: "all",
+    selectedCategoryKey: "all",
     selectedHairstyleId: "",
     selectedHairstyleName: ""
   },
@@ -105,34 +123,41 @@ Page({
       return;
     }
 
+    const categoryOptions = buildCategoryOptions(this.data.hairstyles, gender);
+    const hasCurrentCategory = categoryOptions.some(
+      (item) => item.id === this.data.selectedCategoryKey
+    );
+    const selectedCategoryKey = hasCurrentCategory ? this.data.selectedCategoryKey : "all";
     const visibleHairstyles = filterHairstyles(
       this.data.hairstyles,
       gender,
-      this.data.selectedStyleLine
+      selectedCategoryKey
     ).map(decorateTemplate);
     const selectedHairstyle =
       findById(visibleHairstyles, this.data.selectedHairstyleId) || visibleHairstyles[0] || null;
 
     this.setData({
       selectedGender: gender,
+      categoryOptions,
+      selectedCategoryKey,
       visibleHairstyles,
       selectedHairstyleId: selectedHairstyle ? selectedHairstyle.id : "",
       selectedHairstyleName: selectedHairstyle ? selectedHairstyle.name : ""
     });
   },
 
-  selectStyleLine(event) {
-    const styleLine = event.currentTarget.dataset.styleLine || "all";
+  selectCategory(event) {
+    const categoryKey = event.currentTarget.dataset.categoryKey || "all";
     const visibleHairstyles = filterHairstyles(
       this.data.hairstyles,
       this.data.selectedGender,
-      styleLine
+      categoryKey
     ).map(decorateTemplate);
     const selectedHairstyle =
       findById(visibleHairstyles, this.data.selectedHairstyleId) || visibleHairstyles[0] || null;
 
     this.setData({
-      selectedStyleLine: styleLine,
+      selectedCategoryKey: categoryKey,
       visibleHairstyles,
       selectedHairstyleId: selectedHairstyle ? selectedHairstyle.id : "",
       selectedHairstyleName: selectedHairstyle ? selectedHairstyle.name : ""

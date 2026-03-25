@@ -442,6 +442,8 @@ def test_auth_upload_job_history_flow(tmp_path, monkeypatch):
         assert len([item for item in catalog["hairstyles"] if item["gender"] == "male"]) == 20
         assert len([item for item in catalog["hairstyles"] if item["gender"] == "female"]) == 20
         assert catalog["hairstyles"][0]["style_line_label"]
+        assert catalog["hairstyles"][0]["category_key"]
+        assert catalog["hairstyles"][0]["category_label"]
 
         job_create = client.post(
             "/api/jobs",

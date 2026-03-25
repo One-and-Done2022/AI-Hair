@@ -28,6 +28,8 @@ class TemplateItem(BaseModel):
     cover_url: str
     gender: str | None = None
     gender_label: str | None = None
+    category_key: str | None = None
+    category_label: str | None = None
     style_line: str | None = None
     style_line_label: str | None = None
     tags: list[str] = Field(default_factory=list)

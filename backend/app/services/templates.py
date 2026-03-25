@@ -620,6 +620,8 @@ def _build_hairstyle_template(raw: dict) -> dict:
         "description": raw["summary"],
         "gender": gender,
         "gender_label": GENDER_LABELS.get(gender, gender),
+        "category_key": raw.get("categoryKey"),
+        "category_label": raw.get("categoryLabel"),
         "style_line": style_line,
         "style_line_label": STYLE_LINE_LABELS.get(style_line, style_line),
         "tags": raw.get("detailTags", []),
@@ -628,6 +630,7 @@ def _build_hairstyle_template(raw: dict) -> dict:
         "pairing_advice": raw.get("pairingAdvice", []),
         "shot_advice": raw["shotAdvice"],
         "expression_action": raw.get("expressionAction", []),
+        "control_profile": raw.get("controlProfile"),
         "palette": _pick_palette("hairstyle", gender, style_line),
     }
 

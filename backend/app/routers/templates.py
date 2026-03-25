@@ -27,6 +27,8 @@ def list_templates(request: Request) -> TemplateCatalogResponse:
             cover_url=_absolute_cover_url(request, "hairstyles", item["id"]),
             gender=item.get("gender"),
             gender_label=item.get("gender_label"),
+            category_key=item.get("category_key"),
+            category_label=item.get("category_label"),
             style_line=item.get("style_line"),
             style_line_label=item.get("style_line_label"),
             tags=item.get("tags", []),

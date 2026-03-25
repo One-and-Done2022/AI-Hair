@@ -9,7 +9,7 @@
   </view>
 
   <view class="editorial-head">
-    <view class="title editorial-title">步骤 1：选择风格</view>
+    <view class="title editorial-title">步骤 1：选择发型</view>
   </view>
 
   <view class="gender-switch">
@@ -31,11 +31,11 @@
 
   <scroll-view class="style-switch" scroll-x="true" enable-flex="true" show-scrollbar="false">
     <view
-      wx:for="{{styleLineOptions}}"
+      wx:for="{{categoryOptions}}"
       wx:key="id"
-      class="style-chip {{selectedStyleLine === item.id ? 'active' : ''}}"
-      bindtap="selectStyleLine"
-      data-style-line="{{item.id}}"
+      class="style-chip {{selectedCategoryKey === item.id ? 'active' : ''}}"
+      bindtap="selectCategory"
+      data-category-key="{{item.id}}"
     >
       {{item.label}}
     </view>
@@ -63,7 +63,7 @@
       </view>
       <view class="tile-name">{{item.name}}</view>
       <view class="tile-chip-row">
-        <view wx:if="{{item.primaryTag}}" class="tile-chip">{{item.primaryTag}}</view>
+        <view wx:if="{{item.category_label}}" class="tile-chip tile-chip-highlight">{{item.category_label}}</view>
         <view class="tile-chip">{{item.style_line_label}}</view>
       </view>
     </view>
