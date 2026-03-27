@@ -189,6 +189,13 @@ python3 scripts/review_scene_pipeline.py approve <scene_id> --sync
 python3 scripts/review_scene_pipeline.py approve <scene_id> --sync --restart
 ```
 
+如果需要指定正式封面优先使用女生或男生审核图：
+
+```bash
+python3 scripts/review_scene_pipeline.py approve <scene_id> --cover-gender female --sync
+python3 scripts/review_scene_pipeline.py approve <scene_id> --cover-gender male --sync
+```
+
 驳回：
 
 ```bash
@@ -199,3 +206,61 @@ python3 scripts/review_scene_pipeline.py reject <scene_id> --reason "审核图�
 
 - 通过：`storage/scene_pipeline/approved/`
 - 驳回：`storage/scene_pipeline/rejected/`
+
+## 模板真实样片流水线
+
+仓库已支持给发型模板和场景模板批量生成真实样片，并在审核通过后直接落到前端模板封面。
+
+### 1. 生成审核包
+
+场景模板：
+
+```bash
+set -a && source .env && set +a
+python3 scripts/template_image_pipeline.py scenes
+```
+
+发型模板：
+
+```bash
+set -a && source .env && set +a
+python3 scripts/template_image_pipeline.py hairstyles --ids male-forward-spikes,female-french-lazy-waves
+```
+
+输出目录：
+
+- `storage/template_image_pipeline/review/scenes/<scene_id>/`
+- `storage/template_image_pipeline/review/hairstyles/<hairstyle_id>/`
+
+每个审核包会包含：
+
+- `template_snapshot.json`
+- `prompt.txt`
+- `review_<gender>.*`
+- `metadata.json`
+
+### 2. 审核通过或驳回
+
+通过并写入模板正式封面：
+
+```bash
+python3 scripts/review_template_image_pipeline.py approve scenes morning-window-softlight --sync
+python3 scripts/review_template_image_pipeline.py approve hairstyles male-forward-spikes --sync
+```
+
+如需指定使用哪张审核图作为正式封面：
+
+```bash
+python3 scripts/review_template_image_pipeline.py approve scenes morning-window-softlight --cover-gender female --sync
+```
+
+驳回：
+
+```bash
+python3 scripts/review_template_image_pipeline.py reject hairstyles male-forward-spikes --reason "样片不稳定"
+```
+
+归档目录：
+
+- 通过：`storage/template_image_pipeline/approved/`
+- 驳回：`storage/template_image_pipeline/rejected/`

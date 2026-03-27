@@ -86,7 +86,10 @@
       "gq-short-back-sides"
     ],
     "categoryKey": "clean_short",
-    "categoryLabel": "清爽短发"
+    "categoryLabel": "清爽短发",
+    "coverImagePath": "template_assets/hairstyles/male-forward-spikes.jpg",
+    "coverImageUpdatedAt": "2026-03-27T06:59:24+00:00",
+    "coverImageSource": "template_image_pipeline:review_male.jpg"
   },
   {
     "id": "male-chestnut-head",
@@ -124,7 +127,10 @@
       "gq-barber-language"
     ],
     "categoryKey": "clean_short",
-    "categoryLabel": "清爽短发"
+    "categoryLabel": "清爽短发",
+    "coverImagePath": "template_assets/hairstyles/male-chestnut-head.jpg",
+    "coverImageUpdatedAt": "2026-03-27T06:59:23+00:00",
+    "coverImageSource": "template_image_pipeline:review_male.jpg"
   },
   {
     "id": "male-american-buzz",
@@ -162,7 +168,10 @@
       "gq-best-short-haircuts"
     ],
     "categoryKey": "clean_short",
-    "categoryLabel": "清爽短发"
+    "categoryLabel": "清爽短发",
+    "coverImagePath": "template_assets/hairstyles/male-american-buzz.jpg",
+    "coverImageUpdatedAt": "2026-03-27T06:59:23+00:00",
+    "coverImageSource": "template_image_pipeline:review_male.jpg"
   },
   {
     "id": "male-french-short-texture",
@@ -200,7 +209,10 @@
       "gq-barber-language"
     ],
     "categoryKey": "clean_short",
-    "categoryLabel": "清爽短发"
+    "categoryLabel": "清爽短发",
+    "coverImagePath": "template_assets/hairstyles/male-french-short-texture.jpg",
+    "coverImageUpdatedAt": "2026-03-27T06:59:25+00:00",
+    "coverImageSource": "template_image_pipeline:review_male.jpg"
   },
   {
     "id": "male-flat-short-cut",
@@ -238,7 +250,10 @@
       "gq-fade-guide"
     ],
     "categoryKey": "clean_short",
-    "categoryLabel": "清爽短发"
+    "categoryLabel": "清爽短发",
+    "coverImagePath": "template_assets/hairstyles/male-flat-short-cut.jpg",
+    "coverImageUpdatedAt": "2026-03-27T06:59:24+00:00",
+    "coverImageSource": "template_image_pipeline:review_male.jpg"
   },
   {
     "id": "male-morgan-fringe",
@@ -276,7 +291,10 @@
       "gq-short-back-sides"
     ],
     "categoryKey": "korean_soft",
-    "categoryLabel": "韩系修饰"
+    "categoryLabel": "韩系修饰",
+    "coverImagePath": "template_assets/hairstyles/male-morgan-fringe.jpg",
+    "coverImageUpdatedAt": "2026-03-27T06:59:26+00:00",
+    "coverImageSource": "template_image_pipeline:review_male.jpg"
   },
   {
     "id": "male-tin-foil-perm",
@@ -314,7 +332,10 @@
       "gq-fade-guide"
     ],
     "categoryKey": "textured_perm",
-    "categoryLabel": "纹理烫发"
+    "categoryLabel": "纹理烫发",
+    "coverImagePath": "template_assets/hairstyles/male-tin-foil-perm.jpg",
+    "coverImageUpdatedAt": "2026-03-27T06:59:27+00:00",
+    "coverImageSource": "template_image_pipeline:review_male.jpg"
   },
   {
     "id": "male-clip-perm",
@@ -352,7 +373,10 @@
       "gq-short-back-sides"
     ],
     "categoryKey": "textured_perm",
-    "categoryLabel": "纹理烫发"
+    "categoryLabel": "纹理烫发",
+    "coverImagePath": "template_assets/hairstyles/male-clip-perm.jpg",
+    "coverImageUpdatedAt": "2026-03-27T06:59:23+00:00",
+    "coverImageSource": "template_image_pipeline:review_male.jpg"
   },
   {
     "id": "male-firework-perm",
@@ -390,7 +414,10 @@
       "gq-high-fade"
     ],
     "categoryKey": "textured_perm",
-    "categoryLabel": "纹理烫发"
+    "categoryLabel": "纹理烫发",
+    "coverImagePath": "template_assets/hairstyles/male-firework-perm.jpg",
+    "coverImageUpdatedAt": "2026-03-27T06:59:24+00:00",
+    "coverImageSource": "template_image_pipeline:review_male.jpg"
   },
   {
     "id": "male-texture-perm",
@@ -428,7 +455,10 @@
       "gq-short-back-sides"
     ],
     "categoryKey": "textured_perm",
-    "categoryLabel": "纹理烫发"
+    "categoryLabel": "纹理烫发",
+    "coverImagePath": "template_assets/hairstyles/male-texture-perm.jpg",
+    "coverImageUpdatedAt": "2026-03-27T06:59:27+00:00",
+    "coverImageSource": "template_image_pipeline:review_male.jpg"
   },
   {
     "id": "male-wool-perm",
@@ -466,7 +496,10 @@
       "gq-relaxed-pompadour"
     ],
     "categoryKey": "textured_perm",
-    "categoryLabel": "纹理烫发"
+    "categoryLabel": "纹理烫发",
+    "coverImagePath": "template_assets/hairstyles/male-wool-perm.jpg",
+    "coverImageUpdatedAt": "2026-03-27T06:59:28+00:00",
+    "coverImageSource": "template_image_pipeline:review_male.jpg"
   },
   {
     "id": "male-korean-37-part",
@@ -555,7 +588,10 @@
       "gq-short-back-sides"
     ],
     "categoryKey": "korean_soft",
-    "categoryLabel": "韩系修饰"
+    "categoryLabel": "韩系修饰",
+    "coverImagePath": "template_assets/hairstyles/male-korean-37-part.jpg",
+    "coverImageUpdatedAt": "2026-03-27T06:59:25+00:00",
+    "coverImageSource": "template_image_pipeline:review_male.jpg"
   },
   {
     "id": "male-comma-bangs",
@@ -644,7 +680,10 @@
       "gq-short-back-sides"
     ],
     "categoryKey": "korean_soft",
-    "categoryLabel": "韩系修饰"
+    "categoryLabel": "韩系修饰",
+    "coverImagePath": "template_assets/hairstyles/male-comma-bangs.jpg",
+    "coverImageUpdatedAt": "2026-03-27T06:59:23+00:00",
+    "coverImageSource": "template_image_pipeline:review_male.jpg"
   },
   {
     "id": "male-middle-micro-part",
@@ -682,7 +721,10 @@
       "gq-short-back-sides"
     ],
     "categoryKey": "korean_soft",
-    "categoryLabel": "韩系修饰"
+    "categoryLabel": "韩系修饰",
+    "coverImagePath": "template_assets/hairstyles/male-middle-micro-part.jpg",
+    "coverImageUpdatedAt": "2026-03-27T06:59:26+00:00",
+    "coverImageSource": "template_image_pipeline:review_male.jpg"
   },
   {
     "id": "male-vintage-slick-back",
@@ -720,7 +762,10 @@
       "gq-barber-language"
     ],
     "categoryKey": "statement_style",
-    "categoryLabel": "造型感"
+    "categoryLabel": "造型感",
+    "coverImagePath": "template_assets/hairstyles/male-vintage-slick-back.jpg",
+    "coverImageUpdatedAt": "2026-03-27T06:59:28+00:00",
+    "coverImageSource": "template_image_pipeline:review_male.jpg"
   },
   {
     "id": "male-side-part-pomade",
@@ -758,7 +803,10 @@
       "gq-short-back-sides"
     ],
     "categoryKey": "statement_style",
-    "categoryLabel": "造型感"
+    "categoryLabel": "造型感",
+    "coverImagePath": "template_assets/hairstyles/male-side-part-pomade.jpg",
+    "coverImageUpdatedAt": "2026-03-27T06:59:27+00:00",
+    "coverImageSource": "template_image_pipeline:review_male.jpg"
   },
   {
     "id": "male-mullet",
@@ -796,7 +844,10 @@
       "gq-short-back-sides"
     ],
     "categoryKey": "statement_style",
-    "categoryLabel": "造型感"
+    "categoryLabel": "造型感",
+    "coverImagePath": "template_assets/hairstyles/male-mullet.jpg",
+    "coverImageUpdatedAt": "2026-03-27T06:59:26+00:00",
+    "coverImageSource": "template_image_pipeline:review_male.jpg"
   },
   {
     "id": "male-wolf-tail",
@@ -834,7 +885,10 @@
       "gq-short-back-sides"
     ],
     "categoryKey": "statement_style",
-    "categoryLabel": "造型感"
+    "categoryLabel": "造型感",
+    "coverImagePath": "template_assets/hairstyles/male-wolf-tail.jpg",
+    "coverImageUpdatedAt": "2026-03-27T06:59:28+00:00",
+    "coverImageSource": "template_image_pipeline:review_male.jpg"
   },
   {
     "id": "male-japanese-wavy-long",
@@ -872,7 +926,10 @@
       "masterclass-portrait-tips"
     ],
     "categoryKey": "statement_style",
-    "categoryLabel": "造型感"
+    "categoryLabel": "造型感",
+    "coverImagePath": "template_assets/hairstyles/male-japanese-wavy-long.jpg",
+    "coverImageUpdatedAt": "2026-03-27T06:59:25+00:00",
+    "coverImageSource": "template_image_pipeline:review_male.jpg"
   },
   {
     "id": "male-samurai-half-bun",
@@ -910,6 +967,9 @@
       "gq-short-back-sides"
     ],
     "categoryKey": "statement_style",
-    "categoryLabel": "造型感"
+    "categoryLabel": "造型感",
+    "coverImagePath": "template_assets/hairstyles/male-samurai-half-bun.jpg",
+    "coverImageUpdatedAt": "2026-03-27T06:59:27+00:00",
+    "coverImageSource": "template_image_pipeline:review_male.jpg"
   }
 ]

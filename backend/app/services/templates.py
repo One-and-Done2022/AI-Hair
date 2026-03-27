@@ -10,7 +10,7 @@ from pathlib import Path
 from app.config import get_settings
 
 DATA_DIR = Path(__file__).resolve().parents[1] / "data" / "faceprompt"
-TEMPLATE_COVER_VERSION = "visual-v1"
+TEMPLATE_COVER_VERSION = "visual-v2"
 SUPPORTED_ASPECT_RATIOS = (
     "1:1",
     "16:9",
@@ -119,6 +119,10 @@ LEGACY_SCENE_ALIASES = {
     "city-night": "city-neon-night",
 }
 VALID_PROMPT_MODES = {"full_stylize", "hairstyle_only", "scene_only"}
+DEFAULT_STYLING_BY_STYLE_LINE = {
+    "realistic_editorial": "unisex-natural-soft",
+    "fashion_editorial": "unisex-structured-editorial",
+}
 
 IDENTITY_LOCK_SECTION = (
     "请基于上传参考图中的同一人物生成 1 张高相似度、写实风格的人像写真。"
@@ -282,10 +286,12 @@ def get_prompt_block_labels() -> dict[str, str]:
         "expression": "人物表情",
         "subject_action": "主体动作",
         "hairstyle_action": "发型展示动作",
+        "makeup": "人物妆容",
         "outfit": "人物服饰",
         "edit_scope": "编辑目标",
         "hair_target": "目标发型",
         "hair_lock": "发型锁定",
+        "styling_constraints": "妆造约束",
         "scene_constraints": "场景约束",
         "hair_constraints": "发型约束",
         "hair_edit_scope_constraints": "换发范围约束",
@@ -395,8 +401,10 @@ def get_prompt_rule_table() -> dict[str, PromptRule]:
                 "scene_mood",
                 "expression",
                 "subject_action",
+                "makeup",
                 "outfit",
                 "hair_target",
+                "styling_constraints",
                 "scene_constraints",
                 "hair_constraints",
                 "motion_safety_constraints",
@@ -439,9 +447,11 @@ def get_prompt_rule_table() -> dict[str, PromptRule]:
                 "expression",
                 "subject_action",
                 "hairstyle_action",
+                "makeup",
                 "outfit",
                 "hair_lock",
                 "hair_preservation_constraints",
+                "styling_constraints",
                 "scene_constraints",
                 "hair_constraints",
                 "motion_safety_constraints",
@@ -459,9 +469,11 @@ def get_prompt_rule_table() -> dict[str, PromptRule]:
                 "scene_mood",
                 "expression",
                 "subject_action",
+                "makeup",
                 "outfit",
                 "hair_lock",
                 "hair_preservation_constraints",
+                "styling_constraints",
                 "scene_constraints",
                 "motion_safety_constraints",
                 "quality_skin_texture",
@@ -538,6 +550,85 @@ def _filter_scene_actions_for_locked_hairstyle(actions: Iterable[str]) -> list[s
     return filtered or candidates
 
 
+def _matching_stylings(style_line: str, preferred_gender: str | None = None) -> list[dict]:
+    candidates = [item for item in STYLINGS if item.get("style_line") == style_line]
+    if preferred_gender:
+        exact = [item for item in candidates if item.get("gender") == preferred_gender]
+        unisex = [item for item in candidates if item.get("gender") == "unisex"]
+        fallback = [
+            item
+            for item in candidates
+            if item.get("gender") not in {preferred_gender, "unisex"}
+        ]
+        ordered = [*exact, *unisex, *fallback]
+        if ordered:
+            return ordered
+    return candidates
+
+
+def _default_styling(style_line: str, preferred_gender: str | None, seed_source: str) -> dict:
+    style_line_candidates = [item for item in STYLINGS if item.get("style_line") == style_line]
+    if not style_line_candidates:
+        fallback_id = DEFAULT_STYLING_BY_STYLE_LINE.get(style_line)
+        fallback = get_styling(fallback_id) if fallback_id else None
+        if fallback is not None:
+            return fallback
+        raise ValueError(f"No styling template available for style line: {style_line}")
+
+    candidates = _matching_stylings(style_line, preferred_gender)
+    if preferred_gender:
+        exact = [item for item in candidates if item.get("gender") == preferred_gender]
+        if exact:
+            candidates = exact
+        else:
+            unisex = [item for item in candidates if item.get("gender") == "unisex"]
+            if unisex:
+                candidates = unisex
+            else:
+                candidates = style_line_candidates
+
+    selected_id = _select_one(
+        [item["id"] for item in candidates],
+        seed_source=seed_source,
+        label=f"styling:{preferred_gender or 'unisex'}:{style_line}",
+    )
+    selected = get_styling(selected_id)
+    if selected is None:
+        raise ValueError(f"Unknown styling template: {selected_id}")
+    return selected
+
+
+def _resolve_styling(
+    *,
+    style_line: str,
+    preferred_gender: str | None,
+    seed_source: str,
+    styling: dict | None = None,
+) -> dict:
+    if styling is not None:
+        return styling
+    return _default_styling(style_line, preferred_gender, seed_source)
+
+
+def _build_styling_prompt_values(
+    *,
+    styling: dict,
+    default_outfit_text: str,
+    outfit_override: str | None = None,
+) -> dict[str, str]:
+    makeup_text = _normalize_sentence(styling.get("makeup_prompt", ""))
+    outfit_text = _normalize_sentence(outfit_override or styling.get("outfit_prompt") or default_outfit_text)
+    styling_constraints = "；".join(
+        _normalize_sentence(item)
+        for item in _dedupe_keep_order(styling.get("constraints", []))
+    )
+    return {
+        "makeup_text": makeup_text,
+        "outfit_text": outfit_text,
+        "styling_constraints": styling_constraints,
+    }
+
+
 def _select_prompt_details(
     hairstyle: dict, scene: dict, *, seed_source: str
 ) -> dict[str, str]:
@@ -603,6 +694,9 @@ def _build_scene_template(raw: dict) -> dict:
         "constraints": raw.get("constraints", []),
         "pairing_advice": raw.get("pairingAdvice", []),
         "shot_advice": raw["shotAdvice"],
+        "cover_image_path": raw.get("coverImagePath", ""),
+        "cover_image_updated_at": raw.get("coverImageUpdatedAt", ""),
+        "cover_image_source": raw.get("coverImageSource", ""),
         "palette": _pick_palette("scene", "unisex", style_line),
     }
 
@@ -631,7 +725,30 @@ def _build_hairstyle_template(raw: dict) -> dict:
         "shot_advice": raw["shotAdvice"],
         "expression_action": raw.get("expressionAction", []),
         "control_profile": raw.get("controlProfile"),
+        "cover_image_path": raw.get("coverImagePath", ""),
+        "cover_image_updated_at": raw.get("coverImageUpdatedAt", ""),
+        "cover_image_source": raw.get("coverImageSource", ""),
         "palette": _pick_palette("hairstyle", gender, style_line),
+    }
+
+
+def _build_styling_template(raw: dict) -> dict:
+    gender = raw.get("gender", "unisex")
+    style_line = raw["styleLine"]
+    return {
+        "id": raw["id"],
+        "name": raw["title"],
+        "description": raw["summary"],
+        "gender": gender,
+        "gender_label": GENDER_LABELS.get(gender, gender),
+        "style_line": style_line,
+        "style_line_label": STYLE_LINE_LABELS.get(style_line, style_line),
+        "tags": raw.get("detailTags", []),
+        "makeup_prompt": raw["makeupPrompt"],
+        "outfit_prompt": raw["outfitPrompt"],
+        "constraints": raw.get("constraints", []),
+        "pairing_advice": raw.get("pairingAdvice", []),
+        "palette": _pick_palette("scene", gender, style_line),
     }
 
 
@@ -644,14 +761,17 @@ def _catalog() -> dict[str, list[dict]]:
     female_hairstyles = [
         _build_hairstyle_template(item) for item in _load_json("hairstyles_female.json")
     ]
+    stylings = [_build_styling_template(item) for item in _load_json("stylings.json")]
     return {
         "scenes": scenes,
         "hairstyles": [*male_hairstyles, *female_hairstyles],
+        "stylings": stylings,
     }
 
 
 SCENES = _catalog()["scenes"]
 HAIRSTYLES = _catalog()["hairstyles"]
+STYLINGS = _catalog()["stylings"]
 
 
 def _find_template(items: Iterable[dict], template_id: str) -> dict | None:
@@ -671,11 +791,16 @@ def get_scene(template_id: str) -> dict | None:
     return _find_template(SCENES, resolved_id)
 
 
+def get_styling(template_id: str) -> dict | None:
+    return _find_template(STYLINGS, template_id)
+
+
 def build_prompt_assembly(
     *,
     mode: str,
     hairstyle: dict | None = None,
     scene: dict | None = None,
+    styling: dict | None = None,
     seed_source: str | None = None,
     expression_override: str | None = None,
     subject_action_override: str | None = None,
@@ -718,6 +843,12 @@ def build_prompt_assembly(
         if scene is None:
             raise ValueError("scene is required for scene_only mode")
         selection_seed = seed_source or f"scene-only:{scene['id']}"
+        selected_styling = _resolve_styling(
+            style_line=scene["style_line"],
+            preferred_gender=None,
+            seed_source=selection_seed,
+            styling=styling,
+        )
         selected_expression = expression_override or _select_one(
             scene.get("expressions", []),
             seed_source=selection_seed,
@@ -733,7 +864,11 @@ def build_prompt_assembly(
             seed_source=selection_seed,
             label=f"{scene['id']}:scene-only-subject-action",
         )
-        outfit_text = outfit_override or "；".join(_dedupe_keep_order(scene.get("outfit_hints", []))[:2])
+        styling_values = _build_styling_prompt_values(
+            styling=selected_styling,
+            default_outfit_text="；".join(_dedupe_keep_order(scene.get("outfit_hints", []))[:2]),
+            outfit_override=outfit_override,
+        )
         scene_constraint_text = "；".join(
             _normalize_sentence(item) for item in _dedupe_keep_order(scene.get("constraints", []))
         )
@@ -764,14 +899,22 @@ def build_prompt_assembly(
                     f"人物动作：单张图中只选择 1 种主体动作，本张图固定为：{selected_subject_action or '自然站立或静止停顿'}。",
                 ),
                 _make_prompt_block(
+                    "makeup",
+                    f"妆容：{styling_values['makeup_text'] or '妆面保持轻透真实、干净克制，不要出现夸张浓妆'}。",
+                ),
+                _make_prompt_block(
                     "outfit",
-                    f"服饰：{outfit_text or '米白色针织、浅卡其衬衫或裸色背心'}。",
+                    f"服饰：{styling_values['outfit_text'] or '米白色针织、浅卡其衬衫或裸色背心'}。",
                 ),
                 _make_prompt_block(
                     "hair_lock",
                     "人物发型：保持参考图中已经生成完成的发型不变，不要二次改发，不改变发长、顶部体积、刘海、分线、鬓角、后颈发区、卷度、发色和整体轮廓。",
                 ),
                 _make_prompt_block("hair_preservation_constraints", f"发型保持约束：{hair_preservation_text}。"),
+                _make_prompt_block(
+                    "styling_constraints",
+                    f"妆造约束：{styling_values['styling_constraints'] or '妆容与服饰需服从当前场景光线和氛围，不要出现与环境冲突的夸张造型'}。",
+                ),
                 _make_prompt_block("scene_constraints", f"场景关键约束：{scene_constraint_text}。"),
                 _make_prompt_block("motion_safety_constraints", f"动作安全约束：{motion_safety_text}。"),
                 *_build_quality_blocks(),
@@ -783,6 +926,12 @@ def build_prompt_assembly(
         raise ValueError("hairstyle and scene are required for full_stylize mode")
 
     selection_seed = seed_source or f"{hairstyle['id']}:{scene['id']}"
+    selected_styling = _resolve_styling(
+        style_line=scene["style_line"],
+        preferred_gender=hairstyle.get("gender"),
+        seed_source=selection_seed,
+        styling=styling,
+    )
     selected_details = _select_prompt_details(
         hairstyle,
         scene,
@@ -791,7 +940,11 @@ def build_prompt_assembly(
     expression_text = selected_details["expression"] or "自然看向镜头"
     scene_action_text = selected_details["subject_action"] or "自然站立或静止停顿"
     hairstyle_action_text = selected_details["hairstyle_action"]
-    outfit_text = "；".join(_dedupe_keep_order(scene.get("outfit_hints", []))[:2])
+    styling_values = _build_styling_prompt_values(
+        styling=selected_styling,
+        default_outfit_text="；".join(_dedupe_keep_order(scene.get("outfit_hints", []))[:2]),
+        outfit_override=None,
+    )
     scene_constraint_text = "；".join(
         _normalize_sentence(item) for item in _dedupe_keep_order(scene.get("constraints", []))
     )
@@ -833,10 +986,18 @@ def build_prompt_assembly(
                 ),
             ),
             _make_prompt_block(
+                "makeup",
+                f"妆容：{styling_values['makeup_text'] or '妆面保持轻透真实、干净克制，不要出现夸张浓妆'}。",
+            ),
+            _make_prompt_block(
                 "outfit",
-                f"服饰：{outfit_text or '白色宽松衬衫，内搭浅色背心或吊带'}。",
+                f"服饰：{styling_values['outfit_text'] or '白色宽松衬衫，内搭浅色背心或吊带'}。",
             ),
             _make_prompt_block("hair_target", f"人物发型：{_normalize_sentence(hairstyle['prompt_core'])}。"),
+            _make_prompt_block(
+                "styling_constraints",
+                f"妆造约束：{styling_values['styling_constraints'] or '妆容与服饰需与发型、布光和场景基调统一，不要出现不合时宜的强妆或夸张服装'}。",
+            ),
             _make_prompt_block("scene_constraints", f"场景关键约束：{scene_constraint_text}。"),
             _make_prompt_block("hair_constraints", f"发型关键约束：{hair_constraint_text}。"),
             _make_prompt_block("motion_safety_constraints", f"动作安全约束：{motion_safety_text}。"),
@@ -846,11 +1007,18 @@ def build_prompt_assembly(
     )
 
 
-def build_prompt(hairstyle: dict, scene: dict, *, seed_source: str | None = None) -> str:
+def build_prompt(
+    hairstyle: dict,
+    scene: dict,
+    *,
+    styling: dict | None = None,
+    seed_source: str | None = None,
+) -> str:
     return build_prompt_assembly(
         mode="full_stylize",
         hairstyle=hairstyle,
         scene=scene,
+        styling=styling,
         seed_source=seed_source,
     ).render()
 
@@ -865,6 +1033,7 @@ def build_hairstyle_only_prompt(hairstyle: dict) -> str:
 def build_scene_only_prompt(
     scene: dict,
     *,
+    styling: dict | None = None,
     seed_source: str | None = None,
     expression_override: str | None = None,
     subject_action_override: str | None = None,
@@ -873,6 +1042,7 @@ def build_scene_only_prompt(
     return build_prompt_assembly(
         mode="scene_only",
         scene=scene,
+        styling=styling,
         seed_source=seed_source,
         expression_override=expression_override,
         subject_action_override=subject_action_override,
@@ -930,18 +1100,26 @@ def build_job_prompt_payload(
         resolution=resolution,
     )
     selection_seed = seed_source or f"{hairstyle['id']}:{scene['id']}"
+    selected_styling = _resolve_styling(
+        style_line=scene["style_line"],
+        preferred_gender=hairstyle.get("gender"),
+        seed_source=selection_seed,
+    )
     payload = {
         "version": 1,
         "full_prompt": build_prompt(
             hairstyle,
             scene,
+            styling=selected_styling,
             seed_source=selection_seed,
         ),
         "hairstyle_only_prompt": build_hairstyle_only_prompt(hairstyle),
         "scene_only_prompt": build_scene_only_prompt(
             scene,
+            styling=selected_styling,
             seed_source=f"scene-only:{selection_seed}",
         ),
+        "styling_id": selected_styling["id"],
         "output_options": generation_options,
     }
     return json.dumps(payload, ensure_ascii=False)
@@ -955,6 +1133,7 @@ def parse_job_prompt_payload(raw_prompt: str) -> dict:
             "full_prompt": "",
             "hairstyle_only_prompt": "",
             "scene_only_prompt": "",
+            "styling_id": "",
             "output_options": normalized_options,
         }
 
@@ -966,6 +1145,7 @@ def parse_job_prompt_payload(raw_prompt: str) -> dict:
             "full_prompt": raw_prompt,
             "hairstyle_only_prompt": "",
             "scene_only_prompt": "",
+            "styling_id": "",
             "output_options": normalized_options,
         }
 
@@ -975,6 +1155,7 @@ def parse_job_prompt_payload(raw_prompt: str) -> dict:
             "full_prompt": raw_prompt,
             "hairstyle_only_prompt": "",
             "scene_only_prompt": "",
+            "styling_id": "",
             "output_options": normalized_options,
         }
 
@@ -994,6 +1175,7 @@ def parse_job_prompt_payload(raw_prompt: str) -> dict:
         "full_prompt": str(payload.get("full_prompt") or ""),
         "hairstyle_only_prompt": str(payload.get("hairstyle_only_prompt") or ""),
         "scene_only_prompt": str(payload.get("scene_only_prompt") or ""),
+        "styling_id": str(payload.get("styling_id") or ""),
         "output_options": output_options,
     }
 

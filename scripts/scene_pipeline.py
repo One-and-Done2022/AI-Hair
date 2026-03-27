@@ -147,6 +147,24 @@ def build_review_metadata(
     else:
         status = "failed"
 
+    recommended_cover: dict[str, Any] | None = None
+    for preferred_gender in ("female", "male"):
+        candidate = review_results.get(preferred_gender)
+        if candidate and candidate.get("status") == "succeeded" and candidate.get("image"):
+            recommended_cover = {
+                "gender": preferred_gender,
+                "image": candidate["image"],
+            }
+            break
+    if recommended_cover is None:
+        for gender, candidate in review_results.items():
+            if candidate.get("status") == "succeeded" and candidate.get("image"):
+                recommended_cover = {
+                    "gender": gender,
+                    "image": candidate["image"],
+                }
+                break
+
     return {
         "version": 1,
         "status": status,
@@ -158,6 +176,14 @@ def build_review_metadata(
         "generator_backend": generator_backend,
         "sample_assets": source_asset_paths,
         "review_results": review_results,
+        "recommended_cover": recommended_cover,
+        "review_notes": "",
+        "review_checklist": {
+            "scene_scope_clean": "pending",
+            "identity_stable": "pending",
+            "physical_logic_ok": "pending",
+            "cover_ready": "yes" if recommended_cover else "no",
+        },
     }
 
 

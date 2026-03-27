@@ -12,9 +12,24 @@ from typing import Any
 
 
 ROOT_DIR = Path(__file__).resolve().parents[1]
+BACKEND_DIR = ROOT_DIR / "backend"
+if str(BACKEND_DIR) not in sys.path:
+    sys.path.insert(0, str(BACKEND_DIR))
+
 REVIEW_ROOT = ROOT_DIR / "storage" / "scene_pipeline" / "review"
 APPROVED_ROOT = ROOT_DIR / "storage" / "scene_pipeline" / "approved"
 REJECTED_ROOT = ROOT_DIR / "storage" / "scene_pipeline" / "rejected"
+
+storage = None
+
+
+def _load_backend_dependencies() -> None:
+    global storage
+    if storage is not None:
+        return
+    from app.services import storage as _storage
+
+    storage = _storage
 
 
 def utc_now() -> str:
@@ -46,6 +61,30 @@ def load_package_metadata(package_dir: Path) -> dict[str, Any]:
     return json.loads(metadata_path.read_text(encoding="utf-8"))
 
 
+def _pick_cover_filename(package_dir: Path, metadata: dict[str, Any], cover_gender: str) -> str:
+    if cover_gender != "auto":
+        review_item = (metadata.get("review_results") or {}).get(cover_gender, {})
+        filename = str(review_item.get("image") or "").strip()
+        if not filename:
+            raise FileNotFoundError(f"找不到 {cover_gender} 对应的审核图")
+        if not (package_dir / filename).exists():
+            raise FileNotFoundError(f"审核图不存在：{package_dir / filename}")
+        return filename
+
+    recommended = metadata.get("recommended_cover") or {}
+    filename = str(recommended.get("image") or "").strip()
+    if filename and (package_dir / filename).exists():
+        return filename
+
+    for gender in ("female", "male"):
+        review_item = (metadata.get("review_results") or {}).get(gender, {})
+        filename = str(review_item.get("image") or "").strip()
+        if filename and (package_dir / filename).exists():
+            return filename
+
+    raise FileNotFoundError("审核包中没有可用的封面图")
+
+
 def approve_scene_package(
     *,
     scene_id: str,
@@ -53,7 +92,10 @@ def approve_scene_package(
     approved_root: Path,
     sync: bool = False,
     restart: bool = False,
+    cover_gender: str = "auto",
+    note: str = "",
 ) -> Path:
+    _load_backend_dependencies()
     package_dir = review_root / scene_id
     if not package_dir.exists():
         raise FileNotFoundError(f"找不到待审核包：{package_dir}")
@@ -64,6 +106,16 @@ def approve_scene_package(
 
     add_scene_draft = load_add_scene_draft_module()
     payload = json.loads(scene_draft_path.read_text(encoding="utf-8"))
+    metadata = load_package_metadata(package_dir)
+    selected_cover_filename = _pick_cover_filename(package_dir, metadata, cover_gender)
+    cover_object_key = storage.save_template_asset(
+        "scenes",
+        scene_id,
+        (package_dir / selected_cover_filename).read_bytes(),
+    )
+    payload["coverImagePath"] = cover_object_key
+    payload["coverImageUpdatedAt"] = utc_now()
+    payload["coverImageSource"] = f"scene_pipeline:{selected_cover_filename}"
     normalized_scene = add_scene_draft.append_scene_draft(
         catalog_path=add_scene_draft.DEFAULT_CATALOG_PATH,
         payload=payload,
@@ -76,10 +128,12 @@ def approve_scene_package(
     if destination.exists():
         raise FileExistsError(f"已存在已通过目录：{destination}")
 
-    metadata = load_package_metadata(package_dir)
     metadata["status"] = "approved"
     metadata["approved_at"] = utc_now()
     metadata["approved_scene_id"] = normalized_scene["id"]
+    metadata["approved_cover_image"] = selected_cover_filename
+    metadata["approved_cover_path"] = cover_object_key
+    metadata["review_notes"] = note.strip()
     _write_json(package_dir / "metadata.json", metadata)
 
     _ensure_dir(approved_root)
@@ -93,6 +147,7 @@ def reject_scene_package(
     reason: str,
     review_root: Path,
     rejected_root: Path,
+    note: str = "",
 ) -> Path:
     package_dir = review_root / scene_id
     if not package_dir.exists():
@@ -106,6 +161,7 @@ def reject_scene_package(
     metadata["status"] = "rejected"
     metadata["rejected_at"] = utc_now()
     metadata["rejected_reason"] = reason.strip() or "未填写原因"
+    metadata["review_notes"] = note.strip()
     _write_json(package_dir / "metadata.json", metadata)
 
     _ensure_dir(rejected_root)
@@ -123,12 +179,20 @@ def build_parser() -> argparse.ArgumentParser:
     approve_parser.add_argument("--approved-root", default=str(APPROVED_ROOT), help="已通过归档目录。")
     approve_parser.add_argument("--sync", action="store_true", help="通过后同步到 backend/app/data/faceprompt。")
     approve_parser.add_argument("--restart", action="store_true", help="与 --sync 一起使用；同步后重启后端。")
+    approve_parser.add_argument(
+        "--cover-gender",
+        default="auto",
+        choices=["auto", "female", "male"],
+        help="批准时采用哪张审核图作为正式场景封面，默认 auto 优先 female。",
+    )
+    approve_parser.add_argument("--note", default="", help="人工审核备注，会写入 metadata.json。")
 
     reject_parser = subparsers.add_parser("reject", help="驳回审核包。")
     reject_parser.add_argument("scene_id", help="审核包目录名，也就是 scene_draft 的 id。")
     reject_parser.add_argument("--reason", default="审核未通过", help="驳回原因。")
     reject_parser.add_argument("--review-root", default=str(REVIEW_ROOT), help="待审核包目录。")
     reject_parser.add_argument("--rejected-root", default=str(REJECTED_ROOT), help="驳回归档目录。")
+    reject_parser.add_argument("--note", default="", help="人工审核备注，会写入 metadata.json。")
     return parser
 
 
@@ -144,6 +208,8 @@ def main(argv: list[str] | None = None) -> int:
                 approved_root=Path(args.approved_root).expanduser().resolve(),
                 sync=args.sync,
                 restart=args.restart,
+                cover_gender=args.cover_gender,
+                note=args.note,
             )
             print(f"已通过审核并归档到：{destination}")
             return 0
@@ -154,6 +220,7 @@ def main(argv: list[str] | None = None) -> int:
                 reason=args.reason,
                 review_root=Path(args.review_root).expanduser().resolve(),
                 rejected_root=Path(args.rejected_root).expanduser().resolve(),
+                note=args.note,
             )
             print(f"已驳回并归档到：{destination}")
             return 0

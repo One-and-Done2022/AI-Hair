@@ -145,6 +145,10 @@ def test_scene_pipeline_processes_inbox_item_and_generates_review_bundle(tmp_pat
     assert metadata["image_understanding_model"] == "gemini-3-pro-preview"
     assert metadata["review_results"]["male"]["status"] == "succeeded"
     assert metadata["review_results"]["female"]["status"] == "succeeded"
+    assert metadata["recommended_cover"]["gender"] == "female"
+    assert metadata["recommended_cover"]["image"] == "review_female.png"
+    assert metadata["review_checklist"]["cover_ready"] == "yes"
+    assert metadata["review_notes"] == ""
 
 
 def test_review_scene_pipeline_approve_moves_package_and_appends_catalog(tmp_path, monkeypatch):
@@ -188,13 +192,28 @@ def test_review_scene_pipeline_approve_moves_package_and_appends_catalog(tmp_pat
         encoding="utf-8",
     )
     (review_package / "metadata.json").write_text(
-        json.dumps({"status": "pending_review"}, ensure_ascii=False, indent=2) + "\n",
+        json.dumps(
+            {
+                "status": "pending_review",
+                "review_results": {
+                    "female": {"status": "succeeded", "image": "review_female.png"},
+                    "male": {"status": "succeeded", "image": "review_male.png"},
+                },
+                "recommended_cover": {"gender": "female", "image": "review_female.png"},
+            },
+            ensure_ascii=False,
+            indent=2,
+        )
+        + "\n",
         encoding="utf-8",
     )
+    (review_package / "review_female.png").write_bytes(_build_test_image("#f4c2c2"))
+    (review_package / "review_male.png").write_bytes(_build_test_image("#6fa8dc"))
 
     catalog_path = tmp_path / "scenes.json"
     catalog_path.write_text("[]\n", encoding="utf-8")
     sync_calls = []
+    saved_assets = []
 
     fake_module = SimpleNamespace(
         DEFAULT_CATALOG_PATH=catalog_path,
@@ -202,6 +221,20 @@ def test_review_scene_pipeline_approve_moves_package_and_appends_catalog(tmp_pat
         run_sync=lambda restart=False: sync_calls.append(restart),
     )
     monkeypatch.setattr(review_pipeline, "load_add_scene_draft_module", lambda: fake_module)
+    monkeypatch.setattr(
+        review_pipeline,
+        "_load_backend_dependencies",
+        lambda: setattr(
+            review_pipeline,
+            "storage",
+            SimpleNamespace(
+                save_template_asset=lambda category, template_id, image_bytes: saved_assets.append(
+                    (category, template_id, len(image_bytes))
+                )
+                or f"template_assets/{category}/{template_id}.png"
+            ),
+        ),
+    )
 
     destination = review_pipeline.approve_scene_package(
         scene_id="window-softlight-demo",
@@ -209,6 +242,7 @@ def test_review_scene_pipeline_approve_moves_package_and_appends_catalog(tmp_pat
         approved_root=approved_root,
         sync=True,
         restart=True,
+        note="封面表现稳定，可以入库",
     )
 
     assert destination == approved_root / "window-softlight-demo"
@@ -217,8 +251,14 @@ def test_review_scene_pipeline_approve_moves_package_and_appends_catalog(tmp_pat
     saved_catalog = json.loads(catalog_path.read_text(encoding="utf-8"))
     assert len(saved_catalog) == 1
     assert saved_catalog[0]["id"] == "window-softlight-demo"
+    assert saved_catalog[0]["coverImagePath"] == "template_assets/scenes/window-softlight-demo.png"
+    assert saved_catalog[0]["coverImageSource"] == "scene_pipeline:review_female.png"
     approved_metadata = json.loads((destination / "metadata.json").read_text(encoding="utf-8"))
     assert approved_metadata["status"] == "approved"
+    assert approved_metadata["approved_cover_image"] == "review_female.png"
+    assert approved_metadata["approved_cover_path"] == "template_assets/scenes/window-softlight-demo.png"
+    assert approved_metadata["review_notes"] == "封面表现稳定，可以入库"
+    assert saved_assets == [("scenes", "window-softlight-demo", len(_build_test_image("#f4c2c2")))]
     assert sync_calls == [True]
 
 
@@ -247,3 +287,96 @@ def test_review_scene_pipeline_reject_moves_package_with_reason(tmp_path):
     rejected_metadata = json.loads((destination / "metadata.json").read_text(encoding="utf-8"))
     assert rejected_metadata["status"] == "rejected"
     assert rejected_metadata["rejected_reason"] == "场景不稳定，审核图效果不达标"
+
+
+def test_review_scene_pipeline_approve_can_force_male_cover(tmp_path, monkeypatch):
+    review_pipeline = _load_module(REVIEW_PIPELINE_SCRIPT, "review_scene_pipeline_force_male")
+    add_scene_draft = _load_module(ADD_SCENE_DRAFT_SCRIPT, "add_scene_draft_force_male")
+
+    review_root = tmp_path / "review"
+    approved_root = tmp_path / "approved"
+    review_package = review_root / "city-night-demo"
+    review_package.mkdir(parents=True)
+    (review_package / "scene_draft.json").write_text(
+        json.dumps(
+            {
+                "id": "city-night-demo",
+                "title": "夜景人像",
+                "styleLine": "fashion_editorial",
+                "summary": "夜景模板。",
+                "environment": "夜景背景。",
+                "lighting": "侧后方补光。",
+                "styleMood": "冷调时装。",
+                "detailTags": ["夜景"],
+                "expressions": ["看向镜头"],
+                "actions": ["静止站立"],
+                "outfitHints": ["黑色上衣"],
+                "pairingAdvice": ["港风背头"],
+                "shotAdvice": "3:4 竖构图。",
+                "constraints": ["背景简洁"],
+                "controlProfile": {
+                    "windLevel": "still",
+                    "humidityLook": "balanced",
+                    "backgroundComplexity": "low",
+                    "lightingHardness": "soft",
+                    "mirrorRisk": "none",
+                    "compatibleHairstyleTags": [],
+                    "recommendedHairstyleIds": [],
+                },
+                "referenceNotes": "测试。",
+                "referenceSourceIds": ["test"],
+            },
+            ensure_ascii=False,
+            indent=2,
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    (review_package / "metadata.json").write_text(
+        json.dumps(
+            {
+                "status": "pending_review",
+                "review_results": {
+                    "female": {"status": "succeeded", "image": "review_female.png"},
+                    "male": {"status": "succeeded", "image": "review_male.png"},
+                },
+                "recommended_cover": {"gender": "female", "image": "review_female.png"},
+            },
+            ensure_ascii=False,
+            indent=2,
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    (review_package / "review_female.png").write_bytes(_build_test_image("#f4c2c2"))
+    (review_package / "review_male.png").write_bytes(_build_test_image("#6fa8dc"))
+
+    catalog_path = tmp_path / "scenes.json"
+    catalog_path.write_text("[]\n", encoding="utf-8")
+    fake_module = SimpleNamespace(
+        DEFAULT_CATALOG_PATH=catalog_path,
+        append_scene_draft=add_scene_draft.append_scene_draft,
+        run_sync=lambda restart=False: None,
+    )
+    monkeypatch.setattr(review_pipeline, "load_add_scene_draft_module", lambda: fake_module)
+    monkeypatch.setattr(
+        review_pipeline,
+        "_load_backend_dependencies",
+        lambda: setattr(
+            review_pipeline,
+            "storage",
+            SimpleNamespace(
+                save_template_asset=lambda category, template_id, image_bytes: f"template_assets/{category}/{template_id}.png"
+            ),
+        ),
+    )
+
+    destination = review_pipeline.approve_scene_package(
+        scene_id="city-night-demo",
+        review_root=review_root,
+        approved_root=approved_root,
+        cover_gender="male",
+    )
+
+    approved_metadata = json.loads((destination / "metadata.json").read_text(encoding="utf-8"))
+    assert approved_metadata["approved_cover_image"] == "review_male.png"

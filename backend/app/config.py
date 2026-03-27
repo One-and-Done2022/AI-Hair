@@ -23,6 +23,14 @@ def _env_int(name: str, default: int) -> int:
     return int(value)
 
 
+def _env_first(*names: str, default: str = "") -> str:
+    for name in names:
+        value = os.getenv(name)
+        if value is not None and value.strip():
+            return value.strip()
+    return default
+
+
 def _resolve_repo_path(value: str | Path) -> Path:
     path = value if isinstance(value, Path) else Path(value)
     if path.is_absolute():
@@ -261,7 +269,11 @@ def get_settings() -> Settings:
         ).strip(),
         ark_key_cooldown_seconds=_env_int("ARK_API_KEY_COOLDOWN_SECONDS", 120),
         image_generator_backend=image_generator_backend,
-        nano_banana_api_key=os.getenv("NANO_BANANA_API_KEY", "").strip(),
+        nano_banana_api_key=_env_first(
+            "NANO_BANANA_PRO_API_KEY",
+            "NANO_BANANA_API_KEY",
+            default="",
+        ),
         nano_banana_base_url=os.getenv(
             "NANO_BANANA_BASE_URL", "https://api.apiyi.com"
         ).strip().rstrip("/"),

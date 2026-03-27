@@ -86,7 +86,10 @@
       "harpersbazaar-french-bob"
     ],
     "categoryKey": "short_crisp",
-    "categoryLabel": "短发利落"
+    "categoryLabel": "短发利落",
+    "coverImagePath": "template_assets/hairstyles/female-blunt-bob.jpg",
+    "coverImageUpdatedAt": "2026-03-27T06:59:16+00:00",
+    "coverImageSource": "template_image_pipeline:review_female.jpg"
   },
   {
     "id": "female-ear-tucked-first-love",
@@ -124,7 +127,10 @@
       "harpersbazaar-french-bob"
     ],
     "categoryKey": "short_crisp",
-    "categoryLabel": "短发利落"
+    "categoryLabel": "短发利落",
+    "coverImagePath": "template_assets/hairstyles/female-ear-tucked-first-love.jpg",
+    "coverImageUpdatedAt": "2026-03-27T06:59:17+00:00",
+    "coverImageSource": "template_image_pipeline:review_female.jpg"
   },
   {
     "id": "female-french-undercut-short",
@@ -162,7 +168,10 @@
       "masterclass-portrait-tips"
     ],
     "categoryKey": "short_crisp",
-    "categoryLabel": "短发利落"
+    "categoryLabel": "短发利落",
+    "coverImagePath": "template_assets/hairstyles/female-french-undercut-short.jpg",
+    "coverImageUpdatedAt": "2026-03-27T06:59:19+00:00",
+    "coverImageSource": "template_image_pipeline:review_female.jpg"
   },
   {
     "id": "female-boyish-super-short",
@@ -200,7 +209,10 @@
       "masterclass-annie-working-light"
     ],
     "categoryKey": "short_crisp",
-    "categoryLabel": "短发利落"
+    "categoryLabel": "短发利落",
+    "coverImagePath": "template_assets/hairstyles/female-boyish-super-short.jpg",
+    "coverImageUpdatedAt": "2026-03-27T06:59:17+00:00",
+    "coverImageSource": "template_image_pipeline:review_female.jpg"
   },
   {
     "id": "female-japanese-apple-head",
@@ -238,7 +250,10 @@
       "allure-bob-haircut"
     ],
     "categoryKey": "short_crisp",
-    "categoryLabel": "短发利落"
+    "categoryLabel": "短发利落",
+    "coverImagePath": "template_assets/hairstyles/female-japanese-apple-head.jpg",
+    "coverImageUpdatedAt": "2026-03-27T06:59:19+00:00",
+    "coverImageSource": "template_image_pipeline:review_female.jpg"
   },
   {
     "id": "female-collarbone-xinzhilei",
@@ -327,7 +342,10 @@
       "masterclass-portrait-tips"
     ],
     "categoryKey": "layered_medium",
-    "categoryLabel": "层次中长发"
+    "categoryLabel": "层次中长发",
+    "coverImagePath": "template_assets/hairstyles/female-collarbone-xinzhilei.jpg",
+    "coverImageUpdatedAt": "2026-03-27T06:59:17+00:00",
+    "coverImageSource": "template_image_pipeline:review_female.jpg"
   },
   {
     "id": "female-edge-layer-cut",
@@ -365,7 +383,10 @@
       "allure-bob-haircut"
     ],
     "categoryKey": "layered_medium",
-    "categoryLabel": "层次中长发"
+    "categoryLabel": "层次中长发",
+    "coverImagePath": "template_assets/hairstyles/female-edge-layer-cut.jpg",
+    "coverImageUpdatedAt": "2026-03-27T06:59:18+00:00",
+    "coverImageSource": "template_image_pipeline:review_female.jpg"
   },
   {
     "id": "female-high-layer-midlong",
@@ -403,7 +424,10 @@
       "masterclass-tyler-natural-light"
     ],
     "categoryKey": "layered_medium",
-    "categoryLabel": "层次中长发"
+    "categoryLabel": "层次中长发",
+    "coverImagePath": "template_assets/hairstyles/female-high-layer-midlong.jpg",
+    "coverImageUpdatedAt": "2026-03-27T06:59:19+00:00",
+    "coverImageSource": "template_image_pipeline:review_female.jpg"
   },
   {
     "id": "female-japanese-feather-cut",
@@ -441,7 +465,10 @@
       "masterclass-portrait-tips"
     ],
     "categoryKey": "layered_medium",
-    "categoryLabel": "层次中长发"
+    "categoryLabel": "层次中长发",
+    "coverImagePath": "template_assets/hairstyles/female-japanese-feather-cut.jpg",
+    "coverImageUpdatedAt": "2026-03-27T06:59:20+00:00",
+    "coverImageSource": "template_image_pipeline:review_female.jpg"
   },
   {
     "id": "female-fishtail-perm",
@@ -479,7 +506,10 @@
       "allure-bob-haircut"
     ],
     "categoryKey": "layered_medium",
-    "categoryLabel": "层次中长发"
+    "categoryLabel": "层次中长发",
+    "coverImagePath": "template_assets/hairstyles/female-fishtail-perm.jpg",
+    "coverImageUpdatedAt": "2026-03-27T06:59:18+00:00",
+    "coverImageSource": "template_image_pipeline:review_female.jpg"
   },
   {
     "id": "female-french-lazy-waves",
@@ -517,7 +547,10 @@
       "masterclass-portrait-tips"
     ],
     "categoryKey": "soft_curls",
-    "categoryLabel": "氛围卷发"
+    "categoryLabel": "氛围卷发",
+    "coverImagePath": "template_assets/hairstyles/female-french-lazy-waves.jpg",
+    "coverImageUpdatedAt": "2026-03-27T06:59:18+00:00",
+    "coverImageSource": "template_image_pipeline:review_female.jpg"
   },
   {
     "id": "female-korean-air-cushion-perm",
@@ -606,7 +639,10 @@
       "masterclass-portrait-tips"
     ],
     "categoryKey": "soft_curls",
-    "categoryLabel": "氛围卷发"
+    "categoryLabel": "氛围卷发",
+    "coverImagePath": "template_assets/hairstyles/female-korean-air-cushion-perm.jpg",
+    "coverImageUpdatedAt": "2026-03-27T06:59:20+00:00",
+    "coverImageSource": "template_image_pipeline:review_female.jpg"
   },
   {
     "id": "female-wooden-horse-curls",
@@ -644,7 +680,10 @@
       "masterclass-annie-working-light"
     ],
     "categoryKey": "soft_curls",
-    "categoryLabel": "氛围卷发"
+    "categoryLabel": "氛围卷发",
+    "coverImagePath": "template_assets/hairstyles/female-wooden-horse-curls.jpg",
+    "coverImageUpdatedAt": "2026-03-27T06:59:22+00:00",
+    "coverImageSource": "template_image_pipeline:review_female.jpg"
   },
   {
     "id": "female-water-wave-mid",
@@ -682,7 +721,10 @@
       "masterclass-annie-natural-light"
     ],
     "categoryKey": "soft_curls",
-    "categoryLabel": "氛围卷发"
+    "categoryLabel": "氛围卷发",
+    "coverImagePath": "template_assets/hairstyles/female-water-wave-mid.jpg",
+    "coverImageUpdatedAt": "2026-03-27T06:59:21+00:00",
+    "coverImageSource": "template_image_pipeline:review_female.jpg"
   },
   {
     "id": "female-wool-curls",
@@ -720,7 +762,10 @@
       "masterclass-annie-working-light"
     ],
     "categoryKey": "soft_curls",
-    "categoryLabel": "氛围卷发"
+    "categoryLabel": "氛围卷发",
+    "coverImagePath": "template_assets/hairstyles/female-wool-curls.jpg",
+    "coverImageUpdatedAt": "2026-03-27T06:59:22+00:00",
+    "coverImageSource": "template_image_pipeline:review_female.jpg"
   },
   {
     "id": "female-cloud-perm",
@@ -758,7 +803,10 @@
       "masterclass-portrait-tips"
     ],
     "categoryKey": "soft_curls",
-    "categoryLabel": "氛围卷发"
+    "categoryLabel": "氛围卷发",
+    "coverImagePath": "template_assets/hairstyles/female-cloud-perm.jpg",
+    "coverImageUpdatedAt": "2026-03-27T06:59:17+00:00",
+    "coverImageSource": "template_image_pipeline:review_female.jpg"
   },
   {
     "id": "female-wheat-curls",
@@ -796,7 +844,10 @@
       "masterclass-annie-working-light"
     ],
     "categoryKey": "soft_curls",
-    "categoryLabel": "氛围卷发"
+    "categoryLabel": "氛围卷发",
+    "coverImagePath": "template_assets/hairstyles/female-wheat-curls.jpg",
+    "coverImageUpdatedAt": "2026-03-27T06:59:22+00:00",
+    "coverImageSource": "template_image_pipeline:review_female.jpg"
   },
   {
     "id": "female-new-chinese-long-straight",
@@ -834,7 +885,10 @@
       "masterclass-jimmy-natural-light"
     ],
     "categoryKey": "long_statement",
-    "categoryLabel": "长发气质"
+    "categoryLabel": "长发气质",
+    "coverImagePath": "template_assets/hairstyles/female-new-chinese-long-straight.jpg",
+    "coverImageUpdatedAt": "2026-03-27T06:59:21+00:00",
+    "coverImageSource": "template_image_pipeline:review_female.jpg"
   },
   {
     "id": "female-modern-hime-cut",
@@ -872,7 +926,10 @@
       "masterclass-portrait-tips"
     ],
     "categoryKey": "long_statement",
-    "categoryLabel": "长发气质"
+    "categoryLabel": "长发气质",
+    "coverImagePath": "template_assets/hairstyles/female-modern-hime-cut.jpg",
+    "coverImageUpdatedAt": "2026-03-27T06:59:20+00:00",
+    "coverImageSource": "template_image_pipeline:review_female.jpg"
   },
   {
     "id": "female-waterfall-straight",
@@ -910,6 +967,9 @@
       "masterclass-annie-working-light"
     ],
     "categoryKey": "long_statement",
-    "categoryLabel": "长发气质"
+    "categoryLabel": "长发气质",
+    "coverImagePath": "template_assets/hairstyles/female-waterfall-straight.jpg",
+    "coverImageUpdatedAt": "2026-03-27T06:59:21+00:00",
+    "coverImageSource": "template_image_pipeline:review_female.jpg"
   }
 ]

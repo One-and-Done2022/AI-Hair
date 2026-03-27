@@ -1012,7 +1012,7 @@ class NanoBananaProGenerator(ApiYiImageGenerator):
             base_url=settings.nano_banana_base_url,
             model_name=settings.nano_banana_model,
             provider_name="nano-banana-pro",
-            api_key_env_name="NANO_BANANA_API_KEY",
+            api_key_env_name="NANO_BANANA_PRO_API_KEY",
         )
 
 

@@ -4,7 +4,7 @@ from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import Response
 
 from app.schemas import GenerationBackendOption, TemplateCatalogResponse, TemplateItem
-from app.services import templates
+from app.services import storage, templates
 
 
 router = APIRouter(prefix="/templates", tags=["templates"])
@@ -17,6 +17,23 @@ def _absolute_cover_url(request: Request, category: str, template_id: str) -> st
     return f"{base_url}?v={templates.TEMPLATE_COVER_VERSION}"
 
 
+def _real_cover_url(request: Request, item: dict) -> str | None:
+    object_key = str(item.get("cover_image_path") or "").strip()
+    if not object_key:
+        return None
+    base_url = str(request.base_url).rstrip("/")
+    resolved = storage.media_url(object_key, base_url=base_url)
+    if not resolved:
+        return None
+    version = str(item.get("cover_image_updated_at") or templates.TEMPLATE_COVER_VERSION).strip()
+    if not version:
+        return resolved
+    normalized = "".join(ch for ch in version if ch.isalnum())[:24]
+    if not normalized:
+        return resolved
+    return f"{resolved}?v={normalized}"
+
+
 @router.get("", response_model=TemplateCatalogResponse)
 def list_templates(request: Request) -> TemplateCatalogResponse:
     hairstyles = [
@@ -24,7 +41,8 @@ def list_templates(request: Request) -> TemplateCatalogResponse:
             id=item["id"],
             name=item["name"],
             description=item["description"],
-            cover_url=_absolute_cover_url(request, "hairstyles", item["id"]),
+            cover_url=_real_cover_url(request, item)
+            or _absolute_cover_url(request, "hairstyles", item["id"]),
             gender=item.get("gender"),
             gender_label=item.get("gender_label"),
             category_key=item.get("category_key"),
@@ -40,7 +58,8 @@ def list_templates(request: Request) -> TemplateCatalogResponse:
             id=item["id"],
             name=item["name"],
             description=item["description"],
-            cover_url=_absolute_cover_url(request, "scenes", item["id"]),
+            cover_url=_real_cover_url(request, item)
+            or _absolute_cover_url(request, "scenes", item["id"]),
             gender=item.get("gender"),
             gender_label=item.get("gender_label"),
             style_line=item.get("style_line"),

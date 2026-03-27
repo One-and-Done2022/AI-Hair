@@ -50,6 +50,7 @@ def _configure_runtime_env(tmp_path, monkeypatch, *, use_mock_generator: str = "
     monkeypatch.delenv("ARK_API_KEY_DEFAULT_WEIGHT", raising=False)
     monkeypatch.delenv("ARK_API_KEY_COOLDOWN_SECONDS", raising=False)
     monkeypatch.delenv("IMAGE_GENERATOR_BACKEND", raising=False)
+    monkeypatch.delenv("NANO_BANANA_PRO_API_KEY", raising=False)
     monkeypatch.delenv("NANO_BANANA_API_KEY", raising=False)
     monkeypatch.delenv("NANO_BANANA_BASE_URL", raising=False)
     monkeypatch.delenv("NANO_BANANA_MODEL", raising=False)
@@ -159,7 +160,9 @@ def test_build_prompt_uses_faceprompt_single_image_structure():
     assert "只输出 1 张完整成片" in prompt
     assert "胡桃木门框" in prompt
     assert "发型改为前刺头" in prompt
-    assert "白色宽松衬衫" in prompt
+    assert "服饰：" in prompt
+    assert "妆容：" in prompt
+    assert "妆造约束：" in prompt
     assert "不要拼图排版" in prompt
     assert "图片需要符合物理逻辑" in prompt
     assert "不可以有不符合物理逻辑的身体部位" in prompt
@@ -192,6 +195,7 @@ def test_build_and_parse_job_prompt_payload_preserves_output_options():
         "aspect_ratio": "3:4",
         "resolution": "4K",
     }
+    assert parsed["styling_id"]
     assert "full_prompt" in parsed
     assert "hairstyle_only_prompt" in parsed
     assert "scene_only_prompt" in parsed
@@ -224,8 +228,10 @@ def test_build_prompt_assembly_returns_structured_blocks():
         "expression",
         "subject_action",
         "hairstyle_action",
+        "makeup",
         "outfit",
         "hair_target",
+        "styling_constraints",
         "scene_constraints",
         "hair_constraints",
         "motion_safety_constraints",
@@ -246,6 +252,7 @@ def test_prompt_block_labels_use_english_keys_and_chinese_labels():
 
     assert labels["identity_lock"] == "身份锁定"
     assert labels["scene_environment"] == "场景环境"
+    assert labels["makeup"] == "人物妆容"
     assert labels["hair_lock"] == "发型锁定"
     assert labels["negative_physical_logic"] == "物理逻辑负面约束"
 
@@ -258,12 +265,16 @@ def test_prompt_rule_table_declares_mode_boundaries():
     assert "scene_only" in rules
     assert "hairstyle_only" in rules
     assert "hair_lock" in rules["scene_only"].required_blocks
+    assert "makeup" in rules["scene_only"].required_blocks
+    assert "styling_constraints" in rules["scene_only"].required_blocks
     assert "hair_target" in rules["hairstyle_only"].required_blocks
     assert "hair_target" in rules["scene_only"].forbidden_blocks
     assert "scene_environment" in rules["hairstyle_only"].forbidden_blocks
     assert "shot" in rules["hairstyle_only"].forbidden_blocks
     assert "scene_control" in rules["hairstyle_only"].forbidden_blocks
     assert "face_strategy" in rules["hairstyle_only"].forbidden_blocks
+    assert "makeup" in rules["hairstyle_only"].forbidden_blocks
+    assert "styling_constraints" in rules["hairstyle_only"].forbidden_blocks
 
 
 def test_build_hairstyle_only_prompt_uses_identity_lock_and_hair_swap_structure():
@@ -295,6 +306,8 @@ def test_build_scene_only_prompt_locks_existing_hairstyle_and_updates_scene():
     assert "不改变人物的脸型、五官比例、眼距、鼻梁、嘴型、肤色、年龄感和整体气质和发型" in prompt
     assert "忽略原照片中的背景、原服饰、原有动作" in prompt
     assert "人物发型：保持参考图中已经生成完成的发型不变" in prompt
+    assert "妆容：" in prompt
+    assert "服饰：" in prompt
     assert "不要因为动作、风感或镜头变化把当前发型改成另一种发型" in prompt
     assert "抬手整理窗边发丝" not in prompt
 
@@ -316,6 +329,26 @@ def test_scene_only_prompt_assembly_exposes_hair_lock_block():
     hair_blocks = [block.text for block in assembly.blocks if block.key == "hair_lock"]
     assert len(hair_blocks) == 1
     assert "保持参考图中已经生成完成的发型不变" in hair_blocks[0]
+    assert any(block.key == "makeup" for block in assembly.blocks)
+    assert any(block.key == "styling_constraints" for block in assembly.blocks)
+
+
+def test_default_styling_prefers_matching_gender_when_available():
+    from app.services import templates
+
+    female_styling = templates._default_styling(
+        "realistic_editorial",
+        "female",
+        "styling-gender-female",
+    )
+    male_styling = templates._default_styling(
+        "realistic_editorial",
+        "male",
+        "styling-gender-male",
+    )
+
+    assert female_styling["gender"] == "female"
+    assert male_styling["gender"] == "male"
 
 
 def test_prompt_filters_hand_conflicting_hairstyle_actions():
@@ -361,6 +394,7 @@ def test_faceprompt_catalog_counts_and_legacy_aliases():
 
     assert len(templates.SCENES) == 20
     assert len(templates.HAIRSTYLES) == 40
+    assert len(templates.STYLINGS) == 7
     assert len([item for item in templates.HAIRSTYLES if item["gender"] == "male"]) == 20
     assert len([item for item in templates.HAIRSTYLES if item["gender"] == "female"]) == 20
 
@@ -509,6 +543,40 @@ def test_auth_upload_job_history_flow(tmp_path, monkeypatch):
         assert repository.get_upload(upload_id) is None
         assert list((tmp_path / "storage" / "uploads").iterdir()) == []
         assert list((tmp_path / "storage" / "results").iterdir()) == []
+
+
+def test_template_catalog_prefers_real_cover_url_when_available(tmp_path, monkeypatch):
+    app = _build_app(tmp_path, monkeypatch)
+
+    from app.services import storage, templates
+
+    hairstyle = templates.get_hairstyle("male-forward-spikes")
+    assert hairstyle is not None
+
+    original_values = {
+        "cover_image_path": hairstyle.get("cover_image_path", ""),
+        "cover_image_updated_at": hairstyle.get("cover_image_updated_at", ""),
+        "cover_image_source": hairstyle.get("cover_image_source", ""),
+    }
+    hairstyle["cover_image_path"] = storage.save_template_asset(
+        "hairstyles",
+        hairstyle["id"],
+        _build_colored_image("#264653"),
+    )
+    hairstyle["cover_image_updated_at"] = "2026-03-26T12:34:56+00:00"
+    hairstyle["cover_image_source"] = "test"
+
+    try:
+        with TestClient(app) as client:
+            response = client.get("/api/templates")
+            assert response.status_code == 200
+            catalog = response.json()
+            current = next(item for item in catalog["hairstyles"] if item["id"] == hairstyle["id"])
+            assert "/media/template_assets/hairstyles/" in current["cover_url"]
+            assert current["cover_url"].endswith("?v=20260326T1234560000")
+            assert not current["cover_url"].endswith(".svg")
+    finally:
+        hairstyle.update(original_values)
 
 
 def test_job_accepts_extended_output_options(tmp_path, monkeypatch):
@@ -969,10 +1037,23 @@ def test_seedream_5_generator_uses_rest_images_generation_api(tmp_path, monkeypa
     assert len(result.candidate_image_bytes) == 3
 
 
+def test_nano_banana_pro_prefers_new_env_name(tmp_path, monkeypatch):
+    _configure_runtime_env(tmp_path, monkeypatch, use_mock_generator="false")
+    monkeypatch.setenv("NANO_BANANA_PRO_API_KEY", "new-pro-key")
+    monkeypatch.setenv("NANO_BANANA_API_KEY", "legacy-pro-key")
+
+    from app.config import get_settings
+
+    get_settings.cache_clear()
+    settings = get_settings()
+
+    assert settings.nano_banana_api_key == "new-pro-key"
+
+
 def test_nano_banana_generator_uses_native_image_config(tmp_path, monkeypatch):
     _configure_runtime_env(tmp_path, monkeypatch, use_mock_generator="false")
     monkeypatch.setenv("IMAGE_GENERATOR_BACKEND", "nano_banana_pro")
-    monkeypatch.setenv("NANO_BANANA_API_KEY", "nano-test-key")
+    monkeypatch.setenv("NANO_BANANA_PRO_API_KEY", "nano-test-key")
 
     from app.config import get_settings
     from app.services.generation import GenerationContext, NanoBananaProGenerator

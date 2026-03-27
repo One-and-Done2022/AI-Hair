@@ -27,6 +27,14 @@ def _normalize_text(value: Any, field_name: str) -> str:
     return value.strip()
 
 
+def _normalize_optional_text(value: Any, field_name: str) -> str:
+    if value is None:
+        return ""
+    if not isinstance(value, str):
+        raise ValueError(f"{field_name} 必须是字符串")
+    return value.strip()
+
+
 def _normalize_string_list(value: Any, field_name: str, *, allow_empty: bool = False) -> list[str]:
     if not isinstance(value, list):
         raise ValueError(f"{field_name} 必须是字符串数组")
@@ -103,7 +111,7 @@ def normalize_scene_draft(raw: dict[str, Any]) -> dict[str, Any]:
     if style_line not in VALID_STYLE_LINES:
         raise ValueError("styleLine 非法")
 
-    return {
+    normalized = {
         "id": _normalize_text(raw.get("id"), "id"),
         "title": _normalize_text(raw.get("title"), "title"),
         "styleLine": style_line,
@@ -124,6 +132,22 @@ def normalize_scene_draft(raw: dict[str, Any]) -> dict[str, Any]:
             raw.get("referenceSourceIds"), "referenceSourceIds"
         ),
     }
+    if raw.get("coverImagePath") is not None:
+        normalized["coverImagePath"] = _normalize_optional_text(
+            raw.get("coverImagePath"),
+            "coverImagePath",
+        )
+    if raw.get("coverImageUpdatedAt") is not None:
+        normalized["coverImageUpdatedAt"] = _normalize_optional_text(
+            raw.get("coverImageUpdatedAt"),
+            "coverImageUpdatedAt",
+        )
+    if raw.get("coverImageSource") is not None:
+        normalized["coverImageSource"] = _normalize_optional_text(
+            raw.get("coverImageSource"),
+            "coverImageSource",
+        )
+    return normalized
 
 
 def load_payload(input_path: str) -> dict[str, Any]:
