@@ -5,6 +5,8 @@ const { request, uploadFile } = require("./request");
 const CURRENT_IMAGE_PATH_STORAGE_KEY = "currentImagePath";
 const CURRENT_UPLOAD_STORAGE_KEY = "currentUpload";
 const SMART_RECOMMENDATION_STORAGE_KEY = "smartRecommendation";
+const COMPRESS_THRESHOLD_BYTES = 2 * 1024 * 1024;
+const COMPRESS_QUALITY_STEPS = [82, 72, 62];
 
 let pendingUploadPromise = null;
 let pendingUploadPath = "";
@@ -55,8 +57,78 @@ function getCurrentImagePath() {
   return wx.getStorageSync(CURRENT_IMAGE_PATH_STORAGE_KEY) || "";
 }
 
+function getFileInfo(filePath) {
+  return new Promise((resolve, reject) => {
+    wx.getFileInfo({
+      filePath,
+      success: resolve,
+      fail: reject
+    });
+  });
+}
+
+function compressLocalImage(src, quality) {
+  return new Promise((resolve, reject) => {
+    if (typeof wx.compressImage !== "function") {
+      resolve({ tempFilePath: src });
+      return;
+    }
+    wx.compressImage({
+      src,
+      quality,
+      success: resolve,
+      fail: reject
+    });
+  });
+}
+
+async function prepareImageForUpload(localPath) {
+  if (!localPath) {
+    return {
+      filePath: "",
+      compressed: false,
+      originalSize: 0,
+      finalSize: 0
+    };
+  }
+
+  const originalInfo = await getFileInfo(localPath).catch(() => null);
+  let preparedPath = localPath;
+  let preparedInfo = originalInfo;
+  let compressed = false;
+
+  if (originalInfo && originalInfo.size > COMPRESS_THRESHOLD_BYTES) {
+    for (const quality of COMPRESS_QUALITY_STEPS) {
+      const result = await compressLocalImage(localPath, quality).catch(() => null);
+      const nextPath = result && result.tempFilePath ? result.tempFilePath : "";
+      if (!nextPath) {
+        continue;
+      }
+      const nextInfo = await getFileInfo(nextPath).catch(() => null);
+      if (!nextInfo) {
+        continue;
+      }
+      if (!preparedInfo || nextInfo.size < preparedInfo.size) {
+        preparedPath = nextPath;
+        preparedInfo = nextInfo;
+        compressed = preparedPath !== localPath;
+      }
+      if (nextInfo.size <= COMPRESS_THRESHOLD_BYTES) {
+        break;
+      }
+    }
+  }
+
+  return {
+    filePath: preparedPath,
+    compressed,
+    originalSize: originalInfo ? originalInfo.size : 0,
+    finalSize: preparedInfo ? preparedInfo.size : 0
+  };
+}
+
 async function ensureCurrentUpload(localPath, options = {}) {
-  const { timeout = 15000 } = options;
+  const { timeout = 15000, onProgress } = options;
   if (!localPath) {
     return null;
   }
@@ -75,14 +147,17 @@ async function ensureCurrentUpload(localPath, options = {}) {
     url: "/api/uploads",
     filePath: localPath,
     name: "file",
-    timeout
+    timeout,
+    onProgress
   })
     .then((upload) => {
       const preparedUpload = {
         ...upload,
         local_path: localPath
       };
-      wx.setStorageSync(CURRENT_UPLOAD_STORAGE_KEY, preparedUpload);
+      if (getCurrentImagePath() === localPath) {
+        wx.setStorageSync(CURRENT_UPLOAD_STORAGE_KEY, preparedUpload);
+      }
       return preparedUpload;
     })
     .finally(() => {
@@ -134,7 +209,9 @@ async function ensureRecommendation(localPath, options = {}) {
         ...recommendation,
         local_path: localPath
       };
-      wx.setStorageSync(SMART_RECOMMENDATION_STORAGE_KEY, preparedRecommendation);
+      if (getCurrentImagePath() === localPath) {
+        wx.setStorageSync(SMART_RECOMMENDATION_STORAGE_KEY, preparedRecommendation);
+      }
       return preparedRecommendation;
     })
     .catch((error) => {
@@ -234,6 +311,7 @@ async function ensureRecommendationFromCurrentUpload(options = {}) {
 
 module.exports = {
   clearRecommendationCache,
+  prepareImageForUpload,
   ensureCurrentUpload,
   ensureRecommendation,
   ensureRecommendationFromCurrentUpload,

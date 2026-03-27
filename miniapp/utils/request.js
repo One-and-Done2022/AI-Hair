@@ -104,11 +104,12 @@ function uploadFile(options) {
     name = "file",
     formData = {},
     timeout,
+    onProgress,
     _retriedAfterAuthRefresh = false
   } = options;
 
   return new Promise((resolve, reject) => {
-    wx.uploadFile({
+    const uploadTask = wx.uploadFile({
       url: `${baseUrl}${url}`,
       filePath,
       name,
@@ -129,6 +130,7 @@ function uploadFile(options) {
               name,
               formData,
               timeout,
+              onProgress,
               _retriedAfterAuthRefresh: true
             }))
             .then(resolve)
@@ -141,6 +143,12 @@ function uploadFile(options) {
         reject(error);
       }
     });
+
+    if (uploadTask && typeof uploadTask.onProgressUpdate === "function" && typeof onProgress === "function") {
+      uploadTask.onProgressUpdate((progressEvent) => {
+        onProgress(progressEvent || {});
+      });
+    }
   });
 }
 

@@ -6,7 +6,9 @@ const {
   ensureCurrentUpload,
   ensureRecommendation,
   getCachedRecommendation,
+  getCachedUpload,
   getCurrentImagePath,
+  prepareImageForUpload,
   setCurrentImagePath
 } = require("../../utils/recommendation");
 
@@ -19,6 +21,16 @@ function findById(items, id) {
     return null;
   }
   return items.find((item) => item.id === id) || null;
+}
+
+function formatFileSize(bytes) {
+  if (!bytes || bytes <= 0) {
+    return "0KB";
+  }
+  if (bytes < 1024 * 1024) {
+    return `${Math.max(1, Math.round(bytes / 1024))}KB`;
+  }
+  return `${(bytes / (1024 * 1024)).toFixed(bytes >= 10 * 1024 * 1024 ? 0 : 1)}MB`;
 }
 
 function getRecommendationGender(selection, selectedHairstyle) {
@@ -85,7 +97,12 @@ Page({
     aspectRatioOptions: [],
     resolutionOptions: [],
     selectedAspectRatio: "3:4",
-    selectedResolution: "4K"
+    selectedResolution: "4K",
+    imagePreparing: false,
+    uploadPriming: false,
+    uploadReady: false,
+    uploadProgress: 0,
+    uploadMessage: ""
   },
 
   async onLoad() {
@@ -106,6 +123,7 @@ Page({
       ]);
       this.catalog = catalog;
       const currentImagePath = getCurrentImagePath();
+      const cachedUpload = currentImagePath ? getCachedUpload(currentImagePath) : null;
       const cachedSelection = wx.getStorageSync("templateSelection") || {};
       const cachedGenerationOptions = wx.getStorageSync("generationOptions") || {};
       const generationSelection = buildGenerationSelection(
@@ -148,7 +166,16 @@ Page({
         aspectRatioOptions: generationSelection.aspectRatioOptions,
         resolutionOptions: generationSelection.resolutionOptions,
         selectedAspectRatio: generationSelection.selectedAspectRatio,
-        selectedResolution: generationSelection.selectedResolution
+        selectedResolution: generationSelection.selectedResolution,
+        imagePreparing: false,
+        uploadPriming: false,
+        uploadReady: !!cachedUpload,
+        uploadProgress: cachedUpload ? 100 : 0,
+        uploadMessage: currentImagePath
+          ? (cachedUpload
+            ? "照片已上传完成，可直接生成"
+            : "照片已选择，生成时会自动上传")
+          : ""
       });
       wx.setStorageSync("generationOptions", {
         generator_backend: generationSelection.selectedGeneratorBackend,
@@ -225,10 +252,12 @@ Page({
     });
   },
 
-  applySelectedImage(filePath) {
+  async applySelectedImage(filePath) {
     if (!filePath) {
       return;
     }
+    const selectionToken = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+    this.currentImageSelectionToken = selectionToken;
     clearRecommendationCache();
     setCurrentImagePath(filePath);
     this.setData({
@@ -237,8 +266,98 @@ Page({
       recommendation: null,
       recommendedHairstyles: [],
       recommendedScenes: [],
-      recommendationMessage: ""
+      recommendationMessage: "",
+      imagePreparing: true,
+      uploadPriming: false,
+      uploadReady: false,
+      uploadProgress: 0,
+      uploadMessage: "正在优化图片大小"
     });
+    try {
+      const prepared = await prepareImageForUpload(filePath);
+      if (this.currentImageSelectionToken !== selectionToken) {
+        return;
+      }
+      const preparedPath = prepared.filePath || filePath;
+      setCurrentImagePath(preparedPath);
+      this.setData({
+        selectedImage: preparedPath,
+        imagePreparing: false,
+        uploadPriming: true,
+        uploadReady: false,
+        uploadProgress: 0,
+        uploadMessage: prepared.compressed
+          ? `已压缩 ${formatFileSize(prepared.originalSize)} -> ${formatFileSize(prepared.finalSize)}`
+          : "图片已选择，正在预上传"
+      });
+      this.primeUpload(preparedPath, selectionToken, prepared);
+    } catch (error) {
+      if (this.currentImageSelectionToken !== selectionToken) {
+        return;
+      }
+      this.setData({
+        imagePreparing: false,
+        uploadPriming: false,
+        uploadReady: false,
+        uploadProgress: 0,
+        uploadMessage: "图片已选择，生成时会自动上传"
+      });
+    }
+  },
+
+  async primeUpload(localPath, selectionToken, prepared = null) {
+    if (!localPath) {
+      return;
+    }
+    const compressionPrefix = prepared && prepared.compressed
+      ? `已压缩至 ${formatFileSize(prepared.finalSize)}，`
+      : "";
+    this.setData({
+      uploadPriming: true,
+      uploadReady: false,
+      uploadProgress: 0,
+      uploadMessage: `${compressionPrefix}正在预上传`
+    });
+    try {
+      await ensureCurrentUpload(localPath, {
+        onProgress: (progressEvent) => {
+          if (this.currentImageSelectionToken !== selectionToken || this.data.selectedImage !== localPath) {
+            return;
+          }
+          const progress = Math.max(
+            0,
+            Math.min(100, Number(progressEvent.progress || 0))
+          );
+          this.setData({
+            uploadPriming: progress < 100,
+            uploadReady: progress >= 100,
+            uploadProgress: progress,
+            uploadMessage: progress >= 100
+              ? `${compressionPrefix}照片已上传完成`
+              : `${compressionPrefix}正在预上传 ${progress}%`
+          });
+        }
+      });
+      if (this.currentImageSelectionToken !== selectionToken || this.data.selectedImage !== localPath) {
+        return;
+      }
+      this.setData({
+        uploadPriming: false,
+        uploadReady: true,
+        uploadProgress: 100,
+        uploadMessage: `${compressionPrefix}照片已上传完成，可直接生成`
+      });
+    } catch (error) {
+      if (this.currentImageSelectionToken !== selectionToken || this.data.selectedImage !== localPath) {
+        return;
+      }
+      this.setData({
+        uploadPriming: false,
+        uploadReady: false,
+        uploadProgress: 0,
+        uploadMessage: `${compressionPrefix}预上传失败，生成时会自动重试`
+      });
+    }
   },
 
   previewImage() {
@@ -332,10 +451,17 @@ Page({
       });
       return;
     }
+    if (this.data.imagePreparing) {
+      wx.showToast({
+        title: "图片处理中，请稍候",
+        icon: "none"
+      });
+      return;
+    }
 
     this.setData({
       recommendationLoading: true,
-      recommendationMessage: "正在分析照片并生成推荐"
+      recommendationMessage: this.data.uploadPriming ? "正在上传并分析照片" : "正在分析照片并生成推荐"
     });
     try {
       const recommendation = await ensureRecommendation(this.data.selectedImage, { silent: false });
@@ -499,13 +625,17 @@ Page({
       wx.showToast({ title: "请先上传照片", icon: "none" });
       return;
     }
+    if (this.data.imagePreparing) {
+      wx.showToast({ title: "图片处理中，请稍候", icon: "none" });
+      return;
+    }
     if (!this.data.selectedHairstyle || !this.data.selectedScene) {
       wx.showToast({ title: "请先选择发型和场景", icon: "none" });
       return;
     }
 
     this.setData({ submitting: true });
-    wx.showLoading({ title: "正在提交任务" });
+    wx.showLoading({ title: this.data.uploadPriming ? "正在完成上传" : "正在提交任务" });
     try {
       await ensureLogin();
       const upload = await ensureCurrentUpload(this.data.selectedImage);

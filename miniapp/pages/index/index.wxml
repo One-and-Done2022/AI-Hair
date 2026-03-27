@@ -27,7 +27,9 @@
     <view wx:if="{{selectedImage}}" class="preview-shell">
       <view class="preview-card" bindtap="previewImage">
         <image class="preview-image" src="{{selectedImage}}" mode="aspectFill"></image>
-        <view class="preview-badge">已上传</view>
+        <view class="preview-badge">
+          {{imagePreparing ? '处理中' : (uploadReady ? '已就绪' : (uploadPriming ? '上传中' : '已选择'))}}
+        </view>
       </view>
       <view class="preview-actions">
         <button class="secondary-button compact-button" bindtap="chooseImage">重选相册</button>
@@ -41,6 +43,19 @@
         <view class="upload-stage-icon">+</view>
         <view class="upload-stage-title">点击上传照片</view>
         <view class="upload-stage-copy">支持 JPG、PNG 格式</view>
+      </view>
+    </view>
+
+    <view
+      wx:if="{{selectedImage && uploadMessage}}"
+      class="upload-status {{uploadReady ? 'ready' : ((imagePreparing || uploadPriming) ? 'working' : 'idle')}}"
+    >
+      <view class="upload-status-text">{{uploadMessage}}</view>
+      <view wx:if="{{imagePreparing || uploadPriming}}" class="upload-progress">
+        <view
+          class="upload-progress-fill {{imagePreparing ? 'preparing' : ''}}"
+          style="width: {{imagePreparing ? 36 : uploadProgress}}%;"
+        ></view>
       </view>
     </view>
 
@@ -134,7 +149,7 @@
         class="secondary-button recommend-trigger"
         bindtap="runRecommendation"
         loading="{{recommendationLoading}}"
-        disabled="{{!selectedImage || recommendationLoading}}"
+        disabled="{{!selectedImage || recommendationLoading || imagePreparing}}"
       >
         {{selectedImage ? '生成智能推荐' : '上传照片后可用'}}
       </button>
@@ -234,7 +249,7 @@
     <button
       class="primary-button"
       loading="{{submitting}}"
-      disabled="{{!selectedImage || !selectedHairstyle || !selectedScene || submitting}}"
+      disabled="{{!selectedImage || !selectedHairstyle || !selectedScene || submitting || imagePreparing}}"
       bindtap="createJob"
     >
       {{selectedImage && selectedHairstyle && selectedScene ? '开始生成' : '请先完成上传与搭配'}}

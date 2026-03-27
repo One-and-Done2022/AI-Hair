@@ -37,6 +37,7 @@ MIN_PROMINENT_FACE_WIDTH_RATIO = 0.11
 MIN_PROMINENT_FACE_HEIGHT_RATIO = 0.11
 FACE_OVERLAP_IOU_THRESHOLD = 0.35
 SECONDARY_FACE_AREA_SHARE = 0.38
+FACE_DETECTION_MAX_DIMENSION = 1280
 
 
 class UploadValidationError(Exception):
@@ -193,8 +194,22 @@ def _detect_faces(image_bytes: bytes) -> tuple[tuple[int, int, int, int], ...] |
     if decoded is None:
         return None
 
-    height, width = decoded.shape[:2]
-    grayscale = cv2.cvtColor(decoded, cv2.COLOR_BGR2GRAY)
+    original_height, original_width = decoded.shape[:2]
+    detection_image = decoded
+    largest_dimension = max(original_width, original_height)
+    if largest_dimension > FACE_DETECTION_MAX_DIMENSION:
+        scale = FACE_DETECTION_MAX_DIMENSION / float(largest_dimension)
+        detection_image = cv2.resize(
+            decoded,
+            (
+                max(1, int(round(original_width * scale))),
+                max(1, int(round(original_height * scale))),
+            ),
+            interpolation=cv2.INTER_AREA,
+        )
+
+    height, width = detection_image.shape[:2]
+    grayscale = cv2.cvtColor(detection_image, cv2.COLOR_BGR2GRAY)
     grayscale = cv2.equalizeHist(grayscale)
     cascade = cv2.CascadeClassifier(
         cv2.data.haarcascades + "haarcascade_frontalface_default.xml"
@@ -206,7 +221,23 @@ def _detect_faces(image_bytes: bytes) -> tuple[tuple[int, int, int, int], ...] |
         minNeighbors=6,
         minSize=min_size,
     )
-    return tuple(tuple(int(value) for value in face) for face in faces)
+
+    if height == original_height and width == original_width:
+        return tuple(tuple(int(value) for value in face) for face in faces)
+
+    scale_x = original_width / float(width)
+    scale_y = original_height / float(height)
+    restored_faces: list[tuple[int, int, int, int]] = []
+    for x, y, face_width, face_height in faces:
+        restored_faces.append(
+            (
+                int(round(x * scale_x)),
+                int(round(y * scale_y)),
+                int(round(face_width * scale_x)),
+                int(round(face_height * scale_y)),
+            )
+        )
+    return tuple(restored_faces)
 
 
 def _face_area(face: tuple[int, int, int, int]) -> int:
