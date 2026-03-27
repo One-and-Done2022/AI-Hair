@@ -28,23 +28,27 @@ SUPPORTED_ASPECT_RATIOS = (
     "8:1",
 )
 SUPPORTED_RESOLUTIONS = ("512px", "1K", "2K", "4K")
-DEFAULT_GENERATOR_BACKEND = "seedream"
+DEFAULT_GENERATOR_BACKEND = "basic"
 DEFAULT_ASPECT_RATIO = "3:4"
 DEFAULT_RESOLUTION = "4K"
 
 GENERATOR_BACKEND_CAPABILITIES = {
-    "seedream": {
-        "label": "Seedream",
-        "description": "参考图写实重绘，适合主流程换发换景。",
+    "basic": {
+        "label": "基础版",
+        "description": "先用 Nano Banana 2 生成仅换发图，再用 Seedream 4.5 生成 2 张场景成片。",
         "supports_reference_image": True,
-        "aspect_ratios": ("3:4", "4:5", "1:1", "9:16"),
-        "resolutions": ("4K",),
+        "aspect_ratios": SUPPORTED_ASPECT_RATIOS,
+        "resolutions": SUPPORTED_RESOLUTIONS,
         "default_aspect_ratio": "3:4",
         "default_resolution": "4K",
+        "hair_backend": "nano_banana_2",
+        "scene_backend": "seedream",
+        "scene_model_tier": "basic",
+        "badge": "Nano Banana 2 + Seedream 4.5",
     },
-    "nano_banana_pro": {
-        "label": "Nano Banana Pro",
-        "description": "高自由度图像编辑，支持多种画幅与原生清晰度选项。",
+    "premium": {
+        "label": "高级版",
+        "description": "先用 Nano Banana Pro 生成仅换发图，再用 Seedream 5.0 生成 2 张场景成片。",
         "supports_reference_image": True,
         "aspect_ratios": (
             "1:1",
@@ -61,25 +65,18 @@ GENERATOR_BACKEND_CAPABILITIES = {
         "resolutions": ("1K", "2K", "4K"),
         "default_aspect_ratio": "3:4",
         "default_resolution": "4K",
+        "hair_backend": "nano_banana_pro",
+        "scene_backend": "seedream",
+        "scene_model_tier": "premium",
+        "badge": "Nano Banana Pro + Seedream 5.0",
     },
-    "nano_banana_2": {
-        "label": "Nano Banana 2",
-        "description": "支持超宽比例和 512px 到 4K 清晰度控制。",
-        "supports_reference_image": True,
-        "aspect_ratios": SUPPORTED_ASPECT_RATIOS,
-        "resolutions": SUPPORTED_RESOLUTIONS,
-        "default_aspect_ratio": "3:4",
-        "default_resolution": "4K",
-    },
-    "sora_image": {
-        "label": "Sora Image",
-        "description": "Sora 风格图生图，支持 2:3 / 3:2 / 1:1 三种画幅。",
-        "supports_reference_image": True,
-        "aspect_ratios": ("2:3", "3:2", "1:1"),
-        "resolutions": (),
-        "default_aspect_ratio": "2:3",
-        "default_resolution": None,
-    },
+}
+
+LEGACY_GENERATOR_BACKEND_ALIASES = {
+    "seedream": "premium",
+    "nano_banana_pro": "premium",
+    "nano_banana_2": "basic",
+    "sora_image": "premium",
 }
 
 STYLE_LINE_LABELS = {
@@ -305,16 +302,42 @@ def get_prompt_block_labels() -> dict[str, str]:
     }
 
 
+def _normalize_generator_backend(backend_id: str | None) -> str:
+    raw = (backend_id or DEFAULT_GENERATOR_BACKEND).strip().lower()
+    return LEGACY_GENERATOR_BACKEND_ALIASES.get(raw, raw)
+
+
+def get_generation_plan(backend_id: str | None) -> dict | None:
+    resolved_backend = _normalize_generator_backend(backend_id)
+    capability = GENERATOR_BACKEND_CAPABILITIES.get(resolved_backend)
+    if capability is None:
+        return None
+    settings = get_settings()
+    scene_model_name = (
+        settings.seedream_basic_model
+        if capability["scene_model_tier"] == "basic"
+        else settings.seedream_premium_model
+    )
+    return {
+        "id": resolved_backend,
+        **capability,
+        "scene_model_name": scene_model_name,
+    }
+
+
 def _backend_enabled(backend_id: str) -> bool:
     settings = get_settings()
-    if backend_id == "seedream":
-        return bool(settings.ark_api_keys)
-    if backend_id == "nano_banana_pro":
-        return bool(settings.nano_banana_api_key)
-    if backend_id == "nano_banana_2":
+    if settings.use_mock_generator:
+        return True
+    plan = get_generation_plan(backend_id)
+    if plan is None:
+        return False
+    if not settings.ark_api_keys:
+        return False
+    if plan["hair_backend"] == "nano_banana_pro":
+        return bool(settings.nano_banana_pro_api_key)
+    if plan["hair_backend"] == "nano_banana_2":
         return bool(settings.nano_banana_2_api_key)
-    if backend_id == "sora_image":
-        return bool(settings.sora_image_api_key)
     return False
 
 
@@ -1056,7 +1079,7 @@ def normalize_generation_options(
     aspect_ratio: str | None = None,
     resolution: str | None = None,
 ) -> dict[str, str | None]:
-    resolved_backend = (generator_backend or DEFAULT_GENERATOR_BACKEND).strip().lower()
+    resolved_backend = _normalize_generator_backend(generator_backend)
     capability = GENERATOR_BACKEND_CAPABILITIES.get(resolved_backend)
     if capability is None:
         raise ValueError(f"Unsupported generator backend: {resolved_backend}")
@@ -1106,7 +1129,7 @@ def build_job_prompt_payload(
         seed_source=selection_seed,
     )
     payload = {
-        "version": 1,
+        "version": 2,
         "full_prompt": build_prompt(
             hairstyle,
             scene,

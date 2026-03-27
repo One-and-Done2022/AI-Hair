@@ -9,6 +9,17 @@ from sqlalchemy import and_, delete, insert, not_, or_, select, update
 from app.config import get_settings
 from app.db import auth_tokens, jobs, session_scope, uploads, users
 
+ACTIVE_JOB_STATUSES = (
+    "pending",
+    "hair_generating",
+    "hair_ready",
+    "scene_generating",
+    "scene_partial",
+    "processing",
+    "preview_ready",
+)
+TERMINAL_JOB_STATUSES = ("succeeded", "failed")
+
 
 def utc_now() -> str:
     return datetime.now(timezone.utc).replace(microsecond=0).isoformat()
@@ -205,7 +216,7 @@ def get_user_profile_summary(user_id: int) -> dict:
     total_jobs = len(job_rows)
     completed_jobs = sum(1 for row in job_rows if row["status"] == "succeeded")
     processing_jobs = sum(
-        1 for row in job_rows if row["status"] in {"pending", "processing", "preview_ready"}
+        1 for row in job_rows if row["status"] in ACTIVE_JOB_STATUSES
     )
 
     now = datetime.now(timezone.utc)
@@ -265,7 +276,6 @@ def delete_upload(upload_id: str) -> None:
 
 
 def list_expired_uploads(cutoff_iso: str) -> list[dict]:
-    active_statuses = ("pending", "processing", "preview_ready")
     with session_scope() as session:
         rows = session.execute(
             select(uploads).where(
@@ -274,7 +284,7 @@ def list_expired_uploads(cutoff_iso: str) -> list[dict]:
                     uploads.c.stored_path != "",
                     not_(
                         uploads.c.id.in_(
-                            select(jobs.c.upload_id).where(jobs.c.status.in_(active_statuses))
+                            select(jobs.c.upload_id).where(jobs.c.status.in_(ACTIVE_JOB_STATUSES))
                         )
                     ),
                 )
@@ -289,7 +299,7 @@ def list_expired_jobs_with_media(cutoff_iso: str) -> list[dict]:
             select(jobs).where(
                 and_(
                     jobs.c.created_at < cutoff_iso,
-                    jobs.c.status.in_(("succeeded", "failed", "preview_ready")),
+                    jobs.c.status.in_((*TERMINAL_JOB_STATUSES, "preview_ready")),
                     or_(
                         jobs.c.result_path.is_not(None),
                         jobs.c.status == "preview_ready",
@@ -357,9 +367,9 @@ def assign_job_key(job_id: str, assigned_key_id: str | None) -> None:
 def requeue_active_jobs(*, include_pending: bool = True) -> list[str]:
     updated_at = utc_now()
     active_statuses = (
-        ("pending", "processing", "preview_ready")
+        ACTIVE_JOB_STATUSES
         if include_pending
-        else ("processing", "preview_ready")
+        else tuple(status for status in ACTIVE_JOB_STATUSES if status != "pending")
     )
     with session_scope() as session:
         rows = session.execute(

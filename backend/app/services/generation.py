@@ -32,6 +32,7 @@ logger = logging.getLogger(__name__)
 CANDIDATE_IMAGE_COUNT = 3
 PRIMARY_PREVIEW_IMAGE_COUNT = 1
 PreviewCallback = Callable[[bytes], None]
+CandidateCallback = Callable[[bytes], None]
 NANO_IMAGE_TIMEOUT_MAP = {"512px": 120, "1K": 180, "2K": 300, "4K": 360}
 SEEDREAM_REST_TIMEOUT_SECONDS = 180
 
@@ -219,6 +220,7 @@ class GenerationContext:
     scene_name: str
     aspect_ratio: str = "3:4"
     resolution: str | None = "4K"
+    image_count: int = CANDIDATE_IMAGE_COUNT
     full_prompt: str = ""
     hairstyle_only_prompt: str = ""
     scene_only_prompt: str = ""
@@ -249,6 +251,7 @@ class BaseGenerator:
         context: GenerationContext,
         provider_key: ApiKeyLease | None = None,
         on_preview: PreviewCallback | None = None,
+        on_candidate: CandidateCallback | None = None,
     ) -> GenerationResult:
         raise NotImplementedError
 
@@ -354,23 +357,25 @@ class MockGenerator(BaseGenerator):
         context: GenerationContext,
         provider_key: ApiKeyLease | None = None,
         on_preview: PreviewCallback | None = None,
+        on_candidate: CandidateCallback | None = None,
     ) -> GenerationResult:
         candidates: list[bytes] = []
         blur_levels = [10, 18, 26]
         portrait_offsets = [(160, 150), (170, 160), (185, 170)]
         preview_sent = False
+        requested_count = max(1, int(context.image_count or CANDIDATE_IMAGE_COUNT))
 
         with Image.open(source_image_path).convert("RGB") as source:
-            for idx in range(CANDIDATE_IMAGE_COUNT):
+            for idx in range(requested_count):
                 target = Image.new("RGB", (1200, 1600), "#101820")
                 background = ImageOps.fit(source, target.size).filter(
-                    ImageFilter.GaussianBlur(blur_levels[idx])
+                    ImageFilter.GaussianBlur(blur_levels[idx % len(blur_levels)])
                 )
                 target.paste(background)
 
                 portrait = ImageOps.fit(source, (860, 1120))
                 portrait = portrait.filter(ImageFilter.SHARPEN)
-                target.paste(portrait, portrait_offsets[idx])
+                target.paste(portrait, portrait_offsets[idx % len(portrait_offsets)])
 
                 overlay = Image.new("RGBA", target.size, (0, 0, 0, 0))
                 draw = ImageDraw.Draw(overlay)
@@ -389,9 +394,12 @@ class MockGenerator(BaseGenerator):
                 if not preview_sent and on_preview is not None:
                     on_preview(image_bytes)
                     preview_sent = True
+                if on_candidate is not None:
+                    on_candidate(image_bytes)
 
-        ranked_candidates = _rank_candidates(candidates)
-        ordered_images = [candidate.image_bytes for candidate in ranked_candidates]
+        ordered_images = candidates if requested_count <= 2 else [
+            candidate.image_bytes for candidate in _rank_candidates(candidates)
+        ]
         return GenerationResult(
             primary_image_bytes=ordered_images[0],
             candidate_image_bytes=ordered_images,
@@ -401,14 +409,14 @@ class MockGenerator(BaseGenerator):
 class SeedreamGenerator(BaseGenerator):
     supports_key_pool = True
 
-    def __init__(self) -> None:
+    def __init__(self, model_name: str | None = None) -> None:
         settings = get_settings()
         if not settings.ark_api_keys:
             raise ImageGenerationError(
                 "missing_api_key", "At least one Ark API key must be configured when using Seedream."
             )
 
-        self.model_name = settings.ark_image_model
+        self.model_name = (model_name or settings.seedream_premium_model or settings.ark_image_model).strip()
         self._base_url = settings.ark_base_url
         self._clients: dict[str, OpenAI] = {}
         self._client_lock = Lock()
@@ -526,11 +534,13 @@ class SeedreamGenerator(BaseGenerator):
         image_data: str,
         context: GenerationContext,
         on_preview: PreviewCallback | None = None,
+        on_candidate: CandidateCallback | None = None,
     ) -> GenerationResult:
         preview_sent = False
         candidates: list[bytes] = []
+        requested_count = max(1, int(context.image_count or CANDIDATE_IMAGE_COUNT))
 
-        for index in range(CANDIDATE_IMAGE_COUNT):
+        for index in range(requested_count):
             candidate_prompt = prompt
             if index > 0:
                 candidate_prompt = (
@@ -548,9 +558,12 @@ class SeedreamGenerator(BaseGenerator):
             if not preview_sent and on_preview is not None:
                 on_preview(candidate_bytes)
                 preview_sent = True
+            if on_candidate is not None:
+                on_candidate(candidate_bytes)
 
-        ranked_candidates = _rank_candidates(candidates)
-        ordered_images = [candidate.image_bytes for candidate in ranked_candidates]
+        ordered_images = candidates if requested_count <= 2 else [
+            candidate.image_bytes for candidate in _rank_candidates(candidates)
+        ]
         return GenerationResult(
             primary_image_bytes=ordered_images[0],
             candidate_image_bytes=ordered_images,
@@ -588,6 +601,7 @@ class SeedreamGenerator(BaseGenerator):
         image_data: str,
         max_images: int,
         on_first_candidate: PreviewCallback | None = None,
+        on_candidate: CandidateCallback | None = None,
     ) -> list[bytes]:
         candidates: list[bytes] = []
         seen_payloads: set[str] = set()
@@ -611,6 +625,8 @@ class SeedreamGenerator(BaseGenerator):
                 if not preview_sent and on_first_candidate is not None:
                     on_first_candidate(image_bytes)
                     preview_sent = True
+                if on_candidate is not None:
+                    on_candidate(image_bytes)
         return candidates
 
     def _top_up_candidates(
@@ -620,10 +636,12 @@ class SeedreamGenerator(BaseGenerator):
         prompt: str,
         image_data: str,
         existing_count: int,
+        target_count: int,
         on_first_candidate: PreviewCallback | None = None,
+        on_candidate: CandidateCallback | None = None,
     ) -> list[bytes]:
         topped_up: list[bytes] = []
-        for index in range(existing_count + 1, CANDIDATE_IMAGE_COUNT + 1):
+        for index in range(existing_count + 1, target_count + 1):
             variant_prompt = (
                 f"{prompt}\n"
                 f"候选图补充说明：这是第 {index} 张候选图，保持同一人物与核心设定一致，"
@@ -635,6 +653,7 @@ class SeedreamGenerator(BaseGenerator):
                 image_data=image_data,
                 max_images=1,
                 on_first_candidate=on_first_candidate,
+                on_candidate=on_candidate,
             )
             if not extra_candidates:
                 logger.warning("Seedream top-up request %s returned no candidate.", index)
@@ -649,6 +668,7 @@ class SeedreamGenerator(BaseGenerator):
         context: GenerationContext,
         provider_key: ApiKeyLease | None = None,
         on_preview: PreviewCallback | None = None,
+        on_candidate: CandidateCallback | None = None,
     ) -> GenerationResult:
         if provider_key is None:
             settings = get_settings()
@@ -665,6 +685,7 @@ class SeedreamGenerator(BaseGenerator):
             hairstyle_name="",
             scene_name="",
         )
+        requested_count = max(1, int(context.image_count or CANDIDATE_IMAGE_COUNT))
 
         with open(source_image_path, "rb") as handle:
             image_bytes = handle.read()
@@ -688,6 +709,7 @@ class SeedreamGenerator(BaseGenerator):
                 image_data=image_data,
                 context=context,
                 on_preview=emit_preview,
+                on_candidate=on_candidate,
             )
 
         client = self._client_for_key(provider_key)
@@ -697,8 +719,9 @@ class SeedreamGenerator(BaseGenerator):
                 client=client,
                 prompt=prompt,
                 image_data=image_data,
-                max_images=PRIMARY_PREVIEW_IMAGE_COUNT,
+                max_images=min(PRIMARY_PREVIEW_IMAGE_COUNT, requested_count),
                 on_first_candidate=emit_preview,
+                on_candidate=on_candidate,
             )
         except (
             RateLimitError,
@@ -711,11 +734,11 @@ class SeedreamGenerator(BaseGenerator):
         ) as exc:
             raise _map_openai_error(exc) from exc
 
-        if len(candidates) < CANDIDATE_IMAGE_COUNT:
+        if len(candidates) < requested_count:
             logger.warning(
                 "Seedream primary preview request returned %s candidate(s); topping up to %s.",
                 len(candidates),
-                CANDIDATE_IMAGE_COUNT,
+                requested_count,
             )
             try:
                 candidates.extend(
@@ -724,7 +747,9 @@ class SeedreamGenerator(BaseGenerator):
                         prompt=prompt,
                         image_data=image_data,
                         existing_count=len(candidates),
+                        target_count=requested_count,
                         on_first_candidate=emit_preview,
+                        on_candidate=on_candidate,
                     )
                 )
             except (
@@ -738,8 +763,9 @@ class SeedreamGenerator(BaseGenerator):
             ) as exc:
                 raise _map_openai_error(exc) from exc
 
-        ranked_candidates = _rank_candidates(candidates)
-        ordered_images = [candidate.image_bytes for candidate in ranked_candidates]
+        ordered_images = candidates if requested_count <= 2 else [
+            candidate.image_bytes for candidate in _rank_candidates(candidates)
+        ]
         return GenerationResult(
             primary_image_bytes=ordered_images[0],
             candidate_image_bytes=ordered_images,
@@ -931,6 +957,7 @@ class ApiYiImageGenerator(BaseGenerator):
         context: GenerationContext,
         provider_key: ApiKeyLease | None = None,
         on_preview: PreviewCallback | None = None,
+        on_candidate: CandidateCallback | None = None,
     ) -> GenerationResult:
         with open(source_image_path, "rb") as handle:
             image_bytes = handle.read()
@@ -997,6 +1024,8 @@ class ApiYiImageGenerator(BaseGenerator):
         primary_image = images[0]
         if on_preview is not None:
             on_preview(primary_image)
+        if on_candidate is not None:
+            on_candidate(primary_image)
 
         return GenerationResult(
             primary_image_bytes=primary_image,
@@ -1008,9 +1037,9 @@ class NanoBananaProGenerator(ApiYiImageGenerator):
     def __init__(self) -> None:
         settings = get_settings()
         super().__init__(
-            api_key=settings.nano_banana_api_key,
-            base_url=settings.nano_banana_base_url,
-            model_name=settings.nano_banana_model,
+            api_key=settings.nano_banana_pro_api_key,
+            base_url=settings.nano_banana_pro_base_url,
+            model_name=settings.nano_banana_pro_model,
             provider_name="nano-banana-pro",
             api_key_env_name="NANO_BANANA_PRO_API_KEY",
         )
@@ -1058,6 +1087,7 @@ class SoraImageGenerator(BaseGenerator):
         context: GenerationContext,
         provider_key: ApiKeyLease | None = None,
         on_preview: PreviewCallback | None = None,
+        on_candidate: CandidateCallback | None = None,
     ) -> GenerationResult:
         with open(source_image_path, "rb") as handle:
             image_bytes = handle.read()
@@ -1135,6 +1165,8 @@ class SoraImageGenerator(BaseGenerator):
         primary_image = image_response.content
         if on_preview is not None:
             on_preview(primary_image)
+        if on_candidate is not None:
+            on_candidate(primary_image)
 
         return GenerationResult(
             primary_image_bytes=primary_image,

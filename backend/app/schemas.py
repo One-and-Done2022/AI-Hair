@@ -138,22 +138,27 @@ class JobCreateRequest(BaseModel):
     upload_id: str = Field(min_length=1)
     hairstyle_id: str = Field(min_length=1)
     scene_id: str = Field(min_length=1)
-    generator_backend: Literal[
-        "seedream",
-        "nano_banana_pro",
-        "nano_banana_2",
-        "sora_image",
-    ] = "seedream"
+    generator_backend: Literal["basic", "premium"] = "basic"
     aspect_ratio: str | None = "3:4"
     resolution: str | None = "4K"
 
 
 class JobResponse(BaseModel):
     job_id: str
-    status: Literal["pending", "processing", "preview_ready", "succeeded", "failed"]
+    status: Literal[
+        "pending",
+        "hair_generating",
+        "hair_ready",
+        "scene_generating",
+        "scene_partial",
+        "succeeded",
+        "failed",
+    ]
     upload_url: str | None = None
+    hair_preview_url: str | None = None
     result_image_url: str | None = None
     result_image_urls: list[str] = Field(default_factory=list)
+    completed_scene_count: int = 0
     media_expired: bool = False
     media_expires_at: str
     hairstyle_id: str

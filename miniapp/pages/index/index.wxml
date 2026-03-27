@@ -199,7 +199,7 @@
   <view class="panel output-panel">
     <view class="section-title selection-title">输出设置</view>
     <view class="option-group">
-      <view class="option-label">生成模型</view>
+      <view class="option-label">生成方案</view>
       <view class="generator-grid">
         <view
           wx:for="{{generationBackends}}"

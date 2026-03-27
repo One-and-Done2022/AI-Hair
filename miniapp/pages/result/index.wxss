@@ -349,6 +349,10 @@
   background: #eff1f2;
 }
 
+.candidate-image-short {
+  height: 620rpx;
+}
+
 .candidate-badge {
   position: absolute;
   left: 18rpx;

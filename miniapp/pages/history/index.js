@@ -8,8 +8,20 @@ function getStatusLabel(status) {
   if (status === "succeeded") {
     return "已完成";
   }
+  if (status === "hair_generating") {
+    return "换发中";
+  }
+  if (status === "hair_ready") {
+    return "发型预览已返回";
+  }
+  if (status === "scene_generating") {
+    return "场景生成中";
+  }
+  if (status === "scene_partial") {
+    return "场景图已返回";
+  }
   if (status === "preview_ready") {
-    return "首图已返回";
+    return "预览已返回";
   }
   if (status === "failed") {
     return "失败";

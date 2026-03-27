@@ -2,10 +2,9 @@ from __future__ import annotations
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 
-from app.config import get_settings
 from app.dependencies import get_current_user
 from app.schemas import JobCreateRequest, JobResponse
-from app.services.generation import ImageGenerationError, build_generator
+from app.services.generation import ImageGenerationError
 from app.services import repository, retention, storage, templates
 
 
@@ -23,21 +22,29 @@ def _job_response(request: Request, job: dict) -> JobResponse:
         if upload
         else None
     )
-    result_paths = storage.list_result_candidates(job["id"], job.get("result_path"))
+    hair_preview_path = storage.get_hair_preview_path(job["id"])
+    hair_preview_url = (
+        storage.media_url(hair_preview_path, base_url=base_url)
+        if hair_preview_path
+        else None
+    )
+    scene_paths = storage.list_scene_results(job["id"])
     result_image_urls: list[str] = []
-    for path in result_paths:
+    for path in scene_paths:
         resolved = storage.media_url(path, base_url=base_url)
         if resolved:
             result_image_urls.append(resolved)
-    result_image_url = result_image_urls[0] if result_image_urls else None
+    result_image_url = result_image_urls[0] if result_image_urls else hair_preview_url
     media_expires_at = retention.media_expires_at(job["created_at"])
     media_expired = retention.is_media_expired(job["created_at"])
     return JobResponse(
         job_id=job["id"],
         status=job["status"],
         upload_url=upload_url,
+        hair_preview_url=hair_preview_url,
         result_image_url=result_image_url,
         result_image_urls=result_image_urls,
+        completed_scene_count=len(result_image_urls),
         media_expired=media_expired,
         media_expires_at=media_expires_at,
         hairstyle_id=job["hairstyle_id"],
@@ -70,11 +77,14 @@ def create_job(
         raise HTTPException(status_code=400, detail="Invalid hairstyle or scene template.")
 
     try:
-        settings = get_settings()
-        if payload.generator_backend == settings.image_generator_backend:
-            selected_generator = request.app.state.generator
-        else:
-            selected_generator = build_generator(payload.generator_backend)
+        generation_plan = templates.get_generation_plan(payload.generator_backend)
+        if generation_plan is None:
+            raise ValueError(f"Unsupported generator backend: {payload.generator_backend}")
+        if not any(
+            item["id"] == payload.generator_backend and item["enabled"]
+            for item in templates.get_generation_backend_catalog()
+        ):
+            raise ValueError("Selected generation plan is not currently available.")
         prompt = templates.build_job_prompt_payload(
             hairstyle,
             scene,
@@ -92,7 +102,7 @@ def create_job(
         hairstyle_id=payload.hairstyle_id,
         scene_id=payload.scene_id,
         prompt=prompt,
-        model_name=selected_generator.model_name,
+        model_name=f"{generation_plan['hair_backend']}+{generation_plan['scene_model_name']}",
     )
     request.app.state.job_worker.enqueue(job["id"])
     return _job_response(request, job)

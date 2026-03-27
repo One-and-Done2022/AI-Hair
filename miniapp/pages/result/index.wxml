@@ -1,7 +1,7 @@
 <view class="screen result-screen">
   <view class="progress-shell">
     <view class="progress-top">
-      <view class="progress-state">{{status === 'succeeded' ? '已完成' : status === 'preview_ready' ? '首图已返回' : status === 'failed' ? '生成失败' : '正在生成'}}</view>
+      <view class="progress-state">{{statusLabel}}</view>
       <view class="progress-percent">{{status === 'succeeded' ? '100%' : progressPercent + '%'}}</view>
     </view>
     <view class="progress-track">
@@ -21,8 +21,9 @@
 
   <view class="editorial-head">
     <view wx:if="{{mediaExpired}}" class="title editorial-title">图片已过期</view>
-    <view wx:elif="{{status === 'succeeded'}}" class="title editorial-title">新发型已完成</view>
-    <view wx:elif="{{status === 'preview_ready'}}" class="title editorial-title">首张预览已返回</view>
+    <view wx:elif="{{status === 'succeeded'}}" class="title editorial-title">发型预览与场景成片已完成</view>
+    <view wx:elif="{{status === 'failed' && (hairPreviewUrl || resultImageUrls.length)}}" class="title editorial-title">已返回部分结果</view>
+    <view wx:elif="{{hairPreviewUrl}}" class="title editorial-title">发型预览已返回</view>
     <view wx:elif="{{status === 'failed'}}" class="title editorial-title">这次生成未完成</view>
     <view wx:else class="title editorial-title">AI 正在生成</view>
   </view>
@@ -30,11 +31,7 @@
   <view class="job-card hero-card">
     <view class="hero-frame-shell">
       <view class="result-image-frame">
-        <view wx:if="{{status === 'failed'}}" class="state-pane state-pane-failed">
-          <view class="state-title">生成失败</view>
-        </view>
-
-        <view wx:elif="{{mediaExpired}}" class="state-pane state-pane-expired">
+        <view wx:if="{{mediaExpired}}" class="state-pane state-pane-expired">
           <view class="state-title">图片已过期</view>
         </view>
 
@@ -52,9 +49,15 @@
             data-url="{{resultImageUrl}}"
           ></image>
           <view class="result-image-overlay"></view>
-          <view wx:if="{{status === 'preview_ready'}}" class="image-badge">首图预览</view>
-          <view wx:elif="{{status === 'succeeded'}}" class="image-badge">系统推荐</view>
+          <view wx:if="{{resultImageUrls.length}}" class="image-badge">
+            场景成片 {{completedSceneCount}}/2
+          </view>
+          <view wx:elif="{{hairPreviewUrl}}" class="image-badge">仅换发型</view>
         </block>
+
+        <view wx:elif="{{status === 'failed'}}" class="state-pane state-pane-failed">
+          <view class="state-title">生成失败</view>
+        </view>
 
         <view wx:else class="state-pane">
           <view class="pulse-dot"></view>
@@ -65,11 +68,13 @@
 
     <view wx:if="{{job}}" class="hero-meta">
       <view class="hero-meta-title">
-        {{mediaExpired ? '图片与原图已按 7 天策略自动删除，当前保留生成记录' : status === 'succeeded' ? '系统为你挑出的最佳成片' : status === 'preview_ready' ? '首张预览已可先查看' : status === 'failed' ? '本次生成未完成' : '正在生成你的成片'}}
+        {{mediaExpired ? '图片与原图已按 7 天策略自动删除，当前保留生成记录' : progressHint}}
       </view>
       <view class="hero-meta-tag-row">
         <view class="hero-meta-tag">{{job.hairstyle_name || '处理中'}}</view>
         <view class="hero-meta-tag">{{job.scene_name || '处理中'}}</view>
+        <view wx:if="{{job.generator_backend === 'premium'}}" class="hero-meta-tag">高级版</view>
+        <view wx:elif="{{job.generator_backend === 'basic'}}" class="hero-meta-tag">基础版</view>
       </view>
     </view>
   </view>
@@ -91,17 +96,34 @@
         <image class="compare-image" src="{{uploadUrl}}" mode="aspectFill" lazy-load="true"></image>
         <view class="compare-label">原图</view>
       </view>
-      <view class="compare-card" bindtap="previewResult" data-url="{{resultImageUrl}}">
+      <view class="compare-card" bindtap="previewComparison">
         <image class="compare-image" src="{{resultImageUrl}}" mode="aspectFill" lazy-load="true"></image>
-        <view class="compare-label">结果</view>
+        <view class="compare-label">{{resultImageUrls.length ? '当前场景成片' : '当前发型预览'}}</view>
       </view>
     </view>
   </view>
 
-  <view wx:if="{{status === 'succeeded' && resultImageUrls.length}}" class="panel candidate-section">
+  <view wx:if="{{hairPreviewUrl}}" class="panel candidate-section">
     <view class="candidate-head">
-      <view class="section-title">全部候选</view>
-      <view class="candidate-count">{{resultImageUrls.length}} 张</view>
+      <view class="section-title">发型预览图</view>
+      <view class="candidate-count">1 张</view>
+    </view>
+    <view class="candidate-list">
+      <view
+        class="candidate-card recommended"
+        bindtap="previewResult"
+        data-url="{{hairPreviewUrl}}"
+      >
+        <image class="candidate-image candidate-image-short" src="{{hairPreviewUrl}}" mode="aspectFill" lazy-load="true"></image>
+        <view class="candidate-badge">仅换发型</view>
+      </view>
+    </view>
+  </view>
+
+  <view wx:if="{{resultImageUrls.length}}" class="panel candidate-section">
+    <view class="candidate-head">
+      <view class="section-title">场景成片</view>
+      <view class="candidate-count">{{resultImageUrls.length}} / 2 张</view>
     </view>
     <view class="candidate-list">
       <view
@@ -112,7 +134,7 @@
         data-url="{{item}}"
       >
         <image class="candidate-image" src="{{item}}" mode="aspectFill" lazy-load="true"></image>
-        <view class="candidate-badge">{{index === 0 ? '系统推荐' : '候选 ' + (index + 1)}}</view>
+        <view class="candidate-badge">场景成片 {{index + 1}}</view>
       </view>
     </view>
   </view>
@@ -128,6 +150,11 @@
       <button class="secondary-button half-button" open-type="share">分享</button>
       <button class="secondary-button half-button" bindtap="createAnother">再生成一组</button>
     </view>
+  </view>
+
+  <view wx:elif="{{status === 'failed' && (hairPreviewUrl || resultImageUrls.length)}}" class="action-stack">
+    <button class="primary-button" bindtap="saveImage">保存已生成图片</button>
+    <button class="secondary-button" bindtap="createAnother">返回首页重新生成</button>
   </view>
 
   <view wx:elif="{{status === 'failed'}}" class="action-stack">

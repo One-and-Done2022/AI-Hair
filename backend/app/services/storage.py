@@ -454,6 +454,33 @@ def save_preview_result(job_id: str, image_bytes: bytes) -> str:
     return get_object_storage().write_bytes(object_key, image_bytes)
 
 
+def save_hair_preview_result(job_id: str, image_bytes: bytes) -> str:
+    extension = _detect_result_extension(image_bytes)
+    prefix = _object_key("results", job_id, "hair-preview")
+    get_object_storage().delete_prefix(prefix)
+    object_key = _object_key("results", job_id, f"hair-preview{extension}")
+    return get_object_storage().write_bytes(object_key, image_bytes)
+
+
+def get_hair_preview_path(job_id: str) -> str | None:
+    prefix = _object_key("results", job_id, "hair-preview")
+    keys = get_object_storage().list_keys(prefix)
+    return keys[0] if keys else None
+
+
+def save_scene_result(job_id: str, image_bytes: bytes, *, index: int) -> str:
+    extension = _detect_result_extension(image_bytes)
+    prefix = _object_key("results", job_id, f"scene-{index}")
+    get_object_storage().delete_prefix(prefix)
+    object_key = _object_key("results", job_id, f"scene-{index}{extension}")
+    return get_object_storage().write_bytes(object_key, image_bytes)
+
+
+def list_scene_results(job_id: str) -> list[str]:
+    prefix = _object_key("results", job_id, "scene-")
+    return get_object_storage().list_keys(prefix)
+
+
 def save_result_bundle(job_id: str, candidate_images: list[bytes]) -> SavedResultBundle:
     if not candidate_images:
         raise ValueError("candidate_images cannot be empty")

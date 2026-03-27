@@ -49,11 +49,12 @@ def _configure_runtime_env(tmp_path, monkeypatch, *, use_mock_generator: str = "
     monkeypatch.delenv("ARK_API_KEY_MAX_CONCURRENCY", raising=False)
     monkeypatch.delenv("ARK_API_KEY_DEFAULT_WEIGHT", raising=False)
     monkeypatch.delenv("ARK_API_KEY_COOLDOWN_SECONDS", raising=False)
+    monkeypatch.delenv("SEEDREAM_BASIC_MODEL", raising=False)
+    monkeypatch.delenv("SEEDREAM_PREMIUM_MODEL", raising=False)
     monkeypatch.delenv("IMAGE_GENERATOR_BACKEND", raising=False)
     monkeypatch.delenv("NANO_BANANA_PRO_API_KEY", raising=False)
-    monkeypatch.delenv("NANO_BANANA_API_KEY", raising=False)
-    monkeypatch.delenv("NANO_BANANA_BASE_URL", raising=False)
-    monkeypatch.delenv("NANO_BANANA_MODEL", raising=False)
+    monkeypatch.delenv("NANO_BANANA_PRO_BASE_URL", raising=False)
+    monkeypatch.delenv("NANO_BANANA_PRO_MODEL", raising=False)
     monkeypatch.delenv("NANO_BANANA_2_API_KEY", raising=False)
     monkeypatch.delenv("NANO_BANANA_2_BASE_URL", raising=False)
     monkeypatch.delenv("NANO_BANANA_2_MODEL", raising=False)
@@ -125,7 +126,14 @@ def _create_job_fixture(tmp_path, monkeypatch, *, ark_api_keys: str | None = Non
     scene = templates.get_scene("morning-window-softlight")
     assert hairstyle is not None
     assert scene is not None
-    prompt = templates.build_prompt(hairstyle, scene, seed_source="job-fixture")
+    prompt = templates.build_job_prompt_payload(
+        hairstyle,
+        scene,
+        generator_backend="basic",
+        aspect_ratio="3:4",
+        resolution="4K",
+        seed_source="job-fixture",
+    )
     job = repository.create_job(
         user_id=user["id"],
         upload_id=upload["id"],
@@ -191,7 +199,7 @@ def test_build_and_parse_job_prompt_payload_preserves_output_options():
     parsed = templates.parse_job_prompt_payload(payload)
 
     assert parsed["output_options"] == {
-        "generator_backend": "nano_banana_2",
+        "generator_backend": "basic",
         "aspect_ratio": "3:4",
         "resolution": "4K",
     }
@@ -472,7 +480,7 @@ def test_auth_upload_job_history_flow(tmp_path, monkeypatch):
         catalog = templates.json()
         assert len(catalog["hairstyles"]) == 40
         assert len(catalog["scenes"]) == 20
-        assert len(catalog["generation_backends"]) == 4
+        assert len(catalog["generation_backends"]) == 2
         assert len([item for item in catalog["hairstyles"] if item["gender"] == "male"]) == 20
         assert len([item for item in catalog["hairstyles"] if item["gender"] == "female"]) == 20
         assert catalog["hairstyles"][0]["style_line_label"]
@@ -486,7 +494,7 @@ def test_auth_upload_job_history_flow(tmp_path, monkeypatch):
                 "upload_id": upload_id,
                 "hairstyle_id": catalog["hairstyles"][0]["id"],
                 "scene_id": catalog["scenes"][0]["id"],
-                "generator_backend": "seedream",
+                "generator_backend": "premium",
             },
         )
         assert job_create.status_code == 201
@@ -503,10 +511,12 @@ def test_auth_upload_job_history_flow(tmp_path, monkeypatch):
 
         assert status_payload is not None
         assert status_payload["status"] == "succeeded"
+        assert status_payload["hair_preview_url"]
         assert status_payload["result_image_url"]
-        assert len(status_payload["result_image_urls"]) == 3
+        assert len(status_payload["result_image_urls"]) == 2
         assert status_payload["result_image_urls"][0] == status_payload["result_image_url"]
-        assert status_payload["generator_backend"] == "seedream"
+        assert status_payload["generator_backend"] == "premium"
+        assert status_payload["completed_scene_count"] == 2
         assert status_payload["media_expired"] is False
         assert status_payload["media_expires_at"]
 
@@ -515,7 +525,8 @@ def test_auth_upload_job_history_flow(tmp_path, monkeypatch):
         items = history.json()["items"]
         assert len(items) == 1
         assert items[0]["job_id"] == job_id
-        assert len(items[0]["result_image_urls"]) == 3
+        assert items[0]["hair_preview_url"]
+        assert len(items[0]["result_image_urls"]) == 2
         assert items[0]["media_expired"] is False
 
         me = client.get("/api/me", headers=headers)
@@ -602,7 +613,7 @@ def test_job_accepts_extended_output_options(tmp_path, monkeypatch):
                 "upload_id": upload_id,
                 "hairstyle_id": catalog["hairstyles"][0]["id"],
                 "scene_id": catalog["scenes"][0]["id"],
-                "generator_backend": "nano_banana_2",
+                "generator_backend": "basic",
                 "aspect_ratio": "1:8",
                 "resolution": "512px",
             },
@@ -610,7 +621,7 @@ def test_job_accepts_extended_output_options(tmp_path, monkeypatch):
 
         assert job_create.status_code == 201
         payload = job_create.json()
-        assert payload["generator_backend"] == "nano_banana_2"
+        assert payload["generator_backend"] == "basic"
         assert payload["aspect_ratio"] == "1:8"
         assert payload["resolution"] == "512px"
 
@@ -658,8 +669,9 @@ def test_media_cleanup_removes_expired_images_but_keeps_history(tmp_path, monkey
             time.sleep(0.1)
 
         assert final_payload is not None
+        assert final_payload["hair_preview_url"]
         assert final_payload["result_image_url"]
-        assert len(final_payload["result_image_urls"]) == 3
+        assert len(final_payload["result_image_urls"]) == 2
 
         from app.db import jobs, session_scope, uploads
         from app.services import repository
@@ -689,6 +701,7 @@ def test_media_cleanup_removes_expired_images_but_keeps_history(tmp_path, monkey
         assert expired_payload["status"] == "succeeded"
         assert expired_payload["media_expired"] is True
         assert expired_payload["upload_url"] is None
+        assert expired_payload["hair_preview_url"] is None
         assert expired_payload["result_image_url"] is None
         assert expired_payload["result_image_urls"] == []
 
@@ -698,6 +711,7 @@ def test_media_cleanup_removes_expired_images_but_keeps_history(tmp_path, monkey
         assert len(items) == 1
         assert items[0]["job_id"] == job_id
         assert items[0]["media_expired"] is True
+        assert items[0]["hair_preview_url"] is None
         assert items[0]["result_image_url"] is None
 
         upload_record = repository.get_upload(upload_id)
@@ -711,9 +725,8 @@ def test_media_cleanup_removes_expired_images_but_keeps_history(tmp_path, monkey
 
 
 def test_job_exposes_preview_before_final_result(tmp_path, monkeypatch):
-    _configure_runtime_env(tmp_path, monkeypatch, use_mock_generator="false")
+    _configure_runtime_env(tmp_path, monkeypatch, use_mock_generator="true")
 
-    from app.config import get_settings
     from app.main import create_app
     import app.main as app_main
     from app.services.generation import GenerationResult
@@ -728,20 +741,24 @@ def test_job_exposes_preview_before_final_result(tmp_path, monkeypatch):
             context,
             provider_key=None,
             on_preview=None,
+            on_candidate=None,
         ):
             first = _build_colored_image("#264653")
             second = _build_colored_image("#2a9d8f")
-            third = _build_colored_image("#e9c46a")
             if on_preview is not None:
                 on_preview(first)
+            if on_candidate is not None:
+                on_candidate(first)
             time.sleep(0.45)
+            if on_candidate is not None and int(getattr(context, "image_count", 1) or 1) > 1:
+                on_candidate(second)
             return GenerationResult(
                 primary_image_bytes=first,
-                candidate_image_bytes=[first, second, third],
+                candidate_image_bytes=[first, second],
             )
 
     _clear_runtime_caches()
-    monkeypatch.setattr(app_main, "build_generator", lambda: SlowPreviewGenerator())
+    monkeypatch.setattr(app_main, "build_generator", lambda backend=None: SlowPreviewGenerator())
     app = create_app()
 
     with TestClient(app) as client:
@@ -773,15 +790,15 @@ def test_job_exposes_preview_before_final_result(tmp_path, monkeypatch):
             job_detail = client.get(f"/api/jobs/{job_id}", headers=headers)
             assert job_detail.status_code == 200
             payload = job_detail.json()
-            if payload["status"] == "preview_ready":
+            if payload["hair_preview_url"]:
                 preview_payload = payload
                 break
             time.sleep(0.05)
 
         assert preview_payload is not None
+        assert preview_payload["hair_preview_url"]
         assert preview_payload["result_image_url"]
-        assert len(preview_payload["result_image_urls"]) == 1
-        assert preview_payload["result_image_urls"][0] == preview_payload["result_image_url"]
+        assert preview_payload["result_image_url"] == preview_payload["hair_preview_url"]
 
         final_payload = None
         for _ in range(20):
@@ -794,7 +811,7 @@ def test_job_exposes_preview_before_final_result(tmp_path, monkeypatch):
             time.sleep(0.05)
 
         assert final_payload is not None
-        assert len(final_payload["result_image_urls"]) == 3
+        assert len(final_payload["result_image_urls"]) == 2
         assert final_payload["result_image_urls"][0] == final_payload["result_image_url"]
 
 
@@ -919,11 +936,22 @@ def test_seedream_generator_requests_preview_first_then_tops_up(tmp_path, monkey
     call_log = []
     preview_events = []
 
-    def fake_collect(self, *, client, prompt, image_data, max_images, on_first_candidate=None):
+    def fake_collect(
+        self,
+        *,
+        client,
+        prompt,
+        image_data,
+        max_images,
+        on_first_candidate=None,
+        on_candidate=None,
+    ):
         call_log.append(("collect", max_images))
         if on_first_candidate is not None:
             on_first_candidate(preview_image)
             preview_events.append("preview")
+        if on_candidate is not None:
+            on_candidate(preview_image)
         return [preview_image]
 
     def fake_top_up(
@@ -933,9 +961,11 @@ def test_seedream_generator_requests_preview_first_then_tops_up(tmp_path, monkey
         prompt,
         image_data,
         existing_count,
+        target_count,
         on_first_candidate=None,
+        on_candidate=None,
     ):
-        call_log.append(("top_up", existing_count))
+        call_log.append(("top_up", existing_count, target_count))
         return [second_image, third_image]
 
     monkeypatch.setattr(SeedreamGenerator, "_collect_stream_candidates", fake_collect)
@@ -949,7 +979,7 @@ def test_seedream_generator_requests_preview_first_then_tops_up(tmp_path, monkey
         on_preview=lambda image_bytes: preview_events.append("callback"),
     )
 
-    assert call_log == [("collect", 1), ("top_up", 1)]
+    assert call_log == [("collect", 1), ("top_up", 1, 3)]
     assert preview_events == ["callback", "preview"]
     assert len(result.candidate_image_bytes) == 3
 
@@ -1037,17 +1067,20 @@ def test_seedream_5_generator_uses_rest_images_generation_api(tmp_path, monkeypa
     assert len(result.candidate_image_bytes) == 3
 
 
-def test_nano_banana_pro_prefers_new_env_name(tmp_path, monkeypatch):
+def test_nano_banana_pro_settings_use_renamed_envs(tmp_path, monkeypatch):
     _configure_runtime_env(tmp_path, monkeypatch, use_mock_generator="false")
     monkeypatch.setenv("NANO_BANANA_PRO_API_KEY", "new-pro-key")
-    monkeypatch.setenv("NANO_BANANA_API_KEY", "legacy-pro-key")
+    monkeypatch.setenv("NANO_BANANA_PRO_BASE_URL", "https://example.test/api")
+    monkeypatch.setenv("NANO_BANANA_PRO_MODEL", "gemini-3-pro-image-preview")
 
     from app.config import get_settings
 
     get_settings.cache_clear()
     settings = get_settings()
 
-    assert settings.nano_banana_api_key == "new-pro-key"
+    assert settings.nano_banana_pro_api_key == "new-pro-key"
+    assert settings.nano_banana_pro_base_url == "https://example.test/api"
+    assert settings.nano_banana_pro_model == "gemini-3-pro-image-preview"
 
 
 def test_nano_banana_generator_uses_native_image_config(tmp_path, monkeypatch):
@@ -1365,6 +1398,7 @@ def test_job_worker_switches_to_next_key_before_preview(tmp_path, monkeypatch):
             context,
             provider_key=None,
             on_preview=None,
+            on_candidate=None,
         ):
             assert provider_key is not None
             call_order.append(provider_key.key_id)
@@ -1378,12 +1412,36 @@ def test_job_worker_switches_to_next_key_before_preview(tmp_path, monkeypatch):
 
             first = _build_colored_image("#264653")
             second = _build_colored_image("#2a9d8f")
-            third = _build_colored_image("#e9c46a")
             if on_preview is not None:
                 on_preview(first)
+            if on_candidate is not None:
+                on_candidate(first)
+                on_candidate(second)
             return GenerationResult(
                 primary_image_bytes=first,
-                candidate_image_bytes=[first, second, third],
+                candidate_image_bytes=[first, second],
+            )
+
+    class HairStageGenerator:
+        model_name = "hair-stage-generator"
+
+        def generate(
+            self,
+            source_image_path,
+            prompt,
+            context,
+            provider_key=None,
+            on_preview=None,
+            on_candidate=None,
+        ):
+            preview = _build_colored_image("#1d3557")
+            if on_preview is not None:
+                on_preview(preview)
+            if on_candidate is not None:
+                on_candidate(preview)
+            return GenerationResult(
+                primary_image_bytes=preview,
+                candidate_image_bytes=[preview],
             )
 
     worker = JobWorker(
@@ -1394,6 +1452,14 @@ def test_job_worker_switches_to_next_key_before_preview(tmp_path, monkeypatch):
         ),
         concurrency=1,
     )
+    hair_stage_generator = HairStageGenerator()
+    scene_generator = worker.generator
+    scene_key_pool = worker.key_pool
+    worker._resolve_runtime = lambda backend, model_name=None: (
+        (hair_stage_generator, None)
+        if backend.startswith("nano_banana")
+        else (scene_generator, scene_key_pool)
+    )
 
     worker._process(fixture["job"]["id"])
 
@@ -1401,8 +1467,9 @@ def test_job_worker_switches_to_next_key_before_preview(tmp_path, monkeypatch):
     assert job is not None
     assert call_order == ["key-a", "key-b"]
     assert job["status"] == "succeeded"
-    assert job["assigned_key_id"] == "key-b"
-    assert len(storage.list_result_candidates(job["id"], job["result_path"])) == 3
+    assert job["assigned_key_id"] is None
+    assert storage.get_hair_preview_path(job["id"]) is not None
+    assert len(storage.list_scene_results(job["id"])) == 2
 
 
 def test_job_worker_disables_invalid_key_and_falls_back_to_next_key(
@@ -1435,6 +1502,7 @@ def test_job_worker_disables_invalid_key_and_falls_back_to_next_key(
             context,
             provider_key=None,
             on_preview=None,
+            on_candidate=None,
         ):
             assert provider_key is not None
             call_order.append(provider_key.key_id)
@@ -1448,18 +1516,49 @@ def test_job_worker_disables_invalid_key_and_falls_back_to_next_key(
 
             first = _build_colored_image("#264653")
             second = _build_colored_image("#2a9d8f")
-            third = _build_colored_image("#e9c46a")
             if on_preview is not None:
                 on_preview(first)
+            if on_candidate is not None:
+                on_candidate(first)
+                on_candidate(second)
             return GenerationResult(
                 primary_image_bytes=first,
-                candidate_image_bytes=[first, second, third],
+                candidate_image_bytes=[first, second],
+            )
+
+    class HairStageGenerator:
+        model_name = "hair-stage-generator"
+
+        def generate(
+            self,
+            source_image_path,
+            prompt,
+            context,
+            provider_key=None,
+            on_preview=None,
+            on_candidate=None,
+        ):
+            preview = _build_colored_image("#1d3557")
+            if on_preview is not None:
+                on_preview(preview)
+            if on_candidate is not None:
+                on_candidate(preview)
+            return GenerationResult(
+                primary_image_bytes=preview,
+                candidate_image_bytes=[preview],
             )
 
     worker = JobWorker(
         DisableThenFallbackGenerator(),
         key_pool=key_pool,
         concurrency=1,
+    )
+    hair_stage_generator = HairStageGenerator()
+    scene_generator = worker.generator
+    worker._resolve_runtime = lambda backend, model_name=None: (
+        (hair_stage_generator, None)
+        if backend.startswith("nano_banana")
+        else (scene_generator, key_pool)
     )
 
     worker._process(fixture["job"]["id"])
@@ -1468,10 +1567,11 @@ def test_job_worker_disables_invalid_key_and_falls_back_to_next_key(
     assert job is not None
     assert call_order == ["key-a", "key-b"]
     assert job["status"] == "succeeded"
-    assert job["assigned_key_id"] == "key-b"
+    assert job["assigned_key_id"] is None
     assert key_pool.is_disabled("key-a") is True
     assert key_pool.active_size == 1
-    assert len(storage.list_result_candidates(job["id"], job["result_path"])) == 3
+    assert storage.get_hair_preview_path(job["id"]) is not None
+    assert len(storage.list_scene_results(job["id"])) == 2
 
 
 def test_job_worker_keeps_preview_result_when_error_happens_after_preview(
@@ -1484,7 +1584,7 @@ def test_job_worker_keeps_preview_result_when_error_happens_after_preview(
     )
 
     from app.services import repository, storage
-    from app.services.generation import ImageGenerationError
+    from app.services.generation import GenerationResult, ImageGenerationError
     from app.services.job_queue import JobWorker
     from app.services.key_pool import ApiKeyPool
 
@@ -1500,17 +1600,37 @@ def test_job_worker_keeps_preview_result_when_error_happens_after_preview(
             context,
             provider_key=None,
             on_preview=None,
+            on_candidate=None,
         ):
             assert provider_key is not None
             call_order.append(provider_key.key_id)
-            preview = _build_colored_image("#264653")
-            if on_preview is not None:
-                on_preview(preview)
             raise ImageGenerationError(
                 "rate_limited",
                 "provider busy after preview",
                 retryable=True,
                 retry_after_seconds=1,
+            )
+
+    class HairStageGenerator:
+        model_name = "hair-stage-generator"
+
+        def generate(
+            self,
+            source_image_path,
+            prompt,
+            context,
+            provider_key=None,
+            on_preview=None,
+            on_candidate=None,
+        ):
+            preview = _build_colored_image("#1d3557")
+            if on_preview is not None:
+                on_preview(preview)
+            if on_candidate is not None:
+                on_candidate(preview)
+            return GenerationResult(
+                primary_image_bytes=preview,
+                candidate_image_bytes=[preview],
             )
 
     worker = JobWorker(
@@ -1521,15 +1641,24 @@ def test_job_worker_keeps_preview_result_when_error_happens_after_preview(
         ),
         concurrency=1,
     )
+    hair_stage_generator = HairStageGenerator()
+    scene_generator = worker.generator
+    scene_key_pool = worker.key_pool
+    worker._resolve_runtime = lambda backend, model_name=None: (
+        (hair_stage_generator, None)
+        if backend.startswith("nano_banana")
+        else (scene_generator, scene_key_pool)
+    )
 
     worker._process(fixture["job"]["id"])
 
     job = repository.get_job(fixture["job"]["id"])
     assert job is not None
-    assert call_order == ["key-a"]
-    assert job["status"] == "succeeded"
-    assert job["assigned_key_id"] == "key-a"
-    assert len(storage.list_result_candidates(job["id"], job["result_path"])) == 1
+    assert call_order == ["key-a", "key-b"]
+    assert job["status"] == "failed"
+    assert job["assigned_key_id"] is None
+    assert storage.get_hair_preview_path(job["id"]) is not None
+    assert len(storage.list_scene_results(job["id"])) == 0
 
 
 def test_strict_face_detection_rejects_small_face(monkeypatch):

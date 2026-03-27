@@ -4,10 +4,16 @@ const { request } = require("../../utils/request");
 
 const POLL_INTERVAL = 1200;
 const PROGRESS_INTERVAL = 1000;
-const ESTIMATED_TOTAL_SECONDS = 75;
-const MAX_VISIBLE_PROGRESS = 96;
+const ESTIMATED_TOTAL_SECONDS = 80;
 const MIN_VISIBLE_PROGRESS = 6;
-const STAGE_LABELS = ["上传完成", "识别人脸", "首图生成", "候选精修", "完成"];
+
+const STAGE_LABELS = [
+  "上传完成",
+  "发型预览",
+  "场景成片 1",
+  "场景成片 2",
+  "完成"
+];
 
 function decodeText(value) {
   if (!value) {
@@ -32,7 +38,8 @@ function buildJobMeta(job) {
     created_at: job.created_at || "",
     upload_url: job.upload_url || "",
     media_expired: !!job.media_expired,
-    media_expires_at: job.media_expires_at || ""
+    media_expires_at: job.media_expires_at || "",
+    generator_backend: job.generator_backend || ""
   };
 }
 
@@ -51,7 +58,8 @@ function hasMetaChanged(currentJob, nextJob) {
     currentJob.created_at !== nextJob.created_at ||
     currentJob.upload_url !== nextJob.upload_url ||
     currentJob.media_expired !== nextJob.media_expired ||
-    currentJob.media_expires_at !== nextJob.media_expires_at
+    currentJob.media_expires_at !== nextJob.media_expires_at ||
+    currentJob.generator_backend !== nextJob.generator_backend
   );
 }
 
@@ -78,86 +86,173 @@ function isTerminalStatus(status) {
   return status === "succeeded" || status === "failed";
 }
 
-function getProgressStage(progressRatio, status) {
-  if (status === "preview_ready") {
-    return "首图已生成，正在补齐候选图";
-  }
-  if (progressRatio < 0.28) {
-    return "正在生成首张预览图";
-  }
-  if (progressRatio < 0.72) {
-    return "正在补齐候选图";
-  }
-  return "正在筛选最自然的一张";
-}
-
-function getStatusLabel(status) {
+function getStatusLabel(status, completedSceneCount = 0) {
   if (status === "succeeded") {
     return "已完成";
   }
-  if (status === "preview_ready") {
-    return "首图已生成";
-  }
   if (status === "failed") {
-    return "失败";
+    return completedSceneCount > 0 ? "部分完成" : "失败";
   }
-  return "生成中";
-}
-
-function getImageLoadingText(status) {
-  return status === "preview_ready" ? "正在加载首张预览" : "正在加载最终结果";
-}
-
-function buildSaveChoices(imageUrls) {
-  return (imageUrls || []).map((url, index) => ({
-    url,
-    label: index === 0 ? "系统推荐图（顶部）" : `候选结果 ${index + 1}`
-  }));
-}
-
-function buildStageSteps(status, progressPercent) {
-  let completedCount = 2;
-  let activeIndex = 2;
-
-  if (status === "preview_ready") {
-    completedCount = 3;
-    activeIndex = 3;
-  } else if (status === "succeeded") {
-    completedCount = STAGE_LABELS.length;
-    activeIndex = -1;
-  } else if (status === "failed") {
-    completedCount = progressPercent >= 72 ? 3 : 2;
-    activeIndex = progressPercent >= 72 ? 3 : 2;
-  } else if (progressPercent >= 72) {
-    completedCount = 3;
-    activeIndex = 3;
+  if (status === "hair_generating") {
+    return "换发中";
   }
+  if (status === "hair_ready") {
+    return "发型预览已返回";
+  }
+  if (status === "scene_generating") {
+    return "场景生成中";
+  }
+  if (status === "scene_partial") {
+    return "场景图已返回";
+  }
+  return "排队中";
+}
 
-  return STAGE_LABELS.map((label, index) => {
-    let state = "pending";
-    if (index < completedCount) {
-      state = "done";
-    } else if (index === activeIndex) {
-      state = status === "failed" ? "failed" : "active";
-    }
-    return {
-      label,
-      state
-    };
+function getImageLoadingText(status, hasHairPreview, completedSceneCount) {
+  if (completedSceneCount > 0) {
+    return "正在加载场景成片";
+  }
+  if (hasHairPreview) {
+    return "正在加载发型预览";
+  }
+  if (status === "hair_generating") {
+    return "正在加载换发结果";
+  }
+  return "正在加载生成结果";
+}
+
+function buildSaveChoices(hairPreviewUrl, sceneImageUrls) {
+  const choices = [];
+  if (hairPreviewUrl) {
+    choices.push({
+      url: hairPreviewUrl,
+      label: "发型预览图"
+    });
+  }
+  (sceneImageUrls || []).forEach((url, index) => {
+    choices.push({
+      url,
+      label: `场景成片 ${index + 1}`
+    });
   });
+  return choices;
 }
 
-function buildStatusHint(status, remainingSeconds) {
-  if (status === "preview_ready") {
-    return `你已经可以先看第一张，预计还需 ${remainingSeconds} 秒完成最终筛选`;
+function buildStageSteps(status, hasHairPreview, completedSceneCount) {
+  const steps = STAGE_LABELS.map((label) => ({
+    label,
+    state: "pending"
+  }));
+
+  steps[0].state = "done";
+
+  if (status === "hair_generating") {
+    steps[1].state = "active";
+  } else if (hasHairPreview || completedSceneCount > 0 || isTerminalStatus(status)) {
+    steps[1].state = "done";
+  }
+
+  if (completedSceneCount >= 1) {
+    steps[2].state = "done";
+  } else if (status === "scene_generating") {
+    steps[2].state = "active";
+  }
+
+  if (completedSceneCount >= 2) {
+    steps[3].state = "done";
+  } else if (status === "scene_partial") {
+    steps[3].state = "active";
+  }
+
+  if (status === "succeeded") {
+    steps[4].state = "done";
+  } else if (status === "failed") {
+    const failureIndex = completedSceneCount > 0 ? Math.min(3, completedSceneCount + 1) : (hasHairPreview ? 2 : 1);
+    steps[failureIndex].state = "failed";
+  }
+
+  return steps;
+}
+
+function getProgressPercent(status, elapsedSeconds, hasHairPreview, completedSceneCount) {
+  if (status === "succeeded") {
+    return 100;
   }
   if (status === "failed") {
+    if (completedSceneCount >= 1) {
+      return 86;
+    }
+    if (hasHairPreview) {
+      return 46;
+    }
+    return 18;
+  }
+  if (status === "hair_generating") {
+    return Math.min(34, 14 + Math.round(elapsedSeconds * 0.7));
+  }
+  if (status === "hair_ready") {
+    return 42;
+  }
+  if (status === "scene_generating") {
+    return Math.min(74, 54 + Math.round(elapsedSeconds * 0.35));
+  }
+  if (status === "scene_partial") {
+    return Math.min(92, 80 + Math.round(elapsedSeconds * 0.18));
+  }
+  return MIN_VISIBLE_PROGRESS;
+}
+
+function getProgressStage(status, hasHairPreview, completedSceneCount) {
+  if (status === "hair_generating") {
+    return "正在生成仅换发型预览图";
+  }
+  if (status === "hair_ready") {
+    return "发型预览已返回，正在准备场景生成";
+  }
+  if (status === "scene_generating") {
+    return hasHairPreview ? "正在生成第 1 张场景成片" : "正在准备场景成片";
+  }
+  if (status === "scene_partial") {
+    return completedSceneCount >= 1 ? "第 1 张场景成片已返回，正在生成第 2 张" : "正在生成场景成片";
+  }
+  if (status === "succeeded") {
+    return "两张场景成片已全部返回";
+  }
+  if (status === "failed") {
+    if (completedSceneCount > 0) {
+      return "已返回部分结果，本次任务未完整完成";
+    }
+    if (hasHairPreview) {
+      return "发型预览已返回，但场景生成失败";
+    }
+    return "本次任务未能完成";
+  }
+  return "正在排队准备生成";
+}
+
+function buildStatusHint(status, remainingSeconds, hasHairPreview, completedSceneCount) {
+  if (status === "failed") {
+    if (completedSceneCount > 0 || hasHairPreview) {
+      return "当前保留已生成内容，你可以先保存，再返回首页重新生成。";
+    }
     return "这次任务没有顺利完成，可以返回首页重新生成。";
   }
-  if (remainingSeconds > 0) {
-    return `预计还需 ${remainingSeconds} 秒，期间可以离开页面，稍后从历史记录回来查看`;
+  if (status === "succeeded") {
+    return "发型预览与 2 张场景成片都已经准备完成。";
   }
-  return "已进入最后筛选阶段，通常很快就会完成";
+  if (status === "hair_generating") {
+    return "系统先只改发型，确保人物身份稳定后再继续做场景。";
+  }
+  if (status === "hair_ready") {
+    return "发型预览已准备好，接下来会继续生成两张场景成片。";
+  }
+  if (status === "scene_generating") {
+    return `正在生成第 1 张场景成片，预计还需 ${remainingSeconds} 秒。`;
+  }
+  if (status === "scene_partial") {
+    return `第 1 张已经可以先看，预计还需 ${remainingSeconds} 秒完成第 2 张。`;
+  }
+  return "任务已进入队列，生成完成后会自动刷新。";
 }
 
 Page({
@@ -166,19 +261,21 @@ Page({
     statusLabel: getStatusLabel("pending"),
     job: null,
     uploadUrl: "",
+    hairPreviewUrl: "",
     resultImageUrl: "",
     resultImageUrls: [],
+    completedSceneCount: 0,
     mediaExpired: false,
     mediaExpiresAt: "",
     resultImageLoaded: false,
-    imageLoadingText: getImageLoadingText("pending"),
+    imageLoadingText: getImageLoadingText("pending", false, 0),
     progressPercent: MIN_VISIBLE_PROGRESS,
     elapsedSeconds: 0,
     remainingSeconds: ESTIMATED_TOTAL_SECONDS,
     estimatedTotalSeconds: ESTIMATED_TOTAL_SECONDS,
-    progressStage: "正在准备生成",
-    progressHint: "预计总耗时约 75 秒",
-    stageSteps: buildStageSteps("pending", MIN_VISIBLE_PROGRESS)
+    progressStage: "正在排队准备生成",
+    progressHint: "先生成发型预览，再继续生成 2 张场景成片",
+    stageSteps: buildStageSteps("pending", false, 0)
   },
 
   onLoad(options) {
@@ -200,12 +297,11 @@ Page({
     });
 
     const initialStatus = options.status || "pending";
-
     this.setData({
       status: initialStatus,
-      statusLabel: getStatusLabel(initialStatus),
-      imageLoadingText: getImageLoadingText(initialStatus),
-      stageSteps: buildStageSteps(initialStatus, MIN_VISIBLE_PROGRESS),
+      statusLabel: getStatusLabel(initialStatus, 0),
+      imageLoadingText: getImageLoadingText(initialStatus, false, 0),
+      stageSteps: buildStageSteps(initialStatus, false, 0),
       job: initialJob
     });
 
@@ -227,7 +323,7 @@ Page({
     return {
       title: `我在 AIFace 试了 ${hairstyle} · ${scene}`,
       path: "/pages/index/index",
-      imageUrl: this.data.resultImageUrl || this.data.uploadUrl || ""
+      imageUrl: this.data.resultImageUrl || this.data.hairPreviewUrl || this.data.uploadUrl || ""
     };
   },
 
@@ -256,44 +352,33 @@ Page({
   },
 
   updateProgressState() {
-    if (isTerminalStatus(this.data.status)) {
-      this.setData({
-        stageSteps: buildStageSteps(this.data.status, this.data.progressPercent)
-      });
-      return;
-    }
+    const hasHairPreview = !!this.data.hairPreviewUrl;
+    const completedSceneCount = this.data.completedSceneCount || 0;
 
     const createdAtMs = this.jobCreatedAtMs || Date.now();
     const elapsedSeconds = Math.max(0, Math.floor((Date.now() - createdAtMs) / 1000));
-    let progressPercent = MIN_VISIBLE_PROGRESS;
-    let remainingSeconds = Math.max(0, ESTIMATED_TOTAL_SECONDS - elapsedSeconds);
-    let progressStage = getProgressStage(0, this.data.status);
-
-    if (this.data.status === "preview_ready") {
-      progressPercent = Math.min(
-        MAX_VISIBLE_PROGRESS,
-        Math.max(72, 72 + Math.round(elapsedSeconds / 4))
-      );
-      remainingSeconds = Math.max(
-        5,
-        Math.round(Math.max(0, ESTIMATED_TOTAL_SECONDS - elapsedSeconds) / 2)
-      );
-      progressStage = getProgressStage(1, this.data.status);
-    } else {
-      const rawRatio = elapsedSeconds / ESTIMATED_TOTAL_SECONDS;
-      const progressRatio = Math.min(rawRatio, MAX_VISIBLE_PROGRESS / 100);
-      const rawPercent = Math.round(progressRatio * 100);
-      progressPercent = Math.max(MIN_VISIBLE_PROGRESS, rawPercent);
-      progressStage = getProgressStage(progressRatio, this.data.status);
-    }
+    const progressPercent = getProgressPercent(
+      this.data.status,
+      elapsedSeconds,
+      hasHairPreview,
+      completedSceneCount
+    );
+    const remainingSeconds = isTerminalStatus(this.data.status)
+      ? 0
+      : Math.max(0, ESTIMATED_TOTAL_SECONDS - elapsedSeconds);
 
     this.setData({
       elapsedSeconds,
       remainingSeconds,
       progressPercent,
-      progressStage,
-      progressHint: buildStatusHint(this.data.status, remainingSeconds),
-      stageSteps: buildStageSteps(this.data.status, progressPercent)
+      progressStage: getProgressStage(this.data.status, hasHairPreview, completedSceneCount),
+      progressHint: buildStatusHint(
+        this.data.status,
+        remainingSeconds,
+        hasHairPreview,
+        completedSceneCount
+      ),
+      stageSteps: buildStageSteps(this.data.status, hasHairPreview, completedSceneCount)
     });
   },
 
@@ -324,19 +409,20 @@ Page({
 
   applyJobState(job) {
     const nextJob = buildJobMeta(job);
-    const nextImageUrls =
-      Array.isArray(job.result_image_urls) && job.result_image_urls.length
-        ? job.result_image_urls
-        : job.result_image_url
-          ? [job.result_image_url]
-          : [];
-    const nextImageUrl = nextImageUrls[0] || "";
+    const nextHairPreviewUrl = job.hair_preview_url || "";
+    const nextSceneUrls = Array.isArray(job.result_image_urls) ? job.result_image_urls : [];
+    const nextHeroImageUrl = job.result_image_url || nextHairPreviewUrl || "";
+    const nextCompletedSceneCount = Number(job.completed_scene_count || nextSceneUrls.length || 0);
     const nextState = {};
 
-    if (this.data.status !== job.status) {
+    if (this.data.status !== job.status || this.data.completedSceneCount !== nextCompletedSceneCount) {
       nextState.status = job.status;
-      nextState.statusLabel = getStatusLabel(job.status);
-      nextState.imageLoadingText = getImageLoadingText(job.status);
+      nextState.statusLabel = getStatusLabel(job.status, nextCompletedSceneCount);
+      nextState.imageLoadingText = getImageLoadingText(
+        job.status,
+        !!nextHairPreviewUrl,
+        nextCompletedSceneCount
+      );
     }
 
     const createdAtMs = parseTimestamp(job.created_at);
@@ -352,6 +438,10 @@ Page({
       nextState.uploadUrl = job.upload_url || "";
     }
 
+    if (this.data.hairPreviewUrl !== nextHairPreviewUrl) {
+      nextState.hairPreviewUrl = nextHairPreviewUrl;
+    }
+
     if (this.data.mediaExpired !== !!job.media_expired) {
       nextState.mediaExpired = !!job.media_expired;
     }
@@ -360,12 +450,16 @@ Page({
       nextState.mediaExpiresAt = job.media_expires_at || "";
     }
 
-    if (!arraysEqual(this.data.resultImageUrls, nextImageUrls)) {
-      nextState.resultImageUrls = nextImageUrls;
+    if (!arraysEqual(this.data.resultImageUrls, nextSceneUrls)) {
+      nextState.resultImageUrls = nextSceneUrls;
     }
 
-    if (this.data.resultImageUrl !== nextImageUrl) {
-      nextState.resultImageUrl = nextImageUrl;
+    if (this.data.completedSceneCount !== nextCompletedSceneCount) {
+      nextState.completedSceneCount = nextCompletedSceneCount;
+    }
+
+    if (this.data.resultImageUrl !== nextHeroImageUrl) {
+      nextState.resultImageUrl = nextHeroImageUrl;
       nextState.resultImageLoaded = false;
     }
 
@@ -384,15 +478,13 @@ Page({
 
   previewResult(event) {
     const current = event.currentTarget.dataset.url;
-    const urls = this.data.resultImageUrls.length
-      ? this.data.resultImageUrls
-      : this.data.resultImageUrl
-        ? [this.data.resultImageUrl]
-        : [];
-
-    if (!current || !urls.length) {
+    if (!current) {
       return;
     }
+
+    const urls = this.data.resultImageUrls.includes(current)
+      ? this.data.resultImageUrls
+      : [current];
 
     wx.previewImage({
       current,
@@ -411,30 +503,33 @@ Page({
   },
 
   previewComparison() {
-    if (!this.data.uploadUrl || !this.data.resultImageUrl) {
+    const currentResult = this.data.resultImageUrl || this.data.hairPreviewUrl;
+    if (!this.data.uploadUrl || !currentResult) {
       return;
     }
-    const urls = [this.data.uploadUrl, ...(this.data.resultImageUrls.length
-      ? this.data.resultImageUrls
-      : [this.data.resultImageUrl])];
     wx.previewImage({
-      current: this.data.resultImageUrl,
-      urls
+      current: currentResult,
+      urls: [this.data.uploadUrl, currentResult]
     });
   },
 
   async saveImage() {
-    const imageUrls = this.data.resultImageUrls.length
-      ? this.data.resultImageUrls
-      : this.data.resultImageUrl
-        ? [this.data.resultImageUrl]
-        : [];
+    const saveChoices = buildSaveChoices(
+      this.data.hairPreviewUrl,
+      this.data.resultImageUrls
+    );
 
-    if (!imageUrls.length) {
+    if (!saveChoices.length && this.data.resultImageUrl) {
+      saveChoices.push({
+        url: this.data.resultImageUrl,
+        label: "当前结果图"
+      });
+    }
+
+    if (!saveChoices.length) {
       return;
     }
 
-    const saveChoices = buildSaveChoices(imageUrls);
     if (saveChoices.length === 1) {
       this.downloadAndSaveImage(saveChoices[0].url, saveChoices[0].label);
       return;

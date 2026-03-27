@@ -23,14 +23,6 @@ def _env_int(name: str, default: int) -> int:
     return int(value)
 
 
-def _env_first(*names: str, default: str = "") -> str:
-    for name in names:
-        value = os.getenv(name)
-        if value is not None and value.strip():
-            return value.strip()
-    return default
-
-
 def _resolve_repo_path(value: str | Path) -> Path:
     path = value if isinstance(value, Path) else Path(value)
     if path.is_absolute():
@@ -114,11 +106,13 @@ class Settings:
     ark_api_keys: tuple[ArkApiCredential, ...]
     ark_base_url: str
     ark_image_model: str
+    seedream_basic_model: str
+    seedream_premium_model: str
     ark_key_cooldown_seconds: int
     image_generator_backend: str
-    nano_banana_api_key: str
-    nano_banana_base_url: str
-    nano_banana_model: str
+    nano_banana_pro_api_key: str
+    nano_banana_pro_base_url: str
+    nano_banana_pro_model: str
     nano_banana_2_api_key: str
     nano_banana_2_base_url: str
     nano_banana_2_model: str
@@ -267,18 +261,21 @@ def get_settings() -> Settings:
         ark_image_model=os.getenv(
             "ARK_IMAGE_MODEL", "doubao-seedream-5-0-260128"
         ).strip(),
+        seedream_basic_model=os.getenv(
+            "SEEDREAM_BASIC_MODEL", "doubao-seedream-4-5-251128"
+        ).strip(),
+        seedream_premium_model=os.getenv(
+            "SEEDREAM_PREMIUM_MODEL",
+            os.getenv("ARK_IMAGE_MODEL", "doubao-seedream-5-0-260128"),
+        ).strip(),
         ark_key_cooldown_seconds=_env_int("ARK_API_KEY_COOLDOWN_SECONDS", 120),
         image_generator_backend=image_generator_backend,
-        nano_banana_api_key=_env_first(
-            "NANO_BANANA_PRO_API_KEY",
-            "NANO_BANANA_API_KEY",
-            default="",
-        ),
-        nano_banana_base_url=os.getenv(
-            "NANO_BANANA_BASE_URL", "https://api.apiyi.com"
+        nano_banana_pro_api_key=os.getenv("NANO_BANANA_PRO_API_KEY", "").strip(),
+        nano_banana_pro_base_url=os.getenv(
+            "NANO_BANANA_PRO_BASE_URL", "https://api.apiyi.com"
         ).strip().rstrip("/"),
-        nano_banana_model=os.getenv(
-            "NANO_BANANA_MODEL", "gemini-3-pro-image-preview"
+        nano_banana_pro_model=os.getenv(
+            "NANO_BANANA_PRO_MODEL", "gemini-3-pro-image-preview"
         ).strip(),
         nano_banana_2_api_key=os.getenv("NANO_BANANA_2_API_KEY", "").strip(),
         nano_banana_2_base_url=os.getenv(
