@@ -139,8 +139,8 @@ class JobCreateRequest(BaseModel):
     hairstyle_id: str = Field(min_length=1)
     scene_id: str = Field(min_length=1)
     generator_backend: Literal["basic", "premium"] = "basic"
-    aspect_ratio: str | None = "3:4"
-    resolution: str | None = "4K"
+    aspect_ratio: str | None = None
+    resolution: str | None = None
 
 
 class JobResponse(BaseModel):

@@ -97,7 +97,7 @@ Page({
     aspectRatioOptions: [],
     resolutionOptions: [],
     selectedAspectRatio: "3:4",
-    selectedResolution: "4K",
+    selectedResolution: "2K",
     imagePreparing: false,
     uploadPriming: false,
     uploadReady: false,

@@ -28,19 +28,33 @@ SUPPORTED_ASPECT_RATIOS = (
     "8:1",
 )
 SUPPORTED_RESOLUTIONS = ("512px", "1K", "2K", "4K")
+PLAN_SAFE_ASPECT_RATIOS = (
+    "1:1",
+    "16:9",
+    "9:16",
+    "4:3",
+    "3:4",
+    "3:2",
+    "2:3",
+    "21:9",
+    "5:4",
+    "4:5",
+)
+BASIC_PLAN_RESOLUTIONS = ("2K",)
+PREMIUM_PLAN_RESOLUTIONS = ("1K", "2K")
 DEFAULT_GENERATOR_BACKEND = "basic"
 DEFAULT_ASPECT_RATIO = "3:4"
-DEFAULT_RESOLUTION = "4K"
+DEFAULT_RESOLUTION = "2K"
 
 GENERATOR_BACKEND_CAPABILITIES = {
     "basic": {
         "label": "基础版",
-        "description": "先用 Nano Banana 2 生成仅换发图，再用 Seedream 4.5 生成 2 张场景成片。",
+        "description": "先用 Nano Banana 2 生成仅换发图，再用 Seedream 4.5 生成 2 张场景成片。支持常用画幅，清晰度固定 2K。",
         "supports_reference_image": True,
-        "aspect_ratios": SUPPORTED_ASPECT_RATIOS,
-        "resolutions": SUPPORTED_RESOLUTIONS,
+        "aspect_ratios": PLAN_SAFE_ASPECT_RATIOS,
+        "resolutions": BASIC_PLAN_RESOLUTIONS,
         "default_aspect_ratio": "3:4",
-        "default_resolution": "4K",
+        "default_resolution": "2K",
         "hair_backend": "nano_banana_2",
         "scene_backend": "seedream",
         "scene_model_tier": "basic",
@@ -48,23 +62,12 @@ GENERATOR_BACKEND_CAPABILITIES = {
     },
     "premium": {
         "label": "高级版",
-        "description": "先用 Nano Banana Pro 生成仅换发图，再用 Seedream 5.0 生成 2 张场景成片。",
+        "description": "先用 Nano Banana Pro 生成仅换发图，再用 Seedream 5.0 生成 2 张场景成片。支持常用画幅，清晰度可选 1K / 2K。",
         "supports_reference_image": True,
-        "aspect_ratios": (
-            "1:1",
-            "16:9",
-            "9:16",
-            "4:3",
-            "3:4",
-            "3:2",
-            "2:3",
-            "21:9",
-            "5:4",
-            "4:5",
-        ),
-        "resolutions": ("1K", "2K", "4K"),
+        "aspect_ratios": PLAN_SAFE_ASPECT_RATIOS,
+        "resolutions": PREMIUM_PLAN_RESOLUTIONS,
         "default_aspect_ratio": "3:4",
-        "default_resolution": "4K",
+        "default_resolution": "2K",
         "hair_backend": "nano_banana_pro",
         "scene_backend": "seedream",
         "scene_model_tier": "premium",

@@ -131,7 +131,7 @@ def _create_job_fixture(tmp_path, monkeypatch, *, ark_api_keys: str | None = Non
         scene,
         generator_backend="basic",
         aspect_ratio="3:4",
-        resolution="4K",
+        resolution="2K",
         seed_source="job-fixture",
     )
     job = repository.create_job(
@@ -193,7 +193,7 @@ def test_build_and_parse_job_prompt_payload_preserves_output_options():
         scene,
         generator_backend="nano_banana_2",
         aspect_ratio="3:4",
-        resolution="4K",
+        resolution="2K",
         seed_source="job-payload",
     )
     parsed = templates.parse_job_prompt_payload(payload)
@@ -201,7 +201,7 @@ def test_build_and_parse_job_prompt_payload_preserves_output_options():
     assert parsed["output_options"] == {
         "generator_backend": "basic",
         "aspect_ratio": "3:4",
-        "resolution": "4K",
+        "resolution": "2K",
     }
     assert parsed["styling_id"]
     assert "full_prompt" in parsed
@@ -614,16 +614,93 @@ def test_job_accepts_extended_output_options(tmp_path, monkeypatch):
                 "hairstyle_id": catalog["hairstyles"][0]["id"],
                 "scene_id": catalog["scenes"][0]["id"],
                 "generator_backend": "basic",
-                "aspect_ratio": "1:8",
-                "resolution": "512px",
+                "aspect_ratio": "21:9",
+                "resolution": "2K",
             },
         )
 
         assert job_create.status_code == 201
         payload = job_create.json()
         assert payload["generator_backend"] == "basic"
-        assert payload["aspect_ratio"] == "1:8"
-        assert payload["resolution"] == "512px"
+        assert payload["aspect_ratio"] == "21:9"
+        assert payload["resolution"] == "2K"
+
+
+def test_templates_catalog_exposes_plan_specific_output_capabilities(tmp_path, monkeypatch):
+    app = _build_app(tmp_path, monkeypatch)
+
+    with TestClient(app) as client:
+        login = client.post("/api/auth/wechat/login", json={"code": "dev-test"})
+        token = login.json()["token"]
+        headers = {"Authorization": f"Bearer {token}"}
+
+        catalog = client.get("/api/templates", headers=headers)
+        assert catalog.status_code == 200
+        backends = {item["id"]: item for item in catalog.json()["generation_backends"]}
+
+        assert backends["basic"]["aspect_ratios"] == [
+            "1:1",
+            "16:9",
+            "9:16",
+            "4:3",
+            "3:4",
+            "3:2",
+            "2:3",
+            "21:9",
+            "5:4",
+            "4:5",
+        ]
+        assert backends["basic"]["resolutions"] == ["2K"]
+        assert backends["basic"]["default_resolution"] == "2K"
+        assert backends["premium"]["resolutions"] == ["1K", "2K"]
+        assert backends["premium"]["default_resolution"] == "2K"
+
+
+def test_job_rejects_plan_specific_unsupported_output_options(tmp_path, monkeypatch):
+    app = _build_app(tmp_path, monkeypatch)
+
+    with TestClient(app) as client:
+        login = client.post("/api/auth/wechat/login", json={"code": "dev-test"})
+        token = login.json()["token"]
+        headers = {"Authorization": f"Bearer {token}"}
+
+        upload = client.post(
+            "/api/uploads",
+            headers=headers,
+            files={"file": ("portrait.png", _build_test_image(), "image/png")},
+        )
+        upload_id = upload.json()["upload_id"]
+
+        catalog = client.get("/api/templates").json()
+        job_basic_4k = client.post(
+            "/api/jobs",
+            headers=headers,
+            json={
+                "upload_id": upload_id,
+                "hairstyle_id": catalog["hairstyles"][0]["id"],
+                "scene_id": catalog["scenes"][0]["id"],
+                "generator_backend": "basic",
+                "aspect_ratio": "3:4",
+                "resolution": "4K",
+            },
+        )
+        assert job_basic_4k.status_code == 400
+        assert "Unsupported resolution: 4K" in job_basic_4k.json()["detail"]
+
+        job_premium_extreme_ratio = client.post(
+            "/api/jobs",
+            headers=headers,
+            json={
+                "upload_id": upload_id,
+                "hairstyle_id": catalog["hairstyles"][0]["id"],
+                "scene_id": catalog["scenes"][0]["id"],
+                "generator_backend": "premium",
+                "aspect_ratio": "1:8",
+                "resolution": "2K",
+            },
+        )
+        assert job_premium_extreme_ratio.status_code == 400
+        assert "Unsupported aspect ratio: 1:8" in job_premium_extreme_ratio.json()["detail"]
 
 
 def test_media_cleanup_removes_expired_images_but_keeps_history(tmp_path, monkeypatch):
