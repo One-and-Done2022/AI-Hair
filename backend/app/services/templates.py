@@ -1185,17 +1185,39 @@ def parse_job_prompt_payload(raw_prompt: str) -> dict:
             "output_options": normalized_options,
         }
 
-    output_options = normalize_generation_options(
-        generator_backend=(payload.get("output_options") or {}).get("generator_backend")
-        if isinstance(payload.get("output_options"), dict)
-        else None,
-        aspect_ratio=(payload.get("output_options") or {}).get("aspect_ratio")
-        if isinstance(payload.get("output_options"), dict)
-        else None,
-        resolution=(payload.get("output_options") or {}).get("resolution")
-        if isinstance(payload.get("output_options"), dict)
-        else None,
-    )
+    raw_output_options = payload.get("output_options") if isinstance(payload.get("output_options"), dict) else {}
+    raw_generator_backend = raw_output_options.get("generator_backend")
+    raw_aspect_ratio = raw_output_options.get("aspect_ratio")
+    raw_resolution = raw_output_options.get("resolution")
+
+    try:
+        output_options = normalize_generation_options(
+            generator_backend=raw_generator_backend,
+            aspect_ratio=raw_aspect_ratio,
+            resolution=raw_resolution,
+        )
+    except ValueError:
+        resolved_backend = _normalize_generator_backend(raw_generator_backend)
+        if resolved_backend not in GENERATOR_BACKEND_CAPABILITIES:
+            resolved_backend = DEFAULT_GENERATOR_BACKEND
+        capability = GENERATOR_BACKEND_CAPABILITIES[resolved_backend]
+        normalized_resolution = (
+            "512px" if isinstance(raw_resolution, str) and raw_resolution.lower() == "512px"
+            else str(raw_resolution).upper() if raw_resolution is not None else None
+        )
+        output_options = {
+            "generator_backend": resolved_backend,
+            "aspect_ratio": (
+                raw_aspect_ratio
+                if isinstance(raw_aspect_ratio, str) and raw_aspect_ratio in SUPPORTED_ASPECT_RATIOS
+                else capability["default_aspect_ratio"] or DEFAULT_ASPECT_RATIO
+            ),
+            "resolution": (
+                normalized_resolution
+                if isinstance(normalized_resolution, str) and normalized_resolution in SUPPORTED_RESOLUTIONS
+                else (capability["default_resolution"] or DEFAULT_RESOLUTION)
+            ),
+        }
     return {
         "version": payload.get("version", 1),
         "full_prompt": str(payload.get("full_prompt") or ""),

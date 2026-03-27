@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import base64
 import io
+import json
 import sys
 import time
 from datetime import datetime, timedelta, timezone
@@ -207,6 +208,31 @@ def test_build_and_parse_job_prompt_payload_preserves_output_options():
     assert "full_prompt" in parsed
     assert "hairstyle_only_prompt" in parsed
     assert "scene_only_prompt" in parsed
+
+
+def test_parse_job_prompt_payload_keeps_legacy_output_options_for_history():
+    from app.services import templates
+
+    payload = {
+        "version": 2,
+        "full_prompt": "legacy full",
+        "hairstyle_only_prompt": "legacy hair",
+        "scene_only_prompt": "legacy scene",
+        "styling_id": "legacy-style",
+        "output_options": {
+            "generator_backend": "basic",
+            "aspect_ratio": "1:8",
+            "resolution": "4K",
+        },
+    }
+
+    parsed = templates.parse_job_prompt_payload(json.dumps(payload, ensure_ascii=False))
+
+    assert parsed["output_options"] == {
+        "generator_backend": "basic",
+        "aspect_ratio": "1:8",
+        "resolution": "4K",
+    }
 
 
 def test_build_prompt_assembly_returns_structured_blocks():
