@@ -23,6 +23,17 @@ def _env_int(name: str, default: int) -> int:
     return int(value)
 
 
+def _env_csv_tuple(name: str) -> tuple[str, ...]:
+    raw_value = os.getenv(name, "")
+    if not raw_value.strip():
+        return ()
+    return tuple(
+        item.strip()
+        for item in raw_value.replace("\n", ",").split(",")
+        if item.strip()
+    )
+
+
 def _resolve_repo_path(value: str | Path) -> Path:
     path = value if isinstance(value, Path) else Path(value)
     if path.is_absolute():
@@ -104,6 +115,7 @@ class Settings:
     db_pool_recycle_seconds: int
     ark_api_key: str
     ark_api_keys: tuple[ArkApiCredential, ...]
+    ark_api_disabled_key_ids: tuple[str, ...]
     ark_base_url: str
     ark_image_model: str
     seedream_basic_model: str
@@ -255,6 +267,7 @@ def get_settings() -> Settings:
         db_pool_recycle_seconds=max(30, _env_int("DB_POOL_RECYCLE_SECONDS", 1800)),
         ark_api_key=(ark_api_keys[0].api_key if ark_api_keys else "").strip(),
         ark_api_keys=ark_api_keys,
+        ark_api_disabled_key_ids=_env_csv_tuple("ARK_API_DISABLED_KEY_IDS"),
         ark_base_url=os.getenv(
             "ARK_BASE_URL", "https://ark.cn-beijing.volces.com/api/v3"
         ).strip(),

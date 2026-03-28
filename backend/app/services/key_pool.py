@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from threading import Condition, Lock
 from time import monotonic
+from typing import Iterable
 
 from app.config import ArkApiCredential
 
@@ -32,6 +33,7 @@ class ApiKeyPool:
         credentials: tuple[ArkApiCredential, ...],
         *,
         default_cooldown_seconds: int,
+        disabled_key_ids: Iterable[str] = (),
     ) -> None:
         if not credentials:
             raise ValueError("ApiKeyPool requires at least one credential.")
@@ -41,6 +43,15 @@ class ApiKeyPool:
             credential.key_id: _ApiKeyState(credential=credential)
             for credential in credentials
         }
+        self._disabled_key_ids = {key_id.strip() for key_id in disabled_key_ids if key_id.strip()}
+        for key_id in self._disabled_key_ids:
+            state = self._states.get(key_id)
+            if state is None:
+                continue
+            state.cooldown_until = float("inf")
+            state.disabled = True
+            state.disabled_reason = "disabled_by_config"
+            state.disabled_at = monotonic()
         self._lock = Lock()
         self._condition = Condition(self._lock)
 

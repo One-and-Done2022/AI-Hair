@@ -1474,6 +1474,60 @@ def test_map_openai_error_disables_key_for_model_not_open():
     assert mapped.disable_key is True
 
 
+def test_map_openai_error_disables_key_for_set_limit_exceeded():
+    import httpx
+    from openai import APIStatusError
+
+    from app.services.generation import _map_openai_error
+
+    request = httpx.Request("POST", "https://example.com/v1/images")
+    response = httpx.Response(
+        429,
+        request=request,
+        json={
+            "error": {
+                "code": "SetLimitExceeded",
+                "message": "Set limit exceeded for this account.",
+            }
+        },
+    )
+    error = APIStatusError(
+        "Error code: 429",
+        response=response,
+        body=response.json(),
+    )
+
+    mapped = _map_openai_error(error)
+
+    assert mapped.code == "set_limit_exceeded"
+    assert mapped.retryable is True
+    assert mapped.disable_key is True
+    assert mapped.retry_after_seconds == 3600
+
+
+def test_map_seedream_http_error_disables_key_for_set_limit_exceeded():
+    import httpx
+
+    from app.services.generation import _map_seedream_http_error
+
+    response = httpx.Response(
+        429,
+        request=httpx.Request("POST", "https://example.com/api/v3/images/generations"),
+        json={
+            "error": {
+                "message": "Your account [2122895780] has reached the set inference limit for the [doubao-seedream-5-0] model, and the model service has been paused. Please adjust Safe Experience Mode.",
+            }
+        },
+    )
+
+    mapped = _map_seedream_http_error(response)
+
+    assert mapped.code == "set_limit_exceeded"
+    assert mapped.retryable is True
+    assert mapped.disable_key is True
+    assert mapped.retry_after_seconds == 3600
+
+
 def test_settings_parse_multi_ark_api_keys_and_default_worker_concurrency(
     tmp_path, monkeypatch
 ):
@@ -1491,6 +1545,19 @@ def test_settings_parse_multi_ark_api_keys_and_default_worker_concurrency(
     assert all(credential.max_concurrency == 2 for credential in settings.ark_api_keys)
     assert settings.job_worker_concurrency == 4
     assert settings.use_mock_generator is False
+
+
+def test_settings_parse_disabled_ark_api_key_ids(tmp_path, monkeypatch):
+    _configure_runtime_env(tmp_path, monkeypatch, use_mock_generator="false")
+    monkeypatch.setenv("ARK_API_KEYS", "key-a:alpha,key-b:beta")
+    monkeypatch.setenv("ARK_API_DISABLED_KEY_IDS", "key-a,key-c")
+
+    from app.config import get_settings
+
+    get_settings.cache_clear()
+    settings = get_settings()
+
+    assert settings.ark_api_disabled_key_ids == ("key-a", "key-c")
 
 
 def test_api_key_pool_disables_key_and_stops_future_allocation(tmp_path, monkeypatch):
@@ -1517,6 +1584,30 @@ def test_api_key_pool_disables_key_and_stops_future_allocation(tmp_path, monkeyp
     next_lease = pool.acquire(timeout=0.1)
     assert next_lease is not None
     assert next_lease.key_id != lease.key_id
+
+
+def test_api_key_pool_skips_config_disabled_keys(tmp_path, monkeypatch):
+    _configure_runtime_env(tmp_path, monkeypatch, use_mock_generator="false")
+    monkeypatch.setenv("ARK_API_KEYS", "key-a:alpha,key-b:beta")
+    monkeypatch.setenv("ARK_API_DISABLED_KEY_IDS", "key-a")
+
+    from app.config import get_settings
+    from app.services.key_pool import ApiKeyPool
+
+    get_settings.cache_clear()
+    settings = get_settings()
+    pool = ApiKeyPool(
+        settings.ark_api_keys,
+        default_cooldown_seconds=settings.ark_key_cooldown_seconds,
+        disabled_key_ids=settings.ark_api_disabled_key_ids,
+    )
+
+    assert pool.is_disabled("key-a") is True
+    assert pool.active_size == 1
+
+    lease = pool.acquire(timeout=0.1)
+    assert lease is not None
+    assert lease.key_id == "key-b"
 
 
 def test_job_worker_switches_to_next_key_before_preview(tmp_path, monkeypatch):

@@ -208,6 +208,7 @@ def publish_category(
                 generator_backend=backend,
                 aspect_ratio=aspect_ratio,
                 resolution=resolution,
+                review_genders=(cover_gender,) if category == "scenes" else None,
             )
             review_pipeline.approve_template_package(
                 category=category,

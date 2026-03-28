@@ -34,6 +34,7 @@ def main() -> None:
         key_pool = ApiKeyPool(
             settings.ark_api_keys,
             default_cooldown_seconds=settings.ark_key_cooldown_seconds,
+            disabled_key_ids=settings.ark_api_disabled_key_ids,
         )
 
     worker = JobWorker(

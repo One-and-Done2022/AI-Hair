@@ -195,6 +195,19 @@ def _map_openai_error(exc: Exception) -> ImageGenerationError:
                 disable_key=True,
             )
 
+        if status_code == 429 and (
+            normalized_provider_code == "setlimitexceeded"
+            or "setlimitexceeded" in normalized_message
+            or "set limit exceeded" in normalized_message
+        ):
+            return ImageGenerationError(
+                "set_limit_exceeded",
+                str(exc),
+                retryable=True,
+                retry_after_seconds=max(_extract_retry_after_seconds(exc) or 0, 3600),
+                disable_key=True,
+            )
+
         retryable = status_code in {408, 409, 429, 500, 502, 503, 504}
         return ImageGenerationError(
             f"upstream_status_{status_code}",
@@ -902,6 +915,7 @@ def _map_nano_http_error(response: httpx.Response) -> ImageGenerationError:
 
 def _map_seedream_http_error(response: httpx.Response) -> ImageGenerationError:
     message = _extract_nano_error_message(response)
+    normalized_message = message.lower()
     if response.status_code in {401, 403}:
         return ImageGenerationError(
             "authentication_failed",
@@ -912,6 +926,18 @@ def _map_seedream_http_error(response: httpx.Response) -> ImageGenerationError:
         )
     if response.status_code == 400:
         return ImageGenerationError("bad_request", message)
+    if response.status_code == 429 and (
+        "setlimitexceeded" in normalized_message
+        or "set inference limit" in normalized_message
+        or "safe experience mode" in normalized_message
+    ):
+        return ImageGenerationError(
+            "set_limit_exceeded",
+            message,
+            retryable=True,
+            retry_after_seconds=3600,
+            disable_key=True,
+        )
     if response.status_code in {408, 409, 429, 500, 502, 503, 504}:
         return ImageGenerationError(
             f"upstream_status_{response.status_code}",

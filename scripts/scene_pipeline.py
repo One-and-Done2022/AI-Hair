@@ -39,6 +39,7 @@ SceneDraftOptions = None
 build_scene_draft = None
 ApiKeyPool = None
 templates = None
+_SEEDREAM_KEY_POOL = None
 
 
 def utc_now() -> str:
@@ -82,6 +83,24 @@ def _load_backend_dependencies() -> None:
     build_scene_draft = _build_scene_draft
     ApiKeyPool = _ApiKeyPool
     templates = _templates
+
+
+def _shared_seedream_key_pool():
+    global _SEEDREAM_KEY_POOL
+    _load_backend_dependencies()
+    if _SEEDREAM_KEY_POOL is not None:
+        return _SEEDREAM_KEY_POOL
+
+    settings = get_settings()
+    if not settings.ark_api_keys:
+        raise ImageGenerationError("missing_api_key", "当前没有可用的 Ark API key。")
+
+    _SEEDREAM_KEY_POOL = ApiKeyPool(
+        settings.ark_api_keys,
+        default_cooldown_seconds=settings.ark_key_cooldown_seconds,
+        disabled_key_ids=settings.ark_api_disabled_key_ids,
+    )
+    return _SEEDREAM_KEY_POOL
 
 
 def _ensure_dir(path: Path) -> None:
@@ -368,13 +387,7 @@ def _generate_review_image(
     )
 
     if getattr(generator, "supports_key_pool", False):
-        settings = get_settings()
-        if not settings.ark_api_keys:
-            raise ImageGenerationError("missing_api_key", "当前没有可用的 Ark API key。")
-        key_pool = ApiKeyPool(
-            settings.ark_api_keys,
-            default_cooldown_seconds=settings.ark_key_cooldown_seconds,
-        )
+        key_pool = _shared_seedream_key_pool()
         lease = key_pool.acquire(timeout=1.0)
         if lease is None:
             raise ImageGenerationError("no_available_key", "当前没有可用的 Seedream key。")

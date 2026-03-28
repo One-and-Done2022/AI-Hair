@@ -38,6 +38,7 @@ DEFAULT_HAIRSTYLE_SAMPLE_IDS = {
     "female": "female3",
     "male": "male2",
 }
+LEGACY_SCENE_SAMPLE_FILENAMES = {"female.jpg", "male.jpg"}
 
 get_settings = None
 GenerationContext = None
@@ -45,6 +46,7 @@ ImageGenerationError = None
 build_generator = None
 ApiKeyPool = None
 templates = None
+_SEEDREAM_KEY_POOL = None
 
 
 def utc_now() -> str:
@@ -77,6 +79,24 @@ def _load_backend_dependencies() -> None:
     build_generator = _build_generator
     ApiKeyPool = _ApiKeyPool
     templates = _templates
+
+
+def _shared_seedream_key_pool():
+    global _SEEDREAM_KEY_POOL
+    _load_backend_dependencies()
+    if _SEEDREAM_KEY_POOL is not None:
+        return _SEEDREAM_KEY_POOL
+
+    settings = get_settings()
+    if not settings.ark_api_keys:
+        raise ImageGenerationError("missing_api_key", "当前没有可用的 Ark API key。")
+
+    _SEEDREAM_KEY_POOL = ApiKeyPool(
+        settings.ark_api_keys,
+        default_cooldown_seconds=settings.ark_key_cooldown_seconds,
+        disabled_key_ids=settings.ark_api_disabled_key_ids,
+    )
+    return _SEEDREAM_KEY_POOL
 
 
 def _ensure_dir(path: Path) -> None:
@@ -135,13 +155,7 @@ def _generate_review_image(
     )
 
     if getattr(generator, "supports_key_pool", False):
-        settings = get_settings()
-        if not settings.ark_api_keys:
-            raise ImageGenerationError("missing_api_key", "当前没有可用的 Ark API key。")
-        key_pool = ApiKeyPool(
-            settings.ark_api_keys,
-            default_cooldown_seconds=settings.ark_key_cooldown_seconds,
-        )
+        key_pool = _shared_seedream_key_pool()
         lease = key_pool.acquire(timeout=1.0)
         if lease is None:
             raise ImageGenerationError("no_available_key", "当前没有可用的 Seedream key。")
@@ -250,13 +264,28 @@ def _selected_samples_for_template(
     category: str,
     template: dict[str, Any],
     sample_images: dict[str, Path],
+    review_genders: tuple[str, ...] | None = None,
 ) -> dict[str, Path]:
+    def ensure_valid_scene_sample(sample_path: Path, *, gender: str) -> Path:
+        if sample_path.name.lower() in LEGACY_SCENE_SAMPLE_FILENAMES:
+            raise ValueError(
+                f"场景 {template['id']} 仍在使用旧示例人物图 {sample_path.name}，"
+                "请改用 assets/female1~3.jpg 或 assets/male1~3.jpg。"
+            )
+        return sample_path
+
     if category == "scenes":
+        target_genders = tuple(
+            gender for gender in (review_genders or ("female", "male")) if gender in {"female", "male"}
+        ) or ("female", "male")
         selected: dict[str, Path] = {}
-        for gender in ("female", "male"):
+        for gender in target_genders:
             direct_override = sample_images.get(gender)
             if direct_override is not None:
-                selected[gender] = direct_override
+                selected[gender] = ensure_valid_scene_sample(
+                    direct_override,
+                    gender=gender,
+                )
                 continue
             sample_image_id = templates.resolve_scene_sample_image_id(
                 template,
@@ -270,7 +299,10 @@ def _selected_samples_for_template(
                 raise FileNotFoundError(
                     f"找不到官方示例人物图：{sample_image_id}（scene={template['id']} gender={gender}）"
                 )
-            selected[gender] = sample_path
+            selected[gender] = ensure_valid_scene_sample(
+                sample_path,
+                gender=gender,
+            )
         return selected
     gender = str(template.get("gender") or "").strip()
     sample_path = sample_images.get(gender)
@@ -305,6 +337,7 @@ def process_template(
     generator_backend: str,
     aspect_ratio: str,
     resolution: str,
+    review_genders: tuple[str, ...] | None = None,
 ) -> Path:
     _load_backend_dependencies()
     package_dir = review_root / category / template["id"]
@@ -320,7 +353,12 @@ def process_template(
     )
     (package_dir / "prompt.txt").write_text(prompt + "\n", encoding="utf-8")
 
-    selected_samples = _selected_samples_for_template(category, template, sample_images)
+    selected_samples = _selected_samples_for_template(
+        category,
+        template,
+        sample_images,
+        review_genders=review_genders,
+    )
     review_results: dict[str, dict[str, Any]] = {}
     source_asset_paths: dict[str, str] = {}
 

@@ -45,6 +45,7 @@ def create_app() -> FastAPI:
             key_pool = ApiKeyPool(
                 current_settings.ark_api_keys,
                 default_cooldown_seconds=current_settings.ark_key_cooldown_seconds,
+                disabled_key_ids=current_settings.ark_api_disabled_key_ids,
             )
         worker = JobWorker(
             generator,
