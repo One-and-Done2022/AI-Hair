@@ -346,6 +346,29 @@ def test_build_scene_only_prompt_locks_existing_hairstyle_and_updates_scene():
     assert "抬手整理窗边发丝" not in prompt
 
 
+def test_scene_only_prompt_prefers_gendered_scene_styling_rules():
+    from app.services import templates
+
+    scene = templates.get_scene("indoor-film-lifestyle")
+
+    assert scene is not None
+
+    female_prompt = templates.build_scene_only_prompt(
+        scene,
+        preferred_gender="female",
+        seed_source="scene-only-female-rule",
+    )
+    male_prompt = templates.build_scene_only_prompt(
+        scene,
+        preferred_gender="male",
+        seed_source="scene-only-male-rule",
+    )
+
+    assert "内搭浅色背心或吊带" in female_prompt
+    assert "米白或浅灰针织上衣" in male_prompt
+    assert female_prompt != male_prompt
+
+
 def test_scene_only_prompt_assembly_exposes_hair_lock_block():
     from app.services import templates
 
@@ -427,10 +450,10 @@ def test_faceprompt_catalog_counts_and_legacy_aliases():
     from app.services import templates
 
     assert len(templates.SCENES) == 20
-    assert len(templates.HAIRSTYLES) == 40
+    assert len(templates.HAIRSTYLES) == 58
     assert len(templates.STYLINGS) == 7
-    assert len([item for item in templates.HAIRSTYLES if item["gender"] == "male"]) == 20
-    assert len([item for item in templates.HAIRSTYLES if item["gender"] == "female"]) == 20
+    assert len([item for item in templates.HAIRSTYLES if item["gender"] == "male"]) == 25
+    assert len([item for item in templates.HAIRSTYLES if item["gender"] == "female"]) == 33
 
     assert templates.get_hairstyle("american-spiky")["id"] == "male-forward-spikes"
     assert templates.get_scene("lifestyle-interior")["id"] == "indoor-film-lifestyle"
@@ -504,11 +527,11 @@ def test_auth_upload_job_history_flow(tmp_path, monkeypatch):
         templates = client.get("/api/templates")
         assert templates.status_code == 200
         catalog = templates.json()
-        assert len(catalog["hairstyles"]) == 40
+        assert len(catalog["hairstyles"]) == 58
         assert len(catalog["scenes"]) == 20
         assert len(catalog["generation_backends"]) == 2
-        assert len([item for item in catalog["hairstyles"] if item["gender"] == "male"]) == 20
-        assert len([item for item in catalog["hairstyles"] if item["gender"] == "female"]) == 20
+        assert len([item for item in catalog["hairstyles"] if item["gender"] == "male"]) == 25
+        assert len([item for item in catalog["hairstyles"] if item["gender"] == "female"]) == 33
         assert catalog["hairstyles"][0]["style_line_label"]
         assert catalog["hairstyles"][0]["category_key"]
         assert catalog["hairstyles"][0]["category_label"]

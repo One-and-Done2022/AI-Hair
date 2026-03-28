@@ -103,12 +103,15 @@ def test_scene_pipeline_processes_inbox_item_and_generates_review_bundle(tmp_pat
                 model_name="gemini-3-pro-preview",
             )
 
+    prompt_calls: list[str] = []
+
     class FakeGenerator:
         supports_key_pool = False
 
         def generate(self, source_image_path, prompt, context, provider_key=None, on_preview=None):
             assert Path(source_image_path).exists()
             assert "人物发型：保持参考图中已经生成完成的发型不变" in prompt
+            prompt_calls.append(prompt)
             image_bytes = _build_test_image("#264653")
             return GenerationResult(
                 primary_image_bytes=image_bytes,
@@ -135,7 +138,8 @@ def test_scene_pipeline_processes_inbox_item_and_generates_review_bundle(tmp_pat
     assert (package_dir / "source.png").exists()
     assert (package_dir / "blocks.json").exists()
     assert (package_dir / "scene_draft.json").exists()
-    assert (package_dir / "scene_only_prompt.txt").exists()
+    assert (package_dir / "scene_only_prompt_male.txt").exists()
+    assert (package_dir / "scene_only_prompt_female.txt").exists()
     assert (package_dir / "review_male.png").exists()
     assert (package_dir / "review_female.png").exists()
 
@@ -147,8 +151,15 @@ def test_scene_pipeline_processes_inbox_item_and_generates_review_bundle(tmp_pat
     assert metadata["review_results"]["female"]["status"] == "succeeded"
     assert metadata["recommended_cover"]["gender"] == "female"
     assert metadata["recommended_cover"]["image"] == "review_female.png"
+    assert metadata["prompt_files"]["male"] == "scene_only_prompt_male.txt"
+    assert metadata["prompt_files"]["female"] == "scene_only_prompt_female.txt"
     assert metadata["review_checklist"]["cover_ready"] == "yes"
+    assert metadata["review_checklist"]["styling_harmony"] == "pending"
+    assert metadata["review_checklist"]["lighting_face_ok"] == "pending"
+    assert metadata["review_checklist"]["outfit_scene_consistent"] == "pending"
     assert metadata["review_notes"] == ""
+    assert len(prompt_calls) == 2
+    assert prompt_calls[0] != prompt_calls[1]
 
 
 def test_review_scene_pipeline_approve_moves_package_and_appends_catalog(tmp_path, monkeypatch):

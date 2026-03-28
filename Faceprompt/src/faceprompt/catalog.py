@@ -1853,12 +1853,12 @@ def validate_catalog() -> list[str]:
     summary = catalog_summary()
     if summary["scene_count"] != 20:
         errors.append(f"Expected 20 scenes, found {summary['scene_count']}")
-    if summary["hairstyle_count"] != 40:
-        errors.append(f"Expected 40 hairstyles, found {summary['hairstyle_count']}")
-    if summary["male_hairstyles"] != 20:
-        errors.append(f"Expected 20 male hairstyles, found {summary['male_hairstyles']}")
-    if summary["female_hairstyles"] != 20:
-        errors.append(f"Expected 20 female hairstyles, found {summary['female_hairstyles']}")
+    if summary["hairstyle_count"] != 58:
+        errors.append(f"Expected 58 hairstyles, found {summary['hairstyle_count']}")
+    if summary["male_hairstyles"] != 25:
+        errors.append(f"Expected 25 male hairstyles, found {summary['male_hairstyles']}")
+    if summary["female_hairstyles"] != 33:
+        errors.append(f"Expected 33 female hairstyles, found {summary['female_hairstyles']}")
     if summary["structured_hairstyle_controls"] < 6:
         errors.append(
             "Expected at least 6 structured hairstyle control profiles for the pilot"

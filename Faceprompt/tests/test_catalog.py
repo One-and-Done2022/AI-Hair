@@ -27,10 +27,10 @@ class CatalogTests(unittest.TestCase):
     def test_summary_counts_match_plan(self) -> None:
         summary = catalog_summary()
         self.assertEqual(summary["scene_count"], 20)
-        self.assertEqual(summary["hairstyle_count"], 40)
-        self.assertEqual(summary["male_hairstyles"], 20)
-        self.assertEqual(summary["female_hairstyles"], 20)
-        self.assertEqual(summary["total_records"], 60)
+        self.assertEqual(summary["hairstyle_count"], 58)
+        self.assertEqual(summary["male_hairstyles"], 25)
+        self.assertEqual(summary["female_hairstyles"], 33)
+        self.assertEqual(summary["total_records"], 78)
         self.assertGreaterEqual(summary["structured_hairstyle_controls"], 6)
         self.assertGreaterEqual(summary["structured_scene_controls"], 6)
 

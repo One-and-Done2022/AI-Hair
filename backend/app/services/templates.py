@@ -630,9 +630,19 @@ def _resolve_styling(
     preferred_gender: str | None,
     seed_source: str,
     styling: dict | None = None,
+    scene_rule: dict | None = None,
 ) -> dict:
     if styling is not None:
         return styling
+    if scene_rule is not None:
+        selected = _scene_rule_styling_candidates(
+            style_line,
+            preferred_gender,
+            seed_source,
+            scene_rule,
+        )
+        if selected is not None:
+            return selected
     return _default_styling(style_line, preferred_gender, seed_source)
 
 
@@ -640,13 +650,20 @@ def _build_styling_prompt_values(
     *,
     styling: dict,
     default_outfit_text: str,
+    makeup_override: str | None = None,
     outfit_override: str | None = None,
+    constraint_additions: Iterable[str] | None = None,
 ) -> dict[str, str]:
-    makeup_text = _normalize_sentence(styling.get("makeup_prompt", ""))
+    makeup_text = _normalize_sentence(makeup_override or styling.get("makeup_prompt", ""))
     outfit_text = _normalize_sentence(outfit_override or styling.get("outfit_prompt") or default_outfit_text)
     styling_constraints = "；".join(
         _normalize_sentence(item)
-        for item in _dedupe_keep_order(styling.get("constraints", []))
+        for item in _dedupe_keep_order(
+            [
+                *styling.get("constraints", []),
+                *(constraint_additions or ()),
+            ]
+        )
     )
     return {
         "makeup_text": makeup_text,
@@ -778,6 +795,21 @@ def _build_styling_template(raw: dict) -> dict:
     }
 
 
+def _build_scene_styling_rule(raw: dict) -> dict:
+    return {
+        "id": raw["sceneId"],
+        "scene_family": raw.get("sceneFamily", ""),
+        "default_styling_id": raw.get("defaultStylingId", ""),
+        "gender_styling_ids": raw.get("genderStylingIds", {}),
+        "allowed_styling_ids": raw.get("allowedStylingIds", []),
+        "makeup_override": raw.get("makeupOverride"),
+        "outfit_override": raw.get("outfitOverride"),
+        "styling_constraint_additions": raw.get("stylingConstraintAdditions"),
+        "lighting_guardrails": raw.get("lightingGuardrails"),
+        "recommended_hairstyle_category_keys": raw.get("recommendedHairstyleCategoryKeys", {}),
+    }
+
+
 @lru_cache(maxsize=1)
 def _catalog() -> dict[str, list[dict]]:
     scenes = [_build_scene_template(item) for item in _load_json("scenes.json")]
@@ -788,16 +820,21 @@ def _catalog() -> dict[str, list[dict]]:
         _build_hairstyle_template(item) for item in _load_json("hairstyles_female.json")
     ]
     stylings = [_build_styling_template(item) for item in _load_json("stylings.json")]
+    scene_styling_rules = [
+        _build_scene_styling_rule(item) for item in _load_json("scene_styling_rules.json")
+    ]
     return {
         "scenes": scenes,
         "hairstyles": [*male_hairstyles, *female_hairstyles],
         "stylings": stylings,
+        "scene_styling_rules": scene_styling_rules,
     }
 
 
 SCENES = _catalog()["scenes"]
 HAIRSTYLES = _catalog()["hairstyles"]
 STYLINGS = _catalog()["stylings"]
+SCENE_STYLING_RULES = _catalog()["scene_styling_rules"]
 
 
 def _find_template(items: Iterable[dict], template_id: str) -> dict | None:
@@ -821,12 +858,89 @@ def get_styling(template_id: str) -> dict | None:
     return _find_template(STYLINGS, template_id)
 
 
+def get_scene_styling_rule(scene_id: str) -> dict | None:
+    return _find_template(SCENE_STYLING_RULES, scene_id)
+
+
+def _normalize_rule_value_to_list(raw: object) -> list[str]:
+    if raw is None:
+        return []
+    if isinstance(raw, str):
+        return [_normalize_sentence(raw)]
+    if isinstance(raw, list):
+        return [
+            _normalize_sentence(item)
+            for item in _dedupe_keep_order(str(item) for item in raw if str(item).strip())
+        ]
+    return []
+
+
+def _resolve_rule_sentences(raw: object, preferred_gender: str | None) -> list[str]:
+    if isinstance(raw, dict):
+        resolved: list[str] = []
+        ordered_keys: list[str] = []
+        if preferred_gender:
+            ordered_keys.append(preferred_gender)
+        ordered_keys.extend(["default", "unisex"])
+        for key in ordered_keys:
+            resolved.extend(_normalize_rule_value_to_list(raw.get(key)))
+        return _dedupe_keep_order(resolved)
+    return _normalize_rule_value_to_list(raw)
+
+
+def _resolve_rule_text(raw: object, preferred_gender: str | None) -> str:
+    return "；".join(_resolve_rule_sentences(raw, preferred_gender))
+
+
+def _scene_rule_styling_candidates(
+    style_line: str,
+    preferred_gender: str | None,
+    seed_source: str,
+    scene_rule: dict,
+) -> dict | None:
+    allowed_ids = {
+        str(item).strip()
+        for item in scene_rule.get("allowed_styling_ids", [])
+        if str(item).strip()
+    }
+    explicit_id = ""
+    gender_map = scene_rule.get("gender_styling_ids", {})
+    if preferred_gender and isinstance(gender_map, dict):
+        explicit_id = str(gender_map.get(preferred_gender) or "").strip()
+    if not explicit_id:
+        explicit_id = str(scene_rule.get("default_styling_id") or "").strip()
+
+    if explicit_id:
+        selected = get_styling(explicit_id)
+        if selected is not None and (
+            not allowed_ids or selected["id"] in allowed_ids
+        ) and selected["style_line"] == style_line:
+            return selected
+
+    candidates = _matching_stylings(style_line, preferred_gender)
+    if allowed_ids:
+        filtered = [item for item in candidates if item["id"] in allowed_ids]
+        if filtered:
+            candidates = filtered
+
+    if not candidates:
+        return None
+
+    selected_id = _select_one(
+        [item["id"] for item in candidates],
+        seed_source=seed_source,
+        label=f"scene-rule-styling:{scene_rule['id']}:{preferred_gender or 'unisex'}",
+    )
+    return get_styling(selected_id)
+
+
 def build_prompt_assembly(
     *,
     mode: str,
     hairstyle: dict | None = None,
     scene: dict | None = None,
     styling: dict | None = None,
+    preferred_gender: str | None = None,
     seed_source: str | None = None,
     expression_override: str | None = None,
     subject_action_override: str | None = None,
@@ -869,11 +983,13 @@ def build_prompt_assembly(
         if scene is None:
             raise ValueError("scene is required for scene_only mode")
         selection_seed = seed_source or f"scene-only:{scene['id']}"
+        scene_rule = get_scene_styling_rule(scene["id"])
         selected_styling = _resolve_styling(
             style_line=scene["style_line"],
-            preferred_gender=None,
+            preferred_gender=preferred_gender,
             seed_source=selection_seed,
             styling=styling,
+            scene_rule=scene_rule,
         )
         selected_expression = expression_override or _select_one(
             scene.get("expressions", []),
@@ -890,14 +1006,38 @@ def build_prompt_assembly(
             seed_source=selection_seed,
             label=f"{scene['id']}:scene-only-subject-action",
         )
+        makeup_override_text = _resolve_rule_text(
+            scene_rule.get("makeup_override") if scene_rule else None,
+            preferred_gender,
+        )
+        resolved_outfit_override = (
+            outfit_override
+            or _resolve_rule_text(
+                scene_rule.get("outfit_override") if scene_rule else None,
+                preferred_gender,
+            )
+        )
+        styling_constraint_additions = _resolve_rule_sentences(
+            scene_rule.get("styling_constraint_additions") if scene_rule else None,
+            preferred_gender,
+        )
         styling_values = _build_styling_prompt_values(
-            styling=selected_styling,
-            default_outfit_text="；".join(_dedupe_keep_order(scene.get("outfit_hints", []))[:2]),
-            outfit_override=outfit_override,
+        styling=selected_styling,
+        default_outfit_text="；".join(_dedupe_keep_order(scene.get("outfit_hints", []))[:2]),
+            makeup_override=makeup_override_text,
+            outfit_override=resolved_outfit_override,
+            constraint_additions=styling_constraint_additions,
         )
-        scene_constraint_text = "；".join(
-            _normalize_sentence(item) for item in _dedupe_keep_order(scene.get("constraints", []))
+        scene_constraint_items = _dedupe_keep_order(
+            [
+                *scene.get("constraints", []),
+                *_resolve_rule_sentences(
+                    scene_rule.get("lighting_guardrails") if scene_rule else None,
+                    preferred_gender,
+                ),
+            ]
         )
+        scene_constraint_text = "；".join(_normalize_sentence(item) for item in scene_constraint_items)
         hair_preservation_text = _normalize_sentence(SCENE_ONLY_CONSTRAINTS_SECTION)
         motion_safety_text = "；".join(
             [
@@ -952,11 +1092,13 @@ def build_prompt_assembly(
         raise ValueError("hairstyle and scene are required for full_stylize mode")
 
     selection_seed = seed_source or f"{hairstyle['id']}:{scene['id']}"
+    scene_rule = get_scene_styling_rule(scene["id"])
     selected_styling = _resolve_styling(
         style_line=scene["style_line"],
         preferred_gender=hairstyle.get("gender"),
         seed_source=selection_seed,
         styling=styling,
+        scene_rule=scene_rule,
     )
     selected_details = _select_prompt_details(
         hairstyle,
@@ -966,14 +1108,35 @@ def build_prompt_assembly(
     expression_text = selected_details["expression"] or "自然看向镜头"
     scene_action_text = selected_details["subject_action"] or "自然站立或静止停顿"
     hairstyle_action_text = selected_details["hairstyle_action"]
+    makeup_override_text = _resolve_rule_text(
+        scene_rule.get("makeup_override") if scene_rule else None,
+        hairstyle.get("gender"),
+    )
+    resolved_outfit_override = _resolve_rule_text(
+        scene_rule.get("outfit_override") if scene_rule else None,
+        hairstyle.get("gender"),
+    )
+    styling_constraint_additions = _resolve_rule_sentences(
+        scene_rule.get("styling_constraint_additions") if scene_rule else None,
+        hairstyle.get("gender"),
+    )
     styling_values = _build_styling_prompt_values(
         styling=selected_styling,
         default_outfit_text="；".join(_dedupe_keep_order(scene.get("outfit_hints", []))[:2]),
-        outfit_override=None,
+        makeup_override=makeup_override_text,
+        outfit_override=resolved_outfit_override,
+        constraint_additions=styling_constraint_additions,
     )
-    scene_constraint_text = "；".join(
-        _normalize_sentence(item) for item in _dedupe_keep_order(scene.get("constraints", []))
+    scene_constraint_items = _dedupe_keep_order(
+        [
+            *scene.get("constraints", []),
+            *_resolve_rule_sentences(
+                scene_rule.get("lighting_guardrails") if scene_rule else None,
+                hairstyle.get("gender"),
+            ),
+        ]
     )
+    scene_constraint_text = "；".join(_normalize_sentence(item) for item in scene_constraint_items)
     hair_constraint_text = "；".join(
         _normalize_sentence(item) for item in _dedupe_keep_order(hairstyle.get("constraints", []))
     )
@@ -1060,6 +1223,7 @@ def build_scene_only_prompt(
     scene: dict,
     *,
     styling: dict | None = None,
+    preferred_gender: str | None = None,
     seed_source: str | None = None,
     expression_override: str | None = None,
     subject_action_override: str | None = None,
@@ -1069,6 +1233,7 @@ def build_scene_only_prompt(
         mode="scene_only",
         scene=scene,
         styling=styling,
+        preferred_gender=preferred_gender,
         seed_source=seed_source,
         expression_override=expression_override,
         subject_action_override=subject_action_override,
@@ -1130,6 +1295,7 @@ def build_job_prompt_payload(
         style_line=scene["style_line"],
         preferred_gender=hairstyle.get("gender"),
         seed_source=selection_seed,
+        scene_rule=get_scene_styling_rule(scene["id"]),
     )
     payload = {
         "version": 2,
@@ -1143,6 +1309,7 @@ def build_job_prompt_payload(
         "scene_only_prompt": build_scene_only_prompt(
             scene,
             styling=selected_styling,
+            preferred_gender=hairstyle.get("gender"),
             seed_source=f"scene-only:{selection_seed}",
         ),
         "styling_id": selected_styling["id"],

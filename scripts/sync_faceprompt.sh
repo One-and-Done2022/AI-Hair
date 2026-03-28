@@ -9,6 +9,7 @@ SERVICE_NAME="aiface-backend.service"
 
 FILES=(
   "scenes.json"
+  "scene_styling_rules.json"
   "hairstyles_male.json"
   "hairstyles_female.json"
   "stylings.json"
@@ -96,7 +97,7 @@ watch_loop() {
 
   inotifywait -m -e close_write,create,move,delete "$SOURCE_DIR" | while read -r _dir _event file; do
     case "$file" in
-      scenes.json|hairstyles_male.json|hairstyles_female.json|stylings.json)
+      scenes.json|scene_styling_rules.json|hairstyles_male.json|hairstyles_female.json|stylings.json)
         log "检测到变更：$file"
         sync_once
         ;;

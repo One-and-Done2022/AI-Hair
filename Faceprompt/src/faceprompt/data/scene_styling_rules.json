@@ -1,0 +1,845 @@
+[
+  {
+    "sceneId": "indoor-film-lifestyle",
+    "sceneFamily": "warm_lifestyle_interior",
+    "defaultStylingId": "unisex-natural-soft",
+    "genderStylingIds": {
+      "female": "female-natural-soft-glow",
+      "male": "male-clean-natural-grooming"
+    },
+    "allowedStylingIds": [
+      "female-natural-soft-glow",
+      "male-clean-natural-grooming",
+      "unisex-natural-soft"
+    ],
+    "makeupOverride": {
+      "female": "轻透自然底妆，保留真实皮肤纹理与微光泽，眉眼干净柔和，唇色控制在低饱和裸粉或豆沙调。",
+      "male": "皮肤状态干净清爽，轻微修饰瑕疵与黑眼圈，眉毛整洁自然，不要出现浓妆感。"
+    },
+    "outfitOverride": {
+      "female": "白色宽松衬衫，内搭浅色背心或吊带，面料柔软、低饱和、带生活感。",
+      "male": "米白或浅灰针织上衣、干净白衬衫或低饱和家居衬衫，版型松弛但不邋遢。"
+    },
+    "stylingConstraintAdditions": {
+      "default": [
+        "妆面与木色环境保持低饱和统一，不要出现网红感重妆",
+        "服饰纹理以棉麻或柔软针织为主，不要加入强设计感单品"
+      ]
+    },
+    "lightingGuardrails": [
+      "脸部亮部必须保留细节，不要因胶片感把肤色压灰",
+      "木色环境保持温润中性，不要偏红偏脏"
+    ],
+    "recommendedHairstyleCategoryKeys": {
+      "female": [
+        "layered_medium",
+        "soft_curls"
+      ],
+      "male": [
+        "korean_soft",
+        "clean_short"
+      ]
+    }
+  },
+  {
+    "sceneId": "morning-window-softlight",
+    "sceneFamily": "morning_window_softlight",
+    "defaultStylingId": "unisex-natural-soft",
+    "genderStylingIds": {
+      "female": "female-natural-soft-glow",
+      "male": "male-clean-natural-grooming"
+    },
+    "allowedStylingIds": [
+      "female-natural-soft-glow",
+      "male-clean-natural-grooming",
+      "unisex-natural-soft"
+    ],
+    "makeupOverride": {
+      "female": "近乎无妆感的轻透底妆，肤色真实自然，腮红与唇色极轻，只保留清晨醒来的柔和气息。",
+      "male": "肤质干净通透，轻微修饰肤色不均与黑眼圈，保留清晨自然状态，不做明显妆感。"
+    },
+    "outfitOverride": {
+      "female": "浅灰针织上衣或白色棉质家居衬衫，领口自然放松，材质柔软轻薄。",
+      "male": "浅灰针织、白色棉质家居衬衫或低饱和家居上衣，整体简洁、干净、晨间感明确。"
+    },
+    "stylingConstraintAdditions": {
+      "default": [
+        "妆容与服饰都要服务清晨软光，不要出现过重修容与高饱和口红",
+        "服饰不能太正式，保持刚起床后的自然松弛感"
+      ]
+    },
+    "lightingGuardrails": [
+      "清晨光线维持中性偏冷通透，不要做成昏黄晨曦",
+      "脸部和发丝边缘高光要柔和，不要出现硬边爆点"
+    ],
+    "recommendedHairstyleCategoryKeys": {
+      "female": [
+        "layered_medium",
+        "soft_curls",
+        "long_statement"
+      ],
+      "male": [
+        "korean_soft",
+        "clean_short"
+      ]
+    }
+  },
+  {
+    "sceneId": "walnut-study-portrait",
+    "sceneFamily": "quiet_walnut_study",
+    "defaultStylingId": "unisex-natural-soft",
+    "genderStylingIds": {
+      "female": "female-natural-soft-glow",
+      "male": "male-clean-natural-grooming"
+    },
+    "allowedStylingIds": [
+      "female-natural-soft-glow",
+      "male-clean-natural-grooming",
+      "unisex-natural-soft"
+    ],
+    "makeupOverride": {
+      "female": "知性克制的淡妆，底妆轻透，眉形整洁，眼妆与唇色都维持低饱和，突出安静书卷气。",
+      "male": "皮肤和眉毛做基础整理，保留自然男性气质，干净沉稳，不出现刻意时装妆。"
+    },
+    "outfitOverride": {
+      "female": "米白衬衫、深灰针织背心或低饱和外套，材质安静克制，有轻微知识感。",
+      "male": "米白衬衫、深灰针织背心或低饱和西装外套，版型整洁但不过度板正。"
+    },
+    "stylingConstraintAdditions": {
+      "default": [
+        "服饰层次要和木质书房环境协调，避免过亮或过潮流的单品",
+        "妆面重点是安静和可信，不要做成精致过度的商业大片脸"
+      ]
+    },
+    "lightingGuardrails": [
+      "木色不能过红，脸部受光需保持干净通透",
+      "书房细节可见但不要抢走面部识别度"
+    ],
+    "recommendedHairstyleCategoryKeys": {
+      "female": [
+        "layered_medium",
+        "long_statement"
+      ],
+      "male": [
+        "korean_soft",
+        "clean_short"
+      ]
+    }
+  },
+  {
+    "sceneId": "cafe-candid-seat",
+    "sceneFamily": "urban_cafe_candid",
+    "defaultStylingId": "unisex-natural-soft",
+    "genderStylingIds": {
+      "female": "female-natural-soft-glow",
+      "male": "male-clean-natural-grooming"
+    },
+    "allowedStylingIds": [
+      "female-natural-soft-glow",
+      "male-clean-natural-grooming",
+      "unisex-natural-soft"
+    ],
+    "makeupOverride": {
+      "female": "生活感轻妆，底妆清透，眼妆与唇色克制，允许一点都市抓拍的明亮气色。",
+      "male": "肤质清爽，轻微修饰瑕疵与唇色暗沉，整体像真实街拍，不要浓妆。"
+    },
+    "outfitOverride": {
+      "female": "白色衬衫、黑色针织开衫或奶油色风衣内搭，都市感简洁干净。",
+      "male": "白衬衫、深色针织开衫或奶油色轻外套，层次简洁，不要过度商务化。"
+    },
+    "stylingConstraintAdditions": {
+      "default": [
+        "妆造要有都市生活感，但不能变成用力摆拍的时装街拍",
+        "桌面器皿是陪衬，服饰与人物面部仍然是主视觉"
+      ]
+    },
+    "lightingGuardrails": [
+      "混合光下肤色必须干净，不要发灰发脏",
+      "背景亮点和反光要收住，不要抢人物五官"
+    ],
+    "recommendedHairstyleCategoryKeys": {
+      "female": [
+        "layered_medium",
+        "soft_curls"
+      ],
+      "male": [
+        "korean_soft",
+        "statement_style"
+      ]
+    }
+  },
+  {
+    "sceneId": "bathroom-mirror-morning",
+    "sceneFamily": "bathroom_morning_private",
+    "defaultStylingId": "unisex-natural-soft",
+    "genderStylingIds": {
+      "female": "female-natural-soft-glow",
+      "male": "male-clean-natural-grooming"
+    },
+    "allowedStylingIds": [
+      "female-natural-soft-glow",
+      "male-clean-natural-grooming",
+      "unisex-natural-soft"
+    ],
+    "makeupOverride": {
+      "female": "近乎素颜的晨间淡妆，底妆极轻，强调真实肤质与自然唇色，不做重眼妆。",
+      "male": "保持洗漱后的清爽状态，皮肤轻微修饰即可，不要出现粉感和明显轮廓修容。"
+    },
+    "outfitOverride": {
+      "female": "白色背心、浅灰家居上衣或宽松衬衫微敞领口，日常亲密感明确。",
+      "male": "白T、浅灰家居上衣或干净宽松衬衫，保持晨间洗漱后的自然状态。"
+    },
+    "stylingConstraintAdditions": {
+      "default": [
+        "浴室语境要真实亲密，不要用礼服化造型破坏生活感",
+        "服饰领口和肩颈关系要自然，不要因为镜前场景做夸张性感化处理"
+      ]
+    },
+    "lightingGuardrails": [
+      "镜前灯和自然光的混合要均匀，不要出现双重硬阴影",
+      "镜面构图不得产生重复人脸和错位五官"
+    ],
+    "recommendedHairstyleCategoryKeys": {
+      "female": [
+        "short_crisp",
+        "layered_medium"
+      ],
+      "male": [
+        "clean_short",
+        "korean_soft"
+      ]
+    }
+  },
+  {
+    "sceneId": "hotel-room-loose",
+    "sceneFamily": "hotel_loose_daylight",
+    "defaultStylingId": "unisex-natural-soft",
+    "genderStylingIds": {
+      "female": "female-evening-film-glow",
+      "male": "male-clean-natural-grooming"
+    },
+    "allowedStylingIds": [
+      "female-natural-soft-glow",
+      "female-evening-film-glow",
+      "male-clean-natural-grooming",
+      "unisex-natural-soft"
+    ],
+    "makeupOverride": {
+      "female": "暖调轻透底妆，眼唇克制，面中有一点柔和血色，传达高级酒店里的松弛与微醺感。",
+      "male": "肤质整理干净，略带休息后的松弛气息，不要出现强烈商务妆感。"
+    },
+    "outfitOverride": {
+      "female": "白色宽松衬衫、丝质吊带或低饱和针织上衣，面料柔软、带一点慵懒垂坠。",
+      "male": "白色宽松衬衫、浅灰针织或低饱和家居上衣，舒展但整洁。"
+    },
+    "stylingConstraintAdditions": {
+      "default": [
+        "妆造重点是高级松弛，不要做成夜店妆或过度性感造型",
+        "服饰和床品色温要统一，避免冷暖冲突"
+      ]
+    },
+    "lightingGuardrails": [
+      "自然窗光仍是主光，室内暖光只负责补层次，不能把脸打黄",
+      "床品高光要柔和，不要反射成刺眼白块"
+    ],
+    "recommendedHairstyleCategoryKeys": {
+      "female": [
+        "soft_curls",
+        "layered_medium"
+      ],
+      "male": [
+        "korean_soft",
+        "textured_perm"
+      ]
+    }
+  },
+  {
+    "sceneId": "sunset-home-backlight",
+    "sceneFamily": "sunset_home_backlight",
+    "defaultStylingId": "unisex-natural-soft",
+    "genderStylingIds": {
+      "female": "female-evening-film-glow",
+      "male": "male-clean-natural-grooming"
+    },
+    "allowedStylingIds": [
+      "female-evening-film-glow",
+      "male-clean-natural-grooming",
+      "unisex-natural-soft"
+    ],
+    "makeupOverride": {
+      "female": "暖调轻透底妆，腮红与唇色带一点夕阳下的柔暖血色，但整体仍克制、松弛、不过度修饰。",
+      "male": "肤色整理干净，允许一点暖色反光带来的血色感，但不要出现明显彩妆。"
+    },
+    "outfitOverride": {
+      "female": "米白色针织、浅卡其衬衫或裸色背心，材质柔软，适合夕阳下的轻情绪感。",
+      "male": "米白针织、浅卡其衬衫或低饱和休闲上衣，线条简单，贴合家居逆光氛围。"
+    },
+    "stylingConstraintAdditions": {
+      "default": [
+        "整体妆造要服务傍晚松弛和记忆感，不要做成夜景浓妆",
+        "服饰颜色只允许低饱和暖中性色，不要突然出现高饱和色块"
+      ]
+    },
+    "lightingGuardrails": [
+      "逆光必须保留脸部识别度和眼周细节，不能把人脸压成黑影",
+      "头发边缘光要暖而柔，不要烧白也不要发橙"
+    ],
+    "recommendedHairstyleCategoryKeys": {
+      "female": [
+        "soft_curls",
+        "long_statement"
+      ],
+      "male": [
+        "textured_perm",
+        "korean_soft"
+      ]
+    }
+  },
+  {
+    "sceneId": "hallway-quiet-frame",
+    "sceneFamily": "quiet_hallway_frame",
+    "defaultStylingId": "unisex-natural-soft",
+    "genderStylingIds": {
+      "female": "female-natural-soft-glow",
+      "male": "male-clean-natural-grooming"
+    },
+    "allowedStylingIds": [
+      "female-natural-soft-glow",
+      "male-clean-natural-grooming",
+      "unisex-natural-soft"
+    ],
+    "makeupOverride": {
+      "female": "低饱和、线条干净的自然淡妆，突出静谧和秩序感，不要浓重修容。",
+      "male": "面部保持干净利落，眉眼整洁，整体气质偏克制与安静。"
+    },
+    "outfitOverride": {
+      "female": "白衬衫、墨绿针织或深灰外套，轮廓简洁，不要喧闹图案。",
+      "male": "白衬衫、墨绿针织或深灰西装外套，线条利落但不过强势。"
+    },
+    "stylingConstraintAdditions": {
+      "default": [
+        "服饰需与门框和低饱和空间形成清晰层次，不要被背景吃掉",
+        "整体表达以克制和安静为主，不要做夸张时尚造型"
+      ]
+    },
+    "lightingGuardrails": [
+      "顶部环境光与侧窗光要融合均匀，避免头顶热点",
+      "框景线条保持端正，不要因为镜头畸变破坏画面秩序"
+    ],
+    "recommendedHairstyleCategoryKeys": {
+      "female": [
+        "short_crisp",
+        "layered_medium"
+      ],
+      "male": [
+        "clean_short",
+        "korean_soft"
+      ]
+    }
+  },
+  {
+    "sceneId": "bedside-half-recline",
+    "sceneFamily": "bedside_soft_recline",
+    "defaultStylingId": "unisex-natural-soft",
+    "genderStylingIds": {
+      "female": "female-evening-film-glow",
+      "male": "male-clean-natural-grooming"
+    },
+    "allowedStylingIds": [
+      "female-evening-film-glow",
+      "male-clean-natural-grooming",
+      "unisex-natural-soft"
+    ],
+    "makeupOverride": {
+      "female": "轻透暖调底妆，保留真实肤质与柔和血色，传达靠近床边时的亲密与松弛，不要出现厚重妆感。",
+      "male": "皮肤与唇色轻微修饰，整体自然放松，保留真实面部纹理。"
+    },
+    "outfitOverride": {
+      "female": "宽松白衬衫、针织背心或柔软吊带，材质要软、自然、有呼吸感。",
+      "male": "宽松白衬衫、浅灰针织或低饱和家居上衣，姿态舒展但干净。"
+    },
+    "stylingConstraintAdditions": {
+      "default": [
+        "场景可以亲密但不能性感化过度，妆造与姿态都要保留真实生活感",
+        "服饰褶皱要自然，不要出现刻意摆拍的雕塑化处理"
+      ]
+    },
+    "lightingGuardrails": [
+      "床品亮度柔和，不要反射到脸上造成局部过曝",
+      "肩颈和脸部明暗过渡要细腻，不要出现硬切割"
+    ],
+    "recommendedHairstyleCategoryKeys": {
+      "female": [
+        "soft_curls",
+        "layered_medium"
+      ],
+      "male": [
+        "korean_soft",
+        "textured_perm"
+      ]
+    }
+  },
+  {
+    "sceneId": "rainy-window-mood",
+    "sceneFamily": "rainy_window_mood",
+    "defaultStylingId": "unisex-natural-soft",
+    "genderStylingIds": {
+      "female": "female-evening-film-glow",
+      "male": "male-clean-natural-grooming"
+    },
+    "allowedStylingIds": [
+      "female-natural-soft-glow",
+      "female-evening-film-glow",
+      "male-clean-natural-grooming",
+      "unisex-natural-soft"
+    ],
+    "makeupOverride": {
+      "female": "冷调低饱和淡妆，底妆轻薄，腮红与唇色被压低饱和度，保留情绪感但不失真实气色。",
+      "male": "肤色偏冷中性但依然健康，轻微整理肤质和眉眼，不要出现生硬妆感。"
+    },
+    "outfitOverride": {
+      "female": "深灰高领针织、黑色衬衫或冷白色家居衬衫，质地柔软、线条安静。",
+      "male": "深灰高领、黑色衬衫或冷白色简洁上衣，色彩收敛、轮廓干净。"
+    },
+    "stylingConstraintAdditions": {
+      "default": [
+        "冷调氛围不能把人物做成惨白或发青，仍需保留真实血色",
+        "服饰和妆容都要配合雨天情绪，不要出现过亮过跳的色彩"
+      ]
+    },
+    "lightingGuardrails": [
+      "雨痕和玻璃反射只做前景点缀，不要遮挡关键五官",
+      "阴天散射光要均匀，不要平到丢失面部层次"
+    ],
+    "recommendedHairstyleCategoryKeys": {
+      "female": [
+        "layered_medium",
+        "long_statement"
+      ],
+      "male": [
+        "korean_soft",
+        "statement_style"
+      ]
+    }
+  },
+  {
+    "sceneId": "studio-solid-backdrop",
+    "sceneFamily": "studio_clean_backdrop",
+    "defaultStylingId": "unisex-structured-editorial",
+    "genderStylingIds": {
+      "female": "female-minimal-editorial",
+      "male": "male-sharp-editorial"
+    },
+    "allowedStylingIds": [
+      "female-minimal-editorial",
+      "male-sharp-editorial",
+      "unisex-structured-editorial"
+    ],
+    "makeupOverride": {
+      "female": "底妆干净精致但不假面，轮廓与眉眼清晰，唇色克制，强调发型与五官的读图性。",
+      "male": "面部结构清爽利落，轻微提亮肤质和眉眼，不做油亮浓妆。"
+    },
+    "outfitOverride": {
+      "female": "黑色高领、白色结构化衬衫或极简剪裁上衣，服装线条明确。",
+      "male": "黑色高领、白色结构化衬衫或极简西装，面料利落、无多余装饰。"
+    },
+    "stylingConstraintAdditions": {
+      "default": [
+        "棚拍里妆造和发型需要读图清楚，但不能出现廉价商业棚拍感",
+        "服装要让位于脸和发型，不要用复杂细节抢主体"
+      ]
+    },
+    "lightingGuardrails": [
+      "背景必须均匀干净，不要出现脏灰色块和曝光不匀",
+      "主脸光清晰利落，但五官暗部仍保留细节"
+    ],
+    "recommendedHairstyleCategoryKeys": {
+      "female": [
+        "short_crisp",
+        "long_statement"
+      ],
+      "male": [
+        "clean_short",
+        "statement_style"
+      ]
+    }
+  },
+  {
+    "sceneId": "cold-metal-space",
+    "sceneFamily": "cold_metal_editorial",
+    "defaultStylingId": "unisex-structured-editorial",
+    "genderStylingIds": {
+      "female": "female-minimal-editorial",
+      "male": "male-sharp-editorial"
+    },
+    "allowedStylingIds": [
+      "female-minimal-editorial",
+      "male-sharp-editorial",
+      "unisex-structured-editorial"
+    ],
+    "makeupOverride": {
+      "female": "冷调极简妆面，底妆平整干净，轮廓和眉眼略更清晰，但不做厚重舞台妆。",
+      "male": "皮肤和轮廓稍做强化，保留锋利感与健康肤色，不要做夸张彩妆。"
+    },
+    "outfitOverride": {
+      "female": "黑色皮质上衣、银灰西装或结构感背心，材质利落、冷调、反光可控。",
+      "male": "黑色皮质、银灰西装或结构感上衣，轮廓明确，不要花哨装饰。"
+    },
+    "stylingConstraintAdditions": {
+      "default": [
+        "金属空间里服饰和妆面要利落克制，不要突然加入生活感软塌单品",
+        "冷调不等于惨白，人物皮肤仍需有血色和质感"
+      ]
+    },
+    "lightingGuardrails": [
+      "金属反光必须受控，不能把脸部高光打爆",
+      "冷白轮廓光只做切边，不要让五官发青"
+    ],
+    "recommendedHairstyleCategoryKeys": {
+      "female": [
+        "short_crisp",
+        "long_statement"
+      ],
+      "male": [
+        "statement_style",
+        "clean_short"
+      ]
+    }
+  },
+  {
+    "sceneId": "retro-cinema-box",
+    "sceneFamily": "retro_cinema_editorial",
+    "defaultStylingId": "unisex-structured-editorial",
+    "genderStylingIds": {
+      "female": "female-minimal-editorial",
+      "male": "male-sharp-editorial"
+    },
+    "allowedStylingIds": [
+      "female-minimal-editorial",
+      "male-sharp-editorial",
+      "unisex-structured-editorial"
+    ],
+    "makeupOverride": {
+      "female": "复古暖调妆面，唇色与眼周略带戏剧性，但整体仍需高级克制，不做夸张复古造型妆。",
+      "male": "面部轮廓和肤质更清楚一些，配合复古暗暖环境，但保持真实男性气质。"
+    },
+    "outfitOverride": {
+      "female": "黑色丝质衬衫、酒红礼服感上衣或深色结构化单品，整体高级、暗暖、不过繁复。",
+      "male": "黑色丝质衬衫、深色西装或酒红暗调外套，材质高级但不夸张。"
+    },
+    "stylingConstraintAdditions": {
+      "default": [
+        "复古氛围是暗暖戏剧，不是浓妆舞台妆，人物身份仍需稳定真实",
+        "服装颜色和背景酒红木色要协调，不要互相打架"
+      ]
+    },
+    "lightingGuardrails": [
+      "暗部必须保留脸部细节，不要为了氛围牺牲识别度",
+      "暖色重点光只强调脸和发型，不要把背景亮点提得太高"
+    ],
+    "recommendedHairstyleCategoryKeys": {
+      "female": [
+        "soft_curls",
+        "long_statement"
+      ],
+      "male": [
+        "statement_style",
+        "textured_perm"
+      ]
+    }
+  },
+  {
+    "sceneId": "city-neon-night",
+    "sceneFamily": "city_neon_editorial",
+    "defaultStylingId": "unisex-structured-editorial",
+    "genderStylingIds": {
+      "female": "female-minimal-editorial",
+      "male": "male-sharp-editorial"
+    },
+    "allowedStylingIds": [
+      "female-minimal-editorial",
+      "male-sharp-editorial",
+      "unisex-structured-editorial"
+    ],
+    "makeupOverride": {
+      "female": "冷暖对比下的极简时装妆，眉眼清楚、底妆干净，允许轻微轮廓强调但不做夜店妆。",
+      "male": "肤质干净利落，面部结构略强化，适配夜景霓虹但不出现浓艳妆感。"
+    },
+    "outfitOverride": {
+      "female": "黑色皮衣、深色吊带或利落西装外套，材质硬挺，色块收敛。",
+      "male": "黑色皮衣、深色内搭或利落西装外套，强调都市夜景下的轮廓感。"
+    },
+    "stylingConstraintAdditions": {
+      "default": [
+        "霓虹夜景里妆容依旧要高级克制，不要做廉价夜店风",
+        "服装不能带大面积反光材质，避免和霓虹边缘光冲突"
+      ]
+    },
+    "lightingGuardrails": [
+      "主脸光优先保证五官识别度，霓虹只做辅助色彩边缘",
+      "霓虹色不能污染肤色，不要出现大面积蓝紫脏色"
+    ],
+    "recommendedHairstyleCategoryKeys": {
+      "female": [
+        "short_crisp",
+        "long_statement"
+      ],
+      "male": [
+        "statement_style",
+        "clean_short"
+      ]
+    }
+  },
+  {
+    "sceneId": "gallery-white-cube",
+    "sceneFamily": "gallery_minimal_editorial",
+    "defaultStylingId": "unisex-structured-editorial",
+    "genderStylingIds": {
+      "female": "female-minimal-editorial",
+      "male": "male-sharp-editorial"
+    },
+    "allowedStylingIds": [
+      "female-minimal-editorial",
+      "male-sharp-editorial",
+      "unisex-structured-editorial"
+    ],
+    "makeupOverride": {
+      "female": "白盒子空间下的干净极简妆，面部结构清楚，底妆细腻通透，不要浓重高彩度。",
+      "male": "肤质与骨相清晰，妆感隐形，只做必要整理和轮廓提亮。"
+    },
+    "outfitOverride": {
+      "female": "结构化白衬衫、黑色高领或极简礼服感上衣，轮廓简练分明。",
+      "male": "结构化白衬衫、黑色高领或极简西装，线条利落，体块明确。"
+    },
+    "stylingConstraintAdditions": {
+      "default": [
+        "白盒子场景的重点是留白与结构，不要加入复杂花纹或过多配饰",
+        "服饰与背景必须拉开层次，不能把人物融进白墙"
+      ]
+    },
+    "lightingGuardrails": [
+      "白墙与服装都不能过曝，面部亮度要略高于背景",
+      "空间里只保留一个轻点缀，不要让装饰分散视线"
+    ],
+    "recommendedHairstyleCategoryKeys": {
+      "female": [
+        "short_crisp",
+        "layered_medium"
+      ],
+      "male": [
+        "clean_short",
+        "statement_style"
+      ]
+    }
+  },
+  {
+    "sceneId": "dramatic-side-light",
+    "sceneFamily": "dramatic_side_light",
+    "defaultStylingId": "unisex-structured-editorial",
+    "genderStylingIds": {
+      "female": "female-minimal-editorial",
+      "male": "male-sharp-editorial"
+    },
+    "allowedStylingIds": [
+      "female-minimal-editorial",
+      "male-sharp-editorial",
+      "unisex-structured-editorial"
+    ],
+    "makeupOverride": {
+      "female": "轮廓清晰但不过度雕刻的时装妆，强调骨相、眼神与发型体积，不做厚重粉感。",
+      "male": "面部结构和肤质利落，配合强侧光突出骨相，但不要出现油亮妆面。"
+    },
+    "outfitOverride": {
+      "female": "黑色高领、深色西装或结构感上衣，颜色纯净，适合强光切线。",
+      "male": "黑色高领、深色西装或金属配饰上衣，轮廓明确，材质高级。"
+    },
+    "stylingConstraintAdditions": {
+      "default": [
+        "侧光场景里妆造要让骨相和发型读图更强，但不能形成廉价舞台感",
+        "服装暗部纹理可见，不要掉进死黑一团"
+      ]
+    },
+    "lightingGuardrails": [
+      "光切线必须落在五官关键结构上，鼻梁和颧骨要有层次",
+      "暗部不允许死黑，仍要保住眼窝和下颌信息"
+    ],
+    "recommendedHairstyleCategoryKeys": {
+      "female": [
+        "short_crisp",
+        "long_statement"
+      ],
+      "male": [
+        "statement_style",
+        "clean_short"
+      ]
+    }
+  },
+  {
+    "sceneId": "luxury-hotel-lobby",
+    "sceneFamily": "luxury_hotel_editorial",
+    "defaultStylingId": "unisex-structured-editorial",
+    "genderStylingIds": {
+      "female": "female-minimal-editorial",
+      "male": "male-sharp-editorial"
+    },
+    "allowedStylingIds": [
+      "female-minimal-editorial",
+      "male-sharp-editorial",
+      "unisex-structured-editorial"
+    ],
+    "makeupOverride": {
+      "female": "高级但克制的时装妆，肤质细腻、轮廓干净、眼神明亮，带一点明星感但不过度。", 
+      "male": "肤质和骨相清楚，整体利落、有大堂时尚氛围，但不做夸张男模妆。"
+    },
+    "outfitOverride": {
+      "female": "黑色结构化西装、缎面衬衫或简洁礼服感上衣，材质高级、线条精练。",
+      "male": "黑色西装、缎面衬衫或利落外套，体块明确，突出大堂空间的明星感。"
+    },
+    "stylingConstraintAdditions": {
+      "default": [
+        "整体要有高级酒店的精致感，但仍然保持人物真实身份，不要做成夸张广告大片脸",
+        "服装材质要高级简洁，避免廉价亮面和复杂装饰"
+      ]
+    },
+    "lightingGuardrails": [
+      "空间灯带不能压脸，人物脸部必须有独立定向主光",
+      "石材和金属反光要高级克制，不要刺眼"
+    ],
+    "recommendedHairstyleCategoryKeys": {
+      "female": [
+        "long_statement",
+        "soft_curls"
+      ],
+      "male": [
+        "statement_style",
+        "clean_short"
+      ]
+    }
+  },
+  {
+    "sceneId": "rooftop-wind",
+    "sceneFamily": "rooftop_wind_editorial",
+    "defaultStylingId": "unisex-structured-editorial",
+    "genderStylingIds": {
+      "female": "female-minimal-editorial",
+      "male": "male-sharp-editorial"
+    },
+    "allowedStylingIds": [
+      "female-minimal-editorial",
+      "male-sharp-editorial",
+      "unisex-structured-editorial"
+    ],
+    "makeupOverride": {
+      "female": "风场环境下的清透时装妆，底妆干净，轮廓与眉眼清楚，但不要浓到像棚内硬妆。",
+      "male": "面部与眉眼保持利落，肤质清爽，适合户外风场，不做明显妆感。"
+    },
+    "outfitOverride": {
+      "female": "长风衣、结构化衬衫或利落外套，材质有风感但不能过于厚重。",
+      "male": "长风衣、结构化衬衫或利落西装外套，轮廓清楚，方便风场读图。"
+    },
+    "stylingConstraintAdditions": {
+      "default": [
+        "风感是动态加分项，但妆造必须稳住轮廓，不能被风吹乱成失控状态",
+        "服装和发型都要为轮廓服务，不要堆太多飘散元素"
+      ]
+    },
+    "lightingGuardrails": [
+      "天空亮度受控，不要背景过曝把人物边缘吃掉",
+      "风吹发丝与衣角必须自然统一，不要出现不合物理逻辑的乱流"
+    ],
+    "recommendedHairstyleCategoryKeys": {
+      "female": [
+        "long_statement",
+        "soft_curls"
+      ],
+      "male": [
+        "statement_style",
+        "textured_perm"
+      ]
+    }
+  },
+  {
+    "sceneId": "moody-bar-counter",
+    "sceneFamily": "moody_bar_editorial",
+    "defaultStylingId": "unisex-structured-editorial",
+    "genderStylingIds": {
+      "female": "female-minimal-editorial",
+      "male": "male-sharp-editorial"
+    },
+    "allowedStylingIds": [
+      "female-minimal-editorial",
+      "male-sharp-editorial",
+      "unisex-structured-editorial"
+    ],
+    "makeupOverride": {
+      "female": "暗调夜色中的精致低饱和时装妆，眼唇略有存在感，但整体依旧高级克制，不做夜店感浓妆。",
+      "male": "肤质与轮廓清楚，配合低照度暖光保留成熟夜色氛围，不要产生厚重妆感。"
+    },
+    "outfitOverride": {
+      "female": "黑色丝衬衫、修身西装或吊带礼服感上衣，材质高级，颜色收敛。",
+      "male": "黑色丝衬衫、修身西装或暗调利落上衣，避免复杂图案。"
+    },
+    "stylingConstraintAdditions": {
+      "default": [
+        "夜色氛围要成熟但不能油腻，妆造与酒吧空间保持高级距离感",
+        "服装和妆面都应避免高饱和红紫色，防止把夜景做脏"
+      ]
+    },
+    "lightingGuardrails": [
+      "局部暖光必须打在脸部关键区域，暗部仍保留五官信息",
+      "玻璃反射和高光点要少而精，不要杂乱"
+    ],
+    "recommendedHairstyleCategoryKeys": {
+      "female": [
+        "long_statement",
+        "soft_curls"
+      ],
+      "male": [
+        "statement_style",
+        "textured_perm"
+      ]
+    }
+  },
+  {
+    "sceneId": "backstage-vanity-mirror",
+    "sceneFamily": "backstage_vanity_editorial",
+    "defaultStylingId": "unisex-structured-editorial",
+    "genderStylingIds": {
+      "female": "female-minimal-editorial",
+      "male": "male-sharp-editorial"
+    },
+    "allowedStylingIds": [
+      "female-minimal-editorial",
+      "male-sharp-editorial",
+      "unisex-structured-editorial"
+    ],
+    "makeupOverride": {
+      "female": "镜前准备时刻的精致时装妆，底妆与眼神都清楚明亮，但避免过分浓艳和厚粉。",
+      "male": "皮肤和轮廓整洁利落，镜前状态像正式拍摄前准备完成，不要出现舞台妆痕迹。"
+    },
+    "outfitOverride": {
+      "female": "黑色挂脖上衣、修身西装或缎面吊带，轮廓明确，适合镜前后台语境。",
+      "male": "黑色利落上衣、修身西装或暗调衬衫，保持后台准备时刻的高级感。"
+    },
+    "stylingConstraintAdditions": {
+      "default": [
+        "后台语境要像拍摄前准备完成，而不是化妆进行中，妆造应完整但克制",
+        "桌面化妆工具只作为少量高质感点缀，不要堆满镜前台面"
+      ]
+    },
+    "lightingGuardrails": [
+      "镜灯不能过曝，脸部主光要均匀清楚",
+      "镜面构图避免重复脸和错位反射，人物始终只保留单人主体"
+    ],
+    "recommendedHairstyleCategoryKeys": {
+      "female": [
+        "short_crisp",
+        "long_statement"
+      ],
+      "male": [
+        "statement_style",
+        "clean_short"
+      ]
+    }
+  }
+]

@@ -135,6 +135,7 @@ def build_review_metadata(
     generator_backend: str,
     review_results: dict[str, dict[str, Any]],
     source_asset_paths: dict[str, str],
+    prompt_files: dict[str, str],
 ) -> dict[str, Any]:
     all_succeeded = review_results and all(
         item.get("status") == "succeeded" for item in review_results.values()
@@ -175,6 +176,7 @@ def build_review_metadata(
         "image_understanding_model": image_understanding_model,
         "generator_backend": generator_backend,
         "sample_assets": source_asset_paths,
+        "prompt_files": prompt_files,
         "review_results": review_results,
         "recommended_cover": recommended_cover,
         "review_notes": "",
@@ -182,6 +184,9 @@ def build_review_metadata(
             "scene_scope_clean": "pending",
             "identity_stable": "pending",
             "physical_logic_ok": "pending",
+            "styling_harmony": "pending",
+            "lighting_face_ok": "pending",
+            "outfit_scene_consistent": "pending",
             "cover_ready": "yes" if recommended_cover else "no",
         },
     }
@@ -286,10 +291,6 @@ def process_inbox_item(
     moved_source_path = package_dir / f"source{source_path.suffix.lower()}"
     shutil.move(str(source_path), moved_source_path)
 
-    prompt = templates.build_scene_only_prompt(
-        scene_template,
-        seed_source=f"{scene_id}:review",
-    )
     (package_dir / "blocks.json").write_text(
         json.dumps(understanding_result.blocks, ensure_ascii=False, indent=2) + "\n",
         encoding="utf-8",
@@ -298,7 +299,6 @@ def process_inbox_item(
         json.dumps(scene_draft, ensure_ascii=False, indent=2) + "\n",
         encoding="utf-8",
     )
-    (package_dir / "scene_only_prompt.txt").write_text(prompt + "\n", encoding="utf-8")
     (package_dir / "raw_model_response.txt").write_text(
         understanding_result.raw_response.strip() + "\n",
         encoding="utf-8",
@@ -306,6 +306,7 @@ def process_inbox_item(
 
     review_results: dict[str, dict[str, Any]] = {}
     source_asset_paths: dict[str, str] = {}
+    prompt_files: dict[str, str] = {}
     for gender, sample_path in sample_images.items():
         source_asset_paths[gender] = str(sample_path)
         if not sample_path.exists():
@@ -314,6 +315,15 @@ def process_inbox_item(
                 "error": f"找不到示例人物图：{sample_path}",
             }
             continue
+
+        prompt = templates.build_scene_only_prompt(
+            scene_template,
+            preferred_gender=gender,
+            seed_source=f"{scene_id}:review:{gender}",
+        )
+        prompt_filename = f"scene_only_prompt_{gender}.txt"
+        (package_dir / prompt_filename).write_text(prompt + "\n", encoding="utf-8")
+        prompt_files[gender] = prompt_filename
 
         try:
             generation_result = _generate_review_image(
@@ -347,6 +357,7 @@ def process_inbox_item(
         generator_backend=generator_backend,
         review_results=review_results,
         source_asset_paths=source_asset_paths,
+        prompt_files=prompt_files,
     )
     _write_json(package_dir / "metadata.json", metadata)
     return package_dir
