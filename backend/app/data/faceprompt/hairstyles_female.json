@@ -130,8 +130,8 @@
     "categoryKey": "short_crisp",
     "categoryLabel": "短发利落",
     "coverImagePath": "template_assets/hairstyles/female-inward-bob.jpg",
-    "coverImageUpdatedAt": "",
-    "coverImageSource": "draft_pending_render"
+    "coverImageUpdatedAt": "2026-03-28T05:48:41+00:00",
+    "coverImageSource": "template_image_pipeline:review_female.jpg"
   },
   {
     "id": "female-chin-length-bob",
@@ -172,8 +172,8 @@
     "categoryKey": "short_crisp",
     "categoryLabel": "短发利落",
     "coverImagePath": "template_assets/hairstyles/female-chin-length-bob.jpg",
-    "coverImageUpdatedAt": "",
-    "coverImageSource": "draft_pending_render"
+    "coverImageUpdatedAt": "2026-03-28T05:49:08+00:00",
+    "coverImageSource": "template_image_pipeline:review_female.jpg"
   },
   {
     "id": "female-ear-tucked-first-love",
@@ -378,8 +378,8 @@
     "categoryKey": "short_crisp",
     "categoryLabel": "短发利落",
     "coverImagePath": "template_assets/hairstyles/female-audrey-short.jpg",
-    "coverImageUpdatedAt": "",
-    "coverImageSource": "draft_pending_render"
+    "coverImageUpdatedAt": "2026-03-28T05:49:27+00:00",
+    "coverImageSource": "template_image_pipeline:review_female.jpg"
   },
   {
     "id": "female-classic-collarbone",
@@ -420,8 +420,8 @@
     "categoryKey": "layered_medium",
     "categoryLabel": "层次中长发",
     "coverImagePath": "template_assets/hairstyles/female-classic-collarbone.jpg",
-    "coverImageUpdatedAt": "",
-    "coverImageSource": "draft_pending_render"
+    "coverImageUpdatedAt": "2026-03-28T05:49:49+00:00",
+    "coverImageSource": "template_image_pipeline:review_female.jpg"
   },
   {
     "id": "female-collarbone-xinzhilei",
@@ -554,8 +554,8 @@
     "categoryKey": "layered_medium",
     "categoryLabel": "层次中长发",
     "coverImagePath": "template_assets/hairstyles/female-high-layer-collarbone.jpg",
-    "coverImageUpdatedAt": "",
-    "coverImageSource": "draft_pending_render"
+    "coverImageUpdatedAt": "2026-03-28T05:50:12+00:00",
+    "coverImageSource": "template_image_pipeline:review_female.jpg"
   },
   {
     "id": "female-soft-wave-collarbone",
@@ -596,8 +596,8 @@
     "categoryKey": "layered_medium",
     "categoryLabel": "层次中长发",
     "coverImagePath": "template_assets/hairstyles/female-soft-wave-collarbone.jpg",
-    "coverImageUpdatedAt": "",
-    "coverImageSource": "draft_pending_render"
+    "coverImageUpdatedAt": "2026-03-28T05:50:48+00:00",
+    "coverImageSource": "template_image_pipeline:review_female.jpg"
   },
   {
     "id": "female-shoulder-length-cut",
@@ -638,8 +638,8 @@
     "categoryKey": "layered_medium",
     "categoryLabel": "层次中长发",
     "coverImagePath": "template_assets/hairstyles/female-shoulder-length-cut.jpg",
-    "coverImageUpdatedAt": "",
-    "coverImageSource": "draft_pending_render"
+    "coverImageUpdatedAt": "2026-03-28T05:51:15+00:00",
+    "coverImageSource": "template_image_pipeline:review_female.jpg"
   },
   {
     "id": "female-high-layer-midlong",
@@ -803,8 +803,8 @@
     "categoryKey": "layered_medium",
     "categoryLabel": "层次中长发",
     "coverImagePath": "template_assets/hairstyles/female-wolf-cut.jpg",
-    "coverImageUpdatedAt": "",
-    "coverImageSource": "draft_pending_render"
+    "coverImageUpdatedAt": "2026-03-28T05:51:47+00:00",
+    "coverImageSource": "template_image_pipeline:review_female.jpg"
   },
   {
     "id": "female-modern-hime-cut",
@@ -886,8 +886,8 @@
     "categoryKey": "layered_medium",
     "categoryLabel": "层次中长发",
     "coverImagePath": "template_assets/hairstyles/female-classic-hime-cut.jpg",
-    "coverImageUpdatedAt": "",
-    "coverImageSource": "draft_pending_render"
+    "coverImageUpdatedAt": "2026-03-28T05:52:08+00:00",
+    "coverImageSource": "template_image_pipeline:review_female.jpg"
   },
   {
     "id": "female-black-long-straight",
@@ -928,8 +928,8 @@
     "categoryKey": "long_statement",
     "categoryLabel": "长发气质",
     "coverImagePath": "template_assets/hairstyles/female-black-long-straight.jpg",
-    "coverImageUpdatedAt": "",
-    "coverImageSource": "draft_pending_render"
+    "coverImageUpdatedAt": "2026-03-28T05:52:32+00:00",
+    "coverImageSource": "template_image_pipeline:review_female.jpg"
   },
   {
     "id": "female-waterfall-straight",
@@ -1267,8 +1267,8 @@
     "categoryKey": "soft_curls",
     "categoryLabel": "氛围卷发",
     "coverImagePath": "template_assets/hairstyles/female-mermaid-wave.jpg",
-    "coverImageUpdatedAt": "",
-    "coverImageSource": "draft_pending_render"
+    "coverImageUpdatedAt": "2026-03-28T05:53:04+00:00",
+    "coverImageSource": "template_image_pipeline:review_female.jpg"
   },
   {
     "id": "female-wool-curls",
@@ -1391,8 +1391,8 @@
     "categoryKey": "soft_curls",
     "categoryLabel": "氛围卷发",
     "coverImagePath": "template_assets/hairstyles/female-egg-roll-perm.jpg",
-    "coverImageUpdatedAt": "",
-    "coverImageSource": "draft_pending_render"
+    "coverImageUpdatedAt": "2026-03-28T05:53:31+00:00",
+    "coverImageSource": "template_image_pipeline:review_female.jpg"
   },
   {
     "id": "female-wheat-curls",
@@ -1515,7 +1515,7 @@
     "categoryKey": "soft_curls",
     "categoryLabel": "氛围卷发",
     "coverImagePath": "template_assets/hairstyles/female-hongkong-glam-wave.jpg",
-    "coverImageUpdatedAt": "",
-    "coverImageSource": "draft_pending_render"
+    "coverImageUpdatedAt": "2026-03-28T05:53:53+00:00",
+    "coverImageSource": "template_image_pipeline:review_female.jpg"
   }
 ]

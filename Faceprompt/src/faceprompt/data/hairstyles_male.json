@@ -171,48 +171,7 @@
     "categoryKey": "korean_soft",
     "categoryLabel": "韩系修饰",
     "coverImagePath": "template_assets/hairstyles/male-micro-part-cover.jpg",
-    "coverImageUpdatedAt": "",
-    "coverImageSource": "draft_pending_render"
-  },
-  {
-    "id": "male-morgan-fringe",
-    "gender": "male",
-    "title": "摩根碎盖",
-    "styleLine": "realistic_editorial",
-    "summary": "发根有支撑、发尾自然垂落，能够修饰头型并提升蓬松感，是韩系热门短烫之一。",
-    "promptCore": "发型改为摩根碎盖，发根通过摩根烫形成隐形支撑，顶部与前区自然蓬起但不夸张，发尾保持轻碎垂落，刘海有轻薄碎感并略盖额头；两侧和后区自然收短，整体深棕或黑色，轮廓轻盈、蓬松、显头包脸但不厚重。",
-    "detailTags": [
-      "摩根碎盖",
-      "发根支撑",
-      "蓬松",
-      "韩系"
-    ],
-    "constraints": [
-      "蓬松感必须来自发根支撑而不是卷得很乱",
-      "发尾要自然垂落并带碎感",
-      "整体不能显厚重闷塌"
-    ],
-    "pairingAdvice": [
-      "酒店房间松弛感人像",
-      "清晨窗边软光人像",
-      "咖啡馆抓拍座位人像"
-    ],
-    "shotAdvice": "适合平视近景和轻微俯拍，突出高颅顶和前额碎盖层次。",
-    "expressionAction": [
-      "轻松看镜头",
-      "抬手轻抓头顶发根",
-      "低头后露出蓬松前区"
-    ],
-    "referenceNotes": "摩根碎盖的核心是发根支撑带来的轻蓬效果，不是细密小卷，也不是纯直发碎盖。",
-    "referenceSourceIds": [
-      "gq-barber-language",
-      "gq-best-short-haircuts",
-      "gq-short-back-sides"
-    ],
-    "categoryKey": "korean_soft",
-    "categoryLabel": "韩系修饰",
-    "coverImagePath": "template_assets/hairstyles/male-morgan-fringe.jpg",
-    "coverImageUpdatedAt": "2026-03-27T06:59:26+00:00",
+    "coverImageUpdatedAt": "2026-03-28T05:46:24+00:00",
     "coverImageSource": "template_image_pipeline:review_male.jpg"
   },
   {
@@ -377,8 +336,8 @@
     "categoryKey": "clean_short",
     "categoryLabel": "清爽短发",
     "coverImagePath": "template_assets/hairstyles/male-fade-buzz.jpg",
-    "coverImageUpdatedAt": "",
-    "coverImageSource": "draft_pending_render"
+    "coverImageUpdatedAt": "2026-03-28T05:46:46+00:00",
+    "coverImageSource": "template_image_pipeline:review_male.jpg"
   },
   {
     "id": "male-korean-37-part",
@@ -470,98 +429,6 @@
     "categoryLabel": "韩系修饰",
     "coverImagePath": "template_assets/hairstyles/male-korean-37-part.jpg",
     "coverImageUpdatedAt": "2026-03-27T06:59:25+00:00",
-    "coverImageSource": "template_image_pipeline:review_male.jpg"
-  },
-  {
-    "id": "male-comma-bangs",
-    "gender": "male",
-    "title": "逗号刘海",
-    "styleLine": "realistic_editorial",
-    "summary": "刘海内卷成逗号形，修饰宽额头和太阳穴，是典型的韩系柔和短发。",
-    "promptCore": "发型改为逗号刘海，顶部保留中短层次，前额一侧刘海向内卷出明显但自然的逗号形 C 弯，另一侧轻轻向后梳开，露出部分额头；两侧和后区保持干净服帖，整体深棕或黑色，气质温柔、精致、带少年感。",
-    "detailTags": [
-      "逗号刘海",
-      "C 弯",
-      "韩系",
-      "修饰额头"
-    ],
-    "constraints": [
-      "逗号形刘海必须清楚可见",
-      "露额比例要自然不过大",
-      "不能把两侧做得过于蓬松杂乱"
-    ],
-    "pairingAdvice": [
-      "清晨窗边软光人像",
-      "室内生活感胶片写真",
-      "咖啡馆抓拍座位人像"
-    ],
-    "shotAdvice": "适合平视近景和轻微侧脸，突出额前 C 弯与眉眼距离。",
-    "expressionAction": [
-      "轻轻看镜头",
-      "抬手碰触逗号刘海",
-      "低头后缓慢抬眼"
-    ],
-    "controlProfile": {
-      "faceShapeFit": {
-        "best": [
-          "round",
-          "heart",
-          "diamond"
-        ],
-        "ok": [
-          "oval",
-          "long"
-        ],
-        "avoid": [
-          "square"
-        ]
-      },
-      "recommendedForeheads": [
-        "balanced",
-        "broad"
-      ],
-      "recommendedJawlines": [
-        "soft",
-        "defined"
-      ],
-      "recommendedCheekbones": [
-        "soft",
-        "balanced"
-      ],
-      "foreheadStrategy": "用单侧 C 弯刘海切开额头宽度，露额比例控制在三分之一到二分之一",
-      "templeCoverage": "弯钩刘海贴近太阳穴上缘，另一侧轻轻后收",
-      "cheekSoftening": "脸侧不做厚重蓬松，只保留轻薄过渡",
-      "jawlineExposure": "下颌线适度外露，避免太多头发堆在下巴附近",
-      "crownVolume": "中等，前顶区有轻微支撑",
-      "sideVolume": "低到中等，保持干净服帖",
-      "partingOptions": [
-        "逗号偏分",
-        "轻侧分"
-      ],
-      "fringeType": "单侧 C 弯逗号刘海",
-      "lengthZone": "中短发",
-      "curlScale": "轻微内弯",
-      "compatibilityTags": [
-        "soft_parting",
-        "fringe_correction",
-        "lifestyle_softlight"
-      ],
-      "recommendedSceneIds": [
-        "morning-window-softlight",
-        "indoor-film-lifestyle",
-        "cafe-candid-seat"
-      ]
-    },
-    "referenceNotes": "逗号刘海要精致且轻盈，关键是前额单侧弯钩而不是整片卷曲。",
-    "referenceSourceIds": [
-      "gq-barber-language",
-      "gq-best-short-haircuts",
-      "gq-short-back-sides"
-    ],
-    "categoryKey": "korean_soft",
-    "categoryLabel": "韩系修饰",
-    "coverImagePath": "template_assets/hairstyles/male-comma-bangs.jpg",
-    "coverImageUpdatedAt": "2026-03-27T06:59:23+00:00",
     "coverImageSource": "template_image_pipeline:review_male.jpg"
   },
   {
@@ -767,8 +634,8 @@
     "categoryKey": "textured_perm",
     "categoryLabel": "纹理烫发",
     "coverImagePath": "template_assets/hairstyles/male-air-cushion-perm.jpg",
-    "coverImageUpdatedAt": "",
-    "coverImageSource": "draft_pending_render"
+    "coverImageUpdatedAt": "2026-03-28T05:47:21+00:00",
+    "coverImageSource": "template_image_pipeline:review_male.jpg"
   },
   {
     "id": "male-root-lift-perm",
@@ -809,8 +676,8 @@
     "categoryKey": "textured_perm",
     "categoryLabel": "纹理烫发",
     "coverImagePath": "template_assets/hairstyles/male-root-lift-perm.jpg",
-    "coverImageUpdatedAt": "",
-    "coverImageSource": "draft_pending_render"
+    "coverImageUpdatedAt": "2026-03-28T05:47:46+00:00",
+    "coverImageSource": "template_image_pipeline:review_male.jpg"
   },
   {
     "id": "male-clip-perm",
@@ -1015,8 +882,8 @@
     "categoryKey": "textured_perm",
     "categoryLabel": "纹理烫发",
     "coverImagePath": "template_assets/hairstyles/male-french-lazy-perm.jpg",
-    "coverImageUpdatedAt": "",
-    "coverImageSource": "draft_pending_render"
+    "coverImageUpdatedAt": "2026-03-28T05:48:10+00:00",
+    "coverImageSource": "template_image_pipeline:review_male.jpg"
   },
   {
     "id": "male-mullet",

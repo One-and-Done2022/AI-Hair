@@ -450,13 +450,15 @@ def test_faceprompt_catalog_counts_and_legacy_aliases():
     from app.services import templates
 
     assert len(templates.SCENES) == 20
-    assert len(templates.HAIRSTYLES) == 58
+    assert len(templates.HAIRSTYLES) == 56
     assert len(templates.STYLINGS) == 7
-    assert len([item for item in templates.HAIRSTYLES if item["gender"] == "male"]) == 25
+    assert len([item for item in templates.HAIRSTYLES if item["gender"] == "male"]) == 23
     assert len([item for item in templates.HAIRSTYLES if item["gender"] == "female"]) == 33
 
     assert templates.get_hairstyle("american-spiky")["id"] == "male-forward-spikes"
     assert templates.get_scene("lifestyle-interior")["id"] == "indoor-film-lifestyle"
+    assert templates.get_hairstyle("male-morgan-fringe") is None
+    assert templates.get_hairstyle("male-comma-bangs") is None
 
 
 def test_template_cover_svg_uses_visual_layout_without_large_text_overlay():
@@ -527,14 +529,16 @@ def test_auth_upload_job_history_flow(tmp_path, monkeypatch):
         templates = client.get("/api/templates")
         assert templates.status_code == 200
         catalog = templates.json()
-        assert len(catalog["hairstyles"]) == 58
+        assert len(catalog["hairstyles"]) == 56
         assert len(catalog["scenes"]) == 20
         assert len(catalog["generation_backends"]) == 2
-        assert len([item for item in catalog["hairstyles"] if item["gender"] == "male"]) == 25
+        assert len([item for item in catalog["hairstyles"] if item["gender"] == "male"]) == 23
         assert len([item for item in catalog["hairstyles"] if item["gender"] == "female"]) == 33
         assert catalog["hairstyles"][0]["style_line_label"]
         assert catalog["hairstyles"][0]["category_key"]
         assert catalog["hairstyles"][0]["category_label"]
+        assert not any(item["id"] == "male-morgan-fringe" for item in catalog["hairstyles"])
+        assert not any(item["id"] == "male-comma-bangs" for item in catalog["hairstyles"])
 
         job_create = client.post(
             "/api/jobs",

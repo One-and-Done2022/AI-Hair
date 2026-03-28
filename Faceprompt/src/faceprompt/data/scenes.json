@@ -7,24 +7,63 @@
     "environment": "浅色墙面、胡桃木门框、实木书架、杯子和抽纸盒构成生活化室内背景，前景带小面积浅色虚化遮挡，背景有墨绿色装饰画与柔化绿枝",
     "lighting": "窗边自然光从侧前方进入，亮部柔和，阴影边界轻，整体反差低，带微弱胶片颗粒感",
     "styleMood": "整体安静克制、抓拍感明显、真实皮肤、生活气息高级不过度摆拍",
-    "detailTags": ["室内", "自然光", "胶片感", "近景", "生活感"],
-    "expressions": ["慵懒看镜头", "眼神放空", "若有所思、嘴唇微张"],
-    "actions": ["歪头单手抓头发", "靠坐在椅子上微微前倾", "停在自然抓拍瞬间"],
-    "outfitHints": ["白色宽松衬衫，内搭浅色背心或吊带"],
-    "pairingAdvice": ["松散层次长发", "自然蓬松中短层次", "低马尾松散版"],
+    "detailTags": [
+      "室内",
+      "自然光",
+      "胶片感",
+      "近景",
+      "生活感"
+    ],
+    "expressions": [
+      "慵懒看镜头",
+      "眼神放空",
+      "若有所思、嘴唇微张"
+    ],
+    "actions": [
+      "歪头单手抓头发",
+      "靠坐在椅子上微微前倾",
+      "停在自然抓拍瞬间"
+    ],
+    "outfitHints": [
+      "白色宽松衬衫，内搭浅色背心或吊带"
+    ],
+    "pairingAdvice": [
+      "松散层次长发",
+      "自然蓬松中短层次",
+      "低马尾松散版"
+    ],
     "shotAdvice": "3:4 竖构图，胸口以上近景，平视或轻微俯拍，允许少量门框前景遮挡",
-    "constraints": ["背景元素保持精简且有呼吸感", "窗光必须自然柔和", "人物与木质环境基调保持统一"],
+    "constraints": [
+      "背景元素保持精简且有呼吸感",
+      "窗光必须自然柔和",
+      "人物与木质环境基调保持统一"
+    ],
     "controlProfile": {
       "windLevel": "still",
       "humidityLook": "balanced",
       "backgroundComplexity": "low",
       "lightingHardness": "soft",
       "mirrorRisk": "none",
-      "compatibleHairstyleTags": ["lifestyle_softlight", "soft_motion", "layered_face_framing"],
-      "recommendedHairstyleIds": ["female-collarbone-xinzhilei", "female-korean-air-cushion-perm", "male-korean-37-part"]
+      "compatibleHairstyleTags": [
+        "lifestyle_softlight",
+        "soft_motion",
+        "layered_face_framing"
+      ],
+      "recommendedHairstyleIds": [
+        "female-collarbone-xinzhilei",
+        "female-korean-air-cushion-perm",
+        "male-korean-37-part"
+      ]
     },
     "referenceNotes": "前景虚化和木色静物是生活感高级人像的关键，背景不要堆得过满。",
-    "referenceSourceIds": ["masterclass-portrait-tips", "masterclass-annie-natural-light", "masterclass-environmental-portrait"]
+    "referenceSourceIds": [
+      "masterclass-portrait-tips",
+      "masterclass-annie-natural-light",
+      "masterclass-environmental-portrait"
+    ],
+    "coverImagePath": "template_assets/scenes/indoor-film-lifestyle.jpg",
+    "coverImageUpdatedAt": "2026-03-28T05:14:42+00:00",
+    "coverImageSource": "template_image_pipeline:review_female.jpg"
   },
   {
     "id": "morning-window-softlight",
@@ -34,24 +73,64 @@
     "environment": "卧室或客厅窗边留白墙面干净，窗帘半拉开，桌上保留少量书本与玻璃杯，背景简洁留有空气感",
     "lighting": "清晨自然光从侧面斜切进来，亮部通透，阴影轻薄，局部发丝被边缘光勾亮",
     "styleMood": "晨间安静、轻松呼吸感、真实肤色、柔和但不发灰",
-    "detailTags": ["窗边", "清晨", "软光", "生活感", "真实肤质"],
-    "expressions": ["温和看向镜头", "刚醒时略带迟缓的神情", "安静地垂眼微笑"],
-    "actions": ["靠在窗台边", "抬手整理窗边发丝", "双手轻握杯子停顿"],
-    "outfitHints": ["浅灰针织上衣或白色棉质家居衬衫"],
-    "pairingAdvice": ["空气刘海长发", "低层次黑长直", "韩系逗号刘海"],
+    "detailTags": [
+      "窗边",
+      "清晨",
+      "软光",
+      "生活感",
+      "真实肤质"
+    ],
+    "expressions": [
+      "温和看向镜头",
+      "刚醒时略带迟缓的神情",
+      "安静地垂眼微笑"
+    ],
+    "actions": [
+      "靠在窗台边",
+      "抬手整理窗边发丝",
+      "双手轻握杯子停顿"
+    ],
+    "outfitHints": [
+      "浅灰针织上衣或白色棉质家居衬衫"
+    ],
+    "pairingAdvice": [
+      "空气刘海长发",
+      "低层次黑长直",
+      "韩系逗号刘海"
+    ],
     "shotAdvice": "3:4 竖构图，胸口以上近景，平视或略微偏侧，保留窗框线条",
-    "constraints": ["窗边留白区域要足够干净", "清晨光不应过黄", "发丝边缘高光要柔和"],
+    "constraints": [
+      "窗边留白区域要足够干净",
+      "清晨光不应过黄",
+      "发丝边缘高光要柔和"
+    ],
     "controlProfile": {
       "windLevel": "still",
       "humidityLook": "balanced",
       "backgroundComplexity": "low",
       "lightingHardness": "soft",
       "mirrorRisk": "none",
-      "compatibleHairstyleTags": ["lifestyle_softlight", "soft_volume", "face_framing", "fringe_correction"],
-      "recommendedHairstyleIds": ["female-korean-air-cushion-perm", "male-korean-37-part", "male-comma-bangs"]
+      "compatibleHairstyleTags": [
+        "lifestyle_softlight",
+        "soft_volume",
+        "face_framing",
+        "fringe_correction"
+      ],
+      "recommendedHairstyleIds": [
+        "female-korean-air-cushion-perm",
+        "male-korean-37-part",
+        "male-middle-micro-part"
+      ]
     },
     "referenceNotes": "窗边软光适合突出眼神与皮肤，不需要复杂道具就能有故事感。",
-    "referenceSourceIds": ["masterclass-jimmy-natural-light", "masterclass-tyler-natural-light", "masterclass-portrait-tips"]
+    "referenceSourceIds": [
+      "masterclass-jimmy-natural-light",
+      "masterclass-tyler-natural-light",
+      "masterclass-portrait-tips"
+    ],
+    "coverImagePath": "template_assets/scenes/morning-window-softlight.jpg",
+    "coverImageUpdatedAt": "2026-03-28T05:16:49+00:00",
+    "coverImageSource": "template_image_pipeline:review_female.jpg"
   },
   {
     "id": "walnut-study-portrait",
@@ -61,15 +140,46 @@
     "environment": "胡桃木书柜、书脊、陶瓷杯、纸巾盒和深色装裱画作构成安静书房场景，桌面留有少量纸张与笔",
     "lighting": "暖中性的侧窗光落在脸上和木质表面，亮部细腻，暗部有层次但不过黑",
     "styleMood": "沉静、克制、微电影感、带轻度胶片暖调",
-    "detailTags": ["书房", "木质", "暖调", "静物", "克制"],
-    "expressions": ["温和地看镜头", "专注后抬眼", "若有所思地轻抿嘴唇"],
-    "actions": ["手扶椅背微侧身", "低头翻书后抬眼", "单手托住下巴短暂停顿"],
-    "outfitHints": ["米白衬衫、深灰针织背心或低饱和西装外套"],
-    "pairingAdvice": ["法式慵懒长卷", "自然蓬松中短层次", "side part"],
+    "detailTags": [
+      "书房",
+      "木质",
+      "暖调",
+      "静物",
+      "克制"
+    ],
+    "expressions": [
+      "温和地看镜头",
+      "专注后抬眼",
+      "若有所思地轻抿嘴唇"
+    ],
+    "actions": [
+      "手扶椅背微侧身",
+      "低头翻书后抬眼",
+      "单手托住下巴短暂停顿"
+    ],
+    "outfitHints": [
+      "米白衬衫、深灰针织背心或低饱和西装外套"
+    ],
+    "pairingAdvice": [
+      "法式慵懒长卷",
+      "自然蓬松中短层次",
+      "side part"
+    ],
     "shotAdvice": "3:4 竖构图，胸口以上近景，平视为主，背景书脊轻微虚化",
-    "constraints": ["木色不能发红过重", "书房细节要清楚但不抢人脸", "画面必须保留呼吸空间"],
+    "constraints": [
+      "木色不能发红过重",
+      "书房细节要清楚但不抢人脸",
+      "画面必须保留呼吸空间"
+    ],
     "referenceNotes": "木质与纸张细节能增加人物可信度，但一定要控制背景信息量。",
-    "referenceSourceIds": ["masterclass-environmental-portrait", "masterclass-annie-working-light", "masterclass-portrait-tips"]
+    "referenceSourceIds": [
+      "masterclass-environmental-portrait",
+      "masterclass-annie-working-light",
+      "masterclass-portrait-tips"
+    ],
+    "coverImagePath": "template_assets/scenes/walnut-study-portrait.jpg",
+    "coverImageUpdatedAt": "2026-03-28T05:18:59+00:00",
+    "coverImageSource": "template_image_pipeline:review_male.jpg"
   },
   {
     "id": "cafe-candid-seat",
@@ -79,24 +189,63 @@
     "environment": "靠窗咖啡馆座位区，桌面有陶瓷杯、银色餐具、纸袋和一本杂志，背景带轻微人流虚化和深色木质座椅",
     "lighting": "自然光与室内暖光混合，脸部仍以窗边柔光为主，背景亮点不过曝",
     "styleMood": "都市感、自然抓拍、轻松时髦但不过分表演",
-    "detailTags": ["咖啡馆", "抓拍", "都市", "混合光", "松弛"],
-    "expressions": ["轻轻看向窗外", "似笑非笑地回望镜头", "放松地发呆"],
-    "actions": ["单手扶住杯子", "身体半转回望", "拿起手机后停在瞬间"],
-    "outfitHints": ["白色衬衫、黑色针织开衫或奶油色风衣内搭"],
-    "pairingAdvice": ["锁骨发外翻层次", "美式前刺", "中分 curtain"],
+    "detailTags": [
+      "咖啡馆",
+      "抓拍",
+      "都市",
+      "混合光",
+      "松弛"
+    ],
+    "expressions": [
+      "轻轻看向窗外",
+      "似笑非笑地回望镜头",
+      "放松地发呆"
+    ],
+    "actions": [
+      "单手扶住杯子",
+      "身体半转回望",
+      "拿起手机后停在瞬间"
+    ],
+    "outfitHints": [
+      "白色衬衫、黑色针织开衫或奶油色风衣内搭"
+    ],
+    "pairingAdvice": [
+      "锁骨发外翻层次",
+      "美式前刺",
+      "中分 curtain"
+    ],
     "shotAdvice": "3:4 竖构图，胸口以上近景，桌面元素位于画面下沿，背景轻虚化",
-    "constraints": ["混合光不能导致肤色脏灰", "桌面道具只保留少量高质感物件", "人物始终是画面核心"],
+    "constraints": [
+      "混合光不能导致肤色脏灰",
+      "桌面道具只保留少量高质感物件",
+      "人物始终是画面核心"
+    ],
     "controlProfile": {
       "windLevel": "low",
       "humidityLook": "balanced",
       "backgroundComplexity": "medium",
       "lightingHardness": "soft",
       "mirrorRisk": "low",
-      "compatibleHairstyleTags": ["urban_lifestyle", "soft_parting", "layered_face_framing"],
-      "recommendedHairstyleIds": ["female-collarbone-xinzhilei", "male-korean-37-part", "male-comma-bangs"]
+      "compatibleHairstyleTags": [
+        "urban_lifestyle",
+        "soft_parting",
+        "layered_face_framing"
+      ],
+      "recommendedHairstyleIds": [
+        "female-collarbone-xinzhilei",
+        "male-korean-37-part",
+        "male-middle-micro-part"
+      ]
     },
     "referenceNotes": "桌面器物和窗边座位最容易建立真实抓拍语境，但需要控制反光和杂色。",
-    "referenceSourceIds": ["masterclass-portrait-tips", "masterclass-jimmy-natural-light", "masterclass-environmental-portrait"]
+    "referenceSourceIds": [
+      "masterclass-portrait-tips",
+      "masterclass-jimmy-natural-light",
+      "masterclass-environmental-portrait"
+    ],
+    "coverImagePath": "template_assets/scenes/cafe-candid-seat.jpg",
+    "coverImageUpdatedAt": "2026-03-28T05:20:58+00:00",
+    "coverImageSource": "template_image_pipeline:review_female.jpg"
   },
   {
     "id": "bathroom-mirror-morning",
@@ -106,15 +255,46 @@
     "environment": "简洁浴室镜前，浅色瓷砖、银色水龙头、玻璃台面和少量瓶罐构成干净晨间场景",
     "lighting": "镜前顶部暖白灯与侧窗自然光混合，脸部清晰、反射柔和，不产生硬性爆点",
     "styleMood": "亲密、干净、略带刚起床的松弛感，真实皮肤与微湿空气并存",
-    "detailTags": ["浴室", "镜前", "晨间", "亲密", "干净"],
-    "expressions": ["淡淡地看向镜中自己", "轻微放空", "清醒前的迟缓神情"],
-    "actions": ["抬手整理额前碎发", "扶住洗手台边缘", "拿着手机镜前自拍"],
-    "outfitHints": ["白色背心、浅灰家居上衣或宽松衬衫微敞领口"],
-    "pairingAdvice": ["湿发感直发", "湿发感后梳", "高马尾碎发版"],
+    "detailTags": [
+      "浴室",
+      "镜前",
+      "晨间",
+      "亲密",
+      "干净"
+    ],
+    "expressions": [
+      "淡淡地看向镜中自己",
+      "轻微放空",
+      "清醒前的迟缓神情"
+    ],
+    "actions": [
+      "抬手整理额前碎发",
+      "扶住洗手台边缘",
+      "拿着手机镜前自拍"
+    ],
+    "outfitHints": [
+      "白色背心、浅灰家居上衣或宽松衬衫微敞领口"
+    ],
+    "pairingAdvice": [
+      "湿发感直发",
+      "湿发感后梳",
+      "高马尾碎发版"
+    ],
     "shotAdvice": "3:4 竖构图，胸口以上近景，以镜中画面为主，保留少量台面反射",
-    "constraints": ["镜面反射不能出现多重错位", "灯光不要太硬", "浴室道具数量必须克制"],
+    "constraints": [
+      "镜面反射不能出现多重错位",
+      "灯光不要太硬",
+      "浴室道具数量必须克制"
+    ],
     "referenceNotes": "镜面构图容易出错，重点在于保持单一主体和干净台面。",
-    "referenceSourceIds": ["masterclass-annie-working-light", "masterclass-portrait-tips", "masterclass-environmental-portrait"]
+    "referenceSourceIds": [
+      "masterclass-annie-working-light",
+      "masterclass-portrait-tips",
+      "masterclass-environmental-portrait"
+    ],
+    "coverImagePath": "template_assets/scenes/bathroom-mirror-morning.jpg",
+    "coverImageUpdatedAt": "2026-03-28T05:22:55+00:00",
+    "coverImageSource": "template_image_pipeline:review_female.jpg"
   },
   {
     "id": "hotel-room-loose",
@@ -124,15 +304,46 @@
     "environment": "浅米色酒店房间、床头软包、白色床品、落地灯与简洁边桌构成高质感但不复杂的室内空间",
     "lighting": "白天自然窗光为主，室内辅助暖光只负责拉开层次，亮部细腻，阴影柔和",
     "styleMood": "慵懒、放松、略带微醺与旅行中的安静感",
-    "detailTags": ["酒店", "柔光", "慵懒", "旅行感", "近景"],
-    "expressions": ["温和地看镜头", "轻微疲惫但放松", "漫不经心地微张嘴唇"],
-    "actions": ["靠坐在床边或沙发边缘", "单手扶额后回望", "拿起相机自拍"],
-    "outfitHints": ["白色宽松衬衫、丝质吊带或低饱和针织上衣"],
-    "pairingAdvice": ["法式慵懒长卷", "湿发感后梳", "messy fringe"],
+    "detailTags": [
+      "酒店",
+      "柔光",
+      "慵懒",
+      "旅行感",
+      "近景"
+    ],
+    "expressions": [
+      "温和地看镜头",
+      "轻微疲惫但放松",
+      "漫不经心地微张嘴唇"
+    ],
+    "actions": [
+      "靠坐在床边或沙发边缘",
+      "单手扶额后回望",
+      "拿起相机自拍"
+    ],
+    "outfitHints": [
+      "白色宽松衬衫、丝质吊带或低饱和针织上衣"
+    ],
+    "pairingAdvice": [
+      "法式慵懒长卷",
+      "湿发感后梳",
+      "messy fringe"
+    ],
     "shotAdvice": "3:4 竖构图，胸口以上近景，略微偏侧视角，保留床头和落地灯轮廓",
-    "constraints": ["酒店空间不做复杂摆件堆砌", "暖光不能过黄", "肤色与床品色温需协调"],
+    "constraints": [
+      "酒店空间不做复杂摆件堆砌",
+      "暖光不能过黄",
+      "肤色与床品色温需协调"
+    ],
     "referenceNotes": "酒店场景的高级感来自留白、材质和光线，不靠过多道具。",
-    "referenceSourceIds": ["masterclass-annie-natural-light", "masterclass-jimmy-natural-light", "masterclass-environmental-portrait"]
+    "referenceSourceIds": [
+      "masterclass-annie-natural-light",
+      "masterclass-jimmy-natural-light",
+      "masterclass-environmental-portrait"
+    ],
+    "coverImagePath": "template_assets/scenes/hotel-room-loose.jpg",
+    "coverImageUpdatedAt": "2026-03-28T05:25:03+00:00",
+    "coverImageSource": "template_image_pipeline:review_female.jpg"
   },
   {
     "id": "sunset-home-backlight",
@@ -142,15 +353,46 @@
     "environment": "家居客厅或餐边区域简洁留白，木色家具、透明玻璃杯和植物轮廓置于背景中",
     "lighting": "夕阳从背后或侧后方进入，头发边缘出现暖色轮廓光，面部保留少量反射补光",
     "styleMood": "傍晚松弛、柔软、情绪化、略有记忆感",
-    "detailTags": ["傍晚", "逆光", "家居", "暖色边缘光", "情绪感"],
-    "expressions": ["轻轻垂眼", "缓慢看向镜头", "若有所思地停顿"],
-    "actions": ["靠在椅背上微侧身", "抬手挡住少量阳光", "转头时被抓拍"],
-    "outfitHints": ["米白色针织、浅卡其衬衫或裸色背心"],
-    "pairingAdvice": ["港风大波浪", "自然蓬松中短层次", "低马尾松散版"],
+    "detailTags": [
+      "傍晚",
+      "逆光",
+      "家居",
+      "暖色边缘光",
+      "情绪感"
+    ],
+    "expressions": [
+      "轻轻垂眼",
+      "缓慢看向镜头",
+      "若有所思地停顿"
+    ],
+    "actions": [
+      "靠在椅背上微侧身",
+      "抬手挡住少量阳光",
+      "转头时被抓拍"
+    ],
+    "outfitHints": [
+      "米白色针织、浅卡其衬衫或裸色背心"
+    ],
+    "pairingAdvice": [
+      "港风大波浪",
+      "自然蓬松中短层次",
+      "低马尾松散版"
+    ],
     "shotAdvice": "3:4 竖构图，胸口以上近景，可略微欠曝以保留暖色氛围",
-    "constraints": ["逆光必须保留脸部细节", "边缘光不应烧白", "背景植物只作轮廓点缀"],
+    "constraints": [
+      "逆光必须保留脸部细节",
+      "边缘光不应烧白",
+      "背景植物只作轮廓点缀"
+    ],
     "referenceNotes": "夕阳逆光最重要的是让头发和脸的分离清楚，同时不牺牲面部辨识度。",
-    "referenceSourceIds": ["masterclass-jimmy-natural-light", "masterclass-tyler-natural-light", "masterclass-portrait-tips"]
+    "referenceSourceIds": [
+      "masterclass-jimmy-natural-light",
+      "masterclass-tyler-natural-light",
+      "masterclass-portrait-tips"
+    ],
+    "coverImagePath": "template_assets/scenes/sunset-home-backlight.jpg",
+    "coverImageUpdatedAt": "2026-03-28T05:26:56+00:00",
+    "coverImageSource": "template_image_pipeline:review_female.jpg"
   },
   {
     "id": "hallway-quiet-frame",
@@ -160,15 +402,46 @@
     "environment": "浅灰楼道或玄关空间，木门框和墙面形成天然取景框，背景只留少量挂画和枝叶虚化",
     "lighting": "顶部环境光与侧窗自然光混合，整体偏柔，阴影均匀，没有强烈热点",
     "styleMood": "安静、克制、轻微距离感，像偶然经过时的定格",
-    "detailTags": ["楼道", "框景", "玄关", "克制", "简洁"],
-    "expressions": ["平静地直视镜头", "轻轻偏头", "无明显笑意的温和神情"],
-    "actions": ["扶住门框", "身体略微探出", "停在转身瞬间"],
-    "outfitHints": ["白衬衫、墨绿针织或深灰西装外套"],
-    "pairingAdvice": ["法式碎盖", "耳挂短发层次版", "side part"],
+    "detailTags": [
+      "楼道",
+      "框景",
+      "玄关",
+      "克制",
+      "简洁"
+    ],
+    "expressions": [
+      "平静地直视镜头",
+      "轻轻偏头",
+      "无明显笑意的温和神情"
+    ],
+    "actions": [
+      "扶住门框",
+      "身体略微探出",
+      "停在转身瞬间"
+    ],
+    "outfitHints": [
+      "白衬衫、墨绿针织或深灰西装外套"
+    ],
+    "pairingAdvice": [
+      "法式碎盖",
+      "耳挂短发层次版",
+      "side part"
+    ],
     "shotAdvice": "3:4 竖构图，胸口以上近景，用门框形成画面边界",
-    "constraints": ["楼道空间要保持简洁", "框景线条需端正", "色彩控制在低饱和范围"],
+    "constraints": [
+      "楼道空间要保持简洁",
+      "框景线条需端正",
+      "色彩控制在低饱和范围"
+    ],
     "referenceNotes": "门框是天然前景和构图边界，能快速提升画面秩序感。",
-    "referenceSourceIds": ["masterclass-environmental-portrait", "masterclass-annie-working-light", "masterclass-portrait-tips"]
+    "referenceSourceIds": [
+      "masterclass-environmental-portrait",
+      "masterclass-annie-working-light",
+      "masterclass-portrait-tips"
+    ],
+    "coverImagePath": "template_assets/scenes/hallway-quiet-frame.jpg",
+    "coverImageUpdatedAt": "2026-03-28T05:28:56+00:00",
+    "coverImageSource": "template_image_pipeline:review_male.jpg"
   },
   {
     "id": "bedside-half-recline",
@@ -178,15 +451,46 @@
     "environment": "简洁卧室，白色床品、亚麻靠枕、浅色床头和极少量边桌物件构成背景",
     "lighting": "柔和侧窗光扫过脸颊和肩部，枕头和床单有细小褶皱，画面亮度轻柔",
     "styleMood": "私密、温和、松弛，像刚结束一段安静的午后时光",
-    "detailTags": ["床边", "半卧", "私密", "柔光", "近景"],
-    "expressions": ["温和地看向镜头", "眼神放空", "若有所思但不刻意微笑"],
-    "actions": ["靠在枕头上侧躺", "单手撑住头部", "轻轻拨开脸侧碎发"],
-    "outfitHints": ["宽松白衬衫、针织背心或柔软吊带"],
-    "pairingAdvice": ["水波纹中长发", "messy fringe", "法式慵懒长卷"],
+    "detailTags": [
+      "床边",
+      "半卧",
+      "私密",
+      "柔光",
+      "近景"
+    ],
+    "expressions": [
+      "温和地看向镜头",
+      "眼神放空",
+      "若有所思但不刻意微笑"
+    ],
+    "actions": [
+      "靠在枕头上侧躺",
+      "单手撑住头部",
+      "轻轻拨开脸侧碎发"
+    ],
+    "outfitHints": [
+      "宽松白衬衫、针织背心或柔软吊带"
+    ],
+    "pairingAdvice": [
+      "水波纹中长发",
+      "messy fringe",
+      "法式慵懒长卷"
+    ],
     "shotAdvice": "3:4 竖构图，胸口以上近景，镜头略高于视线，保留床面褶皱",
-    "constraints": ["床品纹理要真实柔软", "姿态自然不能过度性感化", "场景元素不宜太多"],
+    "constraints": [
+      "床品纹理要真实柔软",
+      "姿态自然不能过度性感化",
+      "场景元素不宜太多"
+    ],
     "referenceNotes": "半卧近景重点在眼神和肩颈线条，背景越简越高级。",
-    "referenceSourceIds": ["masterclass-annie-natural-light", "masterclass-portrait-tips", "masterclass-annie-working-light"]
+    "referenceSourceIds": [
+      "masterclass-annie-natural-light",
+      "masterclass-portrait-tips",
+      "masterclass-annie-working-light"
+    ],
+    "coverImagePath": "template_assets/scenes/bedside-half-recline.jpg",
+    "coverImageUpdatedAt": "2026-03-28T05:30:53+00:00",
+    "coverImageSource": "template_image_pipeline:review_female.jpg"
   },
   {
     "id": "rainy-window-mood",
@@ -196,15 +500,46 @@
     "environment": "临窗空间保留玻璃水痕、浅灰墙面和一张木椅，背景极简，重点落在窗与人物之间的距离",
     "lighting": "阴天散射光均匀铺开，亮部收敛，肤色偏冷中性，玻璃附近有柔化反射",
     "styleMood": "安静、忧郁、克制，像被雨声包围的独处时刻",
-    "detailTags": ["雨天", "窗边", "冷调", "情绪", "极简"],
-    "expressions": ["眼神略带忧郁", "轻轻看向窗外", "安静地垂眼思考"],
-    "actions": ["手指轻触窗边", "侧脸靠近玻璃", "抱臂坐在木椅上"],
-    "outfitHints": ["深灰高领针织、黑色衬衫或冷白色家居衬衫"],
-    "pairingAdvice": ["低层次黑长直", "湿发感后梳", "light mullet"],
+    "detailTags": [
+      "雨天",
+      "窗边",
+      "冷调",
+      "情绪",
+      "极简"
+    ],
+    "expressions": [
+      "眼神略带忧郁",
+      "轻轻看向窗外",
+      "安静地垂眼思考"
+    ],
+    "actions": [
+      "手指轻触窗边",
+      "侧脸靠近玻璃",
+      "抱臂坐在木椅上"
+    ],
+    "outfitHints": [
+      "深灰高领针织、黑色衬衫或冷白色家居衬衫"
+    ],
+    "pairingAdvice": [
+      "低层次黑长直",
+      "湿发感后梳",
+      "light mullet"
+    ],
     "shotAdvice": "3:4 竖构图，胸口以上近景，保留少量玻璃反射和雨痕前景",
-    "constraints": ["冷调不能让肤色发青", "雨痕只能作为前景点缀", "背景必须保持极简"],
+    "constraints": [
+      "冷调不能让肤色发青",
+      "雨痕只能作为前景点缀",
+      "背景必须保持极简"
+    ],
     "referenceNotes": "雨天场景最怕把画面做脏，重点是冷静和留白。",
-    "referenceSourceIds": ["masterclass-tyler-natural-light", "masterclass-environmental-portrait", "masterclass-portrait-tips"]
+    "referenceSourceIds": [
+      "masterclass-tyler-natural-light",
+      "masterclass-environmental-portrait",
+      "masterclass-portrait-tips"
+    ],
+    "coverImagePath": "template_assets/scenes/rainy-window-mood.jpg",
+    "coverImageUpdatedAt": "2026-03-28T05:32:50+00:00",
+    "coverImageSource": "template_image_pipeline:review_male.jpg"
   },
   {
     "id": "studio-solid-backdrop",
@@ -214,24 +549,62 @@
     "environment": "纯色无缝背景纸干净平整，画面不放道具，空间信息极简，只让人物和发型承担视觉中心",
     "lighting": "主光正前偏上，辅光轻微补阴影，整体布光清晰利落，背景均匀不过曝",
     "styleMood": "高级、干净、时尚、强调造型和五官结构",
-    "detailTags": ["棚拍", "纯色背景", "利落", "高定感", "造型中心"],
-    "expressions": ["冷静直视镜头", "微抬下巴", "克制且不带笑意"],
-    "actions": ["肩部微转", "单手轻碰发型重点区域", "平稳站立定格"],
-    "outfitHints": ["黑色高领、白色结构化衬衫或极简西装"],
-    "pairingAdvice": ["美式前刺", "法式 bob", "slick back"],
+    "detailTags": [
+      "棚拍",
+      "纯色背景",
+      "利落",
+      "高定感",
+      "造型中心"
+    ],
+    "expressions": [
+      "冷静直视镜头",
+      "微抬下巴",
+      "克制且不带笑意"
+    ],
+    "actions": [
+      "肩部微转",
+      "单手轻碰发型重点区域",
+      "平稳站立定格"
+    ],
+    "outfitHints": [
+      "黑色高领、白色结构化衬衫或极简西装"
+    ],
+    "pairingAdvice": [
+      "美式前刺",
+      "法式 bob",
+      "slick back"
+    ],
     "shotAdvice": "3:4 竖构图，胸口以上近景，平视或略低机位，背景纯净无杂物",
-    "constraints": ["背景必须绝对干净", "光线层次要利落", "服装和发型不能互相抢主次"],
+    "constraints": [
+      "背景必须绝对干净",
+      "光线层次要利落",
+      "服装和发型不能互相抢主次"
+    ],
     "controlProfile": {
       "windLevel": "still",
       "humidityLook": "dry",
       "backgroundComplexity": "low",
       "lightingHardness": "balanced",
       "mirrorRisk": "none",
-      "compatibleHairstyleTags": ["fashion_minimal", "hard_light_ready", "precise_outline"],
-      "recommendedHairstyleIds": ["female-blunt-bob", "male-forward-spikes"]
+      "compatibleHairstyleTags": [
+        "fashion_minimal",
+        "hard_light_ready",
+        "precise_outline"
+      ],
+      "recommendedHairstyleIds": [
+        "female-blunt-bob",
+        "male-forward-spikes"
+      ]
     },
     "referenceNotes": "纯色棚拍是发型识别最稳定的场景，适合做精确轮廓展示。",
-    "referenceSourceIds": ["masterclass-annie-working-light", "masterclass-portrait-tips", "masterclass-environmental-portrait"]
+    "referenceSourceIds": [
+      "masterclass-annie-working-light",
+      "masterclass-portrait-tips",
+      "masterclass-environmental-portrait"
+    ],
+    "coverImagePath": "template_assets/scenes/studio-solid-backdrop.jpg",
+    "coverImageUpdatedAt": "2026-03-28T05:34:29+00:00",
+    "coverImageSource": "template_image_pipeline:review_male.jpg"
   },
   {
     "id": "cold-metal-space",
@@ -241,24 +614,62 @@
     "environment": "冷银色金属墙面、镜面钢材与深灰地面构成未来感空间，背景只有少量结构线条",
     "lighting": "冷白主光从侧前方切入，辅以细窄轮廓光勾边，反射干净、反差清楚",
     "styleMood": "冷冽、现代、结构感强，强调轮廓而非生活气息",
-    "detailTags": ["金属", "冷调", "未来感", "结构感", "高反差"],
-    "expressions": ["冷脸看镜头", "收紧下颌线", "带轻微压迫感的平静神情"],
-    "actions": ["身体靠近金属墙面", "回头看向镜头", "抬手触碰领口或鬓角"],
-    "outfitHints": ["黑色皮质上衣、银灰西装或结构感背心"],
-    "pairingAdvice": ["quiff", "wet straight", "high ponytail wisps"],
+    "detailTags": [
+      "金属",
+      "冷调",
+      "未来感",
+      "结构感",
+      "高反差"
+    ],
+    "expressions": [
+      "冷脸看镜头",
+      "收紧下颌线",
+      "带轻微压迫感的平静神情"
+    ],
+    "actions": [
+      "身体靠近金属墙面",
+      "回头看向镜头",
+      "抬手触碰领口或鬓角"
+    ],
+    "outfitHints": [
+      "黑色皮质上衣、银灰西装或结构感背心"
+    ],
+    "pairingAdvice": [
+      "quiff",
+      "wet straight",
+      "high ponytail wisps"
+    ],
     "shotAdvice": "3:4 竖构图，胸口以上近景，镜头略低，保留少量金属线条",
-    "constraints": ["金属反光不能压过脸部", "色温维持偏冷但肤色仍需健康", "背景结构尽量简洁"],
+    "constraints": [
+      "金属反光不能压过脸部",
+      "色温维持偏冷但肤色仍需健康",
+      "背景结构尽量简洁"
+    ],
     "controlProfile": {
       "windLevel": "still",
       "humidityLook": "dry",
       "backgroundComplexity": "low",
       "lightingHardness": "hard",
       "mirrorRisk": "low",
-      "compatibleHairstyleTags": ["hard_light_ready", "precise_outline", "sharp_texture"],
-      "recommendedHairstyleIds": ["female-blunt-bob", "male-forward-spikes"]
+      "compatibleHairstyleTags": [
+        "hard_light_ready",
+        "precise_outline",
+        "sharp_texture"
+      ],
+      "recommendedHairstyleIds": [
+        "female-blunt-bob",
+        "male-forward-spikes"
+      ]
     },
     "referenceNotes": "冷金属空间最适合展现锋利发型和轮廓分明的五官。",
-    "referenceSourceIds": ["masterclass-annie-working-light", "masterclass-portrait-tips", "masterclass-environmental-portrait"]
+    "referenceSourceIds": [
+      "masterclass-annie-working-light",
+      "masterclass-portrait-tips",
+      "masterclass-environmental-portrait"
+    ],
+    "coverImagePath": "template_assets/scenes/cold-metal-space.jpg",
+    "coverImageUpdatedAt": "2026-03-28T05:35:58+00:00",
+    "coverImageSource": "template_image_pipeline:review_male.jpg"
   },
   {
     "id": "retro-cinema-box",
@@ -268,15 +679,46 @@
     "environment": "复古电影包厢或暗色沙发区，酒红色软包、深木饰面和黄铜细节构成背景",
     "lighting": "暖色重点光落在脸和发型上，背景维持深色层次，暗部保留细节但不抢戏",
     "styleMood": "复古、戏剧化、电影感、带一点神秘与距离感",
-    "detailTags": ["复古", "电影感", "暗调", "酒红", "戏剧化"],
-    "expressions": ["微抬眼看镜头", "带一点漫不经心的高冷", "似笑非笑"],
-    "actions": ["靠在沙发扶手上", "指尖轻碰嘴角或领口", "缓慢回望"],
-    "outfitHints": ["黑色丝质衬衫、酒红礼服或深色西装"],
-    "pairingAdvice": ["retro hong kong waves", "pompadour", "wet back sweep"],
+    "detailTags": [
+      "复古",
+      "电影感",
+      "暗调",
+      "酒红",
+      "戏剧化"
+    ],
+    "expressions": [
+      "微抬眼看镜头",
+      "带一点漫不经心的高冷",
+      "似笑非笑"
+    ],
+    "actions": [
+      "靠在沙发扶手上",
+      "指尖轻碰嘴角或领口",
+      "缓慢回望"
+    ],
+    "outfitHints": [
+      "黑色丝质衬衫、酒红礼服或深色西装"
+    ],
+    "pairingAdvice": [
+      "retro hong kong waves",
+      "pompadour",
+      "wet back sweep"
+    ],
     "shotAdvice": "3:4 竖构图，胸口以上近景，机位略低，保留少量酒红背景",
-    "constraints": ["暗调必须保留面部识别度", "酒红与肤色不能冲突", "背景亮点不宜过多"],
+    "constraints": [
+      "暗调必须保留面部识别度",
+      "酒红与肤色不能冲突",
+      "背景亮点不宜过多"
+    ],
     "referenceNotes": "复古电影包厢适合搭配更成熟、轮廓明确的发型和表情。",
-    "referenceSourceIds": ["masterclass-annie-working-light", "masterclass-portrait-tips", "masterclass-environmental-portrait"]
+    "referenceSourceIds": [
+      "masterclass-annie-working-light",
+      "masterclass-portrait-tips",
+      "masterclass-environmental-portrait"
+    ],
+    "coverImagePath": "template_assets/scenes/retro-cinema-box.jpg",
+    "coverImageUpdatedAt": "2026-03-28T05:37:03+00:00",
+    "coverImageSource": "template_image_pipeline:review_female.jpg"
   },
   {
     "id": "city-neon-night",
@@ -286,24 +728,62 @@
     "environment": "城市夜色街角或室内靠窗区域，背景有蓝紫或红蓝霓虹反射、玻璃和远处虚化车灯",
     "lighting": "主脸光依然清楚，霓虹只作为边缘色彩补充，形成冷暖对比与城市反光",
     "styleMood": "都市、时髦、轻微危险感，视觉重心集中在脸和发型轮廓",
-    "detailTags": ["夜景", "霓虹", "都市", "冷暖对比", "时髦"],
-    "expressions": ["冷静直视镜头", "若有所思地看向侧方", "略带疏离感"],
-    "actions": ["站在玻璃边回头", "抬手拨开发丝", "半转身停住"],
-    "outfitHints": ["黑色皮衣、深色吊带或利落西装外套"],
-    "pairingAdvice": ["american spiky", "wolf cut", "wet blunt bob"],
+    "detailTags": [
+      "夜景",
+      "霓虹",
+      "都市",
+      "冷暖对比",
+      "时髦"
+    ],
+    "expressions": [
+      "冷静直视镜头",
+      "若有所思地看向侧方",
+      "略带疏离感"
+    ],
+    "actions": [
+      "站在玻璃边回头",
+      "抬手拨开发丝",
+      "半转身停住"
+    ],
+    "outfitHints": [
+      "黑色皮衣、深色吊带或利落西装外套"
+    ],
+    "pairingAdvice": [
+      "american spiky",
+      "wolf cut",
+      "wet blunt bob"
+    ],
     "shotAdvice": "3:4 竖构图，胸口以上近景，背景车灯和霓虹做散景",
-    "constraints": ["霓虹色不能污染肤色", "背景必须虚化到不喧宾夺主", "主光优先保证五官清晰"],
+    "constraints": [
+      "霓虹色不能污染肤色",
+      "背景必须虚化到不喧宾夺主",
+      "主光优先保证五官清晰"
+    ],
     "controlProfile": {
       "windLevel": "low",
       "humidityLook": "balanced",
       "backgroundComplexity": "medium",
       "lightingHardness": "balanced",
       "mirrorRisk": "low",
-      "compatibleHairstyleTags": ["urban_night", "sharp_texture", "soft_motion"],
-      "recommendedHairstyleIds": ["male-forward-spikes", "female-collarbone-xinzhilei"]
+      "compatibleHairstyleTags": [
+        "urban_night",
+        "sharp_texture",
+        "soft_motion"
+      ],
+      "recommendedHairstyleIds": [
+        "male-forward-spikes",
+        "female-collarbone-xinzhilei"
+      ]
     },
     "referenceNotes": "霓虹夜景适合轮廓明确、纹理强的发型，但主脸光必须稳定。",
-    "referenceSourceIds": ["masterclass-portrait-tips", "masterclass-annie-working-light", "masterclass-environmental-portrait"]
+    "referenceSourceIds": [
+      "masterclass-portrait-tips",
+      "masterclass-annie-working-light",
+      "masterclass-environmental-portrait"
+    ],
+    "coverImagePath": "template_assets/scenes/city-neon-night.jpg",
+    "coverImageUpdatedAt": "2026-03-28T05:38:26+00:00",
+    "coverImageSource": "template_image_pipeline:review_male.jpg"
   },
   {
     "id": "gallery-white-cube",
@@ -313,15 +793,46 @@
     "environment": "白色画廊空间、几何墙面与极少量艺术品轮廓组成背景，地面与墙面整洁无干扰",
     "lighting": "均匀偏冷白光覆盖空间，主脸光略强于背景，整体层次简洁清楚",
     "styleMood": "极简、高级、理性、带展览空间的距离感",
-    "detailTags": ["画廊", "白盒子", "极简", "高定", "几何"],
-    "expressions": ["平静地看镜头", "轻抬下巴", "淡漠而从容"],
-    "actions": ["靠近白墙站立", "肩部轻轻转开", "抬手触碰耳侧发丝"],
-    "outfitHints": ["结构化白衬衫、黑色高领或极简礼服"],
-    "pairingAdvice": ["inner curl bob", "side part", "french updo"],
+    "detailTags": [
+      "画廊",
+      "白盒子",
+      "极简",
+      "高定",
+      "几何"
+    ],
+    "expressions": [
+      "平静地看镜头",
+      "轻抬下巴",
+      "淡漠而从容"
+    ],
+    "actions": [
+      "靠近白墙站立",
+      "肩部轻轻转开",
+      "抬手触碰耳侧发丝"
+    ],
+    "outfitHints": [
+      "结构化白衬衫、黑色高领或极简礼服"
+    ],
+    "pairingAdvice": [
+      "inner curl bob",
+      "side part",
+      "french updo"
+    ],
     "shotAdvice": "3:4 竖构图，胸口以上近景，几何线条保持垂直干净",
-    "constraints": ["白墙不能曝光过度", "空间里最多只留一个艺术点缀", "服装与背景需形成层次差"],
+    "constraints": [
+      "白墙不能曝光过度",
+      "空间里最多只留一个艺术点缀",
+      "服装与背景需形成层次差"
+    ],
     "referenceNotes": "画廊场景的关键不是道具，而是几何线条和留白。",
-    "referenceSourceIds": ["masterclass-environmental-portrait", "masterclass-portrait-tips", "masterclass-annie-working-light"]
+    "referenceSourceIds": [
+      "masterclass-environmental-portrait",
+      "masterclass-portrait-tips",
+      "masterclass-annie-working-light"
+    ],
+    "coverImagePath": "template_assets/scenes/gallery-white-cube.jpg",
+    "coverImageUpdatedAt": "2026-03-28T05:39:15+00:00",
+    "coverImageSource": "template_image_pipeline:review_female.jpg"
   },
   {
     "id": "dramatic-side-light",
@@ -331,15 +842,46 @@
     "environment": "深色背景或黑灰幕布空间，环境元素极少，仅保留必要负空间",
     "lighting": "单侧硬光切过脸部和发型，亮暗分区明确，鼻梁、颧骨和发丝纹理被明显勾出",
     "styleMood": "戏剧化、紧绷、电影海报感，强调骨相和结构",
-    "detailTags": ["强侧光", "黑灰背景", "戏剧化", "高反差", "骨相"],
-    "expressions": ["目光坚定", "不带笑意的冷静", "带一点压迫感的注视"],
-    "actions": ["半侧脸看镜头", "抬手扶住下颌线", "肩部后拉保持张力"],
-    "outfitHints": ["黑色高领、深色西装或金属配饰上衣"],
-    "pairingAdvice": ["quiff", "wet straight", "slick back"],
+    "detailTags": [
+      "强侧光",
+      "黑灰背景",
+      "戏剧化",
+      "高反差",
+      "骨相"
+    ],
+    "expressions": [
+      "目光坚定",
+      "不带笑意的冷静",
+      "带一点压迫感的注视"
+    ],
+    "actions": [
+      "半侧脸看镜头",
+      "抬手扶住下颌线",
+      "肩部后拉保持张力"
+    ],
+    "outfitHints": [
+      "黑色高领、深色西装或金属配饰上衣"
+    ],
+    "pairingAdvice": [
+      "quiff",
+      "wet straight",
+      "slick back"
+    ],
     "shotAdvice": "3:4 竖构图，胸口以上近景，半侧脸构图更突出侧光层次",
-    "constraints": ["暗部不能死黑", "光切线必须落在五官关键结构上", "发型纹理要清晰可辨"],
+    "constraints": [
+      "暗部不能死黑",
+      "光切线必须落在五官关键结构上",
+      "发型纹理要清晰可辨"
+    ],
     "referenceNotes": "强侧光最适合做结构型发型展示，尤其能放大发丝纹理。",
-    "referenceSourceIds": ["masterclass-annie-working-light", "masterclass-portrait-tips", "masterclass-jimmy-natural-light"]
+    "referenceSourceIds": [
+      "masterclass-annie-working-light",
+      "masterclass-portrait-tips",
+      "masterclass-jimmy-natural-light"
+    ],
+    "coverImagePath": "template_assets/scenes/dramatic-side-light.jpg",
+    "coverImageUpdatedAt": "2026-03-28T05:40:21+00:00",
+    "coverImageSource": "template_image_pipeline:review_male.jpg"
   },
   {
     "id": "luxury-hotel-lobby",
@@ -349,15 +891,46 @@
     "environment": "高级酒店大堂的大理石墙面、暖白灯带和深色家具形成宽阔空间，背景留少量秩序化线条",
     "lighting": "室内主灯带出整体空间亮度，再用定向光突出脸部和发型重点，层次分明",
     "styleMood": "精致、从容、明星感、成熟但不油腻",
-    "detailTags": ["酒店大堂", "石材", "成熟感", "明星气场", "秩序线条"],
-    "expressions": ["沉稳看镜头", "轻微挑眉", "带一点自信距离感"],
-    "actions": ["站在灯带前停住", "单手整理西装或头发", "转身回望"],
-    "outfitHints": ["黑色西装、缎面衬衫或简洁礼服"],
-    "pairingAdvice": ["pompadour", "french updo", "side part"],
+    "detailTags": [
+      "酒店大堂",
+      "石材",
+      "成熟感",
+      "明星气场",
+      "秩序线条"
+    ],
+    "expressions": [
+      "沉稳看镜头",
+      "轻微挑眉",
+      "带一点自信距离感"
+    ],
+    "actions": [
+      "站在灯带前停住",
+      "单手整理西装或头发",
+      "转身回望"
+    ],
+    "outfitHints": [
+      "黑色西装、缎面衬衫或简洁礼服"
+    ],
+    "pairingAdvice": [
+      "pompadour",
+      "french updo",
+      "side part"
+    ],
     "shotAdvice": "3:4 竖构图，胸口以上近景，保留少量大堂线条与灯带",
-    "constraints": ["空间感要大但不能杂乱", "灯带不要压脸", "材质反光需高级而非刺眼"],
+    "constraints": [
+      "空间感要大但不能杂乱",
+      "灯带不要压脸",
+      "材质反光需高级而非刺眼"
+    ],
     "referenceNotes": "酒店大堂能提供天生的高级秩序感，但镜头仍要贴近人物。",
-    "referenceSourceIds": ["masterclass-environmental-portrait", "masterclass-portrait-tips", "masterclass-annie-working-light"]
+    "referenceSourceIds": [
+      "masterclass-environmental-portrait",
+      "masterclass-portrait-tips",
+      "masterclass-annie-working-light"
+    ],
+    "coverImagePath": "template_assets/scenes/luxury-hotel-lobby.jpg",
+    "coverImageUpdatedAt": "2026-03-28T05:41:32+00:00",
+    "coverImageSource": "template_image_pipeline:review_male.jpg"
   },
   {
     "id": "rooftop-wind",
@@ -367,15 +940,46 @@
     "environment": "城市天台边缘、混凝土墙面、远处楼群和开阔天空组成背景，空间简洁直接",
     "lighting": "自然天光为主，风吹起发丝和衣角，轮廓清晰，整体亮度略高但不过曝",
     "styleMood": "自由、锋利、都市大片感，发型动态是视觉关键",
-    "detailTags": ["天台", "风场", "都市", "动态", "大片感"],
-    "expressions": ["迎风看向镜头", "坚定而放松", "带一点倔强感"],
-    "actions": ["头部轻微转动让发丝被风掀起", "单手压住外套领口", "身体顺风微侧"],
-    "outfitHints": ["长风衣、结构化衬衫或利落西装外套"],
-    "pairingAdvice": ["wolf cut", "high ponytail wisps", "messy fringe"],
+    "detailTags": [
+      "天台",
+      "风场",
+      "都市",
+      "动态",
+      "大片感"
+    ],
+    "expressions": [
+      "迎风看向镜头",
+      "坚定而放松",
+      "带一点倔强感"
+    ],
+    "actions": [
+      "头部轻微转动让发丝被风掀起",
+      "单手压住外套领口",
+      "身体顺风微侧"
+    ],
+    "outfitHints": [
+      "长风衣、结构化衬衫或利落西装外套"
+    ],
+    "pairingAdvice": [
+      "wolf cut",
+      "high ponytail wisps",
+      "messy fringe"
+    ],
     "shotAdvice": "3:4 竖构图，胸口以上近景，背景楼群轻虚化，突出风感发丝",
-    "constraints": ["风感必须自然不乱成一团", "天空不过曝", "人物轮廓要从背景中清楚分离"],
+    "constraints": [
+      "风感必须自然不乱成一团",
+      "天空不过曝",
+      "人物轮廓要从背景中清楚分离"
+    ],
     "referenceNotes": "天台场景的重点是动态线条，发型不能被风吹散到失去结构。",
-    "referenceSourceIds": ["masterclass-tyler-natural-light", "masterclass-jimmy-natural-light", "masterclass-portrait-tips"]
+    "referenceSourceIds": [
+      "masterclass-tyler-natural-light",
+      "masterclass-jimmy-natural-light",
+      "masterclass-portrait-tips"
+    ],
+    "coverImagePath": "template_assets/scenes/rooftop-wind.jpg",
+    "coverImageUpdatedAt": "2026-03-28T05:42:36+00:00",
+    "coverImageSource": "template_image_pipeline:review_male.jpg"
   },
   {
     "id": "moody-bar-counter",
@@ -385,15 +989,46 @@
     "environment": "深色酒吧吧台、玻璃杯、瓶身虚化和黄铜灯具组成背景，空间层次深但细节克制",
     "lighting": "面部由局部暖光照亮，背景保持深色氛围和少量高光点，整体暗而不闷",
     "styleMood": "成熟、微醺、神秘、夜色浓郁",
-    "detailTags": ["酒吧", "暗调", "微醺", "成熟", "暖光"],
-    "expressions": ["微醺但清醒地看镜头", "轻轻垂眼", "若有所思"],
-    "actions": ["手扶住酒杯边缘", "身体靠近吧台", "缓慢转头被抓拍"],
-    "outfitHints": ["黑色丝衬衫、修身西装或吊带礼服"],
-    "pairingAdvice": ["wet back sweep", "wet straight", "pompadour"],
+    "detailTags": [
+      "酒吧",
+      "暗调",
+      "微醺",
+      "成熟",
+      "暖光"
+    ],
+    "expressions": [
+      "微醺但清醒地看镜头",
+      "轻轻垂眼",
+      "若有所思"
+    ],
+    "actions": [
+      "手扶住酒杯边缘",
+      "身体靠近吧台",
+      "缓慢转头被抓拍"
+    ],
+    "outfitHints": [
+      "黑色丝衬衫、修身西装或吊带礼服"
+    ],
+    "pairingAdvice": [
+      "wet back sweep",
+      "wet straight",
+      "pompadour"
+    ],
     "shotAdvice": "3:4 竖构图，胸口以上近景，吧台位于下沿，背景酒瓶和灯点虚化",
-    "constraints": ["暗部不能丢失五官", "暖光要控制在高级金棕色范围", "背景玻璃反射不能杂乱"],
+    "constraints": [
+      "暗部不能丢失五官",
+      "暖光要控制在高级金棕色范围",
+      "背景玻璃反射不能杂乱"
+    ],
     "referenceNotes": "夜色吧台适合搭配油润或结构型发型，但必须优先保证人脸辨识度。",
-    "referenceSourceIds": ["masterclass-annie-working-light", "masterclass-portrait-tips", "masterclass-environmental-portrait"]
+    "referenceSourceIds": [
+      "masterclass-annie-working-light",
+      "masterclass-portrait-tips",
+      "masterclass-environmental-portrait"
+    ],
+    "coverImagePath": "template_assets/scenes/moody-bar-counter.jpg",
+    "coverImageUpdatedAt": "2026-03-28T05:43:55+00:00",
+    "coverImageSource": "template_image_pipeline:review_male.jpg"
   },
   {
     "id": "backstage-vanity-mirror",
@@ -403,14 +1038,45 @@
     "environment": "后台化妆镜、圆形灯泡、化妆台和少量刷具构成背景，镜前空间紧凑但秩序感强",
     "lighting": "镜前灯泡提供正面暖白光，再用轻微侧光补足层次，肤质清楚且眼神明亮",
     "styleMood": "准备上场前的专注、自持与高级张力",
-    "detailTags": ["后台", "化妆镜", "灯泡", "明星感", "专注"],
-    "expressions": ["专注看向镜中", "冷静回望镜头", "准备上场前的收敛神情"],
-    "actions": ["抬手整理耳侧发丝", "扶住化妆台边缘", "拿起口红或小镜子短暂停顿"],
-    "outfitHints": ["黑色挂脖上衣、修身西装或缎面吊带"],
-    "pairingAdvice": ["slick back", "french updo", "comma bangs"],
+    "detailTags": [
+      "后台",
+      "化妆镜",
+      "灯泡",
+      "明星感",
+      "专注"
+    ],
+    "expressions": [
+      "专注看向镜中",
+      "冷静回望镜头",
+      "准备上场前的收敛神情"
+    ],
+    "actions": [
+      "抬手整理耳侧发丝",
+      "扶住化妆台边缘",
+      "拿起口红或小镜子短暂停顿"
+    ],
+    "outfitHints": [
+      "黑色挂脖上衣、修身西装或缎面吊带"
+    ],
+    "pairingAdvice": [
+      "slick back",
+      "french updo",
+      "comma bangs"
+    ],
     "shotAdvice": "3:4 竖构图，胸口以上近景，保留镜灯和少量台面物件",
-    "constraints": ["镜灯不能过曝", "桌面只放少量高质感化妆工具", "镜面构图必须避免重复人脸"],
+    "constraints": [
+      "镜灯不能过曝",
+      "桌面只放少量高质感化妆工具",
+      "镜面构图必须避免重复人脸"
+    ],
     "referenceNotes": "后台镜前很适合强调发型定型后的精致状态和明星感。",
-    "referenceSourceIds": ["masterclass-annie-working-light", "masterclass-environmental-portrait", "masterclass-portrait-tips"]
+    "referenceSourceIds": [
+      "masterclass-annie-working-light",
+      "masterclass-environmental-portrait",
+      "masterclass-portrait-tips"
+    ],
+    "coverImagePath": "template_assets/scenes/backstage-vanity-mirror.jpg",
+    "coverImageUpdatedAt": "2026-03-28T05:44:48+00:00",
+    "coverImageSource": "template_image_pipeline:review_female.jpg"
   }
 ]
