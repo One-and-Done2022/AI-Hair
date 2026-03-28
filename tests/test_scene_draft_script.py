@@ -27,11 +27,26 @@ def _build_scene_payload(scene_id: str = "window-softlight-demo") -> dict:
             "summary": "窗边自然光与留白背景构成稳定的生活化人像环境。",
             "environment": "室内留白墙面与木质家具背景，窗边区域干净克制。",
             "lighting": "窗边柔和自然光从侧前方进入，整体亮部通透。",
+            "lightingProfile": {
+                "lightDirection": "side",
+                "lightQuality": "soft",
+                "colorTemperature": "neutral",
+                "contrastLevel": "low",
+                "shadowDensity": "light",
+                "hairHighlightMode": "soft_edge",
+                "skinRendering": "soft_texture",
+                "exposureBias": "slightly_over",
+                "practicalLightsAllowed": False,
+            },
             "styleMood": "安静、松弛、生活感高级。",
             "detailTags": ["室内", "窗边", "自然光"],
             "expressions": ["温和看向镜头"],
             "actions": ["靠坐在椅子上轻微侧身"],
             "outfitHints": ["米白色针织上衣"],
+            "outfitPalette": ["白色", "浅灰", "米白"],
+            "outfitMaterials": ["轻薄棉质", "柔软针织"],
+            "outfitShapes": ["宽松衬衫", "简洁背心"],
+            "outfitAvoids": ["高饱和撞色", "复杂配饰"],
             "pairingAdvice": ["法式慵懒卷", "蓬松锁骨发"],
             "shotAdvice": "3:4 竖构图，胸口以上近景，平视镜头。",
             "constraints": ["背景保持简洁留白", "不要加入复杂前景"],
@@ -43,6 +58,7 @@ def _build_scene_payload(scene_id: str = "window-softlight-demo") -> dict:
                 "mirrorRisk": "none",
                 "compatibleHairstyleTags": ["lifestyle_softlight"],
             },
+            "sampleImageIds": {"female": ["female3"], "male": ["male2"]},
             "referenceNotes": "由场景理解接口自动生成，建议人工复核后再入库。",
             "referenceSourceIds": ["scene-understanding-api"],
         }
@@ -64,6 +80,8 @@ def test_append_scene_draft_accepts_full_api_response(tmp_path):
     assert len(saved) == 1
     assert saved[0]["title"] == "窗边自然光人像"
     assert saved[0]["controlProfile"]["recommendedHairstyleIds"] == []
+    assert saved[0]["lightingProfile"]["lightDirection"] == "side"
+    assert saved[0]["sampleImageIds"]["female"] == ["female3"]
 
 
 def test_append_scene_draft_rejects_duplicate_id(tmp_path):

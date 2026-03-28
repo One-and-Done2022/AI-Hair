@@ -18,8 +18,12 @@ TEMPLATE_PIPELINE_PATH = ROOT_DIR / "scripts" / "template_image_pipeline.py"
 REVIEW_PIPELINE_PATH = ROOT_DIR / "scripts" / "review_template_image_pipeline.py"
 
 DEFAULT_SAMPLE_IMAGES = {
-    "male": ROOT_DIR / "assets" / "male.jpg",
-    "female": ROOT_DIR / "assets" / "female.jpg",
+    "female1": ROOT_DIR / "assets" / "female1.jpg",
+    "female2": ROOT_DIR / "assets" / "female2.jpg",
+    "female3": ROOT_DIR / "assets" / "female3.jpg",
+    "male1": ROOT_DIR / "assets" / "male1.jpg",
+    "male2": ROOT_DIR / "assets" / "male2.jpg",
+    "male3": ROOT_DIR / "assets" / "male3.jpg",
 }
 DEFAULT_ASPECT_RATIO = "3:4"
 DEFAULT_RESOLUTION = "2K"
@@ -28,6 +32,10 @@ DEFAULT_BACKENDS = {
     "scenes": "seedream",
 }
 SUPPORTED_CATEGORIES = {"hairstyles", "scenes"}
+DEFAULT_HAIRSTYLE_SAMPLE_IDS = {
+    "female": "female3",
+    "male": "male2",
+}
 
 SCENE_COVER_GENDER_MAP = {
     "indoor-film-lifestyle": "female",
@@ -124,7 +132,30 @@ def _cover_gender_for_template(category: str, template: dict[str, Any]) -> str:
 
 def _selected_sample_images(category: str, template: dict[str, Any]) -> tuple[str, dict[str, Path]]:
     cover_gender = _cover_gender_for_template(category, template)
-    sample_path = DEFAULT_SAMPLE_IMAGES[cover_gender]
+    direct_sample_path = DEFAULT_SAMPLE_IMAGES.get(cover_gender)
+    if direct_sample_path is not None:
+        if not direct_sample_path.exists():
+            raise FileNotFoundError(f"找不到示例人物图：{direct_sample_path}")
+        return cover_gender, {cover_gender: direct_sample_path}
+
+    if category == "scenes":
+        resolver = getattr(template_pipeline.templates, "resolve_scene_sample_image_id", None)
+        if callable(resolver):
+            sample_image_id = resolver(
+                template,
+                cover_gender,
+                seed_source=f"{template['id']}:publish-cover:{cover_gender}",
+            )
+        else:
+            sample_image_id = DEFAULT_HAIRSTYLE_SAMPLE_IDS.get(cover_gender, "")
+    else:
+        sample_image_id = DEFAULT_HAIRSTYLE_SAMPLE_IDS.get(cover_gender, "")
+
+    sample_path = DEFAULT_SAMPLE_IMAGES.get(sample_image_id)
+    if sample_path is None:
+        raise FileNotFoundError(
+            f"找不到 {category}/{template.get('id')} 对应的官方示例人物图配置：{sample_image_id}"
+        )
     if not sample_path.exists():
         raise FileNotFoundError(f"找不到示例人物图：{sample_path}")
     return cover_gender, {cover_gender: sample_path}

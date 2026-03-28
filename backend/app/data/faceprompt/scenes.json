@@ -63,7 +63,46 @@
     ],
     "coverImagePath": "template_assets/scenes/indoor-film-lifestyle.jpg",
     "coverImageUpdatedAt": "2026-03-28T05:14:42+00:00",
-    "coverImageSource": "template_image_pipeline:review_female.jpg"
+    "coverImageSource": "template_image_pipeline:review_female.jpg",
+    "lightingProfile": {
+      "lightDirection": "side",
+      "lightQuality": "soft",
+      "colorTemperature": "neutral",
+      "contrastLevel": "low",
+      "shadowDensity": "light",
+      "hairHighlightMode": "soft_edge",
+      "skinRendering": "soft_texture",
+      "exposureBias": "neutral",
+      "practicalLightsAllowed": false
+    },
+    "outfitPalette": [
+      "奶油白",
+      "浅米白",
+      "浅卡其"
+    ],
+    "outfitMaterials": [
+      "棉质衬衫",
+      "柔软针织",
+      "细腻棉麻"
+    ],
+    "outfitShapes": [
+      "宽松衬衫",
+      "简洁背心",
+      "微敞领口上衣"
+    ],
+    "outfitAvoids": [
+      "高饱和撞色",
+      "复杂印花",
+      "强结构礼服"
+    ],
+    "sampleImageIds": {
+      "female": [
+        "female3"
+      ],
+      "male": [
+        "male2"
+      ]
+    }
   },
   {
     "id": "morning-window-softlight",
@@ -130,7 +169,46 @@
     ],
     "coverImagePath": "template_assets/scenes/morning-window-softlight.jpg",
     "coverImageUpdatedAt": "2026-03-28T05:16:49+00:00",
-    "coverImageSource": "template_image_pipeline:review_female.jpg"
+    "coverImageSource": "template_image_pipeline:review_female.jpg",
+    "lightingProfile": {
+      "lightDirection": "side",
+      "lightQuality": "soft",
+      "colorTemperature": "neutral",
+      "contrastLevel": "low",
+      "shadowDensity": "light",
+      "hairHighlightMode": "soft_edge",
+      "skinRendering": "soft_texture",
+      "exposureBias": "slightly_over",
+      "practicalLightsAllowed": false
+    },
+    "outfitPalette": [
+      "白色",
+      "浅灰",
+      "燕麦色"
+    ],
+    "outfitMaterials": [
+      "轻薄棉质",
+      "柔软针织",
+      "家居棉布"
+    ],
+    "outfitShapes": [
+      "家居衬衫",
+      "轻薄针织上衣",
+      "简洁背心"
+    ],
+    "outfitAvoids": [
+      "厚重外套",
+      "正式西装",
+      "亮面材质"
+    ],
+    "sampleImageIds": {
+      "female": [
+        "female3"
+      ],
+      "male": [
+        "male2"
+      ]
+    }
   },
   {
     "id": "walnut-study-portrait",
@@ -179,7 +257,46 @@
     ],
     "coverImagePath": "template_assets/scenes/walnut-study-portrait.jpg",
     "coverImageUpdatedAt": "2026-03-28T05:18:59+00:00",
-    "coverImageSource": "template_image_pipeline:review_male.jpg"
+    "coverImageSource": "template_image_pipeline:review_male.jpg",
+    "lightingProfile": {
+      "lightDirection": "side",
+      "lightQuality": "medium",
+      "colorTemperature": "neutral",
+      "contrastLevel": "medium",
+      "shadowDensity": "balanced",
+      "hairHighlightMode": "none",
+      "skinRendering": "clean_texture",
+      "exposureBias": "neutral",
+      "practicalLightsAllowed": false
+    },
+    "outfitPalette": [
+      "米白",
+      "深灰",
+      "低饱和墨绿"
+    ],
+    "outfitMaterials": [
+      "衬衫棉布",
+      "细针织",
+      "轻薄西装面料"
+    ],
+    "outfitShapes": [
+      "叠穿衬衫",
+      "针织背心",
+      "低饱和外套"
+    ],
+    "outfitAvoids": [
+      "潮流 logo",
+      "夸张配饰",
+      "荧光色"
+    ],
+    "sampleImageIds": {
+      "female": [
+        "female3"
+      ],
+      "male": [
+        "male2"
+      ]
+    }
   },
   {
     "id": "cafe-candid-seat",
@@ -245,7 +362,46 @@
     ],
     "coverImagePath": "template_assets/scenes/cafe-candid-seat.jpg",
     "coverImageUpdatedAt": "2026-03-28T05:20:58+00:00",
-    "coverImageSource": "template_image_pipeline:review_female.jpg"
+    "coverImageSource": "template_image_pipeline:review_female.jpg",
+    "lightingProfile": {
+      "lightDirection": "mixed",
+      "lightQuality": "soft",
+      "colorTemperature": "mixed",
+      "contrastLevel": "medium",
+      "shadowDensity": "balanced",
+      "hairHighlightMode": "soft_edge",
+      "skinRendering": "clean_texture",
+      "exposureBias": "neutral",
+      "practicalLightsAllowed": true
+    },
+    "outfitPalette": [
+      "白色",
+      "奶油色",
+      "深灰"
+    ],
+    "outfitMaterials": [
+      "衬衫棉布",
+      "轻针织",
+      "柔软风衣面料"
+    ],
+    "outfitShapes": [
+      "简洁衬衫",
+      "针织开衫",
+      "轻外套内搭"
+    ],
+    "outfitAvoids": [
+      "过度商务套装",
+      "复杂图腾",
+      "厚重羽绒"
+    ],
+    "sampleImageIds": {
+      "female": [
+        "female3"
+      ],
+      "male": [
+        "male2"
+      ]
+    }
   },
   {
     "id": "bathroom-mirror-morning",
@@ -294,7 +450,46 @@
     ],
     "coverImagePath": "template_assets/scenes/bathroom-mirror-morning.jpg",
     "coverImageUpdatedAt": "2026-03-28T05:22:55+00:00",
-    "coverImageSource": "template_image_pipeline:review_female.jpg"
+    "coverImageSource": "template_image_pipeline:review_female.jpg",
+    "lightingProfile": {
+      "lightDirection": "mixed",
+      "lightQuality": "soft",
+      "colorTemperature": "neutral",
+      "contrastLevel": "low",
+      "shadowDensity": "light",
+      "hairHighlightMode": "none",
+      "skinRendering": "clean_texture",
+      "exposureBias": "neutral",
+      "practicalLightsAllowed": true
+    },
+    "outfitPalette": [
+      "白色",
+      "浅灰",
+      "冷白"
+    ],
+    "outfitMaterials": [
+      "棉质背心",
+      "轻薄家居面料",
+      "柔软衬衫棉布"
+    ],
+    "outfitShapes": [
+      "背心",
+      "宽松家居上衣",
+      "敞领衬衫"
+    ],
+    "outfitAvoids": [
+      "礼服化剪裁",
+      "高饱和图案",
+      "厚重外套"
+    ],
+    "sampleImageIds": {
+      "female": [
+        "female3"
+      ],
+      "male": [
+        "male2"
+      ]
+    }
   },
   {
     "id": "hotel-room-loose",
@@ -343,7 +538,47 @@
     ],
     "coverImagePath": "template_assets/scenes/hotel-room-loose.jpg",
     "coverImageUpdatedAt": "2026-03-28T05:25:03+00:00",
-    "coverImageSource": "template_image_pipeline:review_female.jpg"
+    "coverImageSource": "template_image_pipeline:review_female.jpg",
+    "lightingProfile": {
+      "lightDirection": "side",
+      "lightQuality": "soft",
+      "colorTemperature": "warm",
+      "contrastLevel": "low",
+      "shadowDensity": "light",
+      "hairHighlightMode": "soft_edge",
+      "skinRendering": "soft_texture",
+      "exposureBias": "neutral",
+      "practicalLightsAllowed": true
+    },
+    "outfitPalette": [
+      "米白",
+      "浅卡其",
+      "裸色"
+    ],
+    "outfitMaterials": [
+      "柔软针织",
+      "细腻棉布",
+      "轻垂坠面料"
+    ],
+    "outfitShapes": [
+      "宽松衬衫",
+      "柔软吊带",
+      "松弛针织上衣"
+    ],
+    "outfitAvoids": [
+      "商务正装",
+      "夜店亮片",
+      "硬挺礼服"
+    ],
+    "sampleImageIds": {
+      "female": [
+        "female3",
+        "female2"
+      ],
+      "male": [
+        "male2"
+      ]
+    }
   },
   {
     "id": "sunset-home-backlight",
@@ -392,7 +627,47 @@
     ],
     "coverImagePath": "template_assets/scenes/sunset-home-backlight.jpg",
     "coverImageUpdatedAt": "2026-03-28T05:26:56+00:00",
-    "coverImageSource": "template_image_pipeline:review_female.jpg"
+    "coverImageSource": "template_image_pipeline:review_female.jpg",
+    "lightingProfile": {
+      "lightDirection": "back",
+      "lightQuality": "soft",
+      "colorTemperature": "warm",
+      "contrastLevel": "medium",
+      "shadowDensity": "balanced",
+      "hairHighlightMode": "clean_rim",
+      "skinRendering": "soft_texture",
+      "exposureBias": "slightly_under",
+      "practicalLightsAllowed": true
+    },
+    "outfitPalette": [
+      "米白",
+      "浅卡其",
+      "裸粉中性调"
+    ],
+    "outfitMaterials": [
+      "柔软针织",
+      "棉麻",
+      "轻垂坠衬衫面料"
+    ],
+    "outfitShapes": [
+      "针织上衣",
+      "简洁衬衫",
+      "轻柔背心"
+    ],
+    "outfitAvoids": [
+      "荧光色",
+      "硬质皮革",
+      "厚重廓形"
+    ],
+    "sampleImageIds": {
+      "female": [
+        "female3",
+        "female2"
+      ],
+      "male": [
+        "male2"
+      ]
+    }
   },
   {
     "id": "hallway-quiet-frame",
@@ -441,7 +716,47 @@
     ],
     "coverImagePath": "template_assets/scenes/hallway-quiet-frame.jpg",
     "coverImageUpdatedAt": "2026-03-28T05:28:56+00:00",
-    "coverImageSource": "template_image_pipeline:review_male.jpg"
+    "coverImageSource": "template_image_pipeline:review_male.jpg",
+    "lightingProfile": {
+      "lightDirection": "mixed",
+      "lightQuality": "medium",
+      "colorTemperature": "neutral",
+      "contrastLevel": "medium",
+      "shadowDensity": "balanced",
+      "hairHighlightMode": "none",
+      "skinRendering": "clean_texture",
+      "exposureBias": "neutral",
+      "practicalLightsAllowed": true
+    },
+    "outfitPalette": [
+      "白色",
+      "墨绿",
+      "深灰"
+    ],
+    "outfitMaterials": [
+      "衬衫棉布",
+      "细针织",
+      "轻外套面料"
+    ],
+    "outfitShapes": [
+      "简洁衬衫",
+      "针织层搭",
+      "利落外套"
+    ],
+    "outfitAvoids": [
+      "张扬印花",
+      "暖橙亮色",
+      "堆叠配饰"
+    ],
+    "sampleImageIds": {
+      "female": [
+        "female3"
+      ],
+      "male": [
+        "male2",
+        "male1"
+      ]
+    }
   },
   {
     "id": "bedside-half-recline",
@@ -490,7 +805,46 @@
     ],
     "coverImagePath": "template_assets/scenes/bedside-half-recline.jpg",
     "coverImageUpdatedAt": "2026-03-28T05:30:53+00:00",
-    "coverImageSource": "template_image_pipeline:review_female.jpg"
+    "coverImageSource": "template_image_pipeline:review_female.jpg",
+    "lightingProfile": {
+      "lightDirection": "side",
+      "lightQuality": "soft",
+      "colorTemperature": "warm",
+      "contrastLevel": "low",
+      "shadowDensity": "light",
+      "hairHighlightMode": "soft_edge",
+      "skinRendering": "soft_texture",
+      "exposureBias": "slightly_under",
+      "practicalLightsAllowed": true
+    },
+    "outfitPalette": [
+      "白色",
+      "奶油白",
+      "浅灰"
+    ],
+    "outfitMaterials": [
+      "柔软针织",
+      "棉质衬衫",
+      "轻薄背心面料"
+    ],
+    "outfitShapes": [
+      "宽松衬衫",
+      "柔软背心",
+      "松弛针织"
+    ],
+    "outfitAvoids": [
+      "夸张性感剪裁",
+      "礼服感材质",
+      "高饱和色块"
+    ],
+    "sampleImageIds": {
+      "female": [
+        "female3"
+      ],
+      "male": [
+        "male2"
+      ]
+    }
   },
   {
     "id": "rainy-window-mood",
@@ -539,7 +893,46 @@
     ],
     "coverImagePath": "template_assets/scenes/rainy-window-mood.jpg",
     "coverImageUpdatedAt": "2026-03-28T05:32:50+00:00",
-    "coverImageSource": "template_image_pipeline:review_male.jpg"
+    "coverImageSource": "template_image_pipeline:review_male.jpg",
+    "lightingProfile": {
+      "lightDirection": "side",
+      "lightQuality": "soft",
+      "colorTemperature": "cool",
+      "contrastLevel": "low",
+      "shadowDensity": "balanced",
+      "hairHighlightMode": "none",
+      "skinRendering": "soft_texture",
+      "exposureBias": "slightly_under",
+      "practicalLightsAllowed": false
+    },
+    "outfitPalette": [
+      "深灰",
+      "冷白",
+      "炭黑"
+    ],
+    "outfitMaterials": [
+      "细针织",
+      "柔软衬衫面料",
+      "轻薄高领针织"
+    ],
+    "outfitShapes": [
+      "高领上衣",
+      "简洁衬衫",
+      "安静内搭"
+    ],
+    "outfitAvoids": [
+      "高亮反光",
+      "高饱和色块",
+      "复杂层叠"
+    ],
+    "sampleImageIds": {
+      "female": [
+        "female3"
+      ],
+      "male": [
+        "male2"
+      ]
+    }
   },
   {
     "id": "studio-solid-backdrop",
@@ -604,7 +997,46 @@
     ],
     "coverImagePath": "template_assets/scenes/studio-solid-backdrop.jpg",
     "coverImageUpdatedAt": "2026-03-28T05:34:29+00:00",
-    "coverImageSource": "template_image_pipeline:review_male.jpg"
+    "coverImageSource": "template_image_pipeline:review_male.jpg",
+    "lightingProfile": {
+      "lightDirection": "front",
+      "lightQuality": "medium",
+      "colorTemperature": "neutral",
+      "contrastLevel": "medium",
+      "shadowDensity": "balanced",
+      "hairHighlightMode": "controlled_specular",
+      "skinRendering": "clean_texture",
+      "exposureBias": "neutral",
+      "practicalLightsAllowed": false
+    },
+    "outfitPalette": [
+      "黑色",
+      "白色",
+      "冷灰"
+    ],
+    "outfitMaterials": [
+      "结构衬衫面料",
+      "高领针织",
+      "挺括西装面料"
+    ],
+    "outfitShapes": [
+      "结构化衬衫",
+      "高领上衣",
+      "极简西装"
+    ],
+    "outfitAvoids": [
+      "甜美荷叶边",
+      "家居服",
+      "大面积图案"
+    ],
+    "sampleImageIds": {
+      "female": [
+        "female2"
+      ],
+      "male": [
+        "male1"
+      ]
+    }
   },
   {
     "id": "cold-metal-space",
@@ -669,7 +1101,46 @@
     ],
     "coverImagePath": "template_assets/scenes/cold-metal-space.jpg",
     "coverImageUpdatedAt": "2026-03-28T05:35:58+00:00",
-    "coverImageSource": "template_image_pipeline:review_male.jpg"
+    "coverImageSource": "template_image_pipeline:review_male.jpg",
+    "lightingProfile": {
+      "lightDirection": "side",
+      "lightQuality": "hard",
+      "colorTemperature": "cool",
+      "contrastLevel": "high",
+      "shadowDensity": "deep",
+      "hairHighlightMode": "controlled_specular",
+      "skinRendering": "structured_texture",
+      "exposureBias": "slightly_under",
+      "practicalLightsAllowed": true
+    },
+    "outfitPalette": [
+      "黑色",
+      "银灰",
+      "冷白"
+    ],
+    "outfitMaterials": [
+      "皮质",
+      "结构西装面料",
+      "挺括科技面料"
+    ],
+    "outfitShapes": [
+      "结构感背心",
+      "利落西装",
+      "极简硬挺上衣"
+    ],
+    "outfitAvoids": [
+      "暖色碎花",
+      "家居针织",
+      "软塌廓形"
+    ],
+    "sampleImageIds": {
+      "female": [
+        "female2"
+      ],
+      "male": [
+        "male1"
+      ]
+    }
   },
   {
     "id": "retro-cinema-box",
@@ -718,7 +1189,46 @@
     ],
     "coverImagePath": "template_assets/scenes/retro-cinema-box.jpg",
     "coverImageUpdatedAt": "2026-03-28T05:37:03+00:00",
-    "coverImageSource": "template_image_pipeline:review_female.jpg"
+    "coverImageSource": "template_image_pipeline:review_female.jpg",
+    "lightingProfile": {
+      "lightDirection": "side",
+      "lightQuality": "medium",
+      "colorTemperature": "warm",
+      "contrastLevel": "high",
+      "shadowDensity": "deep",
+      "hairHighlightMode": "clean_rim",
+      "skinRendering": "clean_texture",
+      "exposureBias": "slightly_under",
+      "practicalLightsAllowed": true
+    },
+    "outfitPalette": [
+      "黑色",
+      "酒红",
+      "深棕"
+    ],
+    "outfitMaterials": [
+      "丝质衬衫面料",
+      "缎面",
+      "挺括西装面料"
+    ],
+    "outfitShapes": [
+      "暗色衬衫",
+      "礼服感上衣",
+      "深色外套"
+    ],
+    "outfitAvoids": [
+      "荧光色",
+      "可爱风单品",
+      "运动休闲装"
+    ],
+    "sampleImageIds": {
+      "female": [
+        "female2"
+      ],
+      "male": [
+        "male1"
+      ]
+    }
   },
   {
     "id": "city-neon-night",
@@ -783,7 +1293,46 @@
     ],
     "coverImagePath": "template_assets/scenes/city-neon-night.jpg",
     "coverImageUpdatedAt": "2026-03-28T05:38:26+00:00",
-    "coverImageSource": "template_image_pipeline:review_male.jpg"
+    "coverImageSource": "template_image_pipeline:review_male.jpg",
+    "lightingProfile": {
+      "lightDirection": "mixed",
+      "lightQuality": "medium",
+      "colorTemperature": "mixed",
+      "contrastLevel": "high",
+      "shadowDensity": "deep",
+      "hairHighlightMode": "controlled_specular",
+      "skinRendering": "clean_texture",
+      "exposureBias": "slightly_under",
+      "practicalLightsAllowed": true
+    },
+    "outfitPalette": [
+      "黑色",
+      "深灰",
+      "冷金属色"
+    ],
+    "outfitMaterials": [
+      "皮质",
+      "挺括西装面料",
+      "冷感合成面料"
+    ],
+    "outfitShapes": [
+      "皮衣",
+      "利落外套",
+      "修身内搭"
+    ],
+    "outfitAvoids": [
+      "高反光亮片",
+      "大 logo",
+      "暖色家居服"
+    ],
+    "sampleImageIds": {
+      "female": [
+        "female2"
+      ],
+      "male": [
+        "male1"
+      ]
+    }
   },
   {
     "id": "gallery-white-cube",
@@ -832,7 +1381,46 @@
     ],
     "coverImagePath": "template_assets/scenes/gallery-white-cube.jpg",
     "coverImageUpdatedAt": "2026-03-28T05:39:15+00:00",
-    "coverImageSource": "template_image_pipeline:review_female.jpg"
+    "coverImageSource": "template_image_pipeline:review_female.jpg",
+    "lightingProfile": {
+      "lightDirection": "front",
+      "lightQuality": "soft",
+      "colorTemperature": "neutral",
+      "contrastLevel": "medium",
+      "shadowDensity": "light",
+      "hairHighlightMode": "none",
+      "skinRendering": "clean_texture",
+      "exposureBias": "slightly_over",
+      "practicalLightsAllowed": false
+    },
+    "outfitPalette": [
+      "黑色",
+      "白色",
+      "冷灰"
+    ],
+    "outfitMaterials": [
+      "结构化衬衫面料",
+      "高领针织",
+      "极简礼服面料"
+    ],
+    "outfitShapes": [
+      "结构衬衫",
+      "高领上衣",
+      "极简礼服感单品"
+    ],
+    "outfitAvoids": [
+      "花卉图案",
+      "宽松家居服",
+      "过多配饰"
+    ],
+    "sampleImageIds": {
+      "female": [
+        "female2"
+      ],
+      "male": [
+        "male1"
+      ]
+    }
   },
   {
     "id": "dramatic-side-light",
@@ -881,7 +1469,46 @@
     ],
     "coverImagePath": "template_assets/scenes/dramatic-side-light.jpg",
     "coverImageUpdatedAt": "2026-03-28T05:40:21+00:00",
-    "coverImageSource": "template_image_pipeline:review_male.jpg"
+    "coverImageSource": "template_image_pipeline:review_male.jpg",
+    "lightingProfile": {
+      "lightDirection": "side",
+      "lightQuality": "hard",
+      "colorTemperature": "neutral",
+      "contrastLevel": "high",
+      "shadowDensity": "deep",
+      "hairHighlightMode": "clean_rim",
+      "skinRendering": "structured_texture",
+      "exposureBias": "slightly_under",
+      "practicalLightsAllowed": false
+    },
+    "outfitPalette": [
+      "黑色",
+      "深灰",
+      "金属灰"
+    ],
+    "outfitMaterials": [
+      "高领针织",
+      "西装面料",
+      "冷感结构面料"
+    ],
+    "outfitShapes": [
+      "深色高领",
+      "结构西装",
+      "利落上衣"
+    ],
+    "outfitAvoids": [
+      "软糯家居服",
+      "大面积亮色",
+      "甜美元素"
+    ],
+    "sampleImageIds": {
+      "female": [
+        "female2"
+      ],
+      "male": [
+        "male1"
+      ]
+    }
   },
   {
     "id": "luxury-hotel-lobby",
@@ -930,7 +1557,46 @@
     ],
     "coverImagePath": "template_assets/scenes/luxury-hotel-lobby.jpg",
     "coverImageUpdatedAt": "2026-03-28T05:41:32+00:00",
-    "coverImageSource": "template_image_pipeline:review_male.jpg"
+    "coverImageSource": "template_image_pipeline:review_male.jpg",
+    "lightingProfile": {
+      "lightDirection": "mixed",
+      "lightQuality": "medium",
+      "colorTemperature": "warm",
+      "contrastLevel": "medium",
+      "shadowDensity": "balanced",
+      "hairHighlightMode": "controlled_specular",
+      "skinRendering": "clean_texture",
+      "exposureBias": "neutral",
+      "practicalLightsAllowed": true
+    },
+    "outfitPalette": [
+      "黑色",
+      "香槟白",
+      "深炭灰"
+    ],
+    "outfitMaterials": [
+      "缎面",
+      "西装面料",
+      "细腻结构织物"
+    ],
+    "outfitShapes": [
+      "结构西装",
+      "利落衬衫",
+      "礼服感上衣"
+    ],
+    "outfitAvoids": [
+      "廉价亮片",
+      "荧光色",
+      "街头 oversize"
+    ],
+    "sampleImageIds": {
+      "female": [
+        "female2"
+      ],
+      "male": [
+        "male1"
+      ]
+    }
   },
   {
     "id": "rooftop-wind",
@@ -979,7 +1645,46 @@
     ],
     "coverImagePath": "template_assets/scenes/rooftop-wind.jpg",
     "coverImageUpdatedAt": "2026-03-28T05:42:36+00:00",
-    "coverImageSource": "template_image_pipeline:review_male.jpg"
+    "coverImageSource": "template_image_pipeline:review_male.jpg",
+    "lightingProfile": {
+      "lightDirection": "back",
+      "lightQuality": "medium",
+      "colorTemperature": "cool",
+      "contrastLevel": "medium",
+      "shadowDensity": "balanced",
+      "hairHighlightMode": "clean_rim",
+      "skinRendering": "clean_texture",
+      "exposureBias": "neutral",
+      "practicalLightsAllowed": false
+    },
+    "outfitPalette": [
+      "黑色",
+      "冷灰",
+      "白色"
+    ],
+    "outfitMaterials": [
+      "风衣面料",
+      "挺括衬衫面料",
+      "轻薄结构织物"
+    ],
+    "outfitShapes": [
+      "长风衣",
+      "结构衬衫",
+      "利落外套"
+    ],
+    "outfitAvoids": [
+      "厚重羽绒",
+      "甜美蝴蝶结",
+      "杂乱层叠"
+    ],
+    "sampleImageIds": {
+      "female": [
+        "female1"
+      ],
+      "male": [
+        "male3"
+      ]
+    }
   },
   {
     "id": "moody-bar-counter",
@@ -1028,7 +1733,46 @@
     ],
     "coverImagePath": "template_assets/scenes/moody-bar-counter.jpg",
     "coverImageUpdatedAt": "2026-03-28T05:43:55+00:00",
-    "coverImageSource": "template_image_pipeline:review_male.jpg"
+    "coverImageSource": "template_image_pipeline:review_male.jpg",
+    "lightingProfile": {
+      "lightDirection": "side",
+      "lightQuality": "medium",
+      "colorTemperature": "warm",
+      "contrastLevel": "high",
+      "shadowDensity": "deep",
+      "hairHighlightMode": "controlled_specular",
+      "skinRendering": "clean_texture",
+      "exposureBias": "slightly_under",
+      "practicalLightsAllowed": true
+    },
+    "outfitPalette": [
+      "黑色",
+      "深酒红",
+      "炭灰"
+    ],
+    "outfitMaterials": [
+      "丝质衬衫面料",
+      "西装面料",
+      "微光泽暗色面料"
+    ],
+    "outfitShapes": [
+      "修身西装",
+      "丝衬衫",
+      "暗调利落上衣"
+    ],
+    "outfitAvoids": [
+      "亮片夜店装",
+      "高饱和紫红",
+      "随意家居服"
+    ],
+    "sampleImageIds": {
+      "female": [
+        "female2"
+      ],
+      "male": [
+        "male1"
+      ]
+    }
   },
   {
     "id": "backstage-vanity-mirror",
@@ -1077,6 +1821,45 @@
     ],
     "coverImagePath": "template_assets/scenes/backstage-vanity-mirror.jpg",
     "coverImageUpdatedAt": "2026-03-28T05:44:48+00:00",
-    "coverImageSource": "template_image_pipeline:review_female.jpg"
+    "coverImageSource": "template_image_pipeline:review_female.jpg",
+    "lightingProfile": {
+      "lightDirection": "front",
+      "lightQuality": "soft",
+      "colorTemperature": "warm",
+      "contrastLevel": "medium",
+      "shadowDensity": "balanced",
+      "hairHighlightMode": "controlled_specular",
+      "skinRendering": "clean_texture",
+      "exposureBias": "neutral",
+      "practicalLightsAllowed": true
+    },
+    "outfitPalette": [
+      "黑色",
+      "冷白",
+      "炭灰"
+    ],
+    "outfitMaterials": [
+      "缎面",
+      "修身西装面料",
+      "利落结构织物"
+    ],
+    "outfitShapes": [
+      "挂脖上衣",
+      "修身西装",
+      "暗调衬衫"
+    ],
+    "outfitAvoids": [
+      "化妆袍感服装",
+      "荧光色",
+      "杂乱印花"
+    ],
+    "sampleImageIds": {
+      "female": [
+        "female2"
+      ],
+      "male": [
+        "male1"
+      ]
+    }
   }
 ]

@@ -19,6 +19,14 @@ VALID_HUMIDITY_LOOKS = {"dry", "balanced", "humid", "wet"}
 VALID_BACKGROUND_COMPLEXITIES = {"low", "medium", "high"}
 VALID_LIGHTING_HARDNESSES = {"soft", "balanced", "hard"}
 VALID_MIRROR_RISKS = {"none", "low", "medium", "high"}
+VALID_LIGHT_DIRECTIONS = {"front", "side", "back", "top", "mixed"}
+VALID_LIGHT_QUALITIES = {"soft", "medium", "hard"}
+VALID_COLOR_TEMPERATURES = {"cool", "neutral", "warm", "mixed"}
+VALID_CONTRAST_LEVELS = {"low", "medium", "high"}
+VALID_SHADOW_DENSITIES = {"light", "balanced", "deep"}
+VALID_HAIR_HIGHLIGHT_MODES = {"soft_edge", "clean_rim", "controlled_specular", "none"}
+VALID_SKIN_RENDERINGS = {"soft_texture", "clean_texture", "structured_texture"}
+VALID_EXPOSURE_BIASES = {"slightly_under", "neutral", "slightly_over"}
 
 
 def _normalize_text(value: Any, field_name: str) -> str:
@@ -97,6 +105,71 @@ def _normalize_control_profile(value: Any) -> dict[str, Any]:
     }
 
 
+def _normalize_lighting_profile(value: Any) -> dict[str, Any]:
+    if not isinstance(value, dict):
+        raise ValueError("lightingProfile 必须是对象")
+
+    light_direction = _normalize_text(value.get("lightDirection"), "lightingProfile.lightDirection")
+    light_quality = _normalize_text(value.get("lightQuality"), "lightingProfile.lightQuality")
+    color_temperature = _normalize_text(
+        value.get("colorTemperature"), "lightingProfile.colorTemperature"
+    )
+    contrast_level = _normalize_text(value.get("contrastLevel"), "lightingProfile.contrastLevel")
+    shadow_density = _normalize_text(value.get("shadowDensity"), "lightingProfile.shadowDensity")
+    hair_highlight_mode = _normalize_text(
+        value.get("hairHighlightMode"), "lightingProfile.hairHighlightMode"
+    )
+    skin_rendering = _normalize_text(value.get("skinRendering"), "lightingProfile.skinRendering")
+    exposure_bias = _normalize_text(value.get("exposureBias"), "lightingProfile.exposureBias")
+    practical_lights_allowed = bool(value.get("practicalLightsAllowed"))
+
+    if light_direction not in VALID_LIGHT_DIRECTIONS:
+        raise ValueError("lightingProfile.lightDirection 非法")
+    if light_quality not in VALID_LIGHT_QUALITIES:
+        raise ValueError("lightingProfile.lightQuality 非法")
+    if color_temperature not in VALID_COLOR_TEMPERATURES:
+        raise ValueError("lightingProfile.colorTemperature 非法")
+    if contrast_level not in VALID_CONTRAST_LEVELS:
+        raise ValueError("lightingProfile.contrastLevel 非法")
+    if shadow_density not in VALID_SHADOW_DENSITIES:
+        raise ValueError("lightingProfile.shadowDensity 非法")
+    if hair_highlight_mode not in VALID_HAIR_HIGHLIGHT_MODES:
+        raise ValueError("lightingProfile.hairHighlightMode 非法")
+    if skin_rendering not in VALID_SKIN_RENDERINGS:
+        raise ValueError("lightingProfile.skinRendering 非法")
+    if exposure_bias not in VALID_EXPOSURE_BIASES:
+        raise ValueError("lightingProfile.exposureBias 非法")
+
+    return {
+        "lightDirection": light_direction,
+        "lightQuality": light_quality,
+        "colorTemperature": color_temperature,
+        "contrastLevel": contrast_level,
+        "shadowDensity": shadow_density,
+        "hairHighlightMode": hair_highlight_mode,
+        "skinRendering": skin_rendering,
+        "exposureBias": exposure_bias,
+        "practicalLightsAllowed": practical_lights_allowed,
+    }
+
+
+def _normalize_sample_image_ids(value: Any) -> dict[str, list[str]]:
+    if not isinstance(value, dict):
+        raise ValueError("sampleImageIds 必须是对象")
+    return {
+        "female": _normalize_string_list(
+            value.get("female", []),
+            "sampleImageIds.female",
+            allow_empty=True,
+        ),
+        "male": _normalize_string_list(
+            value.get("male", []),
+            "sampleImageIds.male",
+            allow_empty=True,
+        ),
+    }
+
+
 def extract_scene_draft(payload: Any) -> dict[str, Any]:
     if not isinstance(payload, dict):
         raise ValueError("输入内容必须是 JSON 对象")
@@ -118,15 +191,37 @@ def normalize_scene_draft(raw: dict[str, Any]) -> dict[str, Any]:
         "summary": _normalize_text(raw.get("summary"), "summary"),
         "environment": _normalize_text(raw.get("environment"), "environment"),
         "lighting": _normalize_text(raw.get("lighting"), "lighting"),
+        "lightingProfile": _normalize_lighting_profile(raw.get("lightingProfile")),
         "styleMood": _normalize_text(raw.get("styleMood"), "styleMood"),
         "detailTags": _normalize_string_list(raw.get("detailTags"), "detailTags"),
         "expressions": _normalize_string_list(raw.get("expressions"), "expressions"),
         "actions": _normalize_string_list(raw.get("actions"), "actions"),
         "outfitHints": _normalize_string_list(raw.get("outfitHints"), "outfitHints"),
+        "outfitPalette": _normalize_string_list(
+            raw.get("outfitPalette", []),
+            "outfitPalette",
+            allow_empty=True,
+        ),
+        "outfitMaterials": _normalize_string_list(
+            raw.get("outfitMaterials", []),
+            "outfitMaterials",
+            allow_empty=True,
+        ),
+        "outfitShapes": _normalize_string_list(
+            raw.get("outfitShapes", []),
+            "outfitShapes",
+            allow_empty=True,
+        ),
+        "outfitAvoids": _normalize_string_list(
+            raw.get("outfitAvoids", []),
+            "outfitAvoids",
+            allow_empty=True,
+        ),
         "pairingAdvice": _normalize_string_list(raw.get("pairingAdvice"), "pairingAdvice"),
         "shotAdvice": _normalize_text(raw.get("shotAdvice"), "shotAdvice"),
         "constraints": _normalize_string_list(raw.get("constraints"), "constraints"),
         "controlProfile": _normalize_control_profile(raw.get("controlProfile")),
+        "sampleImageIds": _normalize_sample_image_ids(raw.get("sampleImageIds")),
         "referenceNotes": _normalize_text(raw.get("referenceNotes"), "referenceNotes"),
         "referenceSourceIds": _normalize_string_list(
             raw.get("referenceSourceIds"), "referenceSourceIds"

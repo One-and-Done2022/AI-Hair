@@ -93,8 +93,27 @@ class SceneUnderstandingBlocks(BaseModel):
     scene_mood: str
     expression: str
     subject_action: str
+    makeup: str
     outfit: str
+    styling_constraints: str
     scene_constraints: str
+
+
+class SceneLightingProfile(BaseModel):
+    lightDirection: str
+    lightQuality: str
+    colorTemperature: str
+    contrastLevel: str
+    shadowDensity: str
+    hairHighlightMode: str
+    skinRendering: str
+    exposureBias: str
+    practicalLightsAllowed: bool = False
+
+
+class SceneSampleImageIds(BaseModel):
+    female: list[str] = Field(default_factory=list)
+    male: list[str] = Field(default_factory=list)
 
 
 class SceneControlProfile(BaseModel):
@@ -114,15 +133,21 @@ class SceneDraft(BaseModel):
     summary: str
     environment: str
     lighting: str
+    lightingProfile: SceneLightingProfile
     styleMood: str
     detailTags: list[str] = Field(default_factory=list)
     expressions: list[str] = Field(default_factory=list)
     actions: list[str] = Field(default_factory=list)
     outfitHints: list[str] = Field(default_factory=list)
+    outfitPalette: list[str] = Field(default_factory=list)
+    outfitMaterials: list[str] = Field(default_factory=list)
+    outfitShapes: list[str] = Field(default_factory=list)
+    outfitAvoids: list[str] = Field(default_factory=list)
     pairingAdvice: list[str] = Field(default_factory=list)
     shotAdvice: str
     constraints: list[str] = Field(default_factory=list)
     controlProfile: SceneControlProfile
+    sampleImageIds: SceneSampleImageIds
     referenceNotes: str
     referenceSourceIds: list[str] = Field(default_factory=list)
 
@@ -130,6 +155,7 @@ class SceneDraft(BaseModel):
 class SceneUnderstandingResponse(BaseModel):
     upload_id: str
     model_name: str
+    subject_gender: Literal["male", "female", "unknown"] = "unknown"
     blocks: SceneUnderstandingBlocks
     scene_draft: SceneDraft
 

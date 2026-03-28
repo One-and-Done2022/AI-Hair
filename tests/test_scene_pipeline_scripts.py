@@ -89,6 +89,7 @@ def test_scene_pipeline_processes_inbox_item_and_generates_review_bundle(tmp_pat
         def extract_scene_blocks(self, image_bytes: bytes):
             assert image_bytes
             return SceneUnderstandingResult(
+                subject_gender="female",
                 blocks={
                     "shot": "3:4 竖构图，胸口以上近景，平视镜头。",
                     "scene_environment": "绿色植物虚化的户外场景，背景干净。",
@@ -96,7 +97,9 @@ def test_scene_pipeline_processes_inbox_item_and_generates_review_bundle(tmp_pat
                     "scene_mood": "清新、轻盈、松弛。",
                     "expression": "自然看向镜头。",
                     "subject_action": "轻微侧身停顿。",
+                    "makeup": "轻透自然底妆，保持清新气色。",
                     "outfit": "浅色上衣。",
+                    "styling_constraints": "不要高饱和妆面与厚重配饰。",
                     "scene_constraints": "背景植物需要虚化；不要引入第二个人。",
                 },
                 raw_response='{"ok": true}',
@@ -138,28 +141,28 @@ def test_scene_pipeline_processes_inbox_item_and_generates_review_bundle(tmp_pat
     assert (package_dir / "source.png").exists()
     assert (package_dir / "blocks.json").exists()
     assert (package_dir / "scene_draft.json").exists()
-    assert (package_dir / "scene_only_prompt_male.txt").exists()
     assert (package_dir / "scene_only_prompt_female.txt").exists()
-    assert (package_dir / "review_male.png").exists()
     assert (package_dir / "review_female.png").exists()
+    assert (package_dir / "review_summary.md").exists()
 
     metadata = json.loads((package_dir / "metadata.json").read_text(encoding="utf-8"))
     assert metadata["status"] == "pending_review"
     assert metadata["scene_title"]
     assert metadata["image_understanding_model"] == "gemini-3-pro-preview"
-    assert metadata["review_results"]["male"]["status"] == "succeeded"
+    assert metadata["subject_gender"] == "female"
     assert metadata["review_results"]["female"]["status"] == "succeeded"
     assert metadata["recommended_cover"]["gender"] == "female"
     assert metadata["recommended_cover"]["image"] == "review_female.png"
-    assert metadata["prompt_files"]["male"] == "scene_only_prompt_male.txt"
     assert metadata["prompt_files"]["female"] == "scene_only_prompt_female.txt"
     assert metadata["review_checklist"]["cover_ready"] == "yes"
     assert metadata["review_checklist"]["styling_harmony"] == "pending"
     assert metadata["review_checklist"]["lighting_face_ok"] == "pending"
     assert metadata["review_checklist"]["outfit_scene_consistent"] == "pending"
     assert metadata["review_notes"] == ""
-    assert len(prompt_calls) == 2
-    assert prompt_calls[0] != prompt_calls[1]
+    review_summary = (package_dir / "review_summary.md").read_text(encoding="utf-8")
+    assert "原图人物性别判断：`female`" in review_summary
+    assert "python3 scripts/review_scene_pipeline.py approve" in review_summary
+    assert len(prompt_calls) == 1
 
 
 def test_review_scene_pipeline_approve_moves_package_and_appends_catalog(tmp_path, monkeypatch):
@@ -178,11 +181,26 @@ def test_review_scene_pipeline_approve_moves_package_and_appends_catalog(tmp_pat
         "summary": "窗边自然光与留白背景构成稳定的人像场景。",
         "environment": "室内留白墙面与木质家具背景，窗边区域干净克制。",
         "lighting": "窗边柔和自然光从侧前方进入，整体亮部通透。",
+        "lightingProfile": {
+            "lightDirection": "side",
+            "lightQuality": "soft",
+            "colorTemperature": "neutral",
+            "contrastLevel": "low",
+            "shadowDensity": "light",
+            "hairHighlightMode": "soft_edge",
+            "skinRendering": "soft_texture",
+            "exposureBias": "slightly_over",
+            "practicalLightsAllowed": False,
+        },
         "styleMood": "安静、松弛、生活感高级。",
         "detailTags": ["室内", "窗边", "自然光"],
         "expressions": ["温和看向镜头"],
         "actions": ["靠坐在椅子上轻微侧身"],
         "outfitHints": ["米白色针织上衣"],
+        "outfitPalette": ["白色", "浅灰", "米白"],
+        "outfitMaterials": ["轻薄棉质", "柔软针织"],
+        "outfitShapes": ["宽松衬衫", "简洁背心"],
+        "outfitAvoids": ["高饱和撞色", "复杂配饰"],
         "pairingAdvice": ["法式慵懒卷", "蓬松锁骨发"],
         "shotAdvice": "3:4 竖构图，胸口以上近景，平视镜头。",
         "constraints": ["背景保持简洁留白", "不要加入复杂前景"],
@@ -195,6 +213,7 @@ def test_review_scene_pipeline_approve_moves_package_and_appends_catalog(tmp_pat
             "compatibleHairstyleTags": ["lifestyle_softlight"],
             "recommendedHairstyleIds": [],
         },
+        "sampleImageIds": {"female": ["female3"], "male": ["male2"]},
         "referenceNotes": "内部审核通过。",
         "referenceSourceIds": ["scene-pipeline"],
     }
@@ -273,6 +292,45 @@ def test_review_scene_pipeline_approve_moves_package_and_appends_catalog(tmp_pat
     assert sync_calls == [True]
 
 
+def test_review_scene_pipeline_list_shows_pending_packages(tmp_path):
+    review_pipeline = _load_module(REVIEW_PIPELINE_SCRIPT, "review_scene_pipeline")
+
+    review_root = tmp_path / "review"
+    package_dir = review_root / "green-outdoor-demo"
+    package_dir.mkdir(parents=True)
+    (package_dir / "metadata.json").write_text(
+        json.dumps(
+            {
+                "status": "pending_review",
+                "scene_title": "绿意清新人像",
+                "subject_gender": "female",
+                "recommended_cover": {
+                    "gender": "female",
+                    "image": "review_female.png",
+                },
+                "review_results": {
+                    "female": {"status": "succeeded", "image": "review_female.png"},
+                },
+            },
+            ensure_ascii=False,
+            indent=2,
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+    packages = review_pipeline.list_review_packages(review_root)
+
+    assert len(packages) == 1
+    assert packages[0]["scene_id"] == "green-outdoor-demo"
+    assert packages[0]["subject_gender"] == "female"
+    assert packages[0]["recommended_cover_image"] == "review_female.png"
+
+    rendered = "\n".join(review_pipeline.render_review_package_lines(packages))
+    assert "green-outdoor-demo | 绿意清新人像" in rendered
+    assert "原图人物：female" in rendered
+
+
 def test_review_scene_pipeline_reject_moves_package_with_reason(tmp_path):
     review_pipeline = _load_module(REVIEW_PIPELINE_SCRIPT, "review_scene_pipeline_reject")
 
@@ -317,11 +375,26 @@ def test_review_scene_pipeline_approve_can_force_male_cover(tmp_path, monkeypatc
                 "summary": "夜景模板。",
                 "environment": "夜景背景。",
                 "lighting": "侧后方补光。",
+                "lightingProfile": {
+                    "lightDirection": "back",
+                    "lightQuality": "medium",
+                    "colorTemperature": "cool",
+                    "contrastLevel": "high",
+                    "shadowDensity": "deep",
+                    "hairHighlightMode": "clean_rim",
+                    "skinRendering": "structured_texture",
+                    "exposureBias": "slightly_under",
+                    "practicalLightsAllowed": True,
+                },
                 "styleMood": "冷调时装。",
                 "detailTags": ["夜景"],
                 "expressions": ["看向镜头"],
                 "actions": ["静止站立"],
                 "outfitHints": ["黑色上衣"],
+                "outfitPalette": ["黑色", "冷灰"],
+                "outfitMaterials": ["西装面料", "结构化织物"],
+                "outfitShapes": ["利落上衣", "结构外套"],
+                "outfitAvoids": ["高饱和亮色", "家居感单品"],
                 "pairingAdvice": ["港风背头"],
                 "shotAdvice": "3:4 竖构图。",
                 "constraints": ["背景简洁"],
@@ -334,6 +407,7 @@ def test_review_scene_pipeline_approve_can_force_male_cover(tmp_path, monkeypatc
                     "compatibleHairstyleTags": [],
                     "recommendedHairstyleIds": [],
                 },
+                "sampleImageIds": {"female": ["female2"], "male": ["male1"]},
                 "referenceNotes": "测试。",
                 "referenceSourceIds": ["test"],
             },

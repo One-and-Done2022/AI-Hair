@@ -69,39 +69,47 @@ def test_image_understanding_service_uses_configured_model(tmp_path, monkeypatch
 
     request_log: dict[str, object] = {}
 
-    def fake_create(*, model, temperature, messages):
-        request_log["model"] = model
-        request_log["temperature"] = temperature
-        request_log["messages"] = messages
-        return SimpleNamespace(
-            choices=[
-                SimpleNamespace(
-                    message=SimpleNamespace(
-                        content=(
-                            '{"shot":"3:4 竖构图，胸口以上近景，平视镜头。",'
+    def fake_run_chat_completion_via_curl(
+        *,
+        base_url,
+        api_key,
+        model_name,
+        prompt_text,
+        data_url,
+        timeout_seconds,
+    ):
+        request_log["api_key"] = api_key
+        request_log["base_url"] = base_url
+        request_log["model"] = model_name
+        request_log["timeout"] = timeout_seconds
+        request_log["prompt_text"] = prompt_text
+        request_log["data_url"] = data_url
+        return {
+            "choices": [
+                {
+                    "message": {
+                        "content": (
+                            '{"subject_gender":"female",'
+                            '"shot":"3:4 竖构图，胸口以上近景，平视镜头。",'
                             '"scene_environment":"室内留白墙面与木质家具背景。",'
                             '"scene_lighting":"窗边柔和自然光从侧前方进入。",'
                             '"scene_mood":"安静、克制、松弛。",'
                             '"expression":"温和看向镜头。",'
                             '"subject_action":"靠坐在椅子上轻微侧身。",'
+                            '"makeup":"轻透自然底妆。",'
                             '"outfit":"米白色针织上衣。",'
+                            '"styling_constraints":"不要高饱和妆面与夸张配饰。",'
                             '"scene_constraints":"背景保持简洁留白，不要加入复杂前景。"}'
                         )
-                    )
-                )
+                    }
+                }
             ]
-        )
+        }
 
-    class FakeOpenAI:
-        def __init__(self, *, api_key, base_url, timeout):
-            request_log["api_key"] = api_key
-            request_log["base_url"] = base_url
-            request_log["timeout"] = timeout
-            self.chat = SimpleNamespace(
-                completions=SimpleNamespace(create=fake_create)
-            )
-
-    monkeypatch.setattr("app.services.image_understanding.OpenAI", FakeOpenAI)
+    monkeypatch.setattr(
+        "app.services.image_understanding._run_chat_completion_via_curl",
+        fake_run_chat_completion_via_curl,
+    )
 
     from app.services.image_understanding import ImageUnderstandingService
 
@@ -109,14 +117,13 @@ def test_image_understanding_service_uses_configured_model(tmp_path, monkeypatch
 
     assert request_log["api_key"] == "vision-test-key"
     assert request_log["base_url"] == "https://api.apiyi.com/v1"
-    assert request_log["timeout"] == 120
     assert request_log["model"] == "gemini-3-pro-preview"
-    messages = request_log["messages"]
-    assert isinstance(messages, list)
-    assert messages[1]["content"][1]["image_url"]["url"].startswith(
-        "data:image/png;base64,"
-    )
+    assert request_log["timeout"] == 120
+    assert request_log["data_url"].startswith("data:image/jpeg;base64,")
     assert result.blocks["scene_environment"] == "室内留白墙面与木质家具背景。"
+    assert result.blocks["makeup"] == "轻透自然底妆。"
+    assert result.blocks["styling_constraints"] == "不要高饱和妆面与夸张配饰。"
+    assert result.subject_gender == "female"
     assert result.model_name == "gemini-3-pro-preview"
 
 
@@ -131,7 +138,9 @@ def test_build_scene_draft_returns_valid_scene_json_shape():
             "scene_mood": "安静、松弛、生活感高级。",
             "expression": "温和看向镜头；轻微放空。",
             "subject_action": "靠坐在椅子上轻微侧身。",
+            "makeup": "轻透自然底妆。",
             "outfit": "米白色针织上衣。",
+            "styling_constraints": "不要厚重浓妆；避免复杂配饰。",
             "scene_constraints": "背景保持简洁留白；不要加入复杂前景。",
         }
     )
@@ -140,6 +149,9 @@ def test_build_scene_draft_returns_valid_scene_json_shape():
     assert draft["id"].startswith("window-softlight-")
     assert draft["detailTags"]
     assert draft["pairingAdvice"]
+    assert draft["lightingProfile"]["lightDirection"] == "side"
+    assert draft["outfitPalette"]
+    assert draft["sampleImageIds"]["female"] == ["female3"]
     assert draft["controlProfile"]["windLevel"] == "still"
     assert draft["controlProfile"]["lightingHardness"] == "soft"
     assert draft["referenceSourceIds"] == ["scene-understanding-api"]

@@ -141,10 +141,16 @@ python3 scripts/add_scene_draft.py --input /path/to/scene-response.json --sync
 storage/scene_pipeline/inbox/
 ```
 
-审核示例人物固定使用：
+审核示例人物改为使用 6 张官方样例池，并按场景自动挑选更合适的人像：
 
-- `assets/male.jpg`
-- `assets/female.jpg`
+- 女生：`assets/female1.jpg` / `assets/female2.jpg` / `assets/female3.jpg`
+- 男生：`assets/male1.jpg` / `assets/male2.jpg` / `assets/male3.jpg`
+
+审核图生成规则：
+
+- 原参考图主角是男生，只生成男生审核图
+- 原参考图主角是女生，只生成女生审核图
+- 如果模型无法稳定判断，则回退为男女各生成 1 张
 
 ### 2. 生成审核包
 
@@ -157,7 +163,8 @@ python3 scripts/scene_pipeline.py
 
 - 用 Gemini 3 Pro 理解场景图并提取 block
 - 生成 `scene_draft.json`
-- 用男女两张官方示例人物图分别跑一次 `scene_only` 审核图
+- 识别原图人物性别，并按对应官方示例人物图跑 `scene_only` 审核图
+- 额外生成 `review_summary.md`，方便人工审核
 
 输出目录：
 
@@ -170,10 +177,16 @@ storage/scene_pipeline/review/<scene_id>/
 - `source.*`
 - `blocks.json`
 - `scene_draft.json`
-- `scene_only_prompt.txt`
-- `review_male.*`
-- `review_female.*`
+- `scene_only_prompt_<gender>.txt`
+- `review_<gender>.*`
 - `metadata.json`
+- `review_summary.md`
+
+查看当前待审核场景包：
+
+```bash
+python3 scripts/review_scene_pipeline.py list
+```
 
 ### 3. 审核通过或驳回
 

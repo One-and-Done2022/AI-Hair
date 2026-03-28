@@ -137,6 +137,33 @@ def test_template_image_pipeline_hairstyle_prompt_adds_white_background_cover_su
     assert "适合前端模板卡片展示" in prompt
 
 
+def test_scene_template_uses_scene_sample_image_ids_when_no_gender_override():
+    template_pipeline = _load_module(
+        TEMPLATE_PIPELINE_SCRIPT,
+        "template_image_pipeline_scene_sample_ids",
+    )
+    template_pipeline._load_backend_dependencies()
+
+    scene = template_pipeline.templates.get_scene("city-neon-night")
+    assert scene is not None
+
+    female2 = Path("/tmp/female2.jpg")
+    male1 = Path("/tmp/male1.jpg")
+    selected = template_pipeline._selected_samples_for_template(
+        "scenes",
+        scene,
+        {
+            "female2": female2,
+            "male1": male1,
+        },
+    )
+
+    assert selected == {
+        "female": female2,
+        "male": male1,
+    }
+
+
 def test_review_template_image_pipeline_approve_updates_hairstyle_catalog_and_moves_package(
     tmp_path,
     monkeypatch,

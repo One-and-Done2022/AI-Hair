@@ -39,7 +39,38 @@
         "korean_soft",
         "clean_short"
       ]
-    }
+    },
+    "defaultStylingIds": [
+      "female-natural-soft-glow",
+      "male-clean-natural-grooming",
+      "unisex-natural-soft"
+    ],
+    "fallbackStylingIds": [
+      "unisex-natural-soft"
+    ],
+    "forbiddenStylingIds": [
+      "female-minimal-editorial",
+      "male-sharp-editorial",
+      "unisex-structured-editorial"
+    ],
+    "stylingConstraints": [
+      "妆面与木色环境保持低饱和统一，不要出现网红感重妆",
+      "服饰纹理以棉麻或柔软针织为主，不要加入强设计感单品"
+    ],
+    "lightingAdjustment": [
+      "脸部亮部必须保留细节，不要因胶片感把肤色压灰",
+      "木色环境保持温润中性，不要偏红偏脏"
+    ],
+    "requiredOutfitTags": [
+      "低饱和",
+      "柔软材质",
+      "生活感"
+    ],
+    "forbiddenOutfitTags": [
+      "高饱和撞色",
+      "夸张礼服感",
+      "复杂印花"
+    ]
   },
   {
     "sceneId": "morning-window-softlight",
@@ -82,7 +113,38 @@
         "korean_soft",
         "clean_short"
       ]
-    }
+    },
+    "defaultStylingIds": [
+      "female-natural-soft-glow",
+      "male-clean-natural-grooming",
+      "unisex-natural-soft"
+    ],
+    "fallbackStylingIds": [
+      "unisex-natural-soft"
+    ],
+    "forbiddenStylingIds": [
+      "female-minimal-editorial",
+      "male-sharp-editorial",
+      "unisex-structured-editorial"
+    ],
+    "stylingConstraints": [
+      "妆容与服饰都要服务清晨软光，不要出现过重修容与高饱和口红",
+      "服饰不能太正式，保持刚起床后的自然松弛感"
+    ],
+    "lightingAdjustment": [
+      "清晨光线维持中性偏冷通透，不要做成昏黄晨曦",
+      "脸部和发丝边缘高光要柔和，不要出现硬边爆点"
+    ],
+    "requiredOutfitTags": [
+      "晨间感",
+      "柔软材质",
+      "低饱和"
+    ],
+    "forbiddenOutfitTags": [
+      "正式套装",
+      "浓妆感",
+      "硬挺礼服"
+    ]
   },
   {
     "sceneId": "walnut-study-portrait",
@@ -124,7 +186,38 @@
         "korean_soft",
         "clean_short"
       ]
-    }
+    },
+    "defaultStylingIds": [
+      "female-natural-soft-glow",
+      "male-clean-natural-grooming",
+      "unisex-natural-soft"
+    ],
+    "fallbackStylingIds": [
+      "unisex-natural-soft"
+    ],
+    "forbiddenStylingIds": [
+      "female-minimal-editorial",
+      "male-sharp-editorial",
+      "unisex-structured-editorial"
+    ],
+    "stylingConstraints": [
+      "服饰层次要和木质书房环境协调，避免过亮或过潮流的单品",
+      "妆面重点是安静和可信，不要做成精致过度的商业大片脸"
+    ],
+    "lightingAdjustment": [
+      "木色不能过红，脸部受光需保持干净通透",
+      "书房细节可见但不要抢走面部识别度"
+    ],
+    "requiredOutfitTags": [
+      "知性",
+      "低饱和",
+      "安静层次"
+    ],
+    "forbiddenOutfitTags": [
+      "潮流大 logo",
+      "荧光色",
+      "过度时装化"
+    ]
   },
   {
     "sceneId": "cafe-candid-seat",
@@ -166,7 +259,38 @@
         "korean_soft",
         "statement_style"
       ]
-    }
+    },
+    "defaultStylingIds": [
+      "female-natural-soft-glow",
+      "male-clean-natural-grooming",
+      "unisex-natural-soft"
+    ],
+    "fallbackStylingIds": [
+      "unisex-natural-soft"
+    ],
+    "forbiddenStylingIds": [
+      "female-minimal-editorial",
+      "male-sharp-editorial",
+      "unisex-structured-editorial"
+    ],
+    "stylingConstraints": [
+      "妆造要有都市生活感，但不能变成用力摆拍的时装街拍",
+      "桌面器皿是陪衬，服饰与人物面部仍然是主视觉"
+    ],
+    "lightingAdjustment": [
+      "混合光下肤色必须干净，不要发灰发脏",
+      "背景亮点和反光要收住，不要抢人物五官"
+    ],
+    "requiredOutfitTags": [
+      "都市简洁",
+      "轻层次",
+      "低饱和"
+    ],
+    "forbiddenOutfitTags": [
+      "过度商务",
+      "潮牌堆叠",
+      "强对比印花"
+    ]
   },
   {
     "sceneId": "bathroom-mirror-morning",
@@ -208,7 +332,38 @@
         "clean_short",
         "korean_soft"
       ]
-    }
+    },
+    "defaultStylingIds": [
+      "female-natural-soft-glow",
+      "male-clean-natural-grooming",
+      "unisex-natural-soft"
+    ],
+    "fallbackStylingIds": [
+      "unisex-natural-soft"
+    ],
+    "forbiddenStylingIds": [
+      "female-minimal-editorial",
+      "male-sharp-editorial",
+      "unisex-structured-editorial"
+    ],
+    "stylingConstraints": [
+      "浴室语境要真实亲密，不要用礼服化造型破坏生活感",
+      "服饰领口和肩颈关系要自然，不要因为镜前场景做夸张性感化处理"
+    ],
+    "lightingAdjustment": [
+      "镜前灯和自然光的混合要均匀，不要出现双重硬阴影",
+      "镜面构图不得产生重复人脸和错位五官"
+    ],
+    "requiredOutfitTags": [
+      "晨间感",
+      "亲密真实",
+      "轻量服饰"
+    ],
+    "forbiddenOutfitTags": [
+      "礼服感",
+      "高饱和唇色",
+      "复杂配饰"
+    ]
   },
   {
     "sceneId": "hotel-room-loose",
@@ -251,7 +406,40 @@
         "korean_soft",
         "textured_perm"
       ]
-    }
+    },
+    "defaultStylingIds": [
+      "female-evening-film-glow",
+      "male-clean-natural-grooming",
+      "unisex-natural-soft",
+      "female-natural-soft-glow"
+    ],
+    "fallbackStylingIds": [
+      "unisex-natural-soft",
+      "female-natural-soft-glow"
+    ],
+    "forbiddenStylingIds": [
+      "female-minimal-editorial",
+      "male-sharp-editorial",
+      "unisex-structured-editorial"
+    ],
+    "stylingConstraints": [
+      "妆造重点是高级松弛，不要做成夜店妆或过度性感造型",
+      "服饰和床品色温要统一，避免冷暖冲突"
+    ],
+    "lightingAdjustment": [
+      "自然窗光仍是主光，室内暖光只负责补层次，不能把脸打黄",
+      "床品高光要柔和，不要反射成刺眼白块"
+    ],
+    "requiredOutfitTags": [
+      "高级松弛",
+      "柔软垂坠",
+      "暖中性色"
+    ],
+    "forbiddenOutfitTags": [
+      "夜店风",
+      "商务正装",
+      "高反光亮片"
+    ]
   },
   {
     "sceneId": "sunset-home-backlight",
@@ -293,7 +481,39 @@
         "textured_perm",
         "korean_soft"
       ]
-    }
+    },
+    "defaultStylingIds": [
+      "female-evening-film-glow",
+      "male-clean-natural-grooming",
+      "unisex-natural-soft"
+    ],
+    "fallbackStylingIds": [
+      "unisex-natural-soft",
+      "female-natural-soft-glow"
+    ],
+    "forbiddenStylingIds": [
+      "female-minimal-editorial",
+      "male-sharp-editorial",
+      "unisex-structured-editorial"
+    ],
+    "stylingConstraints": [
+      "整体妆造要服务傍晚松弛和记忆感，不要做成夜景浓妆",
+      "服饰颜色只允许低饱和暖中性色，不要突然出现高饱和色块"
+    ],
+    "lightingAdjustment": [
+      "逆光必须保留脸部识别度和眼周细节，不能把人脸压成黑影",
+      "头发边缘光要暖而柔，不要烧白也不要发橙"
+    ],
+    "requiredOutfitTags": [
+      "夕阳暖调",
+      "低饱和",
+      "柔软质感"
+    ],
+    "forbiddenOutfitTags": [
+      "冷白商务装",
+      "高饱和亮色",
+      "硬质皮革"
+    ]
   },
   {
     "sceneId": "hallway-quiet-frame",
@@ -335,7 +555,38 @@
         "clean_short",
         "korean_soft"
       ]
-    }
+    },
+    "defaultStylingIds": [
+      "female-natural-soft-glow",
+      "male-clean-natural-grooming",
+      "unisex-natural-soft"
+    ],
+    "fallbackStylingIds": [
+      "unisex-natural-soft"
+    ],
+    "forbiddenStylingIds": [
+      "female-minimal-editorial",
+      "male-sharp-editorial",
+      "unisex-structured-editorial"
+    ],
+    "stylingConstraints": [
+      "服饰需与门框和低饱和空间形成清晰层次，不要被背景吃掉",
+      "整体表达以克制和安静为主，不要做夸张时尚造型"
+    ],
+    "lightingAdjustment": [
+      "顶部环境光与侧窗光要融合均匀，避免头顶热点",
+      "框景线条保持端正，不要因为镜头畸变破坏画面秩序"
+    ],
+    "requiredOutfitTags": [
+      "克制",
+      "门框层次",
+      "低饱和"
+    ],
+    "forbiddenOutfitTags": [
+      "夸张时装感",
+      "高饱和撞色",
+      "繁复配饰"
+    ]
   },
   {
     "sceneId": "bedside-half-recline",
@@ -377,7 +628,39 @@
         "korean_soft",
         "textured_perm"
       ]
-    }
+    },
+    "defaultStylingIds": [
+      "female-evening-film-glow",
+      "male-clean-natural-grooming",
+      "unisex-natural-soft"
+    ],
+    "fallbackStylingIds": [
+      "unisex-natural-soft",
+      "female-natural-soft-glow"
+    ],
+    "forbiddenStylingIds": [
+      "female-minimal-editorial",
+      "male-sharp-editorial",
+      "unisex-structured-editorial"
+    ],
+    "stylingConstraints": [
+      "场景可以亲密但不能性感化过度，妆造与姿态都要保留真实生活感",
+      "服饰褶皱要自然，不要出现刻意摆拍的雕塑化处理"
+    ],
+    "lightingAdjustment": [
+      "床品亮度柔和，不要反射到脸上造成局部过曝",
+      "肩颈和脸部明暗过渡要细腻，不要出现硬切割"
+    ],
+    "requiredOutfitTags": [
+      "亲密真实",
+      "柔软材质",
+      "呼吸感"
+    ],
+    "forbiddenOutfitTags": [
+      "过度性感",
+      "雕塑化褶皱",
+      "舞台妆"
+    ]
   },
   {
     "sceneId": "rainy-window-mood",
@@ -420,7 +703,39 @@
         "korean_soft",
         "statement_style"
       ]
-    }
+    },
+    "defaultStylingIds": [
+      "female-evening-film-glow",
+      "male-clean-natural-grooming",
+      "unisex-natural-soft",
+      "female-natural-soft-glow"
+    ],
+    "fallbackStylingIds": [
+      "unisex-natural-soft"
+    ],
+    "forbiddenStylingIds": [
+      "female-minimal-editorial",
+      "male-sharp-editorial",
+      "unisex-structured-editorial"
+    ],
+    "stylingConstraints": [
+      "冷调氛围不能把人物做成惨白或发青，仍需保留真实血色",
+      "服饰和妆容都要配合雨天情绪，不要出现过亮过跳的色彩"
+    ],
+    "lightingAdjustment": [
+      "雨痕和玻璃反射只做前景点缀，不要遮挡关键五官",
+      "阴天散射光要均匀，不要平到丢失面部层次"
+    ],
+    "requiredOutfitTags": [
+      "冷静情绪",
+      "低饱和",
+      "安静轮廓"
+    ],
+    "forbiddenOutfitTags": [
+      "高饱和亮色",
+      "热烈红唇",
+      "金属亮面"
+    ]
   },
   {
     "sceneId": "studio-solid-backdrop",
@@ -462,7 +777,39 @@
         "clean_short",
         "statement_style"
       ]
-    }
+    },
+    "defaultStylingIds": [
+      "female-minimal-editorial",
+      "male-sharp-editorial",
+      "unisex-structured-editorial"
+    ],
+    "fallbackStylingIds": [
+      "unisex-structured-editorial"
+    ],
+    "forbiddenStylingIds": [
+      "female-natural-soft-glow",
+      "female-evening-film-glow",
+      "male-clean-natural-grooming",
+      "unisex-natural-soft"
+    ],
+    "stylingConstraints": [
+      "棚拍里妆造和发型需要读图清楚，但不能出现廉价商业棚拍感",
+      "服装要让位于脸和发型，不要用复杂细节抢主体"
+    ],
+    "lightingAdjustment": [
+      "背景必须均匀干净，不要出现脏灰色块和曝光不匀",
+      "主脸光清晰利落，但五官暗部仍保留细节"
+    ],
+    "requiredOutfitTags": [
+      "结构化",
+      "干净纯色",
+      "时装读图性"
+    ],
+    "forbiddenOutfitTags": [
+      "家居感",
+      "甜美碎花",
+      "多余配饰"
+    ]
   },
   {
     "sceneId": "cold-metal-space",
@@ -504,7 +851,39 @@
         "statement_style",
         "clean_short"
       ]
-    }
+    },
+    "defaultStylingIds": [
+      "female-minimal-editorial",
+      "male-sharp-editorial",
+      "unisex-structured-editorial"
+    ],
+    "fallbackStylingIds": [
+      "unisex-structured-editorial"
+    ],
+    "forbiddenStylingIds": [
+      "female-natural-soft-glow",
+      "female-evening-film-glow",
+      "male-clean-natural-grooming",
+      "unisex-natural-soft"
+    ],
+    "stylingConstraints": [
+      "金属空间里服饰和妆面要利落克制，不要突然加入生活感软塌单品",
+      "冷调不等于惨白，人物皮肤仍需有血色和质感"
+    ],
+    "lightingAdjustment": [
+      "金属反光必须受控，不能把脸部高光打爆",
+      "冷白轮廓光只做切边，不要让五官发青"
+    ],
+    "requiredOutfitTags": [
+      "冷感结构",
+      "反光可控",
+      "利落轮廓"
+    ],
+    "forbiddenOutfitTags": [
+      "暖调家居服",
+      "甜美元素",
+      "软塌针织"
+    ]
   },
   {
     "sceneId": "retro-cinema-box",
@@ -546,7 +925,39 @@
         "statement_style",
         "textured_perm"
       ]
-    }
+    },
+    "defaultStylingIds": [
+      "female-minimal-editorial",
+      "male-sharp-editorial",
+      "unisex-structured-editorial"
+    ],
+    "fallbackStylingIds": [
+      "unisex-structured-editorial"
+    ],
+    "forbiddenStylingIds": [
+      "female-natural-soft-glow",
+      "female-evening-film-glow",
+      "male-clean-natural-grooming",
+      "unisex-natural-soft"
+    ],
+    "stylingConstraints": [
+      "复古氛围是暗暖戏剧，不是浓妆舞台妆，人物身份仍需稳定真实",
+      "服装颜色和背景酒红木色要协调，不要互相打架"
+    ],
+    "lightingAdjustment": [
+      "暗部必须保留脸部细节，不要为了氛围牺牲识别度",
+      "暖色重点光只强调脸和发型，不要把背景亮点提得太高"
+    ],
+    "requiredOutfitTags": [
+      "暗暖高级",
+      "复古戏剧",
+      "深色材质"
+    ],
+    "forbiddenOutfitTags": [
+      "舞台浓妆",
+      "运动装",
+      "高亮荧光色"
+    ]
   },
   {
     "sceneId": "city-neon-night",
@@ -588,7 +999,39 @@
         "statement_style",
         "clean_short"
       ]
-    }
+    },
+    "defaultStylingIds": [
+      "female-minimal-editorial",
+      "male-sharp-editorial",
+      "unisex-structured-editorial"
+    ],
+    "fallbackStylingIds": [
+      "unisex-structured-editorial"
+    ],
+    "forbiddenStylingIds": [
+      "female-natural-soft-glow",
+      "female-evening-film-glow",
+      "male-clean-natural-grooming",
+      "unisex-natural-soft"
+    ],
+    "stylingConstraints": [
+      "霓虹夜景里妆容依旧要高级克制，不要做廉价夜店风",
+      "服装不能带大面积反光材质，避免和霓虹边缘光冲突"
+    ],
+    "lightingAdjustment": [
+      "主脸光优先保证五官识别度，霓虹只做辅助色彩边缘",
+      "霓虹色不能污染肤色，不要出现大面积蓝紫脏色"
+    ],
+    "requiredOutfitTags": [
+      "都市夜色",
+      "利落轮廓",
+      "深色收敛"
+    ],
+    "forbiddenOutfitTags": [
+      "夜店亮片",
+      "廉价皮革",
+      "高反光大片材质"
+    ]
   },
   {
     "sceneId": "gallery-white-cube",
@@ -630,7 +1073,39 @@
         "clean_short",
         "statement_style"
       ]
-    }
+    },
+    "defaultStylingIds": [
+      "female-minimal-editorial",
+      "male-sharp-editorial",
+      "unisex-structured-editorial"
+    ],
+    "fallbackStylingIds": [
+      "unisex-structured-editorial"
+    ],
+    "forbiddenStylingIds": [
+      "female-natural-soft-glow",
+      "female-evening-film-glow",
+      "male-clean-natural-grooming",
+      "unisex-natural-soft"
+    ],
+    "stylingConstraints": [
+      "白盒子场景的重点是留白与结构，不要加入复杂花纹或过多配饰",
+      "服饰与背景必须拉开层次，不能把人物融进白墙"
+    ],
+    "lightingAdjustment": [
+      "白墙与服装都不能过曝，面部亮度要略高于背景",
+      "空间里只保留一个轻点缀，不要让装饰分散视线"
+    ],
+    "requiredOutfitTags": [
+      "极简留白",
+      "结构清晰",
+      "黑白灰"
+    ],
+    "forbiddenOutfitTags": [
+      "复杂花纹",
+      "甜美家居服",
+      "背景同色融合"
+    ]
   },
   {
     "sceneId": "dramatic-side-light",
@@ -672,7 +1147,39 @@
         "statement_style",
         "clean_short"
       ]
-    }
+    },
+    "defaultStylingIds": [
+      "female-minimal-editorial",
+      "male-sharp-editorial",
+      "unisex-structured-editorial"
+    ],
+    "fallbackStylingIds": [
+      "unisex-structured-editorial"
+    ],
+    "forbiddenStylingIds": [
+      "female-natural-soft-glow",
+      "female-evening-film-glow",
+      "male-clean-natural-grooming",
+      "unisex-natural-soft"
+    ],
+    "stylingConstraints": [
+      "侧光场景里妆造要让骨相和发型读图更强，但不能形成廉价舞台感",
+      "服装暗部纹理可见，不要掉进死黑一团"
+    ],
+    "lightingAdjustment": [
+      "光切线必须落在五官关键结构上，鼻梁和颧骨要有层次",
+      "暗部不允许死黑，仍要保住眼窝和下颌信息"
+    ],
+    "requiredOutfitTags": [
+      "强轮廓",
+      "深色结构",
+      "骨相强调"
+    ],
+    "forbiddenOutfitTags": [
+      "软糯家居感",
+      "甜美淡粉",
+      "低对比服装"
+    ]
   },
   {
     "sceneId": "luxury-hotel-lobby",
@@ -688,7 +1195,7 @@
       "unisex-structured-editorial"
     ],
     "makeupOverride": {
-      "female": "高级但克制的时装妆，肤质细腻、轮廓干净、眼神明亮，带一点明星感但不过度。", 
+      "female": "高级但克制的时装妆，肤质细腻、轮廓干净、眼神明亮，带一点明星感但不过度。",
       "male": "肤质和骨相清楚，整体利落、有大堂时尚氛围，但不做夸张男模妆。"
     },
     "outfitOverride": {
@@ -714,7 +1221,39 @@
         "statement_style",
         "clean_short"
       ]
-    }
+    },
+    "defaultStylingIds": [
+      "female-minimal-editorial",
+      "male-sharp-editorial",
+      "unisex-structured-editorial"
+    ],
+    "fallbackStylingIds": [
+      "unisex-structured-editorial"
+    ],
+    "forbiddenStylingIds": [
+      "female-natural-soft-glow",
+      "female-evening-film-glow",
+      "male-clean-natural-grooming",
+      "unisex-natural-soft"
+    ],
+    "stylingConstraints": [
+      "整体要有高级酒店的精致感，但仍然保持人物真实身份，不要做成夸张广告大片脸",
+      "服装材质要高级简洁，避免廉价亮面和复杂装饰"
+    ],
+    "lightingAdjustment": [
+      "空间灯带不能压脸，人物脸部必须有独立定向主光",
+      "石材和金属反光要高级克制，不要刺眼"
+    ],
+    "requiredOutfitTags": [
+      "高级感",
+      "精致结构",
+      "材质克制"
+    ],
+    "forbiddenOutfitTags": [
+      "廉价亮面",
+      "街头 oversize",
+      "复杂装饰"
+    ]
   },
   {
     "sceneId": "rooftop-wind",
@@ -756,7 +1295,39 @@
         "statement_style",
         "textured_perm"
       ]
-    }
+    },
+    "defaultStylingIds": [
+      "female-minimal-editorial",
+      "male-sharp-editorial",
+      "unisex-structured-editorial"
+    ],
+    "fallbackStylingIds": [
+      "unisex-structured-editorial"
+    ],
+    "forbiddenStylingIds": [
+      "female-natural-soft-glow",
+      "female-evening-film-glow",
+      "male-clean-natural-grooming",
+      "unisex-natural-soft"
+    ],
+    "stylingConstraints": [
+      "风感是动态加分项，但妆造必须稳住轮廓，不能被风吹乱成失控状态",
+      "服装和发型都要为轮廓服务，不要堆太多飘散元素"
+    ],
+    "lightingAdjustment": [
+      "天空亮度受控，不要背景过曝把人物边缘吃掉",
+      "风吹发丝与衣角必须自然统一，不要出现不合物理逻辑的乱流"
+    ],
+    "requiredOutfitTags": [
+      "风场轮廓",
+      "利落外套",
+      "动态但受控"
+    ],
+    "forbiddenOutfitTags": [
+      "过厚大衣",
+      "拖沓层叠",
+      "甜美元素"
+    ]
   },
   {
     "sceneId": "moody-bar-counter",
@@ -798,7 +1369,39 @@
         "statement_style",
         "textured_perm"
       ]
-    }
+    },
+    "defaultStylingIds": [
+      "female-minimal-editorial",
+      "male-sharp-editorial",
+      "unisex-structured-editorial"
+    ],
+    "fallbackStylingIds": [
+      "unisex-structured-editorial"
+    ],
+    "forbiddenStylingIds": [
+      "female-natural-soft-glow",
+      "female-evening-film-glow",
+      "male-clean-natural-grooming",
+      "unisex-natural-soft"
+    ],
+    "stylingConstraints": [
+      "夜色氛围要成熟但不能油腻，妆造与酒吧空间保持高级距离感",
+      "服装和妆面都应避免高饱和红紫色，防止把夜景做脏"
+    ],
+    "lightingAdjustment": [
+      "局部暖光必须打在脸部关键区域，暗部仍保留五官信息",
+      "玻璃反射和高光点要少而精，不要杂乱"
+    ],
+    "requiredOutfitTags": [
+      "成熟夜色",
+      "深色高级",
+      "低照度读图"
+    ],
+    "forbiddenOutfitTags": [
+      "夜店浓妆",
+      "高饱和紫红",
+      "廉价亮片"
+    ]
   },
   {
     "sceneId": "backstage-vanity-mirror",
@@ -840,6 +1443,38 @@
         "statement_style",
         "clean_short"
       ]
-    }
+    },
+    "defaultStylingIds": [
+      "female-minimal-editorial",
+      "male-sharp-editorial",
+      "unisex-structured-editorial"
+    ],
+    "fallbackStylingIds": [
+      "unisex-structured-editorial"
+    ],
+    "forbiddenStylingIds": [
+      "female-natural-soft-glow",
+      "female-evening-film-glow",
+      "male-clean-natural-grooming",
+      "unisex-natural-soft"
+    ],
+    "stylingConstraints": [
+      "后台语境要像拍摄前准备完成，而不是化妆进行中，妆造应完整但克制",
+      "桌面化妆工具只作为少量高质感点缀，不要堆满镜前台面"
+    ],
+    "lightingAdjustment": [
+      "镜灯不能过曝，脸部主光要均匀清楚",
+      "镜面构图避免重复脸和错位反射，人物始终只保留单人主体"
+    ],
+    "requiredOutfitTags": [
+      "后台精致感",
+      "利落轮廓",
+      "镜前高级感"
+    ],
+    "forbiddenOutfitTags": [
+      "化妆袍感",
+      "杂乱台面感",
+      "舞台浓妆"
+    ]
   }
 ]

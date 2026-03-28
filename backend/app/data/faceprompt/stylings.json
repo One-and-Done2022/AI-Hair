@@ -11,9 +11,58 @@
       "妆面要真实轻透，不要做成厚粉底和高饱和网红妆",
       "服饰颜色必须与自然光和生活感场景保持统一，不要抢过人物面部"
     ],
-    "detailTags": ["自然淡妆", "柔光", "低饱和", "生活感"],
-    "pairingAdvice": ["清晨窗边软光人像", "室内生活感胶片写真", "咖啡馆抓拍座位人像"],
-    "referenceNotes": "适合作为女性写实写真默认妆造，重点是轻透、干净、不过度修饰。"
+    "detailTags": [
+      "自然淡妆",
+      "柔光",
+      "低饱和",
+      "生活感"
+    ],
+    "pairingAdvice": [
+      "清晨窗边软光人像",
+      "室内生活感胶片写真",
+      "咖啡馆抓拍座位人像"
+    ],
+    "referenceNotes": "适合作为女性写实写真默认妆造，重点是轻透、干净、不过度修饰。",
+    "genderScope": "female",
+    "makeupIntensity": "light",
+    "outfitStructure": "soft",
+    "paletteTags": [
+      "cream",
+      "light_grey",
+      "soft_beige",
+      "low_saturation"
+    ],
+    "compatibleSceneIds": [
+      "indoor-film-lifestyle",
+      "morning-window-softlight",
+      "walnut-study-portrait",
+      "cafe-candid-seat",
+      "bathroom-mirror-morning",
+      "hotel-room-loose",
+      "hallway-quiet-frame"
+    ],
+    "incompatibleSceneIds": [
+      "studio-solid-backdrop",
+      "cold-metal-space",
+      "retro-cinema-box",
+      "city-neon-night",
+      "gallery-white-cube",
+      "dramatic-side-light",
+      "luxury-hotel-lobby",
+      "rooftop-wind",
+      "moody-bar-counter",
+      "backstage-vanity-mirror"
+    ],
+    "compatibleLightingTags": [
+      "soft_light",
+      "medium_light",
+      "neutral_light",
+      "warm_light",
+      "low_contrast",
+      "medium_contrast",
+      "soft_skin",
+      "clean_skin"
+    ]
   },
   {
     "id": "female-evening-film-glow",
@@ -27,9 +76,56 @@
       "妆面要贴合傍晚逆光氛围，不能出现过冷或过于锐利的时装妆",
       "服饰需保留柔软生活感，不要出现礼服化和过度夸张配饰"
     ],
-    "detailTags": ["暖调淡妆", "胶片感", "松弛", "家居感"],
-    "pairingAdvice": ["傍晚家居逆光人像", "床边半卧近景人像", "酒店房间松弛感人像"],
-    "referenceNotes": "适合作为写实氛围场景的女性第二套默认妆造，重点是暖调与呼吸感。"
+    "detailTags": [
+      "暖调淡妆",
+      "胶片感",
+      "松弛",
+      "家居感"
+    ],
+    "pairingAdvice": [
+      "傍晚家居逆光人像",
+      "床边半卧近景人像",
+      "酒店房间松弛感人像"
+    ],
+    "referenceNotes": "适合作为写实氛围场景的女性第二套默认妆造，重点是暖调与呼吸感。",
+    "genderScope": "female",
+    "makeupIntensity": "light",
+    "outfitStructure": "soft",
+    "paletteTags": [
+      "warm_beige",
+      "oat",
+      "dusty_rose",
+      "low_saturation"
+    ],
+    "compatibleSceneIds": [
+      "hotel-room-loose",
+      "sunset-home-backlight",
+      "bedside-half-recline",
+      "rainy-window-mood"
+    ],
+    "incompatibleSceneIds": [
+      "studio-solid-backdrop",
+      "cold-metal-space",
+      "retro-cinema-box",
+      "city-neon-night",
+      "gallery-white-cube",
+      "dramatic-side-light",
+      "luxury-hotel-lobby",
+      "rooftop-wind",
+      "moody-bar-counter",
+      "backstage-vanity-mirror"
+    ],
+    "compatibleLightingTags": [
+      "soft_light",
+      "medium_light",
+      "warm_light",
+      "mixed_light",
+      "low_contrast",
+      "medium_contrast",
+      "soft_skin",
+      "clean_skin",
+      "slightly_under"
+    ]
   },
   {
     "id": "male-clean-natural-grooming",
@@ -43,9 +139,62 @@
       "男士妆面必须克制，不要出现明显眼影、浓唇或高饱和彩妆感",
       "服饰保持日常高级感，不要过度街头化或正式商务化"
     ],
-    "detailTags": ["男士轻修饰", "清洁感", "基础色", "日常写真"],
-    "pairingAdvice": ["清晨窗边软光人像", "胡桃木书房静物人像", "室内生活感胶片写真"],
-    "referenceNotes": "适合作为男生写实场景的默认妆造，重点是清洁、自然和真实。"
+    "detailTags": [
+      "男士轻修饰",
+      "清洁感",
+      "基础色",
+      "日常写真"
+    ],
+    "pairingAdvice": [
+      "清晨窗边软光人像",
+      "胡桃木书房静物人像",
+      "室内生活感胶片写真"
+    ],
+    "referenceNotes": "适合作为男生写实场景的默认妆造，重点是清洁、自然和真实。",
+    "genderScope": "male",
+    "makeupIntensity": "barely_there",
+    "outfitStructure": "clean",
+    "paletteTags": [
+      "white",
+      "grey",
+      "khaki",
+      "basics"
+    ],
+    "compatibleSceneIds": [
+      "indoor-film-lifestyle",
+      "morning-window-softlight",
+      "walnut-study-portrait",
+      "cafe-candid-seat",
+      "bathroom-mirror-morning",
+      "hotel-room-loose",
+      "sunset-home-backlight",
+      "hallway-quiet-frame",
+      "bedside-half-recline",
+      "rainy-window-mood"
+    ],
+    "incompatibleSceneIds": [
+      "studio-solid-backdrop",
+      "cold-metal-space",
+      "retro-cinema-box",
+      "city-neon-night",
+      "gallery-white-cube",
+      "dramatic-side-light",
+      "luxury-hotel-lobby",
+      "rooftop-wind",
+      "moody-bar-counter",
+      "backstage-vanity-mirror"
+    ],
+    "compatibleLightingTags": [
+      "soft_light",
+      "medium_light",
+      "neutral_light",
+      "warm_light",
+      "cool_light",
+      "low_contrast",
+      "medium_contrast",
+      "soft_skin",
+      "clean_skin"
+    ]
   },
   {
     "id": "female-minimal-editorial",
@@ -59,9 +208,64 @@
       "妆面必须克制利落，不要做成甜美生活感妆容",
       "服饰轮廓要简洁明确，不要出现松垮休闲家居感"
     ],
-    "detailTags": ["极简时装", "轮廓感", "冷调", "结构化"],
-    "pairingAdvice": ["极简纯色棚拍", "画廊白盒子空间人像", "冷调金属空间人像"],
-    "referenceNotes": "适合作为女性时装场景的默认妆造，重点是干净轮廓和高级克制。"
+    "detailTags": [
+      "极简时装",
+      "轮廓感",
+      "冷调",
+      "结构化"
+    ],
+    "pairingAdvice": [
+      "极简纯色棚拍",
+      "画廊白盒子空间人像",
+      "冷调金属空间人像"
+    ],
+    "referenceNotes": "适合作为女性时装场景的默认妆造，重点是干净轮廓和高级克制。",
+    "genderScope": "female",
+    "makeupIntensity": "defined",
+    "outfitStructure": "structured",
+    "paletteTags": [
+      "black",
+      "white",
+      "silver_grey",
+      "cool_low_saturation"
+    ],
+    "compatibleSceneIds": [
+      "studio-solid-backdrop",
+      "cold-metal-space",
+      "retro-cinema-box",
+      "city-neon-night",
+      "gallery-white-cube",
+      "dramatic-side-light",
+      "luxury-hotel-lobby",
+      "rooftop-wind",
+      "moody-bar-counter",
+      "backstage-vanity-mirror"
+    ],
+    "incompatibleSceneIds": [
+      "indoor-film-lifestyle",
+      "morning-window-softlight",
+      "walnut-study-portrait",
+      "cafe-candid-seat",
+      "bathroom-mirror-morning",
+      "hotel-room-loose",
+      "sunset-home-backlight",
+      "hallway-quiet-frame",
+      "bedside-half-recline",
+      "rainy-window-mood"
+    ],
+    "compatibleLightingTags": [
+      "soft_light",
+      "medium_light",
+      "hard_light",
+      "neutral_light",
+      "cool_light",
+      "mixed_light",
+      "medium_contrast",
+      "high_contrast",
+      "clean_skin",
+      "structured_skin",
+      "slightly_under"
+    ]
   },
   {
     "id": "male-sharp-editorial",
@@ -75,9 +279,63 @@
       "不要做成生活感软妆或甜感妆面",
       "服饰必须配合利落发型和高反差布光，不要出现松垮家居感"
     ],
-    "detailTags": ["男士时装", "轮廓感", "结构化", "冷调"],
-    "pairingAdvice": ["冷调金属空间人像", "都市夜色霓虹人像", "戏剧化强侧光人像"],
-    "referenceNotes": "适合作为男生时装风格的默认妆造，重点是结构感和克制的冷静气质。"
+    "detailTags": [
+      "男士时装",
+      "轮廓感",
+      "结构化",
+      "冷调"
+    ],
+    "pairingAdvice": [
+      "冷调金属空间人像",
+      "都市夜色霓虹人像",
+      "戏剧化强侧光人像"
+    ],
+    "referenceNotes": "适合作为男生时装风格的默认妆造，重点是结构感和克制的冷静气质。",
+    "genderScope": "male",
+    "makeupIntensity": "light",
+    "outfitStructure": "structured",
+    "paletteTags": [
+      "black",
+      "charcoal",
+      "steel_grey",
+      "cool_low_saturation"
+    ],
+    "compatibleSceneIds": [
+      "studio-solid-backdrop",
+      "cold-metal-space",
+      "retro-cinema-box",
+      "city-neon-night",
+      "gallery-white-cube",
+      "dramatic-side-light",
+      "luxury-hotel-lobby",
+      "rooftop-wind",
+      "moody-bar-counter",
+      "backstage-vanity-mirror"
+    ],
+    "incompatibleSceneIds": [
+      "indoor-film-lifestyle",
+      "morning-window-softlight",
+      "walnut-study-portrait",
+      "cafe-candid-seat",
+      "bathroom-mirror-morning",
+      "hotel-room-loose",
+      "sunset-home-backlight",
+      "hallway-quiet-frame",
+      "bedside-half-recline",
+      "rainy-window-mood"
+    ],
+    "compatibleLightingTags": [
+      "medium_light",
+      "hard_light",
+      "neutral_light",
+      "cool_light",
+      "mixed_light",
+      "medium_contrast",
+      "high_contrast",
+      "clean_skin",
+      "structured_skin",
+      "slightly_under"
+    ]
   },
   {
     "id": "unisex-natural-soft",
@@ -91,9 +349,62 @@
       "优先保证真实与稳定，不要让妆造压过人物身份识别",
       "服饰只作为辅助，不要出现风格冲突或抢主体的造型"
     ],
-    "detailTags": ["通用默认", "真实", "稳定", "低饱和"],
-    "pairingAdvice": ["室内生活感胶片写真", "清晨窗边软光人像", "胡桃木书房静物人像"],
-    "referenceNotes": "用于 scene_only 和内部审核图的默认安全选项。"
+    "detailTags": [
+      "通用默认",
+      "真实",
+      "稳定",
+      "低饱和"
+    ],
+    "pairingAdvice": [
+      "室内生活感胶片写真",
+      "清晨窗边软光人像",
+      "胡桃木书房静物人像"
+    ],
+    "referenceNotes": "用于 scene_only 和内部审核图的默认安全选项。",
+    "genderScope": "unisex",
+    "makeupIntensity": "barely_there",
+    "outfitStructure": "clean",
+    "paletteTags": [
+      "white",
+      "grey",
+      "khaki",
+      "low_saturation"
+    ],
+    "compatibleSceneIds": [
+      "indoor-film-lifestyle",
+      "morning-window-softlight",
+      "walnut-study-portrait",
+      "cafe-candid-seat",
+      "bathroom-mirror-morning",
+      "hotel-room-loose",
+      "sunset-home-backlight",
+      "hallway-quiet-frame",
+      "bedside-half-recline",
+      "rainy-window-mood"
+    ],
+    "incompatibleSceneIds": [
+      "studio-solid-backdrop",
+      "cold-metal-space",
+      "retro-cinema-box",
+      "city-neon-night",
+      "gallery-white-cube",
+      "dramatic-side-light",
+      "luxury-hotel-lobby",
+      "rooftop-wind",
+      "moody-bar-counter",
+      "backstage-vanity-mirror"
+    ],
+    "compatibleLightingTags": [
+      "soft_light",
+      "medium_light",
+      "neutral_light",
+      "warm_light",
+      "cool_light",
+      "low_contrast",
+      "medium_contrast",
+      "soft_skin",
+      "clean_skin"
+    ]
   },
   {
     "id": "unisex-structured-editorial",
@@ -107,8 +418,63 @@
       "妆造必须服务于时装布光和空间线条，不要混入生活感软糯风格",
       "服饰控制在高级、克制的范围内，不要加入复杂图案和过度装饰"
     ],
-    "detailTags": ["通用时装", "结构感", "冷静", "极简"],
-    "pairingAdvice": ["极简纯色棚拍", "冷调金属空间人像", "都市夜色霓虹人像"],
-    "referenceNotes": "用于 fashion scene_only 与模板样片的默认安全选项。"
+    "detailTags": [
+      "通用时装",
+      "结构感",
+      "冷静",
+      "极简"
+    ],
+    "pairingAdvice": [
+      "极简纯色棚拍",
+      "冷调金属空间人像",
+      "都市夜色霓虹人像"
+    ],
+    "referenceNotes": "用于 fashion scene_only 与模板样片的默认安全选项。",
+    "genderScope": "unisex",
+    "makeupIntensity": "light",
+    "outfitStructure": "structured",
+    "paletteTags": [
+      "black",
+      "white",
+      "charcoal",
+      "steel_grey"
+    ],
+    "compatibleSceneIds": [
+      "studio-solid-backdrop",
+      "cold-metal-space",
+      "retro-cinema-box",
+      "city-neon-night",
+      "gallery-white-cube",
+      "dramatic-side-light",
+      "luxury-hotel-lobby",
+      "rooftop-wind",
+      "moody-bar-counter",
+      "backstage-vanity-mirror"
+    ],
+    "incompatibleSceneIds": [
+      "indoor-film-lifestyle",
+      "morning-window-softlight",
+      "walnut-study-portrait",
+      "cafe-candid-seat",
+      "bathroom-mirror-morning",
+      "hotel-room-loose",
+      "sunset-home-backlight",
+      "hallway-quiet-frame",
+      "bedside-half-recline",
+      "rainy-window-mood"
+    ],
+    "compatibleLightingTags": [
+      "soft_light",
+      "medium_light",
+      "hard_light",
+      "neutral_light",
+      "cool_light",
+      "mixed_light",
+      "medium_contrast",
+      "high_contrast",
+      "clean_skin",
+      "structured_skin",
+      "slightly_under"
+    ]
   }
 ]

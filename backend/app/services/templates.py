@@ -247,6 +247,73 @@ HAIR_TOUCH_ACTION_KEYWORDS = (
     "触碰耳侧发丝",
 )
 
+LIGHT_DIRECTION_LABELS = {
+    "front": "正面定向入光",
+    "side": "侧向入光",
+    "back": "背后或侧后方入光",
+    "top": "顶部下落光",
+    "mixed": "多方向混合入光",
+}
+
+LIGHT_QUALITY_LABELS = {
+    "soft": "柔光",
+    "medium": "中等硬度光线",
+    "hard": "偏硬光线",
+}
+
+COLOR_TEMPERATURE_LABELS = {
+    "cool": "冷色温",
+    "neutral": "中性色温",
+    "warm": "暖色温",
+    "mixed": "冷暖混合色温",
+}
+
+CONTRAST_LEVEL_LABELS = {
+    "low": "低反差",
+    "medium": "中等反差",
+    "high": "高反差",
+}
+
+SHADOW_DENSITY_LABELS = {
+    "light": "轻薄柔和",
+    "balanced": "保留明暗层次",
+    "deep": "更深但可读",
+}
+
+HAIR_HIGHLIGHT_LABELS = {
+    "soft_edge": "柔和贴边",
+    "clean_rim": "清晰但受控",
+    "controlled_specular": "受控且具有精致反射感",
+    "none": "不额外强调",
+}
+
+SKIN_RENDERING_LABELS = {
+    "soft_texture": "柔和真实纹理",
+    "clean_texture": "干净清晰纹理",
+    "structured_texture": "更强调骨相与结构纹理",
+}
+
+EXPOSURE_BIAS_LABELS = {
+    "slightly_under": "略微压曝光以保留氛围",
+    "neutral": "标准曝光",
+    "slightly_over": "轻微提亮但不过曝",
+}
+
+SCENE_SAMPLE_IMAGE_FALLBACKS = {
+    "lifestyle": {
+        "female": ("female3",),
+        "male": ("male2",),
+    },
+    "fashion": {
+        "female": ("female2",),
+        "male": ("male1",),
+    },
+    "outdoor": {
+        "female": ("female1",),
+        "male": ("male3",),
+    },
+}
+
 
 @dataclass(frozen=True)
 class PromptBlock:
@@ -576,15 +643,94 @@ def _filter_scene_actions_for_locked_hairstyle(actions: Iterable[str]) -> list[s
     return filtered or candidates
 
 
-def _matching_stylings(style_line: str, preferred_gender: str | None = None) -> list[dict]:
+def _styling_scope_matches(styling: dict, preferred_gender: str | None) -> bool:
+    if not preferred_gender:
+        return True
+    scope = str(styling.get("gender_scope") or styling.get("gender") or "unisex").strip()
+    return scope in {preferred_gender, "unisex"}
+
+
+def _scene_lighting_tags(scene: dict) -> list[str]:
+    profile = scene.get("lighting_profile") or {}
+    tags: list[str] = []
+    quality = str(profile.get("light_quality") or "").strip()
+    temperature = str(profile.get("color_temperature") or "").strip()
+    contrast = str(profile.get("contrast_level") or "").strip()
+    skin = str(profile.get("skin_rendering") or "").strip()
+    exposure = str(profile.get("exposure_bias") or "").strip()
+    if quality:
+        tags.append(f"{quality}_light")
+    if temperature:
+        tags.append(f"{temperature}_light")
+    if contrast:
+        tags.append(f"{contrast}_contrast")
+    if skin:
+        tags.append(
+            {
+                "soft_texture": "soft_skin",
+                "clean_texture": "clean_skin",
+                "structured_texture": "structured_skin",
+            }.get(skin, skin)
+        )
+    if exposure:
+        tags.append(exposure)
+    return _dedupe_keep_order(tags)
+
+
+def _styling_supports_scene(styling: dict, scene: dict | None) -> bool:
+    if scene is None:
+        return True
+    scene_id = str(scene.get("id") or "").strip()
+    incompatible_scene_ids = {
+        str(item).strip()
+        for item in styling.get("incompatible_scene_ids", [])
+        if str(item).strip()
+    }
+    if scene_id and scene_id in incompatible_scene_ids:
+        return False
+
+    compatible_scene_ids = {
+        str(item).strip()
+        for item in styling.get("compatible_scene_ids", [])
+        if str(item).strip()
+    }
+    if compatible_scene_ids and scene_id and scene_id not in compatible_scene_ids:
+        return False
+
+    lighting_tags = set(_scene_lighting_tags(scene))
+    compatible_lighting_tags = {
+        str(item).strip()
+        for item in styling.get("compatible_lighting_tags", [])
+        if str(item).strip()
+    }
+    if compatible_lighting_tags and lighting_tags and not (lighting_tags & compatible_lighting_tags):
+        return False
+    return True
+
+
+def _matching_stylings(
+    style_line: str,
+    preferred_gender: str | None = None,
+    scene: dict | None = None,
+) -> list[dict]:
     candidates = [item for item in STYLINGS if item.get("style_line") == style_line]
+    candidates = [item for item in candidates if _styling_supports_scene(item, scene)]
     if preferred_gender:
-        exact = [item for item in candidates if item.get("gender") == preferred_gender]
-        unisex = [item for item in candidates if item.get("gender") == "unisex"]
+        exact = [
+            item
+            for item in candidates
+            if str(item.get("gender_scope") or item.get("gender") or "").strip() == preferred_gender
+        ]
+        unisex = [
+            item
+            for item in candidates
+            if str(item.get("gender_scope") or item.get("gender") or "").strip() == "unisex"
+        ]
         fallback = [
             item
             for item in candidates
-            if item.get("gender") not in {preferred_gender, "unisex"}
+            if str(item.get("gender_scope") or item.get("gender") or "").strip()
+            not in {preferred_gender, "unisex"}
         ]
         ordered = [*exact, *unisex, *fallback]
         if ordered:
@@ -592,7 +738,12 @@ def _matching_stylings(style_line: str, preferred_gender: str | None = None) -> 
     return candidates
 
 
-def _default_styling(style_line: str, preferred_gender: str | None, seed_source: str) -> dict:
+def _default_styling(
+    style_line: str,
+    preferred_gender: str | None,
+    seed_source: str,
+    scene: dict | None = None,
+) -> dict:
     style_line_candidates = [item for item in STYLINGS if item.get("style_line") == style_line]
     if not style_line_candidates:
         fallback_id = DEFAULT_STYLING_BY_STYLE_LINE.get(style_line)
@@ -601,17 +752,25 @@ def _default_styling(style_line: str, preferred_gender: str | None, seed_source:
             return fallback
         raise ValueError(f"No styling template available for style line: {style_line}")
 
-    candidates = _matching_stylings(style_line, preferred_gender)
+    candidates = _matching_stylings(style_line, preferred_gender, scene=scene)
     if preferred_gender:
-        exact = [item for item in candidates if item.get("gender") == preferred_gender]
+        exact = [
+            item
+            for item in candidates
+            if str(item.get("gender_scope") or item.get("gender") or "").strip() == preferred_gender
+        ]
         if exact:
             candidates = exact
         else:
-            unisex = [item for item in candidates if item.get("gender") == "unisex"]
+            unisex = [
+                item
+                for item in candidates
+                if str(item.get("gender_scope") or item.get("gender") or "").strip() == "unisex"
+            ]
             if unisex:
                 candidates = unisex
             else:
-                candidates = style_line_candidates
+                candidates = _matching_stylings(style_line, None, scene=scene) or style_line_candidates
 
     selected_id = _select_one(
         [item["id"] for item in candidates],
@@ -629,6 +788,7 @@ def _resolve_styling(
     style_line: str,
     preferred_gender: str | None,
     seed_source: str,
+    scene: dict | None = None,
     styling: dict | None = None,
     scene_rule: dict | None = None,
 ) -> dict:
@@ -639,31 +799,168 @@ def _resolve_styling(
             style_line,
             preferred_gender,
             seed_source,
+            scene,
             scene_rule,
         )
         if selected is not None:
             return selected
-    return _default_styling(style_line, preferred_gender, seed_source)
+    return _default_styling(style_line, preferred_gender, seed_source, scene)
+
+
+def _resolve_scene_lighting_text(scene: dict, scene_rule: dict | None = None) -> str:
+    profile = scene.get("lighting_profile") or {}
+    if not profile or not any(str(value).strip() for value in profile.values()):
+        base_text = _normalize_sentence(scene.get("lighting", ""))
+    else:
+        base_parts = [
+            f"主光为{LIGHT_DIRECTION_LABELS.get(profile.get('light_direction'), '自然入光')}",
+            f"整体为{LIGHT_QUALITY_LABELS.get(profile.get('light_quality'), '自然光线')}、"
+            f"{COLOR_TEMPERATURE_LABELS.get(profile.get('color_temperature'), '自然色温')}、"
+            f"{CONTRAST_LEVEL_LABELS.get(profile.get('contrast_level'), '适中反差')}",
+            f"阴影层次{SHADOW_DENSITY_LABELS.get(profile.get('shadow_density'), '自然可读')}",
+            f"发丝高光{HAIR_HIGHLIGHT_LABELS.get(profile.get('hair_highlight_mode'), '受控自然')}",
+            f"皮肤呈现{SKIN_RENDERING_LABELS.get(profile.get('skin_rendering'), '真实肌理')}",
+            f"曝光控制为{EXPOSURE_BIAS_LABELS.get(profile.get('exposure_bias'), '标准曝光')}",
+        ]
+        if profile.get("practical_lights_allowed"):
+            base_parts.append("允许少量环境实用光参与层次补光")
+        base_text = "，".join(base_parts)
+
+    adjustment_items = _dedupe_keep_order(
+        _resolve_rule_sentences(
+            (scene_rule or {}).get("lighting_adjustment")
+            or (scene_rule or {}).get("lighting_guardrails"),
+            None,
+        )
+    )
+    if adjustment_items:
+        return "；".join([base_text, f"关键补充：{'；'.join(_normalize_sentence(item) for item in adjustment_items)}"])
+    return base_text
+
+
+def _resolve_scene_outfit_guidance(scene: dict) -> str:
+    palette = _dedupe_keep_order(scene.get("outfit_palette", []))
+    materials = _dedupe_keep_order(scene.get("outfit_materials", []))
+    shapes = _dedupe_keep_order(scene.get("outfit_shapes", []))
+    avoids = _dedupe_keep_order(scene.get("outfit_avoids", []))
+
+    if not any((palette, materials, shapes, avoids)):
+        return "；".join(_normalize_sentence(item) for item in scene.get("outfit_hints", [])[:2])
+
+    segments: list[str] = []
+    if palette:
+        segments.append(f"优先{_format_option_list(palette)}")
+    if materials:
+        segments.append(f"材质以{_format_option_list(materials)}为主")
+    if shapes:
+        segments.append(f"版型以{_format_option_list(shapes)}为主")
+    if avoids:
+        segments.append(f"避免{_format_option_list(avoids)}")
+    return "，".join(segments)
+
+
+def _resolve_styling_constraints_text(
+    *,
+    scene: dict,
+    styling: dict,
+    scene_rule: dict | None,
+    preferred_gender: str | None,
+) -> str:
+    items = [
+        *styling.get("constraints", []),
+        *_resolve_rule_sentences(
+            (scene_rule or {}).get("styling_constraints")
+            or (scene_rule or {}).get("styling_constraint_additions"),
+            preferred_gender,
+        ),
+    ]
+    required_tags = _dedupe_keep_order(
+        str(item).strip()
+        for item in (scene_rule or {}).get("required_outfit_tags", [])
+        if str(item).strip()
+    )
+    forbidden_tags = _dedupe_keep_order(
+        str(item).strip()
+        for item in (scene_rule or {}).get("forbidden_outfit_tags", [])
+        if str(item).strip()
+    )
+    if required_tags:
+        items.append(f"服饰关键词优先：{_format_option_list(required_tags)}")
+    if forbidden_tags:
+        items.append(f"服饰禁忌：{_format_option_list(forbidden_tags)}")
+    if not items:
+        scene_outfit_avoids = _dedupe_keep_order(scene.get("outfit_avoids", []))
+        if scene_outfit_avoids:
+            items.append(f"避免{_format_option_list(scene_outfit_avoids)}")
+    return "；".join(_normalize_sentence(item) for item in _dedupe_keep_order(items) if item)
+
+
+def _scene_is_outdoor(scene: dict) -> bool:
+    blob = " ".join(
+        [
+            str(scene.get("id", "")),
+            str(scene.get("name", "")),
+            str(scene.get("environment", "")),
+            " ".join(scene.get("tags", [])),
+        ]
+    )
+    return any(keyword in blob for keyword in ("rooftop", "天台", "户外", "树林", "植物", "风场"))
+
+
+def resolve_scene_sample_image_ids(scene: dict, gender: str) -> list[str]:
+    sample_image_ids = scene.get("sample_image_ids", {})
+    if isinstance(sample_image_ids, dict):
+        selected = _dedupe_keep_order(sample_image_ids.get(gender, []))
+        if selected:
+            return selected
+
+    if _scene_is_outdoor(scene):
+        return list(SCENE_SAMPLE_IMAGE_FALLBACKS["outdoor"].get(gender, ()))
+    style_line = str(scene.get("style_line") or "").strip()
+    family = "fashion" if style_line == "fashion_editorial" else "lifestyle"
+    return list(SCENE_SAMPLE_IMAGE_FALLBACKS[family].get(gender, ()))
+
+
+def resolve_scene_sample_image_id(
+    scene: dict,
+    gender: str,
+    *,
+    seed_source: str | None = None,
+) -> str:
+    options = resolve_scene_sample_image_ids(scene, gender)
+    if not options:
+        return ""
+    return _select_one(
+        options,
+        seed_source=seed_source or f"{scene.get('id', 'scene')}:{gender}:sample-image",
+        label=f"sample-image:{gender}",
+    )
 
 
 def _build_styling_prompt_values(
     *,
+    scene: dict,
     styling: dict,
-    default_outfit_text: str,
+    scene_rule: dict | None = None,
+    preferred_gender: str | None = None,
     makeup_override: str | None = None,
     outfit_override: str | None = None,
-    constraint_additions: Iterable[str] | None = None,
 ) -> dict[str, str]:
     makeup_text = _normalize_sentence(makeup_override or styling.get("makeup_prompt", ""))
-    outfit_text = _normalize_sentence(outfit_override or styling.get("outfit_prompt") or default_outfit_text)
-    styling_constraints = "；".join(
-        _normalize_sentence(item)
-        for item in _dedupe_keep_order(
-            [
-                *styling.get("constraints", []),
-                *(constraint_additions or ()),
-            ]
-        )
+    structured_outfit_text = _resolve_scene_outfit_guidance(scene)
+    outfit_segments = _dedupe_keep_order(
+        [
+            _normalize_sentence(outfit_override or ""),
+            _normalize_sentence(styling.get("outfit_prompt", "")),
+            _normalize_sentence(structured_outfit_text),
+        ]
+    )
+    outfit_text = "；".join(segment for segment in outfit_segments if segment)
+    styling_constraints = _resolve_styling_constraints_text(
+        scene=scene,
+        styling=styling,
+        scene_rule=scene_rule,
+        preferred_gender=preferred_gender,
     )
     return {
         "makeup_text": makeup_text,
@@ -719,6 +1016,8 @@ def _pick_palette(category: str, gender: str, style_line: str) -> tuple[str, str
 
 def _build_scene_template(raw: dict) -> dict:
     style_line = raw["styleLine"]
+    lighting_profile_raw = raw.get("lightingProfile") or {}
+    sample_image_ids_raw = raw.get("sampleImageIds") or {}
     return {
         "id": raw["id"],
         "name": raw["title"],
@@ -730,13 +1029,32 @@ def _build_scene_template(raw: dict) -> dict:
         "tags": raw.get("detailTags", []),
         "environment": raw["environment"],
         "lighting": raw["lighting"],
+        "lighting_profile": {
+            "light_direction": str(lighting_profile_raw.get("lightDirection") or "").strip(),
+            "light_quality": str(lighting_profile_raw.get("lightQuality") or "").strip(),
+            "color_temperature": str(lighting_profile_raw.get("colorTemperature") or "").strip(),
+            "contrast_level": str(lighting_profile_raw.get("contrastLevel") or "").strip(),
+            "shadow_density": str(lighting_profile_raw.get("shadowDensity") or "").strip(),
+            "hair_highlight_mode": str(lighting_profile_raw.get("hairHighlightMode") or "").strip(),
+            "skin_rendering": str(lighting_profile_raw.get("skinRendering") or "").strip(),
+            "exposure_bias": str(lighting_profile_raw.get("exposureBias") or "").strip(),
+            "practical_lights_allowed": bool(lighting_profile_raw.get("practicalLightsAllowed")),
+        },
         "style_mood": raw["styleMood"],
         "expressions": raw.get("expressions", []),
         "actions": raw.get("actions", []),
         "outfit_hints": raw.get("outfitHints", []),
+        "outfit_palette": raw.get("outfitPalette", []),
+        "outfit_materials": raw.get("outfitMaterials", []),
+        "outfit_shapes": raw.get("outfitShapes", []),
+        "outfit_avoids": raw.get("outfitAvoids", []),
         "constraints": raw.get("constraints", []),
         "pairing_advice": raw.get("pairingAdvice", []),
         "shot_advice": raw["shotAdvice"],
+        "sample_image_ids": {
+            "female": _dedupe_keep_order(sample_image_ids_raw.get("female", [])),
+            "male": _dedupe_keep_order(sample_image_ids_raw.get("male", [])),
+        },
         "cover_image_path": raw.get("coverImagePath", ""),
         "cover_image_updated_at": raw.get("coverImageUpdatedAt", ""),
         "cover_image_source": raw.get("coverImageSource", ""),
@@ -791,6 +1109,13 @@ def _build_styling_template(raw: dict) -> dict:
         "outfit_prompt": raw["outfitPrompt"],
         "constraints": raw.get("constraints", []),
         "pairing_advice": raw.get("pairingAdvice", []),
+        "gender_scope": raw.get("genderScope", gender),
+        "makeup_intensity": raw.get("makeupIntensity", ""),
+        "outfit_structure": raw.get("outfitStructure", ""),
+        "palette_tags": raw.get("paletteTags", []),
+        "compatible_scene_ids": raw.get("compatibleSceneIds", []),
+        "incompatible_scene_ids": raw.get("incompatibleSceneIds", []),
+        "compatible_lighting_tags": raw.get("compatibleLightingTags", []),
         "palette": _pick_palette("scene", gender, style_line),
     }
 
@@ -800,12 +1125,19 @@ def _build_scene_styling_rule(raw: dict) -> dict:
         "id": raw["sceneId"],
         "scene_family": raw.get("sceneFamily", ""),
         "default_styling_id": raw.get("defaultStylingId", ""),
+        "default_styling_ids": raw.get("defaultStylingIds", []),
+        "fallback_styling_ids": raw.get("fallbackStylingIds", []),
+        "forbidden_styling_ids": raw.get("forbiddenStylingIds", []),
         "gender_styling_ids": raw.get("genderStylingIds", {}),
         "allowed_styling_ids": raw.get("allowedStylingIds", []),
         "makeup_override": raw.get("makeupOverride"),
         "outfit_override": raw.get("outfitOverride"),
         "styling_constraint_additions": raw.get("stylingConstraintAdditions"),
+        "styling_constraints": raw.get("stylingConstraints"),
         "lighting_guardrails": raw.get("lightingGuardrails"),
+        "lighting_adjustment": raw.get("lightingAdjustment"),
+        "required_outfit_tags": raw.get("requiredOutfitTags", []),
+        "forbidden_outfit_tags": raw.get("forbiddenOutfitTags", []),
         "recommended_hairstyle_category_keys": raw.get("recommendedHairstyleCategoryKeys", {}),
     }
 
@@ -896,6 +1228,7 @@ def _scene_rule_styling_candidates(
     style_line: str,
     preferred_gender: str | None,
     seed_source: str,
+    scene: dict | None,
     scene_rule: dict,
 ) -> dict | None:
     allowed_ids = {
@@ -903,21 +1236,39 @@ def _scene_rule_styling_candidates(
         for item in scene_rule.get("allowed_styling_ids", [])
         if str(item).strip()
     }
-    explicit_id = ""
+    forbidden_ids = {
+        str(item).strip()
+        for item in scene_rule.get("forbidden_styling_ids", [])
+        if str(item).strip()
+    }
+    explicit_ids: list[str] = []
     gender_map = scene_rule.get("gender_styling_ids", {})
     if preferred_gender and isinstance(gender_map, dict):
-        explicit_id = str(gender_map.get(preferred_gender) or "").strip()
-    if not explicit_id:
-        explicit_id = str(scene_rule.get("default_styling_id") or "").strip()
+        explicit_ids.append(str(gender_map.get(preferred_gender) or "").strip())
+    explicit_ids.extend(
+        [
+            str(scene_rule.get("default_styling_id") or "").strip(),
+            *[str(item).strip() for item in scene_rule.get("default_styling_ids", [])],
+            *[str(item).strip() for item in scene_rule.get("fallback_styling_ids", [])],
+        ]
+    )
 
-    if explicit_id:
+    for explicit_id in _dedupe_keep_order(explicit_ids):
+        if not explicit_id or explicit_id in forbidden_ids:
+            continue
         selected = get_styling(explicit_id)
-        if selected is not None and (
-            not allowed_ids or selected["id"] in allowed_ids
-        ) and selected["style_line"] == style_line:
+        if (
+            selected is not None
+            and (not allowed_ids or selected["id"] in allowed_ids)
+            and selected["style_line"] == style_line
+            and _styling_scope_matches(selected, preferred_gender)
+            and _styling_supports_scene(selected, scene)
+        ):
             return selected
 
-    candidates = _matching_stylings(style_line, preferred_gender)
+    candidates = _matching_stylings(style_line, preferred_gender, scene=scene)
+    if forbidden_ids:
+        candidates = [item for item in candidates if item["id"] not in forbidden_ids]
     if allowed_ids:
         filtered = [item for item in candidates if item["id"] in allowed_ids]
         if filtered:
@@ -988,6 +1339,7 @@ def build_prompt_assembly(
             style_line=scene["style_line"],
             preferred_gender=preferred_gender,
             seed_source=selection_seed,
+            scene=scene,
             styling=styling,
             scene_rule=scene_rule,
         )
@@ -1017,27 +1369,17 @@ def build_prompt_assembly(
                 preferred_gender,
             )
         )
-        styling_constraint_additions = _resolve_rule_sentences(
-            scene_rule.get("styling_constraint_additions") if scene_rule else None,
-            preferred_gender,
-        )
         styling_values = _build_styling_prompt_values(
-        styling=selected_styling,
-        default_outfit_text="；".join(_dedupe_keep_order(scene.get("outfit_hints", []))[:2]),
+            scene=scene,
+            styling=selected_styling,
+            scene_rule=scene_rule,
+            preferred_gender=preferred_gender,
             makeup_override=makeup_override_text,
             outfit_override=resolved_outfit_override,
-            constraint_additions=styling_constraint_additions,
         )
-        scene_constraint_items = _dedupe_keep_order(
-            [
-                *scene.get("constraints", []),
-                *_resolve_rule_sentences(
-                    scene_rule.get("lighting_guardrails") if scene_rule else None,
-                    preferred_gender,
-                ),
-            ]
+        scene_constraint_text = "；".join(
+            _normalize_sentence(item) for item in _dedupe_keep_order(scene.get("constraints", []))
         )
-        scene_constraint_text = "；".join(_normalize_sentence(item) for item in scene_constraint_items)
         hair_preservation_text = _normalize_sentence(SCENE_ONLY_CONSTRAINTS_SECTION)
         motion_safety_text = "；".join(
             [
@@ -1054,7 +1396,10 @@ def build_prompt_assembly(
                 _make_prompt_block("output_format", OUTPUT_FORMAT_SECTION),
                 _make_prompt_block("shot", f"构图：{_normalize_sentence(scene['shot_advice'])}。"),
                 _make_prompt_block("scene_environment", f"场景：{_normalize_sentence(scene['environment'])}。"),
-                _make_prompt_block("scene_lighting", f"光线：{_normalize_sentence(scene['lighting'])}。"),
+                _make_prompt_block(
+                    "scene_lighting",
+                    f"光线：{_resolve_scene_lighting_text(scene, scene_rule)}。",
+                ),
                 _make_prompt_block("scene_mood", f"风格氛围：{_normalize_sentence(scene['style_mood'])}。"),
                 _make_prompt_block(
                     "expression",
@@ -1097,6 +1442,7 @@ def build_prompt_assembly(
         style_line=scene["style_line"],
         preferred_gender=hairstyle.get("gender"),
         seed_source=selection_seed,
+        scene=scene,
         styling=styling,
         scene_rule=scene_rule,
     )
@@ -1116,27 +1462,17 @@ def build_prompt_assembly(
         scene_rule.get("outfit_override") if scene_rule else None,
         hairstyle.get("gender"),
     )
-    styling_constraint_additions = _resolve_rule_sentences(
-        scene_rule.get("styling_constraint_additions") if scene_rule else None,
-        hairstyle.get("gender"),
-    )
     styling_values = _build_styling_prompt_values(
+        scene=scene,
         styling=selected_styling,
-        default_outfit_text="；".join(_dedupe_keep_order(scene.get("outfit_hints", []))[:2]),
+        scene_rule=scene_rule,
+        preferred_gender=hairstyle.get("gender"),
         makeup_override=makeup_override_text,
         outfit_override=resolved_outfit_override,
-        constraint_additions=styling_constraint_additions,
     )
-    scene_constraint_items = _dedupe_keep_order(
-        [
-            *scene.get("constraints", []),
-            *_resolve_rule_sentences(
-                scene_rule.get("lighting_guardrails") if scene_rule else None,
-                hairstyle.get("gender"),
-            ),
-        ]
+    scene_constraint_text = "；".join(
+        _normalize_sentence(item) for item in _dedupe_keep_order(scene.get("constraints", []))
     )
-    scene_constraint_text = "；".join(_normalize_sentence(item) for item in scene_constraint_items)
     hair_constraint_text = "；".join(
         _normalize_sentence(item) for item in _dedupe_keep_order(hairstyle.get("constraints", []))
     )
@@ -1155,7 +1491,10 @@ def build_prompt_assembly(
             _make_prompt_block("output_format", OUTPUT_FORMAT_SECTION),
             _make_prompt_block("shot", f"构图：{_normalize_sentence(scene['shot_advice'])}。"),
             _make_prompt_block("scene_environment", f"场景：{_normalize_sentence(scene['environment'])}。"),
-            _make_prompt_block("scene_lighting", f"光线：{_normalize_sentence(scene['lighting'])}。"),
+            _make_prompt_block(
+                "scene_lighting",
+                f"光线：{_resolve_scene_lighting_text(scene, scene_rule)}。",
+            ),
             _make_prompt_block("scene_mood", f"风格氛围：{_normalize_sentence(scene['style_mood'])}。"),
             _make_prompt_block(
                 "expression",
@@ -1295,6 +1634,7 @@ def build_job_prompt_payload(
         style_line=scene["style_line"],
         preferred_gender=hairstyle.get("gender"),
         seed_source=selection_seed,
+        scene=scene,
         scene_rule=get_scene_styling_rule(scene["id"]),
     )
     payload = {

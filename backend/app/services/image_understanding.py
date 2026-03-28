@@ -5,16 +5,10 @@ import hashlib
 import io
 import json
 import re
+import subprocess
+import tempfile
 from dataclasses import dataclass
 
-from openai import (
-    APIConnectionError,
-    APIError,
-    APIStatusError,
-    AuthenticationError,
-    OpenAI,
-    RateLimitError,
-)
 from PIL import Image
 
 from app.config import get_settings
@@ -27,7 +21,9 @@ SCENE_BLOCK_KEYS = (
     "scene_mood",
     "expression",
     "subject_action",
+    "makeup",
     "outfit",
+    "styling_constraints",
     "scene_constraints",
 )
 
@@ -41,6 +37,7 @@ class SceneUnderstandingResult:
     blocks: dict[str, str]
     raw_response: str
     model_name: str
+    subject_gender: str = "unknown"
 
 
 @dataclass(frozen=True, slots=True)
@@ -61,19 +58,25 @@ def build_scene_understanding_prompt() -> str:
         "不要输出 markdown，不要输出解释，不要输出代码块。\n"
         "不要提取任何发型相关内容，不要输出 hair_target、hair_constraints、"
         "hairstyle_action、hair_lock 等发型字段。\n"
-        "请仅返回以下 8 个字符串字段："
+        "请额外判断参考图中主要人物的性别表达，并返回 subject_gender。\n"
+        "subject_gender 只能是 male、female、unknown 三个值之一。\n"
+        "请返回以下字段："
+        "subject_gender, "
         "shot, scene_environment, scene_lighting, scene_mood, expression, "
-        "subject_action, outfit, scene_constraints。\n"
+        "subject_action, makeup, outfit, styling_constraints, scene_constraints。\n"
         "要求：\n"
         "1. scene_only 视角，只保留场景、动作、表情、服饰、构图信息。\n"
         "2. 如果图片里有人物发型，请完全忽略，不要写入任何发型描述。\n"
         "3. 输出内容要适合直接拼装到中文提示词中，语气简洁、具体、可执行。\n"
         "4. 如果图片中某项不明显，也要给出最合理、最保守的概括。\n"
         "5. scene_constraints 只写场景与动作层面的关键约束，不写发型约束。\n"
+        "6. makeup 只写适合当前场景的人物妆造方向，不要写发型。\n"
+        "7. styling_constraints 只写妆造和服饰禁忌，不要写镜头或发型禁忌。\n"
+        "8. 如果人物性别表达不明确，或者图片里没有明确单人主体，subject_gender 返回 unknown。\n"
         "输出示例格式："
-        '{"shot":"...","scene_environment":"...","scene_lighting":"...",'
+        '{"subject_gender":"female","shot":"...","scene_environment":"...","scene_lighting":"...",'
         '"scene_mood":"...","expression":"...","subject_action":"...",'
-        '"outfit":"...","scene_constraints":"..."}'
+        '"makeup":"...","outfit":"...","styling_constraints":"...","scene_constraints":"..."}'
     )
 
 
@@ -93,7 +96,21 @@ def _build_data_url(image_bytes: bytes) -> str:
     return f"data:{mime_type};base64,{encoded}"
 
 
-def _extract_json_object(text: str) -> dict[str, str]:
+def _prepare_understanding_image(image_bytes: bytes, *, max_side: int = 1280) -> bytes:
+    with Image.open(io.BytesIO(image_bytes)) as image:
+        working = image.convert("RGB")
+        if max(working.width, working.height) <= max_side:
+            buffer = io.BytesIO()
+            working.save(buffer, format="JPEG", quality=88)
+            return buffer.getvalue()
+
+        working.thumbnail((max_side, max_side))
+        buffer = io.BytesIO()
+        working.save(buffer, format="JPEG", quality=88)
+        return buffer.getvalue()
+
+
+def _extract_json_object(text: str) -> tuple[dict[str, str], str]:
     stripped = text.strip()
     match = re.search(r"\{.*\}", stripped, flags=re.DOTALL)
     candidate = match.group(0) if match else stripped
@@ -106,13 +123,113 @@ def _extract_json_object(text: str) -> dict[str, str]:
     if not isinstance(payload, dict):
         raise ImageUnderstandingError("图片理解模型返回了非对象结构，无法继续解析。")
 
+    raw_subject_gender = str(payload.get("subject_gender") or "unknown").strip().lower()
+    if raw_subject_gender not in {"male", "female", "unknown"}:
+        raw_subject_gender = "unknown"
+
     blocks: dict[str, str] = {}
     for key in SCENE_BLOCK_KEYS:
         value = payload.get(key)
         if not isinstance(value, str) or not value.strip():
             raise ImageUnderstandingError(f"图片理解结果缺少必填字段：{key}")
         blocks[key] = value.strip()
-    return blocks
+    return blocks, raw_subject_gender
+
+
+def _extract_message_content(payload: dict) -> str:
+    choices = payload.get("choices")
+    if not isinstance(choices, list) or not choices:
+        return ""
+    message = choices[0].get("message")
+    if not isinstance(message, dict):
+        return ""
+    content = message.get("content")
+    if isinstance(content, str):
+        return content
+    if isinstance(content, list):
+        parts: list[str] = []
+        for item in content:
+            if not isinstance(item, dict):
+                continue
+            text = item.get("text")
+            if isinstance(text, str) and text.strip():
+                parts.append(text.strip())
+        return "\n".join(parts)
+    return ""
+
+
+def _run_chat_completion_via_curl(
+    *,
+    base_url: str,
+    api_key: str,
+    model_name: str,
+    prompt_text: str,
+    data_url: str,
+    timeout_seconds: int,
+) -> dict:
+    request_payload = {
+        "model": model_name,
+        "temperature": 0.2,
+        "messages": [
+            {
+                "role": "system",
+                "content": "你只负责把参考图拆成 scene_only 所需的结构化 block。",
+            },
+            {
+                "role": "user",
+                "content": [
+                    {
+                        "type": "text",
+                        "text": prompt_text,
+                    },
+                    {
+                        "type": "image_url",
+                        "image_url": {"url": data_url},
+                    },
+                ],
+            },
+        ],
+    }
+
+    with tempfile.NamedTemporaryFile("w", encoding="utf-8", suffix=".json", delete=True) as handle:
+        json.dump(request_payload, handle, ensure_ascii=False)
+        handle.flush()
+        command = [
+            "curl",
+            "--max-time",
+            str(timeout_seconds),
+            "-sS",
+            f"{base_url}/chat/completions",
+            "-H",
+            "Content-Type: application/json",
+            "-H",
+            f"Authorization: Bearer {api_key}",
+            "--data-binary",
+            f"@{handle.name}",
+        ]
+        completed = subprocess.run(
+            command,
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+
+    if completed.returncode != 0:
+        error_text = (completed.stderr or completed.stdout or "").strip()
+        if "Operation timed out" in error_text or "timed out" in error_text.lower():
+            raise ImageUnderstandingError("图片理解服务超时，请稍后重试。")
+        raise ImageUnderstandingError(
+            f"图片理解服务调用失败：{error_text or f'curl exit {completed.returncode}'}"
+        )
+
+    try:
+        payload = json.loads(completed.stdout)
+    except json.JSONDecodeError as exc:
+        raise ImageUnderstandingError("图片理解服务返回了无法解析的 JSON。") from exc
+
+    if not isinstance(payload, dict):
+        raise ImageUnderstandingError("图片理解服务返回了非对象结构。")
+    return payload
 
 
 def _dedupe_keep_order(items: list[str] | tuple[str, ...]) -> list[str]:
@@ -293,6 +410,185 @@ def _infer_control_profile(blocks: dict[str, str], style_line: str) -> dict[str,
     }
 
 
+def _contains_any(text: str, keywords: tuple[str, ...]) -> bool:
+    return any(keyword in text for keyword in keywords)
+
+
+def _infer_lighting_profile(blocks: dict[str, str], style_line: str) -> dict[str, object]:
+    text = " ".join(blocks.values())
+
+    if _contains_any(text, ("逆光", "侧后方", "背后", "夕阳")):
+        light_direction = "back"
+    elif _contains_any(text, ("侧光", "侧面", "窗边", "侧前方")):
+        light_direction = "side"
+    elif _contains_any(text, ("顶部", "镜前灯", "顶灯", "下落光")):
+        light_direction = "top"
+    elif _contains_any(text, ("混合光", "霓虹", "冷暖", "多方向", "环境光")):
+        light_direction = "mixed"
+    else:
+        light_direction = "front" if style_line == "fashion_editorial" else "side"
+
+    if _contains_any(text, ("硬光", "强侧光", "戏剧化", "高反差", "金属")):
+        light_quality = "hard"
+    elif _contains_any(text, ("柔和", "柔光", "通透", "自然光", "软光")):
+        light_quality = "soft"
+    else:
+        light_quality = "medium"
+
+    if _contains_any(text, ("冷暖混合", "混合光", "霓虹", "冷暖对比")):
+        color_temperature = "mixed"
+    elif _contains_any(text, ("冷调", "阴天", "雨天", "金属", "夜色")):
+        color_temperature = "cool"
+    elif _contains_any(text, ("暖调", "夕阳", "暖白", "木色", "酒吧", "酒店")):
+        color_temperature = "warm"
+    else:
+        color_temperature = "neutral"
+
+    if _contains_any(text, ("高反差", "戏剧化", "霓虹", "冷感大片")):
+        contrast_level = "high"
+    elif _contains_any(text, ("低反差", "清晨", "柔和", "留白", "松弛")):
+        contrast_level = "low"
+    else:
+        contrast_level = "medium"
+
+    if contrast_level == "high":
+        shadow_density = "deep"
+    elif contrast_level == "low":
+        shadow_density = "light"
+    else:
+        shadow_density = "balanced"
+
+    if _contains_any(text, ("镜前", "金属", "霓虹", "反射")):
+        hair_highlight_mode = "controlled_specular"
+    elif _contains_any(text, ("轮廓光", "边缘光", "逆光")):
+        hair_highlight_mode = "clean_rim"
+    elif _contains_any(text, ("阴天", "散射", "柔雾")):
+        hair_highlight_mode = "none"
+    else:
+        hair_highlight_mode = "soft_edge"
+
+    if style_line == "fashion_editorial" or _contains_any(text, ("骨相", "结构", "利落")):
+        skin_rendering = "structured_texture"
+    elif _contains_any(text, ("清透", "通透", "干净")):
+        skin_rendering = "clean_texture"
+    else:
+        skin_rendering = "soft_texture"
+
+    if _contains_any(text, ("略微欠曝", "低照度", "暗调", "夜色", "雨天", "傍晚")):
+        exposure_bias = "slightly_under"
+    elif _contains_any(text, ("明亮", "高键", "白盒子", "通透")):
+        exposure_bias = "slightly_over"
+    else:
+        exposure_bias = "neutral"
+
+    practical_lights_allowed = _contains_any(
+        text,
+        ("镜前", "酒吧", "酒店", "后台", "咖啡馆", "霓虹", "灯带", "室内暖光"),
+    )
+
+    return {
+        "lightDirection": light_direction,
+        "lightQuality": light_quality,
+        "colorTemperature": color_temperature,
+        "contrastLevel": contrast_level,
+        "shadowDensity": shadow_density,
+        "hairHighlightMode": hair_highlight_mode,
+        "skinRendering": skin_rendering,
+        "exposureBias": exposure_bias,
+        "practicalLightsAllowed": practical_lights_allowed,
+    }
+
+
+def _infer_outfit_palette(blocks: dict[str, str], style_line: str) -> list[str]:
+    text = blocks["outfit"]
+    palette_map = (
+        ("白", "白色"),
+        ("米白", "米白"),
+        ("奶油", "奶油白"),
+        ("浅灰", "浅灰"),
+        ("灰", "深灰"),
+        ("卡其", "浅卡其"),
+        ("黑", "黑色"),
+        ("酒红", "酒红"),
+        ("银", "银灰"),
+        ("裸", "裸色中性调"),
+        ("绿", "低饱和绿"),
+    )
+    palette = [tag for keyword, tag in palette_map if keyword in text]
+    if palette:
+        return _dedupe_keep_order(palette)[:4]
+    if style_line == "fashion_editorial":
+        return ["黑色", "冷灰", "白色"]
+    return ["白色", "浅灰", "米白"]
+
+
+def _infer_outfit_materials(blocks: dict[str, str], style_line: str) -> list[str]:
+    text = blocks["outfit"]
+    material_map = (
+        ("针织", "柔软针织"),
+        ("衬衫", "衬衫棉布"),
+        ("棉", "轻薄棉质"),
+        ("吊带", "轻薄贴肤面料"),
+        ("背心", "轻薄背心面料"),
+        ("风衣", "风衣面料"),
+        ("皮", "皮质"),
+        ("西装", "挺括西装面料"),
+        ("缎", "缎面"),
+    )
+    materials = [tag for keyword, tag in material_map if keyword in text]
+    if materials:
+        return _dedupe_keep_order(materials)[:4]
+    if style_line == "fashion_editorial":
+        return ["挺括西装面料", "结构化织物"]
+    return ["柔软针织", "轻薄棉质"]
+
+
+def _infer_outfit_shapes(blocks: dict[str, str], style_line: str) -> list[str]:
+    text = blocks["outfit"]
+    shape_map = (
+        ("宽松衬衫", "宽松衬衫"),
+        ("衬衫", "简洁衬衫"),
+        ("背心", "简洁背心"),
+        ("吊带", "轻薄吊带"),
+        ("开衫", "针织开衫"),
+        ("高领", "高领上衣"),
+        ("西装", "结构西装"),
+        ("风衣", "利落外套"),
+    )
+    shapes = [tag for keyword, tag in shape_map if keyword in text]
+    if shapes:
+        return _dedupe_keep_order(shapes)[:4]
+    if style_line == "fashion_editorial":
+        return ["结构西装", "利落上衣"]
+    return ["宽松衬衫", "松弛上衣"]
+
+
+def _infer_outfit_avoids(blocks: dict[str, str], style_line: str) -> list[str]:
+    text = " ".join(blocks.values())
+    avoids: list[str] = []
+    if style_line == "fashion_editorial":
+        avoids.extend(["家居感软塌单品", "高饱和甜美元素", "复杂大面积图案"])
+    else:
+        avoids.extend(["强结构礼服感", "高饱和撞色", "复杂夸张配饰"])
+    if _contains_any(text, ("镜前", "镜子", "浴室")):
+        avoids.append("过度性感化处理")
+    if _contains_any(text, ("雨天", "清晨", "窗边")):
+        avoids.append("厚重浓妆感")
+    return _dedupe_keep_order(avoids)
+
+
+def _infer_sample_image_ids(blocks: dict[str, str], style_line: str) -> dict[str, list[str]]:
+    text = " ".join(blocks.values())
+    if _contains_any(text, ("户外", "树林", "植物", "风场", "天台")):
+        return {"female": ["female1"], "male": ["male3"]}
+    if style_line == "fashion_editorial" or _contains_any(
+        text,
+        ("夜色", "霓虹", "金属", "酒吧", "后台", "镜前", "大堂", "棚拍", "白盒子"),
+    ):
+        return {"female": ["female2"], "male": ["male1"]}
+    return {"female": ["female3"], "male": ["male2"]}
+
+
 def build_scene_draft(
     blocks: dict[str, str],
     options: SceneDraftOptions | None = None,
@@ -325,15 +621,21 @@ def build_scene_draft(
         "summary": _infer_summary(blocks),
         "environment": _normalize_phrase(blocks["scene_environment"]),
         "lighting": _normalize_phrase(blocks["scene_lighting"]),
+        "lightingProfile": _infer_lighting_profile(blocks, style_line),
         "styleMood": _normalize_phrase(blocks["scene_mood"]),
         "detailTags": detail_tags,
         "expressions": _split_list_field(blocks["expression"]),
         "actions": _split_list_field(blocks["subject_action"]),
         "outfitHints": _split_list_field(blocks["outfit"]),
+        "outfitPalette": _infer_outfit_palette(blocks, style_line),
+        "outfitMaterials": _infer_outfit_materials(blocks, style_line),
+        "outfitShapes": _infer_outfit_shapes(blocks, style_line),
+        "outfitAvoids": _infer_outfit_avoids(blocks, style_line),
         "pairingAdvice": pairing_advice,
         "shotAdvice": _normalize_phrase(blocks["shot"]),
         "constraints": _split_list_field(blocks["scene_constraints"]),
         "controlProfile": _infer_control_profile(blocks, style_line),
+        "sampleImageIds": _infer_sample_image_ids(blocks, style_line),
         "referenceNotes": reference_notes,
         "referenceSourceIds": reference_source_ids,
     }
@@ -346,62 +648,34 @@ class ImageUnderstandingService:
             raise ImageUnderstandingError("尚未配置图片理解 API Key。")
 
         self.model_name = settings.image_understanding_model
-        self._client = OpenAI(
-            api_key=settings.image_understanding_api_key,
-            base_url=settings.image_understanding_base_url,
-            timeout=settings.image_understanding_timeout_seconds,
-        )
+        self._api_key = settings.image_understanding_api_key
+        self._base_url = settings.image_understanding_base_url.rstrip("/")
+        self._timeout_seconds = settings.image_understanding_timeout_seconds
 
     def extract_scene_blocks(self, image_bytes: bytes) -> SceneUnderstandingResult:
-        data_url = _build_data_url(image_bytes)
+        optimized_bytes = _prepare_understanding_image(image_bytes)
+        data_url = _build_data_url(optimized_bytes)
+        payload = _run_chat_completion_via_curl(
+            base_url=self._base_url,
+            api_key=self._api_key,
+            model_name=self.model_name,
+            prompt_text=build_scene_understanding_prompt(),
+            data_url=data_url,
+            timeout_seconds=self._timeout_seconds,
+        )
 
-        try:
-            response = self._client.chat.completions.create(
-                model=self.model_name,
-                temperature=0.2,
-                messages=[
-                    {
-                        "role": "system",
-                        "content": "你只负责把参考图拆成 scene_only 所需的结构化 block。",
-                    },
-                    {
-                        "role": "user",
-                        "content": [
-                            {
-                                "type": "text",
-                                "text": build_scene_understanding_prompt(),
-                            },
-                            {
-                                "type": "image_url",
-                                "image_url": {"url": data_url},
-                            },
-                        ],
-                    },
-                ],
-            )
-        except AuthenticationError as exc:
-            raise ImageUnderstandingError("图片理解 API Key 无效或权限不足。") from exc
-        except RateLimitError as exc:
-            raise ImageUnderstandingError("图片理解模型当前触发限流，请稍后重试。") from exc
-        except APIConnectionError as exc:
-            raise ImageUnderstandingError("图片理解服务连接失败，请检查网络或服务状态。") from exc
-        except APIStatusError as exc:
-            raise ImageUnderstandingError(
-                f"图片理解服务返回异常状态：{exc.status_code}"
-            ) from exc
-        except APIError as exc:
-            raise ImageUnderstandingError(f"图片理解服务调用失败：{exc}") from exc
-
-        message = response.choices[0].message if response.choices else None
-        raw_content = ""
-        if message is not None and isinstance(message.content, str):
-            raw_content = message.content
+        raw_content = _extract_message_content(payload)
+        if not raw_content.strip():
+            if isinstance(payload, dict):
+                raw_content = json.dumps(payload, ensure_ascii=False)
 
         if not raw_content.strip():
             raise ImageUnderstandingError("图片理解模型没有返回有效内容。")
 
+        blocks, subject_gender = _extract_json_object(raw_content)
         return SceneUnderstandingResult(
-            blocks=_extract_json_object(raw_content),
+            blocks=blocks,
             raw_response=raw_content,
             model_name=self.model_name,
+            subject_gender=subject_gender,
         )

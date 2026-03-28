@@ -461,6 +461,21 @@ def test_faceprompt_catalog_counts_and_legacy_aliases():
     assert templates.get_hairstyle("male-comma-bangs") is None
 
 
+def test_scene_templates_expose_sample_image_ids_and_structured_lighting():
+    from app.services import templates
+
+    lifestyle_scene = templates.get_scene("morning-window-softlight")
+    fashion_scene = templates.get_scene("city-neon-night")
+
+    assert lifestyle_scene is not None
+    assert fashion_scene is not None
+
+    assert lifestyle_scene["lighting_profile"]["light_direction"] == "side"
+    assert lifestyle_scene["outfit_palette"]
+    assert templates.resolve_scene_sample_image_id(lifestyle_scene, "female") == "female3"
+    assert templates.resolve_scene_sample_image_id(fashion_scene, "male") == "male1"
+
+
 def test_template_cover_svg_uses_visual_layout_without_large_text_overlay():
     from app.services import templates
 
@@ -1871,6 +1886,7 @@ def test_scene_understanding_endpoint_returns_blocks_and_scene_draft(tmp_path, m
             from app.services.image_understanding import SceneUnderstandingResult
 
             return SceneUnderstandingResult(
+                subject_gender="female",
                 blocks={
                     "shot": "3:4 竖构图，胸口以上近景，平视镜头。",
                     "scene_environment": "室内留白墙面与木质家具背景，窗边区域干净克制。",
@@ -1878,7 +1894,9 @@ def test_scene_understanding_endpoint_returns_blocks_and_scene_draft(tmp_path, m
                     "scene_mood": "安静、松弛、生活感高级。",
                     "expression": "温和看向镜头。",
                     "subject_action": "靠坐在椅子上轻微侧身。",
+                    "makeup": "轻透自然底妆。",
                     "outfit": "米白色针织上衣。",
+                    "styling_constraints": "不要厚重浓妆；避免复杂配饰。",
                     "scene_constraints": "背景保持简洁留白；不要加入复杂前景。",
                 },
                 raw_response="{}",
@@ -1919,10 +1937,15 @@ def test_scene_understanding_endpoint_returns_blocks_and_scene_draft(tmp_path, m
         payload = response.json()
         assert payload["upload_id"] == upload_id
         assert payload["model_name"] == "gemini-3-pro-preview"
+        assert payload["subject_gender"] == "female"
         assert payload["blocks"]["scene_environment"].startswith("室内留白墙面")
+        assert payload["blocks"]["makeup"] == "轻透自然底妆。"
+        assert payload["blocks"]["styling_constraints"] == "不要厚重浓妆；避免复杂配饰。"
         assert payload["scene_draft"]["title"] == "窗边安静人像"
         assert payload["scene_draft"]["detailTags"] == ["室内", "窗边", "自然光"]
         assert payload["scene_draft"]["pairingAdvice"] == ["法式慵懒卷", "蓬松锁骨发"]
+        assert payload["scene_draft"]["lightingProfile"]["lightDirection"] == "side"
+        assert payload["scene_draft"]["sampleImageIds"]["female"] == ["female3"]
         assert payload["scene_draft"]["controlProfile"]["lightingHardness"] == "soft"
 
 

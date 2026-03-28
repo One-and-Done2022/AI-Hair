@@ -17,8 +17,12 @@ if str(BACKEND_DIR) not in sys.path:
 
 DEFAULT_REVIEW_ROOT = ROOT_DIR / "storage" / "template_image_pipeline" / "review"
 DEFAULT_SAMPLE_IMAGES = {
-    "male": ROOT_DIR / "assets" / "male.jpg",
-    "female": ROOT_DIR / "assets" / "female.jpg",
+    "female1": ROOT_DIR / "assets" / "female1.jpg",
+    "female2": ROOT_DIR / "assets" / "female2.jpg",
+    "female3": ROOT_DIR / "assets" / "female3.jpg",
+    "male1": ROOT_DIR / "assets" / "male1.jpg",
+    "male2": ROOT_DIR / "assets" / "male2.jpg",
+    "male3": ROOT_DIR / "assets" / "male3.jpg",
 }
 DEFAULT_ASPECT_RATIO = "3:4"
 DEFAULT_RESOLUTION = "4K"
@@ -30,6 +34,10 @@ HAIRSTYLE_COVER_WHITE_BG_SUFFIX = (
     "人物保持胸口以上近景、居中、正面或轻微偏正面构图，服饰维持简洁浅色上衣即可，不要夸张改动。"
     "画面重点只展示发型轮廓、刘海、顶部体积、两侧结构与发尾细节，整体干净、标准、适合前端模板卡片展示。"
 )
+DEFAULT_HAIRSTYLE_SAMPLE_IDS = {
+    "female": "female3",
+    "male": "male2",
+}
 
 get_settings = None
 GenerationContext = None
@@ -244,9 +252,31 @@ def _selected_samples_for_template(
     sample_images: dict[str, Path],
 ) -> dict[str, Path]:
     if category == "scenes":
-        return sample_images
+        selected: dict[str, Path] = {}
+        for gender in ("female", "male"):
+            direct_override = sample_images.get(gender)
+            if direct_override is not None:
+                selected[gender] = direct_override
+                continue
+            sample_image_id = templates.resolve_scene_sample_image_id(
+                template,
+                gender,
+                seed_source=f"{template['id']}:template-cover:{gender}",
+            )
+            if not sample_image_id:
+                continue
+            sample_path = sample_images.get(sample_image_id)
+            if sample_path is None:
+                raise FileNotFoundError(
+                    f"找不到官方示例人物图：{sample_image_id}（scene={template['id']} gender={gender}）"
+                )
+            selected[gender] = sample_path
+        return selected
     gender = str(template.get("gender") or "").strip()
     sample_path = sample_images.get(gender)
+    if sample_path is None:
+        fallback_asset_id = DEFAULT_HAIRSTYLE_SAMPLE_IDS.get(gender, "")
+        sample_path = sample_images.get(fallback_asset_id)
     if not sample_path:
         raise FileNotFoundError(f"找不到 {gender} 对应的官方示例人物图")
     return {gender: sample_path}
@@ -351,8 +381,13 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--backend", default=DEFAULT_BACKEND, help="用于生成样片的后端。")
     parser.add_argument("--aspect-ratio", default=DEFAULT_ASPECT_RATIO, help="模板样片画幅。")
     parser.add_argument("--resolution", default=DEFAULT_RESOLUTION, help="模板样片清晰度。")
-    parser.add_argument("--male-image", default=str(DEFAULT_SAMPLE_IMAGES["male"]), help="男生示例人物图路径。")
-    parser.add_argument("--female-image", default=str(DEFAULT_SAMPLE_IMAGES["female"]), help="女生示例人物图路径。")
+    parser.add_argument(
+        "--assets-dir",
+        default=str(ROOT_DIR / "assets"),
+        help="官方示例人物图目录，默认使用 assets/female1~3.jpg 和 assets/male1~3.jpg。",
+    )
+    parser.add_argument("--male-image", default="", help="手工指定男生示例人物图路径，优先级高于自动选择。")
+    parser.add_argument("--female-image", default="", help="手工指定女生示例人物图路径，优先级高于自动选择。")
     return parser
 
 
@@ -377,10 +412,14 @@ def main(argv: list[str] | None = None) -> int:
         print("没有匹配到需要处理的模板。")
         return 0
 
+    assets_dir = Path(args.assets_dir).expanduser().resolve()
     sample_images = {
-        "male": Path(args.male_image).expanduser().resolve(),
-        "female": Path(args.female_image).expanduser().resolve(),
+        asset_id: assets_dir / f"{asset_id}.jpg" for asset_id in DEFAULT_SAMPLE_IMAGES
     }
+    if args.male_image.strip():
+        sample_images["male"] = Path(args.male_image).expanduser().resolve()
+    if args.female_image.strip():
+        sample_images["female"] = Path(args.female_image).expanduser().resolve()
 
     failures: list[str] = []
     for template in templates_to_process:
