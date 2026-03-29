@@ -1755,5 +1755,91 @@
     "coverImagePath": "template_assets/scenes/scene-98033eb1.jpg",
     "coverImageUpdatedAt": "2026-03-28T12:09:45+00:00",
     "coverImageSource": "scene_pipeline:review_female.jpg"
+  },
+  {
+    "id": "scene-41e220d6",
+    "title": "生活感人像",
+    "styleLine": "realistic_editorial",
+    "summary": "金色的麦田，前景和背景有模糊的麦穗，纯净的蓝色天空背景，温暖的自然光，夕阳时分的黄金时刻光线，柔和的侧顺光，构成稳定可复用的场景化人像环境。",
+    "environment": "金色的麦田，前景和背景有模糊的麦穗，纯净的蓝色天空背景",
+    "lighting": "温暖的自然光，夕阳时分的黄金时刻光线，柔和的侧顺光",
+    "lightingProfile": {
+      "lightDirection": "back",
+      "lightQuality": "soft",
+      "colorTemperature": "warm",
+      "contrastLevel": "low",
+      "shadowDensity": "light",
+      "hairHighlightMode": "soft_edge",
+      "skinRendering": "clean_texture",
+      "exposureBias": "neutral",
+      "practicalLightsAllowed": false
+    },
+    "styleMood": "宁静，清新，温柔，治愈，充满自然气息",
+    "detailTags": [
+      "户外",
+      "自然光",
+      "夕阳"
+    ],
+    "expressions": [
+      "平静，自然，眼神温柔，直视镜头"
+    ],
+    "actions": [
+      "静静地站在麦田中"
+    ],
+    "outfitHints": [
+      "简约的纯白色短袖T恤"
+    ],
+    "outfitPalette": [
+      "白色"
+    ],
+    "outfitMaterials": [
+      "柔软针织",
+      "轻薄棉质"
+    ],
+    "outfitShapes": [
+      "宽松衬衫",
+      "松弛上衣"
+    ],
+    "outfitAvoids": [
+      "强结构礼服感",
+      "高饱和撞色",
+      "复杂夸张配饰"
+    ],
+    "pairingAdvice": [
+      "法式慵懒卷",
+      "空气感锁骨发",
+      "轻盈波波头"
+    ],
+    "shotAdvice": "中景，半身像，正面居中构图",
+    "constraints": [
+      "必须是户外自然场景，保持温暖的金色光影氛围，背景天空需保持干净无杂物"
+    ],
+    "controlProfile": {
+      "windLevel": "still",
+      "humidityLook": "balanced",
+      "backgroundComplexity": "low",
+      "lightingHardness": "soft",
+      "mirrorRisk": "none",
+      "compatibleHairstyleTags": [
+        "lifestyle_softlight",
+        "layered_face_framing"
+      ],
+      "recommendedHairstyleIds": []
+    },
+    "sampleImageIds": {
+      "female": [
+        "female1"
+      ],
+      "male": [
+        "male3"
+      ]
+    },
+    "referenceNotes": "由内部 scene pipeline 自动拆解并生成审核图，请人工确认审核图效果后再决定是否加入官方场景库",
+    "referenceSourceIds": [
+      "scene-pipeline"
+    ],
+    "coverImagePath": "template_assets/scenes/scene-41e220d6.jpg",
+    "coverImageUpdatedAt": "2026-03-29T08:48:32+00:00",
+    "coverImageSource": "scene_pipeline:review_male.jpg"
   }
 ]

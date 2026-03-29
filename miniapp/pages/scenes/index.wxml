@@ -55,7 +55,7 @@
         <image
           class="scene-cover"
           src="{{item.cover_url}}"
-          mode="aspectFill"
+          mode="aspectFit"
           lazy-load="true"
           catchtap="previewScene"
           data-id="{{item.id}}"

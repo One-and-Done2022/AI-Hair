@@ -681,6 +681,12 @@ def _styling_supports_scene(styling: dict, scene: dict | None) -> bool:
     if scene is None:
         return True
     scene_id = str(scene.get("id") or "").strip()
+    reference_source_ids = {
+        str(item).strip()
+        for item in scene.get("reference_source_ids", [])
+        if str(item).strip()
+    }
+    is_scene_pipeline_draft = "scene-pipeline" in reference_source_ids
     incompatible_scene_ids = {
         str(item).strip()
         for item in styling.get("incompatible_scene_ids", [])
@@ -694,7 +700,12 @@ def _styling_supports_scene(styling: dict, scene: dict | None) -> bool:
         for item in styling.get("compatible_scene_ids", [])
         if str(item).strip()
     }
-    if compatible_scene_ids and scene_id and scene_id not in compatible_scene_ids:
+    if (
+        compatible_scene_ids
+        and scene_id
+        and scene_id not in compatible_scene_ids
+        and not is_scene_pipeline_draft
+    ):
         return False
 
     lighting_tags = set(_scene_lighting_tags(scene))
@@ -1055,6 +1066,7 @@ def _build_scene_template(raw: dict) -> dict:
             "female": _dedupe_keep_order(sample_image_ids_raw.get("female", [])),
             "male": _dedupe_keep_order(sample_image_ids_raw.get("male", [])),
         },
+        "reference_source_ids": _dedupe_keep_order(raw.get("referenceSourceIds", [])),
         "cover_image_path": raw.get("coverImagePath", ""),
         "cover_image_updated_at": raw.get("coverImageUpdatedAt", ""),
         "cover_image_source": raw.get("coverImageSource", ""),

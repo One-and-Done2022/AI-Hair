@@ -575,6 +575,11 @@
   display: block;
 }
 
+.recommend-cover-scene {
+  height: 300rpx;
+  background: #f4f7fb;
+}
+
 .recommend-name {
   margin-top: 14rpx;
   font-size: 24rpx;
@@ -617,6 +622,11 @@
   border-radius: 22rpx;
   background: #e2e8f0;
   display: block;
+}
+
+.selection-cover-scene {
+  height: 280rpx;
+  background: #f4f7fb;
 }
 
 .selection-placeholder {
