@@ -185,21 +185,8 @@ Page({
       scene: selectedScene,
       gender: selectedHairstyle.gender || this.data.selectedGender || "male"
     });
-
-    wx.showToast({
-      title: "模板已更新",
-      icon: "success"
+    wx.navigateTo({
+      url: "/pages/confirm/index"
     });
-
-    setTimeout(() => {
-      const pageCount = getCurrentPages().length;
-      if (pageCount >= 3) {
-        wx.navigateBack({ delta: 2 });
-        return;
-      }
-      wx.switchTab({
-        url: "/pages/index/index"
-      });
-    }, 350);
   }
 });

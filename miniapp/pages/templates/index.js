@@ -195,6 +195,19 @@ Page({
       return;
     }
 
+    const cachedSelection = wx.getStorageSync("templateSelection") || {};
+    const keepScene =
+      cachedSelection.hairstyle &&
+      cachedSelection.hairstyle.id === hairstyle.id
+        ? cachedSelection.scene || null
+        : null;
+
+    wx.setStorageSync("templateSelection", {
+      hairstyle,
+      scene: keepScene,
+      gender: hairstyle.gender
+    });
+
     wx.navigateTo({
       url:
         `/pages/scenes/index?hairstyleId=${hairstyle.id}` +
