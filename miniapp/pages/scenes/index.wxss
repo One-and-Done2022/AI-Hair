@@ -95,16 +95,20 @@
 .combo-card {
   padding: 20rpx;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 16rpx;
 }
 
 .combo-cover {
-  width: 112rpx;
-  height: 112rpx;
-  border-radius: 22rpx;
+  width: 124rpx;
+  height: 154rpx;
+  border-radius: 24rpx;
   background: #eff1f2;
   flex-shrink: 0;
+}
+
+.combo-cover-hair {
+  background: linear-gradient(180deg, #ffffff 0%, #f4f6f8 100%);
 }
 
 .combo-body {

@@ -575,6 +575,11 @@
   display: block;
 }
 
+.recommend-cover-hair {
+  height: 286rpx;
+  background: linear-gradient(180deg, #ffffff 0%, #f3f4f6 100%);
+}
+
 .recommend-cover-scene {
   height: 300rpx;
 }
@@ -621,6 +626,11 @@
   border-radius: 22rpx;
   background: #e2e8f0;
   display: block;
+}
+
+.selection-cover-hair {
+  height: 248rpx;
+  background: linear-gradient(180deg, #ffffff 0%, #f4f6f8 100%);
 }
 
 .selection-cover-scene {

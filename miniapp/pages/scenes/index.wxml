@@ -16,9 +16,9 @@
   <view class="panel combo-card">
     <image
       wx:if="{{selectedHairstyle && selectedHairstyle.cover_url}}"
-      class="combo-cover"
+      class="combo-cover combo-cover-hair"
       src="{{selectedHairstyle.cover_url}}"
-      mode="aspectFill"
+      mode="aspectFit"
       lazy-load="true"
     ></image>
     <view wx:else class="combo-cover"></view>
