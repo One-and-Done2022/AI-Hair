@@ -14,13 +14,21 @@
   </view>
 
   <view class="panel combo-card">
-    <image
-      wx:if="{{selectedHairstyle && selectedHairstyle.cover_url}}"
-      class="combo-cover combo-cover-hair"
-      src="{{selectedHairstyle.cover_url}}"
-      mode="aspectFit"
-      lazy-load="true"
-    ></image>
+    <view wx:if="{{selectedHairstyle && selectedHairstyle.cover_url}}" class="combo-cover-stage">
+      <image
+        class="combo-cover-backdrop"
+        src="{{selectedHairstyle.cover_url}}"
+        mode="aspectFill"
+        lazy-load="true"
+      ></image>
+      <view class="combo-cover-backdrop-mask"></view>
+      <image
+        class="combo-cover combo-cover-hair"
+        src="{{selectedHairstyle.cover_url}}"
+        mode="aspectFit"
+        lazy-load="true"
+      ></image>
+    </view>
     <view wx:else class="combo-cover"></view>
     <view class="combo-body">
       <view class="combo-label">当前组合</view>

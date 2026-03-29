@@ -1,10 +1,11 @@
 <view class="screen selector-screen">
   <view class="progress-shell">
+    <view class="progress-top">
+      <view class="progress-step">第一步 / 共三步</view>
+      <view class="progress-percent">33%</view>
+    </view>
     <view class="progress-track">
       <view class="progress-fill progress-fill-step-one"></view>
-    </view>
-    <view class="progress-meta">
-      <view class="progress-step">STEP 1 OF 2</view>
     </view>
   </view>
 
@@ -50,6 +51,13 @@
       data-id="{{item.id}}"
     >
       <view class="tile-cover-shell">
+        <image
+          class="tile-cover-backdrop"
+          src="{{item.cover_url}}"
+          mode="aspectFill"
+          lazy-load="true"
+        ></image>
+        <view class="tile-cover-backdrop-mask"></view>
         <image
           class="tile-cover tile-cover-hair"
           src="{{item.cover_url}}"

@@ -59,8 +59,30 @@
           <view class="state-title">生成失败</view>
         </view>
 
-        <view wx:else class="state-pane">
-          <view class="pulse-dot"></view>
+        <view wx:else class="state-pane state-pane-generating">
+          <view class="gen-visual">
+            <view class="gen-aura gen-aura-one"></view>
+            <view class="gen-aura gen-aura-two"></view>
+            <view class="gen-orbit gen-orbit-one"></view>
+            <view class="gen-orbit gen-orbit-two"></view>
+            <view class="gen-card gen-card-main">
+              <view class="gen-card-frame">
+                <view class="gen-card-scan"></view>
+                <view class="gen-card-glow"></view>
+                <view class="gen-portrait">
+                  <view class="gen-portrait-halo"></view>
+                  <view class="gen-portrait-head"></view>
+                  <view class="gen-portrait-body"></view>
+                </view>
+              </view>
+            </view>
+            <view class="gen-chip gen-chip-hair">发型</view>
+            <view class="gen-chip gen-chip-scene">场景</view>
+            <view class="gen-chip gen-chip-light">光线</view>
+            <view class="gen-spark gen-spark-a"></view>
+            <view class="gen-spark gen-spark-b"></view>
+            <view class="gen-spark gen-spark-c"></view>
+          </view>
           <view class="state-title">正在生成</view>
         </view>
       </view>
