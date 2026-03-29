@@ -1205,6 +1205,10 @@ def build_generator(backend: str | None = None) -> BaseGenerator:
     if settings.use_mock_generator:
         return MockGenerator()
     resolved_backend = (backend or settings.image_generator_backend).strip().lower()
+    if resolved_backend == "seedream_basic":
+        return SeedreamGenerator(model_name=settings.seedream_basic_model)
+    if resolved_backend == "seedream_premium":
+        return SeedreamGenerator(model_name=settings.seedream_premium_model)
     if resolved_backend == "seedream":
         return SeedreamGenerator()
     if resolved_backend == "nano_banana_pro":

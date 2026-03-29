@@ -26,7 +26,7 @@ DEFAULT_SAMPLE_IMAGES = {
 }
 DEFAULT_ASPECT_RATIO = "3:4"
 DEFAULT_RESOLUTION = "4K"
-DEFAULT_BACKEND = "seedream"
+DEFAULT_BACKEND = "seedream_basic"
 SUPPORTED_CATEGORIES = {"hairstyles", "scenes"}
 HAIRSTYLE_COVER_WHITE_BG_SUFFIX = (
     "用于官方发型模板封面图。"

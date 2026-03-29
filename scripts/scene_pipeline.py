@@ -28,7 +28,7 @@ DEFAULT_SAMPLE_IMAGES = {
 SUPPORTED_SUFFIXES = {".jpg", ".jpeg", ".png", ".webp"}
 DEFAULT_ASPECT_RATIO = "3:4"
 DEFAULT_RESOLUTION = "4K"
-DEFAULT_BACKEND = "seedream"
+DEFAULT_BACKEND = "seedream_basic"
 
 get_settings = None
 GenerationContext = None
@@ -554,7 +554,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--backend",
         default=DEFAULT_BACKEND,
-        help="用于审核图生成的后端，默认 seedream。",
+        help="用于审核图生成的后端，默认 seedream_basic（Seedream 4.5）。",
     )
     parser.add_argument("--aspect-ratio", default=DEFAULT_ASPECT_RATIO, help="审核图画幅。")
     parser.add_argument("--resolution", default=DEFAULT_RESOLUTION, help="审核图清晰度。")

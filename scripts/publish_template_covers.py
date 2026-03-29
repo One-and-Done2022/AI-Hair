@@ -29,7 +29,7 @@ DEFAULT_ASPECT_RATIO = "3:4"
 DEFAULT_RESOLUTION = "2K"
 DEFAULT_BACKENDS = {
     "hairstyles": "nano_banana_2",
-    "scenes": "seedream",
+    "scenes": "seedream_basic",
 }
 SUPPORTED_CATEGORIES = {"hairstyles", "scenes"}
 DEFAULT_HAIRSTYLE_SAMPLE_IDS = {
