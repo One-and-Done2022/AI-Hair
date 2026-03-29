@@ -77,6 +77,24 @@ function buildGenerationSelection(backends, cachedOptions = {}) {
   };
 }
 
+function formatGenerationBackends(backends = []) {
+  return backends.map((item) => {
+    if (item.id === "basic") {
+      return {
+        ...item,
+        description: "用基础模型，返回 1 张换发预览和 2 张场景成片"
+      };
+    }
+    if (item.id === "premium") {
+      return {
+        ...item,
+        description: "用高级模型，返回 1 张换发预览和 2 张场景成片"
+      };
+    }
+    return item;
+  });
+}
+
 Page({
   data: {
     selectedImage: "",
@@ -122,12 +140,13 @@ Page({
         request({ url: "/api/me" })
       ]);
       this.catalog = catalog;
+      const generationBackends = formatGenerationBackends(catalog.generation_backends || []);
       const currentImagePath = getCurrentImagePath();
       const cachedUpload = currentImagePath ? getCachedUpload(currentImagePath) : null;
       const cachedSelection = wx.getStorageSync("templateSelection") || {};
       const cachedGenerationOptions = wx.getStorageSync("generationOptions") || {};
       const generationSelection = buildGenerationSelection(
-        catalog.generation_backends || [],
+        generationBackends,
         cachedGenerationOptions
       );
       const selectedHairstyle =
@@ -161,7 +180,7 @@ Page({
         selectedHairstyle,
         selectedScene,
         recommendationGender,
-        generationBackends: catalog.generation_backends || [],
+        generationBackends,
         selectedGeneratorBackend: generationSelection.selectedGeneratorBackend,
         aspectRatioOptions: generationSelection.aspectRatioOptions,
         resolutionOptions: generationSelection.resolutionOptions,

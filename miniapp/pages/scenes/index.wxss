@@ -271,12 +271,13 @@
 .scene-desc {
   margin-top: 10rpx;
   font-size: 23rpx;
-  line-height: 1.48;
+  line-height: 1.4;
   color: #4d5762;
   display: -webkit-box;
-  -webkit-line-clamp: 2;
+  -webkit-line-clamp: 1;
   -webkit-box-orient: vertical;
   overflow: hidden;
+  white-space: normal;
 }
 
 .scene-chip-row {
