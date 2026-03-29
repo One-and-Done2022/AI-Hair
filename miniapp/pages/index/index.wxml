@@ -59,29 +59,6 @@
       </view>
     </view>
 
-    <view class="guide-grid">
-      <view class="guide-card">
-        <view class="guide-thumb">
-          <image class="guide-photo" src="../../assets/guides/upload-front.jpg" mode="aspectFill" lazy-load="true"></image>
-          <view class="guide-badge">推荐</view>
-        </view>
-        <view class="guide-label">正面示例</view>
-      </view>
-      <view class="guide-card">
-        <view class="guide-thumb">
-          <image class="guide-photo" src="../../assets/guides/upload-side.jpg" mode="aspectFill" lazy-load="true"></image>
-          <view class="guide-badge guide-badge-soft">可用</view>
-        </view>
-        <view class="guide-label">侧面示例</view>
-      </view>
-      <view class="guide-card guide-card-bad">
-        <view class="guide-thumb guide-thumb-bad">
-          <image class="guide-photo" src="../../assets/guides/upload-blocked.jpg" mode="aspectFill" lazy-load="true"></image>
-          <view class="guide-badge guide-badge-bad">避开</view>
-        </view>
-        <view class="guide-label guide-label-bad">不可遮挡</view>
-      </view>
-    </view>
   </view>
 
   <view class="panel selection-panel">
@@ -95,13 +72,6 @@
     <view class="selection-grid">
       <view class="selection-card {{selectedHairstyle ? 'filled' : ''}}" bindtap="openTemplatePicker">
         <view wx:if="{{selectedHairstyle && selectedHairstyle.cover_url}}" class="selection-cover-stage">
-          <image
-            class="selection-cover-backdrop"
-            src="{{selectedHairstyle.cover_url}}"
-            mode="aspectFill"
-            lazy-load="true"
-          ></image>
-          <view class="selection-cover-backdrop-mask"></view>
           <image
             class="selection-cover selection-cover-hair"
             src="{{selectedHairstyle.cover_url}}"
@@ -172,8 +142,6 @@
               bindtap="applyRecommendedHairstyle"
             >
               <view class="recommend-cover-stage">
-                <image class="recommend-cover-backdrop" src="{{item.cover_url}}" mode="aspectFill" lazy-load="true"></image>
-                <view class="recommend-cover-backdrop-mask"></view>
                 <image class="recommend-cover recommend-cover-hair" src="{{item.cover_url}}" mode="aspectFit" lazy-load="true"></image>
               </view>
               <view class="recommend-name">{{item.name}}</view>

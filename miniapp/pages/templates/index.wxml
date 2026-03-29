@@ -52,13 +52,6 @@
     >
       <view class="tile-cover-shell">
         <image
-          class="tile-cover-backdrop"
-          src="{{item.cover_url}}"
-          mode="aspectFill"
-          lazy-load="true"
-        ></image>
-        <view class="tile-cover-backdrop-mask"></view>
-        <image
           class="tile-cover tile-cover-hair"
           src="{{item.cover_url}}"
           mode="aspectFit"
