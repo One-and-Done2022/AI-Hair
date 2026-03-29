@@ -256,7 +256,7 @@
       "masterclass-portrait-tips"
     ],
     "coverImagePath": "template_assets/scenes/walnut-study-portrait.jpg",
-    "coverImageUpdatedAt": "2026-03-28T11:33:54+00:00",
+    "coverImageUpdatedAt": "2026-03-29T07:48:41+00:00",
     "coverImageSource": "template_image_pipeline:review_male.jpg",
     "lightingProfile": {
       "lightDirection": "side",
@@ -449,7 +449,7 @@
       "masterclass-environmental-portrait"
     ],
     "coverImagePath": "template_assets/scenes/bathroom-mirror-morning.jpg",
-    "coverImageUpdatedAt": "2026-03-28T11:37:30+00:00",
+    "coverImageUpdatedAt": "2026-03-29T07:33:17+00:00",
     "coverImageSource": "template_image_pipeline:review_female.jpg",
     "lightingProfile": {
       "lightDirection": "mixed",
@@ -537,7 +537,7 @@
       "masterclass-environmental-portrait"
     ],
     "coverImagePath": "template_assets/scenes/hotel-room-loose.jpg",
-    "coverImageUpdatedAt": "2026-03-28T11:39:18+00:00",
+    "coverImageUpdatedAt": "2026-03-29T07:35:21+00:00",
     "coverImageSource": "template_image_pipeline:review_female.jpg",
     "lightingProfile": {
       "lightDirection": "side",
@@ -715,7 +715,7 @@
       "masterclass-portrait-tips"
     ],
     "coverImagePath": "template_assets/scenes/hallway-quiet-frame.jpg",
-    "coverImageUpdatedAt": "2026-03-28T11:42:57+00:00",
+    "coverImageUpdatedAt": "2026-03-29T07:37:42+00:00",
     "coverImageSource": "template_image_pipeline:review_male.jpg",
     "lightingProfile": {
       "lightDirection": "mixed",
@@ -755,94 +755,6 @@
       "male": [
         "male2",
         "male1"
-      ]
-    }
-  },
-  {
-    "id": "bedside-half-recline",
-    "title": "床边半卧近景人像",
-    "styleLine": "realistic_editorial",
-    "summary": "半卧姿态强化亲密感和身体曲线，适合柔和情绪人像。",
-    "environment": "简洁卧室，白色床品、亚麻靠枕、浅色床头和极少量边桌物件构成背景",
-    "lighting": "柔和侧窗光扫过脸颊和肩部，枕头和床单有细小褶皱，画面亮度轻柔",
-    "styleMood": "私密、温和、松弛，像刚结束一段安静的午后时光",
-    "detailTags": [
-      "床边",
-      "半卧",
-      "私密",
-      "柔光",
-      "近景"
-    ],
-    "expressions": [
-      "温和地看向镜头",
-      "眼神放空",
-      "若有所思但不刻意微笑"
-    ],
-    "actions": [
-      "靠在枕头上侧躺",
-      "单手撑住头部",
-      "轻轻拨开脸侧碎发"
-    ],
-    "outfitHints": [
-      "宽松白衬衫、针织背心或柔软吊带"
-    ],
-    "pairingAdvice": [
-      "水波纹中长发",
-      "messy fringe",
-      "法式慵懒长卷"
-    ],
-    "shotAdvice": "3:4 竖构图，胸口以上近景，镜头略高于视线，保留床面褶皱",
-    "constraints": [
-      "床品纹理要真实柔软",
-      "姿态自然不能过度性感化",
-      "场景元素不宜太多"
-    ],
-    "referenceNotes": "半卧近景重点在眼神和肩颈线条，背景越简越高级。",
-    "referenceSourceIds": [
-      "masterclass-annie-natural-light",
-      "masterclass-portrait-tips",
-      "masterclass-annie-working-light"
-    ],
-    "coverImagePath": "template_assets/scenes/bedside-half-recline.jpg",
-    "coverImageUpdatedAt": "2026-03-28T12:09:23+00:00",
-    "coverImageSource": "template_image_pipeline:review_female.jpg",
-    "lightingProfile": {
-      "lightDirection": "side",
-      "lightQuality": "soft",
-      "colorTemperature": "warm",
-      "contrastLevel": "low",
-      "shadowDensity": "light",
-      "hairHighlightMode": "soft_edge",
-      "skinRendering": "soft_texture",
-      "exposureBias": "slightly_under",
-      "practicalLightsAllowed": true
-    },
-    "outfitPalette": [
-      "白色",
-      "奶油白",
-      "浅灰"
-    ],
-    "outfitMaterials": [
-      "柔软针织",
-      "棉质衬衫",
-      "轻薄背心面料"
-    ],
-    "outfitShapes": [
-      "宽松衬衫",
-      "柔软背心",
-      "松弛针织"
-    ],
-    "outfitAvoids": [
-      "夸张性感剪裁",
-      "礼服感材质",
-      "高饱和色块"
-    ],
-    "sampleImageIds": {
-      "female": [
-        "female3"
-      ],
-      "male": [
-        "male2"
       ]
     }
   },
@@ -892,7 +804,7 @@
       "masterclass-portrait-tips"
     ],
     "coverImagePath": "template_assets/scenes/rainy-window-mood.jpg",
-    "coverImageUpdatedAt": "2026-03-28T11:47:56+00:00",
+    "coverImageUpdatedAt": "2026-03-29T07:39:32+00:00",
     "coverImageSource": "template_image_pipeline:review_male.jpg",
     "lightingProfile": {
       "lightDirection": "side",
@@ -996,7 +908,7 @@
       "masterclass-environmental-portrait"
     ],
     "coverImagePath": "template_assets/scenes/studio-solid-backdrop.jpg",
-    "coverImageUpdatedAt": "2026-03-28T11:49:26+00:00",
+    "coverImageUpdatedAt": "2026-03-29T07:50:28+00:00",
     "coverImageSource": "template_image_pipeline:review_male.jpg",
     "lightingProfile": {
       "lightDirection": "front",
@@ -1028,110 +940,6 @@
       "甜美荷叶边",
       "家居服",
       "大面积图案"
-    ],
-    "sampleImageIds": {
-      "female": [
-        "female2"
-      ],
-      "male": [
-        "male1"
-      ]
-    }
-  },
-  {
-    "id": "cold-metal-space",
-    "title": "冷调金属空间人像",
-    "styleLine": "fashion_editorial",
-    "summary": "金属材质、冷色反光和利落轮廓适合锋利感较强的时尚造型。",
-    "environment": "冷银色金属墙面、镜面钢材与深灰地面构成未来感空间，背景只有少量结构线条",
-    "lighting": "冷白主光从侧前方切入，辅以细窄轮廓光勾边，反射干净、反差清楚",
-    "styleMood": "冷冽、现代、结构感强，强调轮廓而非生活气息",
-    "detailTags": [
-      "金属",
-      "冷调",
-      "未来感",
-      "结构感",
-      "高反差"
-    ],
-    "expressions": [
-      "冷脸看镜头",
-      "收紧下颌线",
-      "带轻微压迫感的平静神情"
-    ],
-    "actions": [
-      "身体靠近金属墙面",
-      "回头看向镜头",
-      "抬手触碰领口或鬓角"
-    ],
-    "outfitHints": [
-      "黑色皮质上衣、银灰西装或结构感背心"
-    ],
-    "pairingAdvice": [
-      "quiff",
-      "wet straight",
-      "high ponytail wisps"
-    ],
-    "shotAdvice": "3:4 竖构图，胸口以上近景，镜头略低，保留少量金属线条",
-    "constraints": [
-      "金属反光不能压过脸部",
-      "色温维持偏冷但肤色仍需健康",
-      "背景结构尽量简洁"
-    ],
-    "controlProfile": {
-      "windLevel": "still",
-      "humidityLook": "dry",
-      "backgroundComplexity": "low",
-      "lightingHardness": "hard",
-      "mirrorRisk": "low",
-      "compatibleHairstyleTags": [
-        "hard_light_ready",
-        "precise_outline",
-        "sharp_texture"
-      ],
-      "recommendedHairstyleIds": [
-        "female-blunt-bob",
-        "male-forward-spikes"
-      ]
-    },
-    "referenceNotes": "冷金属空间最适合展现锋利发型和轮廓分明的五官。",
-    "referenceSourceIds": [
-      "masterclass-annie-working-light",
-      "masterclass-portrait-tips",
-      "masterclass-environmental-portrait"
-    ],
-    "coverImagePath": "template_assets/scenes/cold-metal-space.jpg",
-    "coverImageUpdatedAt": "2026-03-28T11:51:15+00:00",
-    "coverImageSource": "template_image_pipeline:review_male.jpg",
-    "lightingProfile": {
-      "lightDirection": "side",
-      "lightQuality": "hard",
-      "colorTemperature": "cool",
-      "contrastLevel": "high",
-      "shadowDensity": "deep",
-      "hairHighlightMode": "controlled_specular",
-      "skinRendering": "structured_texture",
-      "exposureBias": "slightly_under",
-      "practicalLightsAllowed": true
-    },
-    "outfitPalette": [
-      "黑色",
-      "银灰",
-      "冷白"
-    ],
-    "outfitMaterials": [
-      "皮质",
-      "结构西装面料",
-      "挺括科技面料"
-    ],
-    "outfitShapes": [
-      "结构感背心",
-      "利落西装",
-      "极简硬挺上衣"
-    ],
-    "outfitAvoids": [
-      "暖色碎花",
-      "家居针织",
-      "软塌廓形"
     ],
     "sampleImageIds": {
       "female": [
@@ -1468,7 +1276,7 @@
       "masterclass-jimmy-natural-light"
     ],
     "coverImagePath": "template_assets/scenes/dramatic-side-light.jpg",
-    "coverImageUpdatedAt": "2026-03-28T11:58:53+00:00",
+    "coverImageUpdatedAt": "2026-03-29T07:42:37+00:00",
     "coverImageSource": "template_image_pipeline:review_male.jpg",
     "lightingProfile": {
       "lightDirection": "side",
@@ -1500,94 +1308,6 @@
       "软糯家居服",
       "大面积亮色",
       "甜美元素"
-    ],
-    "sampleImageIds": {
-      "female": [
-        "female2"
-      ],
-      "male": [
-        "male1"
-      ]
-    }
-  },
-  {
-    "id": "luxury-hotel-lobby",
-    "title": "高级酒店大堂人像",
-    "styleLine": "fashion_editorial",
-    "summary": "石材、灯带和宽阔空间适合带一点明星感的时尚人像。",
-    "environment": "高级酒店大堂的大理石墙面、暖白灯带和深色家具形成宽阔空间，背景留少量秩序化线条",
-    "lighting": "室内主灯带出整体空间亮度，再用定向光突出脸部和发型重点，层次分明",
-    "styleMood": "精致、从容、明星感、成熟但不油腻",
-    "detailTags": [
-      "酒店大堂",
-      "石材",
-      "成熟感",
-      "明星气场",
-      "秩序线条"
-    ],
-    "expressions": [
-      "沉稳看镜头",
-      "轻微挑眉",
-      "带一点自信距离感"
-    ],
-    "actions": [
-      "站在灯带前停住",
-      "单手整理西装或头发",
-      "转身回望"
-    ],
-    "outfitHints": [
-      "黑色西装、缎面衬衫或简洁礼服"
-    ],
-    "pairingAdvice": [
-      "pompadour",
-      "french updo",
-      "side part"
-    ],
-    "shotAdvice": "3:4 竖构图，胸口以上近景，保留少量大堂线条与灯带",
-    "constraints": [
-      "空间感要大但不能杂乱",
-      "灯带不要压脸",
-      "材质反光需高级而非刺眼"
-    ],
-    "referenceNotes": "酒店大堂能提供天生的高级秩序感，但镜头仍要贴近人物。",
-    "referenceSourceIds": [
-      "masterclass-environmental-portrait",
-      "masterclass-portrait-tips",
-      "masterclass-annie-working-light"
-    ],
-    "coverImagePath": "template_assets/scenes/luxury-hotel-lobby.jpg",
-    "coverImageUpdatedAt": "2026-03-28T12:00:41+00:00",
-    "coverImageSource": "template_image_pipeline:review_male.jpg",
-    "lightingProfile": {
-      "lightDirection": "mixed",
-      "lightQuality": "medium",
-      "colorTemperature": "warm",
-      "contrastLevel": "medium",
-      "shadowDensity": "balanced",
-      "hairHighlightMode": "controlled_specular",
-      "skinRendering": "clean_texture",
-      "exposureBias": "neutral",
-      "practicalLightsAllowed": true
-    },
-    "outfitPalette": [
-      "黑色",
-      "香槟白",
-      "深炭灰"
-    ],
-    "outfitMaterials": [
-      "缎面",
-      "西装面料",
-      "细腻结构织物"
-    ],
-    "outfitShapes": [
-      "结构西装",
-      "利落衬衫",
-      "礼服感上衣"
-    ],
-    "outfitAvoids": [
-      "廉价亮片",
-      "荧光色",
-      "街头 oversize"
     ],
     "sampleImageIds": {
       "female": [
@@ -1820,7 +1540,7 @@
       "masterclass-portrait-tips"
     ],
     "coverImagePath": "template_assets/scenes/backstage-vanity-mirror.jpg",
-    "coverImageUpdatedAt": "2026-03-28T12:06:42+00:00",
+    "coverImageUpdatedAt": "2026-03-29T07:44:37+00:00",
     "coverImageSource": "template_image_pipeline:review_female.jpg",
     "lightingProfile": {
       "lightDirection": "front",

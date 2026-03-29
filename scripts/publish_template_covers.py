@@ -36,6 +36,7 @@ DEFAULT_HAIRSTYLE_SAMPLE_IDS = {
     "female": "female3",
     "male": "male2",
 }
+LEGACY_SCENE_SAMPLE_FILENAMES = {"female.jpg", "male.jpg"}
 
 SCENE_COVER_GENDER_MAP = {
     "indoor-film-lifestyle": "female",
@@ -46,15 +47,12 @@ SCENE_COVER_GENDER_MAP = {
     "hotel-room-loose": "female",
     "sunset-home-backlight": "female",
     "hallway-quiet-frame": "male",
-    "bedside-half-recline": "female",
     "rainy-window-mood": "male",
     "studio-solid-backdrop": "male",
-    "cold-metal-space": "male",
     "retro-cinema-box": "female",
     "city-neon-night": "male",
     "gallery-white-cube": "female",
     "dramatic-side-light": "male",
-    "luxury-hotel-lobby": "male",
     "rooftop-wind": "male",
     "moody-bar-counter": "male",
     "backstage-vanity-mirror": "female",
@@ -132,12 +130,6 @@ def _cover_gender_for_template(category: str, template: dict[str, Any]) -> str:
 
 def _selected_sample_images(category: str, template: dict[str, Any]) -> tuple[str, dict[str, Path]]:
     cover_gender = _cover_gender_for_template(category, template)
-    direct_sample_path = DEFAULT_SAMPLE_IMAGES.get(cover_gender)
-    if direct_sample_path is not None:
-        if not direct_sample_path.exists():
-            raise FileNotFoundError(f"找不到示例人物图：{direct_sample_path}")
-        return cover_gender, {cover_gender: direct_sample_path}
-
     if category == "scenes":
         resolver = getattr(template_pipeline.templates, "resolve_scene_sample_image_id", None)
         if callable(resolver):
@@ -155,6 +147,11 @@ def _selected_sample_images(category: str, template: dict[str, Any]) -> tuple[st
     if sample_path is None:
         raise FileNotFoundError(
             f"找不到 {category}/{template.get('id')} 对应的官方示例人物图配置：{sample_image_id}"
+        )
+    if category == "scenes" and sample_path.name.lower() in LEGACY_SCENE_SAMPLE_FILENAMES:
+        raise ValueError(
+            f"场景 {template.get('id')} 仍在使用旧示例人物图 {sample_path.name}，"
+            "请改用 assets/female1~3.jpg 或 assets/male1~3.jpg。"
         )
     if not sample_path.exists():
         raise FileNotFoundError(f"找不到示例人物图：{sample_path}")

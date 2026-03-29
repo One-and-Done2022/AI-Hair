@@ -43,12 +43,10 @@
     ],
     "incompatibleSceneIds": [
       "studio-solid-backdrop",
-      "cold-metal-space",
       "retro-cinema-box",
       "city-neon-night",
       "gallery-white-cube",
       "dramatic-side-light",
-      "luxury-hotel-lobby",
       "rooftop-wind",
       "moody-bar-counter",
       "backstage-vanity-mirror"
@@ -100,17 +98,14 @@
     "compatibleSceneIds": [
       "hotel-room-loose",
       "sunset-home-backlight",
-      "bedside-half-recline",
       "rainy-window-mood"
     ],
     "incompatibleSceneIds": [
       "studio-solid-backdrop",
-      "cold-metal-space",
       "retro-cinema-box",
       "city-neon-night",
       "gallery-white-cube",
       "dramatic-side-light",
-      "luxury-hotel-lobby",
       "rooftop-wind",
       "moody-bar-counter",
       "backstage-vanity-mirror"
@@ -169,17 +164,14 @@
       "hotel-room-loose",
       "sunset-home-backlight",
       "hallway-quiet-frame",
-      "bedside-half-recline",
       "rainy-window-mood"
     ],
     "incompatibleSceneIds": [
       "studio-solid-backdrop",
-      "cold-metal-space",
       "retro-cinema-box",
       "city-neon-night",
       "gallery-white-cube",
       "dramatic-side-light",
-      "luxury-hotel-lobby",
       "rooftop-wind",
       "moody-bar-counter",
       "backstage-vanity-mirror"
@@ -231,12 +223,10 @@
     ],
     "compatibleSceneIds": [
       "studio-solid-backdrop",
-      "cold-metal-space",
       "retro-cinema-box",
       "city-neon-night",
       "gallery-white-cube",
       "dramatic-side-light",
-      "luxury-hotel-lobby",
       "rooftop-wind",
       "moody-bar-counter",
       "backstage-vanity-mirror"
@@ -250,7 +240,6 @@
       "hotel-room-loose",
       "sunset-home-backlight",
       "hallway-quiet-frame",
-      "bedside-half-recline",
       "rainy-window-mood"
     ],
     "compatibleLightingTags": [
@@ -302,12 +291,10 @@
     ],
     "compatibleSceneIds": [
       "studio-solid-backdrop",
-      "cold-metal-space",
       "retro-cinema-box",
       "city-neon-night",
       "gallery-white-cube",
       "dramatic-side-light",
-      "luxury-hotel-lobby",
       "rooftop-wind",
       "moody-bar-counter",
       "backstage-vanity-mirror"
@@ -321,7 +308,6 @@
       "hotel-room-loose",
       "sunset-home-backlight",
       "hallway-quiet-frame",
-      "bedside-half-recline",
       "rainy-window-mood"
     ],
     "compatibleLightingTags": [
@@ -379,17 +365,14 @@
       "hotel-room-loose",
       "sunset-home-backlight",
       "hallway-quiet-frame",
-      "bedside-half-recline",
       "rainy-window-mood"
     ],
     "incompatibleSceneIds": [
       "studio-solid-backdrop",
-      "cold-metal-space",
       "retro-cinema-box",
       "city-neon-night",
       "gallery-white-cube",
       "dramatic-side-light",
-      "luxury-hotel-lobby",
       "rooftop-wind",
       "moody-bar-counter",
       "backstage-vanity-mirror"
@@ -441,12 +424,10 @@
     ],
     "compatibleSceneIds": [
       "studio-solid-backdrop",
-      "cold-metal-space",
       "retro-cinema-box",
       "city-neon-night",
       "gallery-white-cube",
       "dramatic-side-light",
-      "luxury-hotel-lobby",
       "rooftop-wind",
       "moody-bar-counter",
       "backstage-vanity-mirror"
@@ -460,7 +441,6 @@
       "hotel-room-loose",
       "sunset-home-backlight",
       "hallway-quiet-frame",
-      "bedside-half-recline",
       "rainy-window-mood"
     ],
     "compatibleLightingTags": [
