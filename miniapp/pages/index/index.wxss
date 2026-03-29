@@ -485,7 +485,7 @@
 }
 
 .recommend-cover-scene {
-  height: 300rpx;
+  height: 388rpx;
 }
 
 .recommend-name {
@@ -547,7 +547,7 @@
 }
 
 .selection-cover-scene {
-  height: 280rpx;
+  height: 396rpx;
 }
 
 .selection-placeholder {
