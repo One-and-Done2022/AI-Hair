@@ -26,7 +26,10 @@ DEFAULT_SAMPLE_IMAGES = {
 }
 DEFAULT_ASPECT_RATIO = "3:4"
 DEFAULT_RESOLUTION = "4K"
-DEFAULT_BACKEND = "seedream_basic"
+DEFAULT_BACKENDS = {
+    "hairstyles": "nano_banana_2",
+    "scenes": "seedream_basic",
+}
 SUPPORTED_CATEGORIES = {"hairstyles", "scenes"}
 HAIRSTYLE_COVER_WHITE_BG_SUFFIX = (
     "用于官方发型模板封面图。"
@@ -416,7 +419,11 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--review-root", default=str(DEFAULT_REVIEW_ROOT), help="审核包输出目录。")
     parser.add_argument("--ids", default="", help="逗号分隔的模板 id 列表；为空表示全部。")
     parser.add_argument("--limit", type=int, default=0, help="限制本次最多处理多少个模板。0 表示不限制。")
-    parser.add_argument("--backend", default=DEFAULT_BACKEND, help="用于生成样片的后端。")
+    parser.add_argument(
+        "--backend",
+        default="",
+        help="用于生成样片的后端；为空时发型默认 nano_banana_2，场景默认 seedream_basic（Seedream 4.5）。",
+    )
     parser.add_argument("--aspect-ratio", default=DEFAULT_ASPECT_RATIO, help="模板样片画幅。")
     parser.add_argument("--resolution", default=DEFAULT_RESOLUTION, help="模板样片清晰度。")
     parser.add_argument(
@@ -459,6 +466,8 @@ def main(argv: list[str] | None = None) -> int:
     if args.female_image.strip():
         sample_images["female"] = Path(args.female_image).expanduser().resolve()
 
+    generator_backend = args.backend.strip() or DEFAULT_BACKENDS[args.category]
+
     failures: list[str] = []
     for template in templates_to_process:
         try:
@@ -467,7 +476,7 @@ def main(argv: list[str] | None = None) -> int:
                 template=template,
                 review_root=review_root,
                 sample_images=sample_images,
-                generator_backend=args.backend,
+                generator_backend=generator_backend,
                 aspect_ratio=args.aspect_ratio,
                 resolution=args.resolution,
             )

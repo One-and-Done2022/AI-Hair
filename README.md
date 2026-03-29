@@ -154,9 +154,15 @@ storage/scene_pipeline/inbox/
 
 ### 2. 生成审核包
 
+内部约定的 Seedream 别名：
+
+- `seedream_basic`：固定使用 Seedream 4.5
+- `seedream_premium`：固定使用 Seedream 5.0
+- `seedream`：当前仍等价于 Seedream 5.0，建议内部脚本不要再直接使用
+
 ```bash
 set -a && source .env && set +a
-python3 scripts/scene_pipeline.py
+python3 scripts/scene_pipeline.py --backend seedream_basic
 ```
 
 它会自动完成：
@@ -230,7 +236,7 @@ python3 scripts/review_scene_pipeline.py reject <scene_id> --reason "审核图�
 
 ```bash
 set -a && source .env && set +a
-python3 scripts/template_image_pipeline.py scenes
+python3 scripts/template_image_pipeline.py scenes --backend seedream_basic
 ```
 
 发型模板：
@@ -239,6 +245,12 @@ python3 scripts/template_image_pipeline.py scenes
 set -a && source .env && set +a
 python3 scripts/template_image_pipeline.py hairstyles --ids male-forward-spikes,female-french-lazy-waves
 ```
+
+说明：
+
+- 场景模板样片、场景审核包、官方场景封面批量发布，内部默认都走 `seedream_basic`
+- 发型模板样片默认走 `nano_banana_2`
+- 用户高级生图主流程仍走 `seedream` / Seedream 5.0
 
 输出目录：
 

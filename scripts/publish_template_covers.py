@@ -243,7 +243,11 @@ def build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="忽略“未正式发布封面”筛选，直接处理所有匹配模板。",
     )
-    parser.add_argument("--backend", default="", help="生成后端；为空则按分类使用默认值。")
+    parser.add_argument(
+        "--backend",
+        default="",
+        help="生成后端；为空时发型默认 nano_banana_2，场景默认 seedream_basic（Seedream 4.5）。",
+    )
     parser.add_argument("--aspect-ratio", default=DEFAULT_ASPECT_RATIO, help="封面画幅。")
     parser.add_argument("--resolution", default=DEFAULT_RESOLUTION, help="封面清晰度。")
     parser.add_argument(
