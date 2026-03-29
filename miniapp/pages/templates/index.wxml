@@ -54,7 +54,7 @@
         <image
           class="tile-cover tile-cover-hair"
           src="{{item.cover_url}}"
-          mode="aspectFit"
+          mode="aspectFill"
           lazy-load="true"
           catchtap="previewHairstyle"
           data-id="{{item.id}}"

@@ -75,7 +75,7 @@
           <image
             class="selection-cover selection-cover-hair"
             src="{{selectedHairstyle.cover_url}}"
-            mode="aspectFit"
+            mode="aspectFill"
             lazy-load="true"
           ></image>
         </view>
@@ -142,7 +142,7 @@
               bindtap="applyRecommendedHairstyle"
             >
               <view class="recommend-cover-stage">
-                <image class="recommend-cover recommend-cover-hair" src="{{item.cover_url}}" mode="aspectFit" lazy-load="true"></image>
+                <image class="recommend-cover recommend-cover-hair" src="{{item.cover_url}}" mode="aspectFill" lazy-load="true"></image>
               </view>
               <view class="recommend-name">{{item.name}}</view>
               <view wx:if="{{item.reason}}" class="recommend-reason">{{item.reason}}</view>

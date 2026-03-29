@@ -18,7 +18,7 @@
       <image
         class="combo-cover combo-cover-hair"
         src="{{selectedHairstyle.cover_url}}"
-        mode="aspectFit"
+        mode="aspectFill"
         lazy-load="true"
       ></image>
     </view>
