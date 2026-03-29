@@ -1841,5 +1841,90 @@
     "coverImagePath": "template_assets/scenes/scene-41e220d6.jpg",
     "coverImageUpdatedAt": "2026-03-29T08:48:32+00:00",
     "coverImageSource": "scene_pipeline:review_male.jpg"
+  },
+  {
+    "id": "green-outdoor-b9edbc24",
+    "title": "绿意清新人像",
+    "styleLine": "realistic_editorial",
+    "summary": "户外自然环境，背景为模糊的绿色树叶和圆形光斑，明亮的自然光，带有逆光效果，人物轮廓有柔和的高光，背景有明显的光斑，构成稳定可复用的场景化人像环境。",
+    "environment": "户外自然环境，背景为模糊的绿色树叶和圆形光斑",
+    "lighting": "明亮的自然光，带有逆光效果，人物轮廓有柔和的高光，背景有明显的光斑",
+    "lightingProfile": {
+      "lightDirection": "back",
+      "lightQuality": "soft",
+      "colorTemperature": "neutral",
+      "contrastLevel": "low",
+      "shadowDensity": "light",
+      "hairHighlightMode": "clean_rim",
+      "skinRendering": "clean_texture",
+      "exposureBias": "slightly_over",
+      "practicalLightsAllowed": false
+    },
+    "styleMood": "清新，自然，甜美，充满生机",
+    "detailTags": [
+      "户外",
+      "自然光",
+      "逆光",
+      "绿色植物"
+    ],
+    "expressions": [
+      "抿嘴微笑，眼神直视镜头，神态自然灵动"
+    ],
+    "actions": [
+      "双手捧着一束色彩鲜艳的鲜花，手臂上挎着一个编织包，身体微微侧向镜头"
+    ],
+    "outfitHints": [
+      "白色宽松长袖衬衫，内搭浅色打底衫，手臂挎着草编包"
+    ],
+    "outfitPalette": [
+      "白色"
+    ],
+    "outfitMaterials": [
+      "衬衫棉布"
+    ],
+    "outfitShapes": [
+      "简洁衬衫"
+    ],
+    "outfitAvoids": [
+      "强结构礼服感",
+      "高饱和撞色",
+      "复杂夸张配饰"
+    ],
+    "pairingAdvice": [
+      "法式慵懒卷",
+      "空气感锁骨发",
+      "轻盈波波头"
+    ],
+    "shotAdvice": "半身特写，人物居中，背景虚化",
+    "constraints": [
+      "保持背景的绿色植物和光斑效果，突出人物与花朵的互动，保持逆光带来的柔和氛围"
+    ],
+    "controlProfile": {
+      "windLevel": "still",
+      "humidityLook": "balanced",
+      "backgroundComplexity": "high",
+      "lightingHardness": "soft",
+      "mirrorRisk": "none",
+      "compatibleHairstyleTags": [
+        "lifestyle_softlight",
+        "layered_face_framing"
+      ],
+      "recommendedHairstyleIds": []
+    },
+    "sampleImageIds": {
+      "female": [
+        "female1"
+      ],
+      "male": [
+        "male3"
+      ]
+    },
+    "referenceNotes": "由内部 scene pipeline 自动拆解并生成审核图，请人工确认审核图效果后再决定是否加入官方场景库",
+    "referenceSourceIds": [
+      "scene-pipeline"
+    ],
+    "coverImagePath": "template_assets/scenes/green-outdoor-b9edbc24.jpg",
+    "coverImageUpdatedAt": "2026-03-29T09:04:22+00:00",
+    "coverImageSource": "scene_pipeline:review_female.jpg"
   }
 ]

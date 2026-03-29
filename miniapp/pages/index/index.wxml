@@ -115,7 +115,7 @@
           wx:if="{{selectedScene && selectedScene.cover_url}}"
           class="selection-cover selection-cover-scene"
           src="{{selectedScene.cover_url}}"
-          mode="aspectFit"
+          mode="aspectFill"
           lazy-load="true"
         ></image>
         <view wx:else class="selection-cover selection-placeholder">场景</view>
@@ -185,7 +185,7 @@
               data-id="{{item.id}}"
               bindtap="applyRecommendedScene"
             >
-              <image class="recommend-cover recommend-cover-scene" src="{{item.cover_url}}" mode="aspectFit" lazy-load="true"></image>
+              <image class="recommend-cover recommend-cover-scene" src="{{item.cover_url}}" mode="aspectFill" lazy-load="true"></image>
               <view class="recommend-name">{{item.name}}</view>
               <view wx:if="{{item.reason}}" class="recommend-reason">{{item.reason}}</view>
               <view class="recommend-action">{{item.selected ? '已应用' : '点击应用'}}</view>
