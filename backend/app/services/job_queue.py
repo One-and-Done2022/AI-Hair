@@ -39,12 +39,28 @@ class JobWorker:
         self._threads: list[Thread] = []
         self._runtime_lock = Lock()
         settings = get_settings()
+        initial_generator_cache_key = self._build_generator_cache_key(
+            settings.image_generator_backend,
+            getattr(generator, "model_name", None),
+        )
+        initial_key_pool_cache_key = self._build_key_pool_cache_key(
+            settings.image_generator_backend,
+            model_name=getattr(generator, "model_name", None),
+        )
         self._generator_cache: dict[str, BaseGenerator] = {
-            settings.image_generator_backend: generator,
+            initial_generator_cache_key: generator,
         }
         self._key_pool_cache: dict[str, ApiKeyPool | None] = {
-            settings.image_generator_backend: key_pool,
+            initial_key_pool_cache_key: key_pool,
         }
+
+    @staticmethod
+    def _build_generator_cache_key(backend: str, model_name: str | None = None) -> str:
+        return f"{backend}:{model_name}" if model_name else backend
+
+    @staticmethod
+    def _build_key_pool_cache_key(backend: str, model_name: str | None = None) -> str:
+        return f"{backend}:{model_name}" if model_name else backend
 
     def start(self) -> None:
         if any(thread.is_alive() for thread in self._threads):
@@ -421,20 +437,17 @@ class JobWorker:
         model_name: str | None = None,
     ) -> tuple[BaseGenerator, ApiKeyPool | None]:
         settings = get_settings()
-        generator_cache_key = f"{backend}:{model_name}" if model_name else backend
+        generator_cache_key = self._build_generator_cache_key(backend, model_name)
         with self._runtime_lock:
             generator = self._generator_cache.get(generator_cache_key)
             if generator is None:
                 if settings.use_mock_generator:
                     generator = build_generator(backend)
                 elif backend == "seedream":
-                    default_seedream_models = {
-                        settings.seedream_premium_model,
-                        settings.ark_image_model,
-                    }
+                    current_generator_model = getattr(self.generator, "model_name", None)
                     if (
                         settings.image_generator_backend == "seedream"
-                        and (model_name is None or model_name in default_seedream_models)
+                        and (model_name is None or model_name == current_generator_model)
                     ):
                         generator = self.generator
                     else:
@@ -445,20 +458,26 @@ class JobWorker:
                     generator = build_generator(backend)
                 self._generator_cache[generator_cache_key] = generator
 
-            key_pool = self._key_pool_cache.get(backend)
-            if backend not in self._key_pool_cache:
+            resolved_model_name = model_name or getattr(generator, "model_name", None)
+            key_pool_cache_key = self._build_key_pool_cache_key(
+                backend,
+                resolved_model_name if getattr(generator, "supports_key_pool", False) else None,
+            )
+            key_pool = self._key_pool_cache.get(key_pool_cache_key)
+            if key_pool_cache_key not in self._key_pool_cache:
+                filtered_credentials = settings.ark_api_keys_for_model(resolved_model_name)
                 if (
                     not settings.use_mock_generator
                     and getattr(generator, "supports_key_pool", False)
-                    and settings.ark_api_keys
+                    and filtered_credentials
                 ):
                     key_pool = ApiKeyPool(
-                        settings.ark_api_keys,
+                        filtered_credentials,
                         default_cooldown_seconds=settings.ark_key_cooldown_seconds,
                         disabled_key_ids=settings.ark_api_disabled_key_ids,
                     )
                 else:
                     key_pool = None
-                self._key_pool_cache[backend] = key_pool
+                self._key_pool_cache[key_pool_cache_key] = key_pool
 
             return generator, key_pool

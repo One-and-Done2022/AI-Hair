@@ -62,7 +62,7 @@ GENERATOR_BACKEND_CAPABILITIES = {
     },
     "premium": {
         "label": "高级版",
-        "description": "先用 Nano Banana Pro 生成仅换发图，再用 Seedream 5.0 生成 2 张场景成片。支持常用画幅，清晰度可选 1K / 2K。",
+        "description": "先用 Nano Banana Pro 生成仅换发图，再用 Seedream 4.5 生成 2 张场景成片。支持常用画幅，清晰度可选 1K / 2K。",
         "supports_reference_image": True,
         "aspect_ratios": PLAN_SAFE_ASPECT_RATIOS,
         "resolutions": PREMIUM_PLAN_RESOLUTIONS,
@@ -71,7 +71,7 @@ GENERATOR_BACKEND_CAPABILITIES = {
         "hair_backend": "nano_banana_pro",
         "scene_backend": "seedream",
         "scene_model_tier": "premium",
-        "badge": "Nano Banana Pro + Seedream 5.0",
+        "badge": "Nano Banana Pro + Seedream 4.5",
     },
 }
 

@@ -548,31 +548,6 @@ def validate_upload_bytes(image_bytes: bytes, mime_type: str | None) -> ImageMet
             "图片比例不合适，请上传常见的人像照或生活照，避免过窄长图和全景图。",
         )
 
-    if settings.enforce_face_detection:
-        faces = _detect_faces(image_bytes)
-        if faces is None:
-            raise UploadValidationError(
-                "face_detection_unavailable",
-                "人脸检测暂时不可用，请稍后再试。",
-            )
-        faces = _normalize_detected_faces(faces, width, height)
-        if len(faces) == 0:
-            raise UploadValidationError(
-                "no_face",
-                "没有检测到清晰单人脸部，请上传正脸或半侧脸自拍，避免遮挡、逆光和过暗。",
-            )
-        if len(faces) > 1:
-            raise UploadValidationError(
-                "multiple_faces",
-                "检测到多张明显人脸，请上传仅包含一位人物的自拍或单人照。",
-            )
-
-        if not _is_face_close_enough(faces[0], width, height):
-            raise UploadValidationError(
-                "face_too_small",
-                "人脸占比太小，请上传胸口以上近景或更靠近镜头的人像照片。",
-            )
-
     return ImageMetadata(width=width, height=height, extension=ALLOWED_MIME_TYPES[mime_type])
 
 

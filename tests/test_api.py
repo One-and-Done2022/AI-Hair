@@ -50,18 +50,27 @@ def _configure_runtime_env(tmp_path, monkeypatch, *, use_mock_generator: str = "
     monkeypatch.delenv("ARK_API_KEY_MAX_CONCURRENCY", raising=False)
     monkeypatch.delenv("ARK_API_KEY_DEFAULT_WEIGHT", raising=False)
     monkeypatch.delenv("ARK_API_KEY_COOLDOWN_SECONDS", raising=False)
+    monkeypatch.delenv("SEEDREAM_BASIC_ALLOWED_KEY_IDS", raising=False)
     monkeypatch.delenv("SEEDREAM_BASIC_MODEL", raising=False)
+    monkeypatch.delenv("SEEDREAM_PREMIUM_ALLOWED_KEY_IDS", raising=False)
     monkeypatch.delenv("SEEDREAM_PREMIUM_MODEL", raising=False)
     monkeypatch.delenv("IMAGE_GENERATOR_BACKEND", raising=False)
     monkeypatch.delenv("NANO_BANANA_PRO_API_KEY", raising=False)
     monkeypatch.delenv("NANO_BANANA_PRO_BASE_URL", raising=False)
     monkeypatch.delenv("NANO_BANANA_PRO_MODEL", raising=False)
+    monkeypatch.delenv("NANO_BANANA_PRO_MAX_CONCURRENCY", raising=False)
     monkeypatch.delenv("NANO_BANANA_2_API_KEY", raising=False)
     monkeypatch.delenv("NANO_BANANA_2_BASE_URL", raising=False)
     monkeypatch.delenv("NANO_BANANA_2_MODEL", raising=False)
+    monkeypatch.delenv("NANO_BANANA_2_MAX_CONCURRENCY", raising=False)
     monkeypatch.delenv("SORA_IMAGE_API_KEY", raising=False)
     monkeypatch.delenv("SORA_IMAGE_BASE_URL", raising=False)
     monkeypatch.delenv("SORA_IMAGE_MODEL", raising=False)
+    monkeypatch.delenv("IMAGE_UNDERSTANDING_API_KEY", raising=False)
+    monkeypatch.delenv("IMAGE_UNDERSTANDING_BASE_URL", raising=False)
+    monkeypatch.delenv("IMAGE_UNDERSTANDING_MODEL", raising=False)
+    monkeypatch.delenv("IMAGE_UNDERSTANDING_MAX_CONCURRENCY", raising=False)
+    monkeypatch.delenv("IMAGE_UNDERSTANDING_TIMEOUT_SECONDS", raising=False)
     monkeypatch.delenv("JOB_WORKER_CONCURRENCY", raising=False)
     monkeypatch.delenv("DB_POOL_SIZE", raising=False)
     monkeypatch.delenv("DB_MAX_OVERFLOW", raising=False)
@@ -626,7 +635,7 @@ def test_auth_upload_job_history_flow(tmp_path, monkeypatch):
         assert list((tmp_path / "storage" / "results").iterdir()) == []
 
 
-def test_upload_validation_accepts_single_prominent_face(tmp_path, monkeypatch):
+def test_upload_validation_ignores_face_detection_even_when_enabled(tmp_path, monkeypatch):
     _configure_runtime_env(tmp_path, monkeypatch, use_mock_generator="true")
     monkeypatch.setenv("ENFORCE_FACE_DETECTION", "true")
     _clear_runtime_caches()
@@ -636,7 +645,7 @@ def test_upload_validation_accepts_single_prominent_face(tmp_path, monkeypatch):
     monkeypatch.setattr(
         storage,
         "_detect_faces",
-        lambda image_bytes: ((164, 112, 252, 320),),
+        lambda image_bytes: (_ for _ in ()).throw(AssertionError("should not run face detection")),
     )
 
     metadata = storage.validate_upload_bytes(_build_test_image(), "image/png")
@@ -646,45 +655,23 @@ def test_upload_validation_accepts_single_prominent_face(tmp_path, monkeypatch):
     assert metadata.extension == ".png"
 
 
-def test_upload_validation_rejects_multiple_prominent_faces(tmp_path, monkeypatch):
+def test_upload_validation_still_checks_aspect_ratio_without_face_detection(
+    tmp_path, monkeypatch
+):
     _configure_runtime_env(tmp_path, monkeypatch, use_mock_generator="true")
     monkeypatch.setenv("ENFORCE_FACE_DETECTION", "true")
     _clear_runtime_caches()
 
     from app.services import storage
 
-    monkeypatch.setattr(
-        storage,
-        "_detect_faces",
-        lambda image_bytes: (
-            (120, 120, 220, 300),
-            (420, 140, 210, 290),
-        ),
-    )
+    wide_image = Image.new("RGB", (2400, 800), "#8ecae6")
+    buffer = io.BytesIO()
+    wide_image.save(buffer, format="PNG")
 
     with pytest.raises(storage.UploadValidationError) as exc_info:
-        storage.validate_upload_bytes(_build_test_image(), "image/png")
+        storage.validate_upload_bytes(buffer.getvalue(), "image/png")
 
-    assert exc_info.value.code == "multiple_faces"
-
-
-def test_upload_validation_rejects_face_that_is_too_small(tmp_path, monkeypatch):
-    _configure_runtime_env(tmp_path, monkeypatch, use_mock_generator="true")
-    monkeypatch.setenv("ENFORCE_FACE_DETECTION", "true")
-    _clear_runtime_caches()
-
-    from app.services import storage
-
-    monkeypatch.setattr(
-        storage,
-        "_detect_faces",
-        lambda image_bytes: ((340, 280, 60, 72),),
-    )
-
-    with pytest.raises(storage.UploadValidationError) as exc_info:
-        storage.validate_upload_bytes(_build_test_image(), "image/png")
-
-    assert exc_info.value.code == "face_too_small"
+    assert exc_info.value.code == "bad_aspect_ratio"
 
 
 def test_template_catalog_prefers_real_cover_url_when_available(tmp_path, monkeypatch):
@@ -1623,6 +1610,29 @@ def test_settings_parse_disabled_ark_api_key_ids(tmp_path, monkeypatch):
     assert settings.ark_api_disabled_key_ids == ("key-a", "key-c")
 
 
+def test_settings_filter_ark_keys_by_seedream_model(tmp_path, monkeypatch):
+    _configure_runtime_env(tmp_path, monkeypatch, use_mock_generator="false")
+    monkeypatch.setenv("ARK_API_KEYS", "key-a:alpha,key-b:beta,key-c:gamma")
+    monkeypatch.setenv("SEEDREAM_BASIC_MODEL", "doubao-seedream-4-5-251128")
+    monkeypatch.setenv("SEEDREAM_PREMIUM_MODEL", "doubao-seedream-5-0-260128")
+    monkeypatch.setenv("SEEDREAM_BASIC_ALLOWED_KEY_IDS", "key-a,key-b,key-c")
+    monkeypatch.setenv("SEEDREAM_PREMIUM_ALLOWED_KEY_IDS", "key-a")
+
+    from app.config import get_settings
+
+    get_settings.cache_clear()
+    settings = get_settings()
+
+    assert [item.key_id for item in settings.ark_api_keys_for_model(settings.seedream_basic_model)] == [
+        "key-a",
+        "key-b",
+        "key-c",
+    ]
+    assert [item.key_id for item in settings.ark_api_keys_for_model(settings.seedream_premium_model)] == [
+        "key-a"
+    ]
+
+
 def test_api_key_pool_disables_key_and_stops_future_allocation(tmp_path, monkeypatch):
     _configure_runtime_env(tmp_path, monkeypatch, use_mock_generator="false")
     monkeypatch.setenv("ARK_API_KEYS", "key-a:alpha,key-b:beta")
@@ -1671,6 +1681,52 @@ def test_api_key_pool_skips_config_disabled_keys(tmp_path, monkeypatch):
     lease = pool.acquire(timeout=0.1)
     assert lease is not None
     assert lease.key_id == "key-b"
+
+
+def test_seedream_basic_and_premium_use_isolated_key_pools(tmp_path, monkeypatch):
+    _configure_runtime_env(tmp_path, monkeypatch, use_mock_generator="false")
+    monkeypatch.setenv("ARK_API_KEYS", "key-a:alpha,key-b:beta")
+    monkeypatch.setenv("IMAGE_GENERATOR_BACKEND", "seedream")
+    monkeypatch.setenv("SEEDREAM_BASIC_MODEL", "doubao-seedream-4-5-251128")
+    monkeypatch.setenv("SEEDREAM_PREMIUM_MODEL", "doubao-seedream-5-0-260128")
+    _clear_runtime_caches()
+
+    from app.config import get_settings
+    from app.services.generation import build_generator
+    from app.services.job_queue import JobWorker
+    from app.services.key_pool import ApiKeyPool
+
+    settings = get_settings()
+    worker = JobWorker(
+        build_generator("seedream_premium"),
+        key_pool=ApiKeyPool(
+            settings.ark_api_keys,
+            default_cooldown_seconds=settings.ark_key_cooldown_seconds,
+        ),
+        concurrency=1,
+    )
+
+    basic_generator, basic_pool = worker._resolve_runtime(
+        "seedream",
+        model_name=settings.seedream_basic_model,
+    )
+    premium_generator, premium_pool = worker._resolve_runtime(
+        "seedream",
+        model_name=settings.seedream_premium_model,
+    )
+
+    assert basic_pool is not None
+    assert premium_pool is not None
+    assert basic_pool is not premium_pool
+    assert basic_generator.model_name == settings.seedream_basic_model
+    assert premium_generator.model_name == settings.seedream_premium_model
+
+    premium_lease = premium_pool.acquire(timeout=0.1)
+    assert premium_lease is not None
+    premium_pool.disable_key(premium_lease.key_id, reason="set_limit_exceeded")
+
+    assert premium_pool.active_size == 1
+    assert basic_pool.active_size == 2
 
 
 def test_job_worker_switches_to_next_key_before_preview(tmp_path, monkeypatch):
@@ -1960,37 +2016,7 @@ def test_job_worker_keeps_preview_result_when_error_happens_after_preview(
     assert len(storage.list_scene_results(job["id"])) == 0
 
 
-def test_strict_face_detection_rejects_small_face(monkeypatch):
-    monkeypatch.setenv("ENFORCE_FACE_DETECTION", "true")
-
-    from app.config import get_settings
-    from app.services import storage
-
-    get_settings.cache_clear()
-    monkeypatch.setattr(storage, "_detect_faces", lambda _: ((0, 0, 60, 60),))
-
-    with pytest.raises(storage.UploadValidationError) as excinfo:
-        storage.validate_upload_bytes(_build_test_image(), "image/png")
-
-    assert excinfo.value.code == "face_too_small"
-
-
-def test_strict_face_detection_accepts_single_clear_face(monkeypatch):
-    monkeypatch.setenv("ENFORCE_FACE_DETECTION", "true")
-
-    from app.config import get_settings
-    from app.services import storage
-
-    get_settings.cache_clear()
-    monkeypatch.setattr(storage, "_detect_faces", lambda _: ((120, 140, 180, 220),))
-
-    metadata = storage.validate_upload_bytes(_build_test_image(), "image/png")
-
-    assert metadata.width == 768
-    assert metadata.height == 1024
-
-
-def test_strict_face_detection_ignores_tiny_secondary_box(monkeypatch):
+def test_upload_validation_no_longer_depends_on_face_detection(monkeypatch):
     monkeypatch.setenv("ENFORCE_FACE_DETECTION", "true")
 
     from app.config import get_settings
@@ -2000,7 +2026,7 @@ def test_strict_face_detection_ignores_tiny_secondary_box(monkeypatch):
     monkeypatch.setattr(
         storage,
         "_detect_faces",
-        lambda _: ((120, 140, 180, 220), (24, 30, 36, 36)),
+        lambda _: (_ for _ in ()).throw(AssertionError("should not run face detection")),
     )
 
     metadata = storage.validate_upload_bytes(_build_test_image(), "image/png")
@@ -2009,18 +2035,14 @@ def test_strict_face_detection_ignores_tiny_secondary_box(monkeypatch):
     assert metadata.height == 1024
 
 
-def test_strict_face_detection_ignores_small_background_face(monkeypatch):
+def test_upload_validation_accepts_image_without_any_detected_face(monkeypatch):
     monkeypatch.setenv("ENFORCE_FACE_DETECTION", "true")
 
     from app.config import get_settings
     from app.services import storage
 
     get_settings.cache_clear()
-    monkeypatch.setattr(
-        storage,
-        "_detect_faces",
-        lambda _: ((120, 140, 180, 220), (520, 96, 98, 112)),
-    )
+    monkeypatch.setattr(storage, "_detect_faces", lambda _: ())
 
     metadata = storage.validate_upload_bytes(_build_test_image(), "image/png")
 
@@ -2028,7 +2050,7 @@ def test_strict_face_detection_ignores_small_background_face(monkeypatch):
     assert metadata.height == 1024
 
 
-def test_strict_face_detection_rejects_multiple_prominent_faces(monkeypatch):
+def test_upload_validation_accepts_multiple_faces_without_blocking(monkeypatch):
     monkeypatch.setenv("ENFORCE_FACE_DETECTION", "true")
 
     from app.config import get_settings
@@ -2041,10 +2063,10 @@ def test_strict_face_detection_rejects_multiple_prominent_faces(monkeypatch):
         lambda _: ((120, 140, 180, 220), (420, 150, 170, 210)),
     )
 
-    with pytest.raises(storage.UploadValidationError) as excinfo:
-        storage.validate_upload_bytes(_build_test_image(), "image/png")
+    metadata = storage.validate_upload_bytes(_build_test_image(), "image/png")
 
-    assert excinfo.value.code == "multiple_faces"
+    assert metadata.width == 768
+    assert metadata.height == 1024
 
 
 def test_showcases_endpoint_returns_curated_examples(tmp_path, monkeypatch):
