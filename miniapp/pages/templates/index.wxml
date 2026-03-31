@@ -1,8 +1,8 @@
 <view class="screen selector-screen">
   <view class="progress-shell">
     <view class="progress-top">
-      <view class="progress-step">第一步 / 共三步</view>
-      <view class="progress-percent">33%</view>
+      <view class="progress-step">第一步 / 共二步</view>
+      <view class="progress-percent">50%</view>
     </view>
     <view class="progress-track">
       <view class="progress-fill progress-fill-step-one"></view>
@@ -71,6 +71,6 @@
   </view>
 
   <view class="bottom-bar">
-    <button class="primary-button" bindtap="goNext">下一步</button>
+    <button class="primary-button" bindtap="goNext">下一步，选场景</button>
   </view>
 </view>

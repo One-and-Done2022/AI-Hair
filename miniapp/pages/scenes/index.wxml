@@ -1,16 +1,17 @@
 <view class="screen scene-screen">
   <view class="progress-shell">
     <view class="progress-top">
-      <view class="progress-step-text">第二步 / 共三步</view>
-      <view class="progress-percent">66%</view>
+      <view class="progress-step-text">第二步 / 共二步</view>
+      <view class="progress-percent">100%</view>
     </view>
     <view class="progress-track">
-      <view class="progress-fill"></view>
+      <view class="progress-fill progress-fill-complete"></view>
     </view>
   </view>
 
   <view class="editorial-head">
-    <view class="title editorial-title">步骤 2：选择场景</view>
+    <view class="title editorial-title">步骤 2：选择场景并生成</view>
+    <view class="subtitle editorial-subtitle">场景选好后，直接在这里开始生成。</view>
   </view>
 
   <view class="panel combo-card">
@@ -75,7 +76,68 @@
     </view>
   </view>
 
+  <view class="panel generator-panel">
+    <view class="section-title">生成方案</view>
+    <view class="generator-switch">
+      <view
+        wx:for="{{generationBackends}}"
+        wx:key="id"
+        class="generator-pill {{selectedGeneratorBackend === item.id ? 'active' : ''}} {{!item.enabled ? 'disabled' : ''}}"
+        data-value="{{item.id}}"
+        bindtap="selectGeneratorBackend"
+      >
+        {{item.name}}
+      </view>
+    </view>
+    <view wx:for="{{generationBackends}}" wx:key="id">
+      <view wx:if="{{selectedGeneratorBackend === item.id}}" class="generator-copy">{{item.description}}</view>
+    </view>
+  </view>
+
+  <view class="panel advanced-panel">
+    <view class="advanced-head" bindtap="toggleAdvanced">
+      <view>
+        <view class="section-title">高级设置</view>
+        <view class="advanced-summary">比例 {{selectedAspectRatio}}{{selectedResolution ? ' · 清晰度 ' + selectedResolution : ''}}</view>
+      </view>
+      <view class="advanced-toggle">{{advancedOpen ? '收起' : '展开'}}</view>
+    </view>
+
+    <view wx:if="{{advancedOpen}}" class="advanced-body">
+      <view class="option-group">
+        <view class="option-label">画幅比例</view>
+        <view class="option-row">
+          <view
+            wx:for="{{aspectRatioOptions}}"
+            wx:key="id"
+            class="option-chip {{selectedAspectRatio === item.id ? 'active' : ''}}"
+            data-value="{{item.id}}"
+            bindtap="selectAspectRatio"
+          >
+            {{item.label}}
+          </view>
+        </view>
+      </view>
+
+      <view wx:if="{{resolutionOptions.length}}" class="option-group">
+        <view class="option-label">输出清晰度</view>
+        <view class="option-row">
+          <view
+            wx:for="{{resolutionOptions}}"
+            wx:key="id"
+            class="option-chip {{selectedResolution === item.id ? 'active' : ''}}"
+            data-value="{{item.id}}"
+            bindtap="selectResolution"
+          >
+            {{item.label}}
+          </view>
+        </view>
+      </view>
+    </view>
+  </view>
+
   <view class="bottom-bar">
-    <button class="primary-button" bindtap="saveSelection">下一步</button>
+    <button class="primary-button" loading="{{submitting}}" bindtap="createJob">开始生成</button>
+    <view class="bottom-helper">将返回 1 张换发预览和 2 张场景成片</view>
   </view>
 </view>

@@ -1,5 +1,5 @@
 .scene-screen {
-  padding-bottom: calc(196rpx + env(safe-area-inset-bottom));
+  padding-bottom: calc(250rpx + env(safe-area-inset-bottom));
 }
 
 .progress-top {
@@ -29,10 +29,13 @@
 }
 
 .progress-fill {
-  width: 66%;
   height: 100%;
   border-radius: inherit;
   background: linear-gradient(90deg, #0058ba 0%, #5091ff 100%);
+}
+
+.progress-fill-complete {
+  width: 100%;
 }
 
 .editorial-head {
@@ -309,4 +312,116 @@
   z-index: 18;
   padding: 28rpx 28rpx calc(24rpx + env(safe-area-inset-bottom));
   background: linear-gradient(180deg, rgba(249, 251, 255, 0) 0%, rgba(249, 251, 255, 0.96) 28%, #f9fbff 100%);
+}
+
+.generator-panel,
+.advanced-panel {
+  margin-top: 24rpx;
+  padding: 24rpx;
+}
+
+.generator-switch {
+  margin-top: 18rpx;
+  display: flex;
+  gap: 12rpx;
+  flex-wrap: wrap;
+}
+
+.generator-pill {
+  min-width: 132rpx;
+  height: 72rpx;
+  padding: 0 24rpx;
+  border-radius: 999rpx;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #edf3ff;
+  color: #5d6670;
+  font-size: 24rpx;
+  font-weight: 700;
+}
+
+.generator-pill.active {
+  background: #0058ba;
+  color: #ffffff;
+}
+
+.generator-pill.disabled {
+  opacity: 0.42;
+}
+
+.generator-copy {
+  margin-top: 14rpx;
+  font-size: 24rpx;
+  line-height: 1.48;
+  color: #4d5762;
+}
+
+.advanced-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16rpx;
+}
+
+.advanced-summary {
+  margin-top: 8rpx;
+  font-size: 22rpx;
+  color: #5d6670;
+}
+
+.advanced-toggle {
+  color: #0b5ecf;
+  font-size: 24rpx;
+  font-weight: 700;
+}
+
+.advanced-body {
+  margin-top: 22rpx;
+}
+
+.option-group + .option-group {
+  margin-top: 22rpx;
+}
+
+.option-label {
+  font-size: 24rpx;
+  font-weight: 700;
+  color: #485260;
+}
+
+.option-row {
+  margin-top: 14rpx;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14rpx;
+}
+
+.option-chip {
+  min-width: 108rpx;
+  height: 62rpx;
+  padding: 0 24rpx;
+  border-radius: 999rpx;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1rpx solid rgba(0, 88, 186, 0.12);
+  background: rgba(255, 255, 255, 0.95);
+  color: #4d5762;
+  font-size: 24rpx;
+  font-weight: 600;
+}
+
+.option-chip.active {
+  border-color: rgba(0, 88, 186, 0.34);
+  background: rgba(0, 88, 186, 0.1);
+  color: #0058ba;
+}
+
+.bottom-helper {
+  margin-top: 10rpx;
+  text-align: center;
+  font-size: 23rpx;
+  line-height: 1.42;
+  color: #5d6670;
 }

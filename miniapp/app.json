@@ -1,14 +1,12 @@
 {
   "pages": [
     "pages/index/index",
-    "pages/recommend/index",
     "pages/history/index",
     "pages/profile/index",
     "pages/scene-tool/index",
     "pages/capture/index",
     "pages/templates/index",
     "pages/scenes/index",
-    "pages/confirm/index",
     "pages/result/index"
   ],
   "window": {

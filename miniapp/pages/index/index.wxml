@@ -1,10 +1,8 @@
 <view class="screen landing-screen">
   <view class="landing-head">
     <view class="title hero-title">上传照片，开始换发</view>
-    <view class="subtitle hero-subtitle">上传清晰正脸照，开始换发</view>
-    <view class="assist-row">
-      <button class="secondary-button assist-button" bindtap="openRecommendationFlow">AI 推荐搭配</button>
-    </view>
+    <view class="subtitle hero-subtitle">清晰正脸照效果更稳，上传后再选发型和场景。</view>
+    <view wx:if="{{profileSummary}}" class="quota-pill">剩余 {{profileSummary.remaining_quota}} 次</view>
   </view>
 
   <view class="panel upload-panel">
@@ -44,20 +42,141 @@
     </view>
   </view>
 
+  <view wx:if="{{selectedImage}}" class="panel selection-panel">
+    <view class="selection-top">
+      <view>
+        <view class="section-title selection-title">当前搭配</view>
+        <view class="selection-summary">{{flowSummary}}</view>
+      </view>
+      <view class="selection-link" bindtap="goHistory">作品</view>
+    </view>
+
+    <view class="selection-grid">
+      <view
+        class="selection-card {{selectedHairstyle ? 'filled' : 'active'}}"
+        bindtap="openTemplatePicker"
+      >
+        <view class="selection-step">发型</view>
+        <view wx:if="{{selectedHairstyle && selectedHairstyle.cover_url}}" class="selection-cover-stage">
+          <image
+            class="selection-cover selection-cover-hair"
+            src="{{selectedHairstyle.cover_url}}"
+            mode="aspectFill"
+            lazy-load="true"
+          ></image>
+        </view>
+        <view wx:else class="selection-cover selection-placeholder">发型</view>
+        <view class="selection-label">选择发型</view>
+        <view class="selection-value">{{selectedHairstyle ? selectedHairstyle.name : '去选择发型'}}</view>
+        <view class="selection-action">{{selectedHairstyle ? '重新选择' : '立即选择'}}</view>
+      </view>
+
+      <view
+        class="selection-card {{selectedScene ? 'filled' : (selectedHairstyle ? 'active' : 'muted')}}"
+        bindtap="openScenePicker"
+      >
+        <view class="selection-step">场景</view>
+        <image
+          wx:if="{{selectedScene && selectedScene.cover_url}}"
+          class="selection-cover selection-cover-scene"
+          src="{{selectedScene.cover_url}}"
+          mode="aspectFill"
+          lazy-load="true"
+        ></image>
+        <view wx:else class="selection-cover selection-placeholder">场景</view>
+        <view class="selection-label">选择场景</view>
+        <view class="selection-value">{{selectedScene ? selectedScene.name : '去选择场景'}}</view>
+        <view class="selection-action">{{selectedScene ? '重新选择' : (selectedHairstyle ? '立即选择' : '先选发型')}}</view>
+      </view>
+    </view>
+  </view>
+
   <view wx:if="{{selectedImage}}" class="panel recommendation-panel">
     <view class="recommendation-head">
       <view class="section-title recommendation-title">{{recommendationTitle}}</view>
       <view wx:if="{{recommendationReady}}" class="recommendation-pill">已准备</view>
     </view>
     <view class="recommendation-copy">{{recommendationSummary}}</view>
-    <button
-      class="secondary-button recommendation-button"
-      bindtap="openRecommendationFlow"
-      loading="{{recommendationLoading}}"
-      disabled="{{imagePreparing}}"
-    >
-      {{recommendationButtonLabel}}
-    </button>
+    <view class="recommendation-actions">
+      <button
+        class="secondary-button compact-button"
+        bindtap="applyRecommendedCombo"
+        disabled="{{!recommendationReady || recommendationLoading || imagePreparing}}"
+      >
+        一键套用
+      </button>
+      <button
+        class="secondary-button compact-button"
+        bindtap="openRecommendationFlow"
+        loading="{{recommendationLoading}}"
+        disabled="{{imagePreparing}}"
+      >
+        {{recommendationReady ? (recommendationExpanded ? '收起推荐' : '查看推荐') : 'AI 推荐搭配'}}
+      </button>
+    </view>
+
+    <view wx:if="{{recommendationExpanded && (recommendedHairstyles.length || recommendedScenes.length)}}" class="recommend-result">
+      <view class="recommend-top">
+        <view class="recommend-title">推荐发型</view>
+        <view class="recommend-gender-switch">
+          <view
+            class="recommend-gender-pill {{recommendationGender === 'female' ? 'active' : ''}}"
+            data-gender="female"
+            bindtap="selectRecommendationGender"
+          >
+            女生
+          </view>
+          <view
+            class="recommend-gender-pill {{recommendationGender === 'male' ? 'active' : ''}}"
+            data-gender="male"
+            bindtap="selectRecommendationGender"
+          >
+            男生
+          </view>
+        </view>
+      </view>
+
+      <scroll-view
+        wx:if="{{recommendedHairstyles.length}}"
+        class="recommend-scroll"
+        scroll-x="true"
+        enable-flex="true"
+        show-scrollbar="false"
+      >
+        <view
+          wx:for="{{recommendedHairstyles}}"
+          wx:key="id"
+          class="recommend-card {{item.selected ? 'selected' : ''}}"
+          data-id="{{item.id}}"
+          bindtap="applyRecommendedHairstyle"
+        >
+          <view class="recommend-cover-stage">
+            <image class="recommend-cover recommend-cover-hair" src="{{item.cover_url}}" mode="aspectFill" lazy-load="true"></image>
+          </view>
+          <view class="recommend-name">{{item.name}}</view>
+          <view wx:if="{{item.reason}}" class="recommend-reason">{{item.reason}}</view>
+          <view class="recommend-action">{{item.selected ? '已应用' : '点击应用'}}</view>
+        </view>
+      </scroll-view>
+
+      <view wx:if="{{recommendedScenes.length}}" class="recommend-group">
+        <view class="recommend-group-title">推荐场景</view>
+        <scroll-view class="recommend-scroll" scroll-x="true" enable-flex="true" show-scrollbar="false">
+          <view
+            wx:for="{{recommendedScenes}}"
+            wx:key="id"
+            class="recommend-card recommend-card-scene {{item.selected ? 'selected' : ''}}"
+            data-id="{{item.id}}"
+            bindtap="applyRecommendedScene"
+          >
+            <image class="recommend-cover recommend-cover-scene" src="{{item.cover_url}}" mode="aspectFill" lazy-load="true"></image>
+            <view class="recommend-name">{{item.name}}</view>
+            <view wx:if="{{item.reason}}" class="recommend-reason">{{item.reason}}</view>
+            <view class="recommend-action">{{item.selected ? '已应用' : '点击应用'}}</view>
+          </view>
+        </scroll-view>
+      </view>
+    </view>
   </view>
 
   <view wx:if="{{selectedImage}}" class="floating-bar">
