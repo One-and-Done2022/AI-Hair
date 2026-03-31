@@ -1,16 +1,25 @@
 <view class="screen selector-screen">
+  <view class="flow-nav">
+    <view class="flow-nav-group">
+      <view class="flow-nav-button" bindtap="goBackStep">上一步</view>
+      <view class="flow-nav-button" bindtap="resetFlow">回首页</view>
+    </view>
+    <view class="flow-nav-caption">选好发型后进入场景</view>
+  </view>
+
   <view class="progress-shell">
     <view class="progress-top">
-      <view class="progress-step">第一步 / 共二步</view>
-      <view class="progress-percent">50%</view>
+      <view class="progress-step-text">第一步 / 共四步</view>
+      <view class="progress-percent">25%</view>
     </view>
     <view class="progress-track">
-      <view class="progress-fill progress-fill-step-one"></view>
+      <view class="progress-fill progress-fill-quarter"></view>
     </view>
   </view>
 
   <view class="editorial-head">
-    <view class="title editorial-title">步骤 1：选择发型</view>
+    <view class="title editorial-title">选择发型</view>
+    <view class="subtitle editorial-subtitle">先定发型，再去配场景和生成方案。</view>
   </view>
 
   <view class="gender-switch">
@@ -46,7 +55,7 @@
     <view
       wx:for="{{visibleHairstyles}}"
       wx:key="id"
-      class="template-tile {{selectedHairstyleId === item.id ? 'selected' : ''}} {{index % 2 === 1 ? 'offset' : ''}}"
+      class="template-tile {{selectedHairstyleId === item.id ? 'selected' : ''}}"
       bindtap="selectHairstyle"
       data-id="{{item.id}}"
     >
@@ -65,12 +74,12 @@
       <view class="tile-name">{{item.name}}</view>
       <view class="tile-chip-row">
         <view wx:if="{{item.category_label}}" class="tile-chip tile-chip-highlight">{{item.category_label}}</view>
-        <view class="tile-chip">{{item.style_line_label}}</view>
+        <view wx:if="{{item.style_line_label}}" class="tile-chip">{{item.style_line_label}}</view>
       </view>
     </view>
   </view>
 
-  <view class="bottom-bar">
+  <view class="floating-bar">
     <button class="primary-button" bindtap="goNext">下一步，选场景</button>
   </view>
 </view>

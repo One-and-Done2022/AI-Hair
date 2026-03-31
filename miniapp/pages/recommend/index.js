@@ -6,6 +6,7 @@ const {
   getCachedRecommendation,
   getCurrentImagePath
 } = require("../../utils/recommendation");
+const { readCreationDraft, updateCreationDraft } = require("../../utils/creation-draft");
 
 function findById(items, id) {
   if (!id) {
@@ -15,7 +16,7 @@ function findById(items, id) {
 }
 
 function readSelection() {
-  return wx.getStorageSync("templateSelection") || {};
+  return readCreationDraft();
 }
 
 function getRecommendationGender(selection, selectedHairstyle) {
@@ -32,14 +33,7 @@ function getRecommendationGender(selection, selectedHairstyle) {
 }
 
 function buildScenePageUrl(hairstyle) {
-  if (!hairstyle || !hairstyle.id) {
-    return "/pages/scenes/index";
-  }
-  return (
-    `/pages/scenes/index?hairstyleId=${hairstyle.id}` +
-    `&hairstyleName=${encodeURIComponent(hairstyle.name || "")}` +
-    `&gender=${hairstyle.gender || "female"}`
-  );
+  return "/pages/scenes/index";
 }
 
 function getNextStepUrl(selectedImage, selectedHairstyle, selectedScene) {
@@ -52,7 +46,7 @@ function getNextStepUrl(selectedImage, selectedHairstyle, selectedScene) {
   if (!selectedScene) {
     return buildScenePageUrl(selectedHairstyle);
   }
-  return "/pages/confirm/index";
+  return "/pages/options/index";
 }
 
 function getContinueButtonLabel(selectedImage, selectedHairstyle, selectedScene) {
@@ -65,7 +59,7 @@ function getContinueButtonLabel(selectedImage, selectedHairstyle, selectedScene)
   if (!selectedScene) {
     return "去选场景";
   }
-  return "进入确认页";
+  return "去选参数";
 }
 
 function buildRecommendedHairstyles(recommendation, catalog, gender, selectedHairstyle) {
@@ -238,7 +232,7 @@ Page({
       scene: this.data.selectedScene,
       gender: hairstyle.gender || this.data.recommendationGender || "female"
     };
-    wx.setStorageSync("templateSelection", nextSelection);
+    updateCreationDraft(nextSelection);
 
     const recommendation = getRecommendationSource(this);
     this.setData({
@@ -274,7 +268,7 @@ Page({
       return;
     }
 
-    wx.setStorageSync("templateSelection", {
+    updateCreationDraft({
       hairstyle: this.data.selectedHairstyle,
       scene,
       gender:

@@ -3,10 +3,15 @@
     "pages/index/index",
     "pages/history/index",
     "pages/profile/index",
+    "pages/examples/index",
     "pages/scene-tool/index",
     "pages/capture/index",
+    "pages/recommend/index",
     "pages/templates/index",
     "pages/scenes/index",
+    "pages/options/index",
+    "pages/review/index",
+    "pages/confirm/index",
     "pages/result/index"
   ],
   "window": {

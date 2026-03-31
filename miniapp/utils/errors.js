@@ -21,15 +21,15 @@ const UPLOAD_ERROR_MESSAGES = {
   },
   no_face: {
     title: "未检测到清晰人脸",
-    content: "请上传单人正脸或半侧脸生活照，避免遮挡、过暗或过度模糊。"
+    content: "请上传单人正脸或半侧脸自拍，避免遮挡、逆光、过暗和明显模糊。"
   },
   multiple_faces: {
-    title: "检测到多人",
-    content: "请上传只包含一位人物的照片。"
+    title: "检测到多张明显人脸",
+    content: "请上传只包含一位人物的自拍或单人照，避免背景海报、屏幕头像或多人同框。"
   },
   face_too_small: {
     title: "人脸不够清晰",
-    content: "请上传胸口以上近景或更近的人像照，确保人物脸部足够清晰、占画面更大。"
+    content: "请上传胸口以上近景或更靠近镜头的人像照，让脸部在画面中更大、更清晰。"
   },
   face_detection_unavailable: {
     title: "人脸检测暂不可用",

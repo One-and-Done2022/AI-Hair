@@ -1,12 +1,17 @@
 const { ensureLogin } = require("../../utils/auth");
 const { showError } = require("../../utils/errors");
 const { request } = require("../../utils/request");
+const {
+  readCreationDraft,
+  resetCreationDraft,
+  updateCreationDraft
+} = require("../../utils/creation-draft");
 
 function findById(items, id) {
   if (!id) {
     return null;
   }
-  return items.find((item) => item.id === id) || null;
+  return (items || []).find((item) => item.id === id) || null;
 }
 
 function decorateTemplate(item) {
@@ -17,7 +22,7 @@ function decorateTemplate(item) {
 }
 
 function filterHairstyles(hairstyles, gender, categoryKey = "all") {
-  return hairstyles.filter((item) => {
+  return (hairstyles || []).filter((item) => {
     if (item.gender !== gender) {
       return false;
     }
@@ -32,7 +37,7 @@ function buildCategoryOptions(hairstyles, gender) {
   const options = [{ id: "all", label: "全部分类" }];
   const seen = new Set();
 
-  hairstyles.forEach((item) => {
+  (hairstyles || []).forEach((item) => {
     if (item.gender !== gender) {
       return;
     }
@@ -49,28 +54,28 @@ function buildCategoryOptions(hairstyles, gender) {
   return options;
 }
 
-function getDefaultGender(hairstyles, cached) {
-  const cachedGender = cached.hairstyle && cached.hairstyle.gender;
-  if (cachedGender === "male" || cachedGender === "female") {
-    return cachedGender;
+function getDefaultGender(hairstyles, draft) {
+  if (draft.hairstyle && (draft.hairstyle.gender === "male" || draft.hairstyle.gender === "female")) {
+    return draft.hairstyle.gender;
   }
-  if (cached.gender === "male" || cached.gender === "female") {
-    return cached.gender;
+  if (draft.gender === "male" || draft.gender === "female") {
+    return draft.gender;
   }
-  return hairstyles[0] ? hairstyles[0].gender : "male";
+  return (hairstyles[0] && hairstyles[0].gender) || "female";
 }
 
-function resolveSelectionState(catalog, cached) {
+function resolveSelectionState(catalog, draft) {
   const allHairstyles = catalog.hairstyles || [];
-  const cachedHairstyle = findById(allHairstyles, cached.hairstyle && cached.hairstyle.id);
-  const selectedGender = getDefaultGender(allHairstyles, cached);
+  const cachedHairstyle = findById(allHairstyles, draft.hairstyle && draft.hairstyle.id);
+  const selectedGender = getDefaultGender(allHairstyles, draft);
   const categoryOptions = buildCategoryOptions(allHairstyles, selectedGender);
   const selectedCategoryKey =
-    cachedHairstyle && cachedHairstyle.category_key
-      ? cachedHairstyle.category_key
-      : "all";
-  const visibleHairstyles = filterHairstyles(allHairstyles, selectedGender, selectedCategoryKey)
-    .map(decorateTemplate);
+    (cachedHairstyle && cachedHairstyle.category_key) || "all";
+  const visibleHairstyles = filterHairstyles(
+    allHairstyles,
+    selectedGender,
+    selectedCategoryKey
+  ).map(decorateTemplate);
   const selectedHairstyle =
     findById(visibleHairstyles, cachedHairstyle && cachedHairstyle.id) ||
     visibleHairstyles[0] ||
@@ -78,10 +83,10 @@ function resolveSelectionState(catalog, cached) {
 
   return {
     hairstyles: allHairstyles,
-    visibleHairstyles,
     categoryOptions,
     selectedGender,
     selectedCategoryKey,
+    visibleHairstyles,
     selectedHairstyleId: selectedHairstyle ? selectedHairstyle.id : "",
     selectedHairstyleName: selectedHairstyle ? selectedHairstyle.name : ""
   };
@@ -93,7 +98,7 @@ Page({
     hairstyles: [],
     visibleHairstyles: [],
     categoryOptions: [],
-    selectedGender: "male",
+    selectedGender: "female",
     selectedCategoryKey: "all",
     selectedHairstyleId: "",
     selectedHairstyleName: ""
@@ -104,17 +109,44 @@ Page({
   },
 
   async loadTemplates() {
+    const draft = readCreationDraft();
+    if (!draft.imagePath) {
+      wx.showToast({
+        title: "请先上传照片",
+        icon: "none"
+      });
+      wx.switchTab({
+        url: "/pages/index/index"
+      });
+      return;
+    }
+
     this.setData({ loading: true });
     try {
       await ensureLogin();
       const catalog = await request({ url: "/api/templates" });
-      const cached = wx.getStorageSync("templateSelection") || {};
-      this.setData(resolveSelectionState(catalog, cached));
+      this.catalog = catalog;
+      this.setData(resolveSelectionState(catalog, draft));
     } catch (error) {
-      showError(error, { fallback: "加载失败" });
+      showError(error, { fallback: "加载发型失败" });
     } finally {
       this.setData({ loading: false });
     }
+  },
+
+  goBackStep() {
+    wx.navigateBack({
+      fail: () => {
+        wx.switchTab({ url: "/pages/index/index" });
+      }
+    });
+  },
+
+  resetFlow() {
+    resetCreationDraft();
+    wx.switchTab({
+      url: "/pages/index/index"
+    });
   },
 
   selectGender(event) {
@@ -124,17 +156,13 @@ Page({
     }
 
     const categoryOptions = buildCategoryOptions(this.data.hairstyles, gender);
-    const hasCurrentCategory = categoryOptions.some(
-      (item) => item.id === this.data.selectedCategoryKey
-    );
-    const selectedCategoryKey = hasCurrentCategory ? this.data.selectedCategoryKey : "all";
+    const selectedCategoryKey = "all";
     const visibleHairstyles = filterHairstyles(
       this.data.hairstyles,
       gender,
       selectedCategoryKey
     ).map(decorateTemplate);
-    const selectedHairstyle =
-      findById(visibleHairstyles, this.data.selectedHairstyleId) || visibleHairstyles[0] || null;
+    const selectedHairstyle = visibleHairstyles[0] || null;
 
     this.setData({
       selectedGender: gender,
@@ -167,9 +195,18 @@ Page({
   selectHairstyle(event) {
     const selectedId = event.currentTarget.dataset.id;
     const selectedHairstyle = findById(this.data.hairstyles, selectedId);
+    if (!selectedHairstyle) {
+      return;
+    }
+
     this.setData({
       selectedHairstyleId: selectedId,
-      selectedHairstyleName: selectedHairstyle ? selectedHairstyle.name : ""
+      selectedHairstyleName: selectedHairstyle.name || ""
+    });
+    updateCreationDraft({
+      hairstyle: selectedHairstyle,
+      scene: null,
+      gender: selectedHairstyle.gender || this.data.selectedGender
     });
   },
 
@@ -195,24 +232,14 @@ Page({
       return;
     }
 
-    const cachedSelection = wx.getStorageSync("templateSelection") || {};
-    const keepScene =
-      cachedSelection.hairstyle &&
-      cachedSelection.hairstyle.id === hairstyle.id
-        ? cachedSelection.scene || null
-        : null;
-
-    wx.setStorageSync("templateSelection", {
+    updateCreationDraft({
       hairstyle,
-      scene: keepScene,
-      gender: hairstyle.gender
+      scene: null,
+      gender: hairstyle.gender || this.data.selectedGender
     });
 
     wx.navigateTo({
-      url:
-        `/pages/scenes/index?hairstyleId=${hairstyle.id}` +
-        `&hairstyleName=${encodeURIComponent(hairstyle.name)}` +
-        `&gender=${hairstyle.gender}`
+      url: "/pages/scenes/index"
     });
   }
 });

@@ -29,14 +29,14 @@ ALLOWED_MIME_TYPES = {
     "image/jpeg": ".jpg",
     "image/png": ".png",
 }
-MIN_FACE_WIDTH_RATIO = 0.14
-MIN_FACE_HEIGHT_RATIO = 0.14
-MIN_FACE_AREA_RATIO = 0.025
-MIN_PROMINENT_FACE_AREA_RATIO = 0.008
-MIN_PROMINENT_FACE_WIDTH_RATIO = 0.11
-MIN_PROMINENT_FACE_HEIGHT_RATIO = 0.11
+MIN_FACE_WIDTH_RATIO = 0.11
+MIN_FACE_HEIGHT_RATIO = 0.11
+MIN_FACE_AREA_RATIO = 0.015
+MIN_PROMINENT_FACE_AREA_RATIO = 0.015
+MIN_PROMINENT_FACE_WIDTH_RATIO = 0.14
+MIN_PROMINENT_FACE_HEIGHT_RATIO = 0.14
 FACE_OVERLAP_IOU_THRESHOLD = 0.35
-SECONDARY_FACE_AREA_SHARE = 0.38
+SECONDARY_FACE_AREA_SHARE = 0.5
 FACE_DETECTION_MAX_DIMENSION = 1280
 
 
@@ -295,16 +295,22 @@ def _normalize_detected_faces(
         return tuple(deduplicated)
 
     largest_area = float(_face_area(deduplicated[0]))
-    prominent_faces = [
-        face
-        for face in deduplicated
-        if (
-            (_face_area(face) / image_area) >= MIN_PROMINENT_FACE_AREA_RATIO
-            or (face[2] / float(width)) >= MIN_PROMINENT_FACE_WIDTH_RATIO
-            or (face[3] / float(height)) >= MIN_PROMINENT_FACE_HEIGHT_RATIO
-            or (_face_area(face) / largest_area) >= SECONDARY_FACE_AREA_SHARE
+    prominent_faces = []
+    for face in deduplicated:
+        area_ratio = _face_area(face) / image_area
+        width_ratio = face[2] / float(width)
+        height_ratio = face[3] / float(height)
+        area_share = _face_area(face) / largest_area if largest_area > 0 else 0.0
+
+        is_similarly_large_face = area_share >= SECONDARY_FACE_AREA_SHARE
+        is_independently_prominent_face = (
+            area_ratio >= MIN_PROMINENT_FACE_AREA_RATIO
+            and width_ratio >= MIN_PROMINENT_FACE_WIDTH_RATIO
+            and height_ratio >= MIN_PROMINENT_FACE_HEIGHT_RATIO
         )
-    ]
+
+        if is_similarly_large_face or is_independently_prominent_face:
+            prominent_faces.append(face)
 
     if not prominent_faces:
         return (deduplicated[0],)
@@ -362,27 +368,31 @@ def delete_result_bundle(job_id: str) -> None:
 def validate_upload_bytes(image_bytes: bytes, mime_type: str | None) -> ImageMetadata:
     settings = get_settings()
     if mime_type not in ALLOWED_MIME_TYPES:
-        raise UploadValidationError("invalid_type", "Only JPG and PNG images are allowed.")
+        raise UploadValidationError("invalid_type", "仅支持上传 JPG/JPEG 或 PNG 图片。")
 
     size_limit_bytes = settings.max_upload_size_mb * 1024 * 1024
     if len(image_bytes) > size_limit_bytes:
-        raise UploadValidationError("file_too_large", "Uploaded image exceeds the size limit.")
+        raise UploadValidationError(
+            "file_too_large",
+            f"图片大小不能超过 {settings.max_upload_size_mb}MB，请压缩后重试。",
+        )
 
     try:
         with Image.open(io.BytesIO(image_bytes)) as image:
             width, height = image.size
     except UnidentifiedImageError as exc:
-        raise UploadValidationError("invalid_image", "Cannot decode the uploaded image.") from exc
+        raise UploadValidationError("invalid_image", "图片无法解析，请换一张正常导出的照片。") from exc
 
     if width < 512 or height < 512:
         raise UploadValidationError(
-            "image_too_small", "Please upload an image that is at least 512px on each side."
+            "image_too_small", "图片分辨率过低，请上传宽高至少 512px 的清晰照片。"
         )
 
     ratio = width / height
     if ratio < 0.5 or ratio > 2.0:
         raise UploadValidationError(
-            "bad_aspect_ratio", "Please upload a standard portrait or everyday photo."
+            "bad_aspect_ratio",
+            "图片比例不合适，请上传常见的人像照或生活照，避免过窄长图和全景图。",
         )
 
     if settings.enforce_face_detection:
@@ -390,13 +400,19 @@ def validate_upload_bytes(image_bytes: bytes, mime_type: str | None) -> ImageMet
         if faces is None:
             raise UploadValidationError(
                 "face_detection_unavailable",
-                "Face detection is temporarily unavailable. Please try again later.",
+                "人脸检测暂时不可用，请稍后再试。",
             )
         faces = _normalize_detected_faces(faces, width, height)
         if len(faces) == 0:
-            raise UploadValidationError("no_face", "No clear face was detected in the image.")
+            raise UploadValidationError(
+                "no_face",
+                "没有检测到清晰单人脸部，请上传正脸或半侧脸自拍，避免遮挡、逆光和过暗。",
+            )
         if len(faces) > 1:
-            raise UploadValidationError("multiple_faces", "Please upload a photo with only one person.")
+            raise UploadValidationError(
+                "multiple_faces",
+                "检测到多张明显人脸，请上传仅包含一位人物的自拍或单人照。",
+            )
 
         _, _, face_width, face_height = faces[0]
         face_area_ratio = (face_width * face_height) / float(width * height)
@@ -409,7 +425,7 @@ def validate_upload_bytes(image_bytes: bytes, mime_type: str | None) -> ImageMet
         ):
             raise UploadValidationError(
                 "face_too_small",
-                "Please upload a chest-up or close-up portrait with one clear face.",
+                "人脸占比太小，请上传胸口以上近景或更靠近镜头的人像照片。",
             )
 
     return ImageMetadata(width=width, height=height, extension=ALLOWED_MIME_TYPES[mime_type])

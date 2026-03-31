@@ -3,7 +3,13 @@ from __future__ import annotations
 from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import Response
 
-from app.schemas import GenerationBackendOption, TemplateCatalogResponse, TemplateItem
+from app.schemas import (
+    GenerationBackendOption,
+    ShowcaseItem,
+    ShowcaseResponse,
+    TemplateCatalogResponse,
+    TemplateItem,
+)
 from app.services import storage, templates
 
 
@@ -77,6 +83,44 @@ def list_templates(request: Request) -> TemplateCatalogResponse:
         scenes=scenes,
         generation_backends=generation_backends,
     )
+
+
+@router.get("/showcases", response_model=ShowcaseResponse)
+def list_showcases(request: Request) -> ShowcaseResponse:
+    items: list[ShowcaseItem] = []
+    for showcase in templates.get_curated_showcases():
+        hairstyle = templates.get_hairstyle(showcase["hairstyle_id"])
+        scene = templates.get_scene(showcase["scene_id"])
+        if hairstyle is None or scene is None:
+            continue
+        hairstyle_cover_url = _real_cover_url(request, hairstyle) or _absolute_cover_url(
+            request,
+            "hairstyles",
+            hairstyle["id"],
+        )
+        scene_cover_url = _real_cover_url(request, scene) or _absolute_cover_url(
+            request,
+            "scenes",
+            scene["id"],
+        )
+        items.append(
+            ShowcaseItem(
+                id=showcase["id"],
+                title=showcase["title"],
+                summary=showcase["summary"],
+                cover_url=scene_cover_url,
+                hairstyle_id=hairstyle["id"],
+                hairstyle_name=hairstyle["name"],
+                hairstyle_cover_url=hairstyle_cover_url,
+                scene_id=scene["id"],
+                scene_name=scene["name"],
+                scene_cover_url=scene_cover_url,
+                generator_backend=showcase["generator_backend"],
+                aspect_ratio=showcase["aspect_ratio"],
+                resolution=showcase.get("resolution"),
+            )
+        )
+    return ShowcaseResponse(items=items)
 
 
 @router.get("/covers/{category}/{template_id}.svg", name="template_cover")

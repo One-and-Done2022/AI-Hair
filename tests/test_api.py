@@ -1946,6 +1946,25 @@ def test_strict_face_detection_ignores_tiny_secondary_box(monkeypatch):
     assert metadata.height == 1024
 
 
+def test_strict_face_detection_ignores_small_background_face(monkeypatch):
+    monkeypatch.setenv("ENFORCE_FACE_DETECTION", "true")
+
+    from app.config import get_settings
+    from app.services import storage
+
+    get_settings.cache_clear()
+    monkeypatch.setattr(
+        storage,
+        "_detect_faces",
+        lambda _: ((120, 140, 180, 220), (520, 96, 98, 112)),
+    )
+
+    metadata = storage.validate_upload_bytes(_build_test_image(), "image/png")
+
+    assert metadata.width == 768
+    assert metadata.height == 1024
+
+
 def test_strict_face_detection_rejects_multiple_prominent_faces(monkeypatch):
     monkeypatch.setenv("ENFORCE_FACE_DETECTION", "true")
 
@@ -1963,6 +1982,22 @@ def test_strict_face_detection_rejects_multiple_prominent_faces(monkeypatch):
         storage.validate_upload_bytes(_build_test_image(), "image/png")
 
     assert excinfo.value.code == "multiple_faces"
+
+
+def test_showcases_endpoint_returns_curated_examples(tmp_path, monkeypatch):
+    app = _build_app(tmp_path, monkeypatch)
+    client = TestClient(app)
+
+    response = client.get("/api/templates/showcases")
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert len(payload["items"]) == 6
+    assert payload["items"][0]["hairstyle_id"]
+    assert payload["items"][0]["scene_id"]
+    assert payload["items"][0]["cover_url"]
+    assert payload["items"][0]["hairstyle_cover_url"]
+    assert payload["items"][0]["scene_cover_url"]
 
 
 def test_scene_understanding_endpoint_returns_blocks_and_scene_draft(tmp_path, monkeypatch):

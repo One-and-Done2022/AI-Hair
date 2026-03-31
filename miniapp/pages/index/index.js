@@ -1,5 +1,5 @@
 const { ensureLogin } = require("../../utils/auth");
-const { showError } = require("../../utils/errors");
+const { getFriendlyUploadError, showError } = require("../../utils/errors");
 const { request } = require("../../utils/request");
 const {
   clearRecommendationCache,
@@ -11,13 +11,10 @@ const {
   prepareImageForUpload,
   setCurrentImagePath
 } = require("../../utils/recommendation");
-
-function findById(items, id) {
-  if (!id) {
-    return null;
-  }
-  return (items || []).find((item) => item.id === id) || null;
-}
+const {
+  readCreationDraft,
+  updateCreationDraft
+} = require("../../utils/creation-draft");
 
 function formatFileSize(bytes) {
   if (!bytes || bytes <= 0) {
@@ -29,211 +26,107 @@ function formatFileSize(bytes) {
   return `${(bytes / (1024 * 1024)).toFixed(bytes >= 10 * 1024 * 1024 ? 0 : 1)}MB`;
 }
 
-function readSelection() {
-  const selection = wx.getStorageSync("templateSelection") || {};
-  return {
-    selectedHairstyle: selection.hairstyle || null,
-    selectedScene: selection.scene || null,
-    selectedGender: selection.gender || ""
-  };
-}
-
-function getRecommendationGender(selection, selectedHairstyle) {
+function getRecommendationGender(draft, recommendation) {
+  const draftGender =
+    (draft.hairstyle && draft.hairstyle.gender) ||
+    draft.gender ||
+    "female";
   if (
-    selectedHairstyle &&
-    (selectedHairstyle.gender === "male" || selectedHairstyle.gender === "female")
+    recommendation &&
+    recommendation.recommended_hairstyles &&
+    recommendation.recommended_hairstyles[draftGender] &&
+    recommendation.recommended_hairstyles[draftGender].length
   ) {
-    return selectedHairstyle.gender;
+    return draftGender;
   }
-  if (selection && (selection.gender === "male" || selection.gender === "female")) {
-    return selection.gender;
+  if (
+    recommendation &&
+    recommendation.recommended_hairstyles &&
+    recommendation.recommended_hairstyles.female &&
+    recommendation.recommended_hairstyles.female.length
+  ) {
+    return "female";
   }
-  return "female";
+  return "male";
 }
 
-function buildScenePageUrl(hairstyle) {
-  if (!hairstyle || !hairstyle.id) {
-    return "/pages/scenes/index";
-  }
-  return (
-    `/pages/scenes/index?hairstyleId=${hairstyle.id}` +
-    `&hairstyleName=${encodeURIComponent(hairstyle.name || "")}` +
-    `&gender=${hairstyle.gender || "female"}`
-  );
-}
-
-function getNextStepUrl(selectedImage, selectedHairstyle) {
+function buildRecommendationCard(recommendation, loading, draft, selectedImage) {
   if (!selectedImage) {
-    return "";
+    return {
+      recommendationState: "idle",
+      recommendationTitle: "AI 照片分析",
+      recommendationSummary: "上传后会自动分析你的照片，不会打断你继续选发型和场景。",
+      recommendationFaceShape: "",
+      recommendationFeatureTags: [],
+      recommendationHairstyles: [],
+      recommendationScenes: []
+    };
   }
-  if (!selectedHairstyle) {
-    return "/pages/templates/index";
-  }
-  return buildScenePageUrl(selectedHairstyle);
-}
 
-function getContinueButtonLabel(selectedImage, selectedHairstyle, selectedScene) {
-  if (!selectedImage) {
-    return "";
-  }
-  if (!selectedHairstyle) {
-    return "去选发型";
-  }
-  if (!selectedScene) {
-    return "去选场景";
-  }
-  return "去生成";
-}
-
-function getContinueHelper(imagePreparing, uploadPriming, selectedHairstyle, selectedScene) {
-  if (imagePreparing) {
-    return "图片处理中，稍后就能继续选择";
-  }
-  if (uploadPriming) {
-    return "照片正在预上传，你可以继续挑选搭配";
-  }
-  if (!selectedHairstyle) {
-    return "先选一个发型，再继续场景与生成";
-  }
-  if (!selectedScene) {
-    return "再选一个场景，就可以开始生成";
-  }
-  return "搭配已完成，进入下一步直接生成";
-}
-
-function getFlowSummary(selectedHairstyle, selectedScene) {
-  if (!selectedHairstyle) {
-    return "下一步先选发型";
-  }
-  if (!selectedScene) {
-    return "发型已选好，再补一个场景";
-  }
-  return "搭配已完成，可以开始生成";
-}
-
-function buildFlowState({
-  selectedImage,
-  selectedHairstyle,
-  selectedScene,
-  imagePreparing,
-  uploadPriming
-}) {
-  return {
-    continueButtonLabel: getContinueButtonLabel(
-      selectedImage,
-      selectedHairstyle,
-      selectedScene
-    ),
-    continueHelper: getContinueHelper(
-      imagePreparing,
-      uploadPriming,
-      selectedHairstyle,
-      selectedScene
-    ),
-    flowSummary: getFlowSummary(selectedHairstyle, selectedScene)
-  };
-}
-
-function buildRecommendationCardState(recommendation, loading) {
   if (loading) {
     return {
-      recommendationReady: false,
-      recommendationTitle: "AI 正在分析你的照片",
-      recommendationSummary: "很快会给你推荐更适合的发型和场景"
+      recommendationState: "loading",
+      recommendationTitle: "AI 正在分析照片",
+      recommendationSummary: "分析完成后会给你推荐更适合的发型和场景。",
+      recommendationFaceShape: "",
+      recommendationFeatureTags: [],
+      recommendationHairstyles: [],
+      recommendationScenes: []
     };
   }
 
-  if (recommendation) {
-    const hairstyleGroups = recommendation.recommended_hairstyles || {};
-    const hairstyleCount =
-      Math.max(
-        (hairstyleGroups.female || []).length,
-        (hairstyleGroups.male || []).length
-      ) || 3;
-    const sceneCount = (recommendation.recommended_scenes || []).length || 3;
+  if (!recommendation) {
     return {
-      recommendationReady: true,
-      recommendationTitle: "AI 已分析你的照片",
-      recommendationSummary: `为你准备了 ${hairstyleCount} 个发型和 ${sceneCount} 个场景`
+      recommendationState: "unavailable",
+      recommendationTitle: "AI 分析暂未完成",
+      recommendationSummary: "你可以先继续选发型，分析完成后再回来查看推荐。",
+      recommendationFaceShape: "",
+      recommendationFeatureTags: [],
+      recommendationHairstyles: [],
+      recommendationScenes: []
     };
   }
 
+  const gender = getRecommendationGender(draft, recommendation);
+  const hairstyles =
+    (recommendation.recommended_hairstyles &&
+      recommendation.recommended_hairstyles[gender]) ||
+    [];
+  const scenes = recommendation.recommended_scenes || [];
   return {
-    recommendationReady: false,
-    recommendationTitle: "AI 推荐搭配",
-    recommendationSummary: "上传后可一键套用更适合的发型和场景"
+    recommendationState: "ready",
+    recommendationTitle: "AI 已完成照片分析",
+    recommendationSummary: recommendation.summary || "已为你准备更合适的发型和场景方向。",
+    recommendationFaceShape:
+      (recommendation.face_shape && recommendation.face_shape.label) || "",
+    recommendationFeatureTags: (recommendation.feature_tags || []).slice(0, 4),
+    recommendationHairstyles: hairstyles.slice(0, 3).map((item) => item.name),
+    recommendationScenes: scenes.slice(0, 3).map((item) => item.name)
   };
-}
-
-function buildRecommendedHairstyles(recommendation, catalog, gender, selectedHairstyle) {
-  if (!recommendation || !catalog) {
-    return [];
-  }
-  const hairstyleItems =
-    recommendation.recommended_hairstyles &&
-    recommendation.recommended_hairstyles[gender]
-      ? recommendation.recommended_hairstyles[gender]
-      : [];
-
-  return hairstyleItems
-    .map((item) => {
-      const full = findById(catalog.hairstyles || [], item.id);
-      if (!full) {
-        return null;
-      }
-      return {
-        ...full,
-        reason: (item.reasons || [])[0] || "",
-        selected: !!selectedHairstyle && selectedHairstyle.id === full.id
-      };
-    })
-    .filter(Boolean);
-}
-
-function buildRecommendedScenes(recommendation, catalog, selectedScene) {
-  if (!recommendation || !catalog) {
-    return [];
-  }
-
-  return (recommendation.recommended_scenes || [])
-    .map((item) => {
-      const full = findById(catalog.scenes || [], item.id);
-      if (!full) {
-        return null;
-      }
-      return {
-        ...full,
-        reason: (item.reasons || [])[0] || "",
-        selected: !!selectedScene && selectedScene.id === full.id
-      };
-    })
-    .filter(Boolean);
 }
 
 Page({
   data: {
-    bootstrapping: true,
+    loading: true,
     profileSummary: null,
+    showcases: [],
     selectedImage: "",
-    selectedHairstyle: null,
-    selectedScene: null,
+    selectedHairstyleName: "",
+    selectedSceneName: "",
     imagePreparing: false,
     uploadPriming: false,
     uploadReady: false,
     uploadProgress: 0,
     uploadMessage: "",
+    uploadInvalid: false,
     recommendationLoading: false,
-    recommendationReady: false,
-    recommendationTitle: "AI 推荐搭配",
-    recommendationSummary: "上传后可一键套用更适合的发型和场景",
-    recommendationExpanded: false,
-    recommendation: null,
-    recommendationGender: "female",
-    recommendedHairstyles: [],
-    recommendedScenes: [],
-    continueButtonLabel: "",
-    continueHelper: "",
-    flowSummary: ""
+    recommendationState: "idle",
+    recommendationTitle: "AI 照片分析",
+    recommendationSummary: "上传后会自动分析你的照片，不会打断你继续选发型和场景。",
+    recommendationFaceShape: "",
+    recommendationFeatureTags: [],
+    recommendationHairstyles: [],
+    recommendationScenes: []
   },
 
   async onLoad() {
@@ -241,201 +134,135 @@ Page({
   },
 
   onShow() {
-    this.syncSelection();
-    if (this.data.selectedImage) {
-      this.refreshRecommendationCard({ silent: true });
+    this.syncDraftState();
+    if (this.data.selectedImage && !this.data.imagePreparing) {
+      this.refreshRecommendation({ silent: true });
     }
   },
 
-  updateSelectionState(overrides = {}) {
-    const selectedHairstyle = Object.prototype.hasOwnProperty.call(overrides, "selectedHairstyle")
-      ? overrides.selectedHairstyle
-      : this.data.selectedHairstyle;
-    const selectedScene = Object.prototype.hasOwnProperty.call(overrides, "selectedScene")
-      ? overrides.selectedScene
-      : this.data.selectedScene;
-    const recommendation = Object.prototype.hasOwnProperty.call(overrides, "recommendation")
-      ? overrides.recommendation
-      : this.data.recommendation;
-    const selection = readSelection();
-    const recommendationGender = overrides.recommendationGender ||
-      getRecommendationGender(selection, selectedHairstyle);
-
+  syncDraftState() {
+    const draft = readCreationDraft();
     this.setData({
-      selectedHairstyle,
-      selectedScene,
-      recommendation: recommendation || null,
-      recommendationGender,
-      recommendedHairstyles: buildRecommendedHairstyles(
-        recommendation,
-        this.catalog,
-        recommendationGender,
-        selectedHairstyle
-      ),
-      recommendedScenes: buildRecommendedScenes(
-        recommendation,
-        this.catalog,
-        selectedScene
-      ),
-      ...buildFlowState({
-        selectedImage: this.data.selectedImage,
-        selectedHairstyle,
-        selectedScene,
-        imagePreparing: this.data.imagePreparing,
-        uploadPriming: this.data.uploadPriming
-      })
+      selectedImage: getCurrentImagePath(),
+      selectedHairstyleName: (draft.hairstyle && draft.hairstyle.name) || "",
+      selectedSceneName: (draft.scene && draft.scene.name) || ""
     });
   },
 
   async bootstrap() {
-    this.setData({ bootstrapping: true });
+    this.setData({ loading: true });
     try {
       await ensureLogin();
-      const [catalog, profileSummary] = await Promise.all([
-        request({ url: "/api/templates" }),
+      const [showcasePayload, profileSummary] = await Promise.all([
+        request({ url: "/api/templates/showcases" }).catch(() => ({ items: [] })),
         request({ url: "/api/me" }).catch(() => null)
       ]);
 
-      this.catalog = catalog;
-
-      const currentImagePath = getCurrentImagePath();
-      const cachedUpload = currentImagePath ? getCachedUpload(currentImagePath) : null;
-      const selection = readSelection();
-      const selectedHairstyle =
-        findById(catalog.hairstyles, selection.selectedHairstyle && selection.selectedHairstyle.id) ||
-        selection.selectedHairstyle ||
-        null;
-      const selectedScene =
-        findById(catalog.scenes, selection.selectedScene && selection.selectedScene.id) ||
-        selection.selectedScene ||
-        null;
-      const recommendation =
+      const selectedImage = getCurrentImagePath();
+      const cachedUpload = selectedImage ? getCachedUpload(selectedImage) : null;
+      const draft = readCreationDraft();
+      const cachedRecommendation =
         (cachedUpload && getCachedRecommendation(cachedUpload.upload_id)) ||
         getCachedRecommendation() ||
         null;
-      const recommendationGender = getRecommendationGender(
-        { gender: selection.selectedGender },
-        selectedHairstyle
-      );
-
-      if (selectedHairstyle || selectedScene) {
-        wx.setStorageSync("templateSelection", {
-          hairstyle: selectedHairstyle,
-          scene: selectedScene,
-          gender: recommendationGender
-        });
-      }
 
       this.setData({
+        loading: false,
         profileSummary,
-        selectedImage: currentImagePath,
-        selectedHairstyle,
-        selectedScene,
+        showcases: (showcasePayload && showcasePayload.items) || [],
+        selectedImage,
+        selectedHairstyleName: (draft.hairstyle && draft.hairstyle.name) || "",
+        selectedSceneName: (draft.scene && draft.scene.name) || "",
         uploadReady: !!cachedUpload,
         uploadPriming: false,
         uploadProgress: cachedUpload ? 100 : 0,
-        uploadMessage: currentImagePath
+        uploadMessage: selectedImage
           ? cachedUpload
             ? "照片已上传完成，可继续创作"
             : "照片已选择，可继续创作"
           : "",
-        recommendationExpanded: false,
-        recommendationGender,
-        ...buildRecommendationCardState(currentImagePath ? recommendation : null, false),
-        ...buildFlowState({
-          selectedImage: currentImagePath,
-          selectedHairstyle,
-          selectedScene,
-          imagePreparing: false,
-          uploadPriming: false
-        })
+        ...buildRecommendationCard(cachedRecommendation, false, draft, selectedImage)
       });
 
-      this.updateSelectionState({
-        selectedHairstyle,
-        selectedScene,
-        recommendation,
-        recommendationGender
-      });
-
-      if (currentImagePath) {
-        this.refreshRecommendationCard({ silent: true });
+      if (selectedImage) {
+        this.refreshRecommendation({ silent: true });
       }
     } catch (error) {
-      showError(error, { fallback: "加载失败，请稍后再试" });
-    } finally {
-      this.setData({ bootstrapping: false });
+      this.setData({ loading: false });
+      showError(error, { fallback: "加载首页失败，请稍后再试" });
     }
   },
 
-  syncSelection() {
-    const selection = readSelection();
-    this.updateSelectionState({
-      selectedHairstyle: selection.selectedHairstyle,
-      selectedScene: selection.selectedScene
-    });
-  },
-
-  async refreshRecommendationCard({ silent = true, expand = false } = {}) {
-    const localPath = this.data.selectedImage || getCurrentImagePath();
-    if (!localPath) {
-      this.setData({
-        recommendationLoading: false,
-        recommendationExpanded: false,
-        recommendation: null,
-        recommendedHairstyles: [],
-        recommendedScenes: [],
-        ...buildRecommendationCardState(null, false)
-      });
+  async refreshRecommendation({ silent = true } = {}) {
+    const selectedImage = this.data.selectedImage || getCurrentImagePath();
+    const draft = readCreationDraft();
+    if (!selectedImage) {
+      this.setData(buildRecommendationCard(null, false, draft, ""));
       return;
     }
 
-    const cachedUpload = getCachedUpload(localPath);
+    const cachedUpload = getCachedUpload(selectedImage);
     const cachedRecommendation =
       (cachedUpload && getCachedRecommendation(cachedUpload.upload_id)) ||
       getCachedRecommendation();
-
     if (cachedRecommendation) {
-      this.setData({
-        recommendationLoading: false,
-        recommendationExpanded: expand ? true : this.data.recommendationExpanded,
-        ...buildRecommendationCardState(cachedRecommendation, false)
-      });
-      this.updateSelectionState({ recommendation: cachedRecommendation });
+      this.setData(buildRecommendationCard(cachedRecommendation, false, draft, selectedImage));
       return;
     }
 
     this.setData({
       recommendationLoading: true,
-      ...buildRecommendationCardState(null, true)
+      ...buildRecommendationCard(null, true, draft, selectedImage)
     });
 
     try {
       const recommendation = await ensureRecommendationFromCurrentUpload({ silent });
-      const latestPath = this.data.selectedImage || getCurrentImagePath();
-      if (!latestPath || latestPath !== localPath) {
+      const latestImage = this.data.selectedImage || getCurrentImagePath();
+      if (!latestImage || latestImage !== selectedImage) {
         return;
       }
       this.setData({
         recommendationLoading: false,
-        recommendationExpanded: expand ? true : this.data.recommendationExpanded,
-        ...buildRecommendationCardState(recommendation, false)
+        ...buildRecommendationCard(recommendation, false, readCreationDraft(), latestImage)
       });
-      this.updateSelectionState({ recommendation: recommendation || null });
     } catch (error) {
       if (!silent) {
-        showError(error, { fallback: "推荐失败，请稍后再试" });
+        showError(error, { fallback: "AI 分析失败，请稍后再试" });
       }
-      const latestPath = this.data.selectedImage || getCurrentImagePath();
-      if (!latestPath || latestPath !== localPath) {
+      const latestImage = this.data.selectedImage || getCurrentImagePath();
+      if (!latestImage || latestImage !== selectedImage) {
         return;
       }
       this.setData({
         recommendationLoading: false,
-        ...buildRecommendationCardState(null, false)
+        ...buildRecommendationCard(null, false, readCreationDraft(), latestImage)
       });
-      this.updateSelectionState({ recommendation: null });
     }
+  },
+
+  openExampleDetail(event) {
+    const id = event.currentTarget.dataset.id;
+    if (!id) {
+      return;
+    }
+    wx.navigateTo({
+      url: `/pages/examples/index?id=${id}`
+    });
+  },
+
+  openImageSource() {
+    wx.showActionSheet({
+      itemList: ["手机自拍", "从相册选择"],
+      success: ({ tapIndex }) => {
+        if (tapIndex === 0) {
+          this.takeSelfie();
+          return;
+        }
+        if (tapIndex === 1) {
+          this.chooseImage();
+        }
+      }
+    });
   },
 
   chooseImage() {
@@ -446,21 +273,6 @@ Page({
       success: (result) => {
         const filePath = result.tempFilePaths[0];
         this.applySelectedImage(filePath);
-      }
-    });
-  },
-
-  openImageSource() {
-    wx.showActionSheet({
-      itemList: ["手机自拍", "从相册选择"],
-      success: (result) => {
-        if (result.tapIndex === 0) {
-          this.takeSelfie();
-          return;
-        }
-        if (result.tapIndex === 1) {
-          this.chooseImage();
-        }
       }
     });
   },
@@ -478,6 +290,15 @@ Page({
     });
   },
 
+  previewImage() {
+    if (!this.data.selectedImage) {
+      return;
+    }
+    wx.previewImage({
+      urls: [this.data.selectedImage]
+    });
+  },
+
   async applySelectedImage(filePath) {
     if (!filePath) {
       return;
@@ -487,29 +308,18 @@ Page({
     this.currentImageSelectionToken = selectionToken;
     clearRecommendationCache();
     setCurrentImagePath(filePath);
-
-    const selection = readSelection();
+    updateCreationDraft({ imagePath: filePath });
 
     this.setData({
       selectedImage: filePath,
-      recommendationExpanded: false,
-      recommendationLoading: false,
-      recommendation: null,
-      recommendedHairstyles: [],
-      recommendedScenes: [],
       imagePreparing: true,
       uploadPriming: false,
       uploadReady: false,
       uploadProgress: 0,
+      uploadInvalid: false,
       uploadMessage: "正在优化图片大小",
-      ...buildRecommendationCardState(null, false),
-      ...buildFlowState({
-        selectedImage: filePath,
-        selectedHairstyle: selection.selectedHairstyle,
-        selectedScene: selection.selectedScene,
-        imagePreparing: true,
-        uploadPriming: false
-      })
+      recommendationLoading: false,
+      ...buildRecommendationCard(null, false, readCreationDraft(), filePath)
     });
 
     try {
@@ -520,42 +330,30 @@ Page({
 
       const preparedPath = prepared.filePath || filePath;
       setCurrentImagePath(preparedPath);
+      updateCreationDraft({ imagePath: preparedPath });
       this.setData({
         selectedImage: preparedPath,
         imagePreparing: false,
         uploadPriming: true,
         uploadReady: false,
         uploadProgress: 0,
+        uploadInvalid: false,
         uploadMessage: prepared.compressed
           ? `已压缩 ${formatFileSize(prepared.originalSize)} -> ${formatFileSize(prepared.finalSize)}`
-          : "图片已选择，正在预上传",
-        ...buildFlowState({
-          selectedImage: preparedPath,
-          selectedHairstyle: selection.selectedHairstyle,
-          selectedScene: selection.selectedScene,
-          imagePreparing: false,
-          uploadPriming: true
-        })
+          : "图片已选择，正在预上传"
       });
       this.primeUpload(preparedPath, selectionToken, prepared);
     } catch (error) {
       if (this.currentImageSelectionToken !== selectionToken) {
         return;
       }
-
       this.setData({
         imagePreparing: false,
         uploadPriming: false,
         uploadReady: false,
+        uploadInvalid: false,
         uploadProgress: 0,
-        uploadMessage: "图片已选择，可继续创作",
-        ...buildFlowState({
-          selectedImage: filePath,
-          selectedHairstyle: selection.selectedHairstyle,
-          selectedScene: selection.selectedScene,
-          imagePreparing: false,
-          uploadPriming: false
-        })
+        uploadMessage: "图片已选择，可继续创作"
       });
     }
   },
@@ -574,14 +372,8 @@ Page({
       uploadPriming: true,
       uploadReady: false,
       uploadProgress: 0,
-      uploadMessage: `${compressionPrefix}正在预上传`,
-      ...buildFlowState({
-        selectedImage: localPath,
-        selectedHairstyle: this.data.selectedHairstyle,
-        selectedScene: this.data.selectedScene,
-        imagePreparing: false,
-        uploadPriming: true
-      })
+      uploadInvalid: false,
+      uploadMessage: `${compressionPrefix}正在预上传`
     });
 
     try {
@@ -593,25 +385,16 @@ Page({
           ) {
             return;
           }
-          const progress = Math.max(
-            0,
-            Math.min(100, Number(progressEvent.progress || 0))
-          );
+          const progress = Math.max(0, Math.min(100, Number(progressEvent.progress || 0)));
           this.setData({
             uploadPriming: progress < 100,
             uploadReady: progress >= 100,
             uploadProgress: progress,
+            uploadInvalid: false,
             uploadMessage:
               progress >= 100
                 ? `${compressionPrefix}照片已上传完成`
-                : `${compressionPrefix}正在预上传 ${progress}%`,
-            ...buildFlowState({
-              selectedImage: localPath,
-              selectedHairstyle: this.data.selectedHairstyle,
-              selectedScene: this.data.selectedScene,
-              imagePreparing: false,
-              uploadPriming: progress < 100
-            })
+                : `${compressionPrefix}正在预上传 ${progress}%`
           });
         }
       });
@@ -627,16 +410,10 @@ Page({
         uploadPriming: false,
         uploadReady: true,
         uploadProgress: 100,
-        uploadMessage: `${compressionPrefix}照片已上传完成，可继续创作`,
-        ...buildFlowState({
-          selectedImage: localPath,
-          selectedHairstyle: this.data.selectedHairstyle,
-          selectedScene: this.data.selectedScene,
-          imagePreparing: false,
-          uploadPriming: false
-        })
+        uploadInvalid: false,
+        uploadMessage: `${compressionPrefix}照片已上传完成，可继续创作`
       });
-      this.refreshRecommendationCard({ silent: true });
+      this.refreshRecommendation({ silent: true });
     } catch (error) {
       if (
         this.currentImageSelectionToken !== selectionToken ||
@@ -645,113 +422,25 @@ Page({
         return;
       }
 
+      const uploadError = getFriendlyUploadError(error);
+      const uploadInvalid = !!uploadError;
       this.setData({
         uploadPriming: false,
         uploadReady: false,
         uploadProgress: 0,
-        uploadMessage: `${compressionPrefix}预上传失败，生成时会自动重试`,
-        ...buildFlowState({
-          selectedImage: localPath,
-          selectedHairstyle: this.data.selectedHairstyle,
-          selectedScene: this.data.selectedScene,
-          imagePreparing: false,
-          uploadPriming: false
-        })
+        uploadInvalid,
+        uploadMessage: uploadInvalid
+          ? "照片未通过校验，请重新选择"
+          : `${compressionPrefix}预上传失败，稍后会自动重试`
       });
+
+      if (uploadError) {
+        showError(error, { preferModal: true });
+      }
     }
   },
 
-  previewImage() {
-    if (!this.data.selectedImage) {
-      return;
-    }
-    wx.previewImage({
-      urls: [this.data.selectedImage]
-    });
-  },
-
-  applyTemplateSelection(nextSelection) {
-    const hairstyle = Object.prototype.hasOwnProperty.call(nextSelection, "hairstyle")
-      ? nextSelection.hairstyle
-      : this.data.selectedHairstyle;
-    const scene = Object.prototype.hasOwnProperty.call(nextSelection, "scene")
-      ? nextSelection.scene
-      : this.data.selectedScene;
-    const gender = getRecommendationGender(
-      { gender: this.data.recommendationGender },
-      hairstyle
-    );
-
-    wx.setStorageSync("templateSelection", {
-      hairstyle,
-      scene,
-      gender
-    });
-
-    this.updateSelectionState({
-      selectedHairstyle: hairstyle,
-      selectedScene: scene,
-      recommendationGender: gender
-    });
-  },
-
-  selectRecommendationGender(event) {
-    const gender = event.currentTarget.dataset.gender;
-    if (gender !== "male" && gender !== "female") {
-      return;
-    }
-    this.updateSelectionState({ recommendationGender: gender });
-  },
-
-  applyRecommendedHairstyle(event) {
-    const hairstyleId = event.currentTarget.dataset.id;
-    const hairstyle = findById((this.catalog && this.catalog.hairstyles) || [], hairstyleId);
-    if (!hairstyle) {
-      return;
-    }
-    this.applyTemplateSelection({ hairstyle });
-    wx.showToast({
-      title: "已应用推荐发型",
-      icon: "success"
-    });
-  },
-
-  applyRecommendedScene(event) {
-    const sceneId = event.currentTarget.dataset.id;
-    const scene = findById((this.catalog && this.catalog.scenes) || [], sceneId);
-    if (!scene) {
-      return;
-    }
-    this.applyTemplateSelection({ scene });
-    wx.showToast({
-      title: "已应用推荐场景",
-      icon: "success"
-    });
-  },
-
-  applyRecommendedCombo() {
-    const hairstyle = this.data.recommendedHairstyles[0] || null;
-    const scene = this.data.recommendedScenes[0] || null;
-
-    if (!hairstyle && !scene) {
-      wx.showToast({
-        title: "先生成推荐结果",
-        icon: "none"
-      });
-      return;
-    }
-
-    this.applyTemplateSelection({
-      hairstyle: hairstyle || this.data.selectedHairstyle,
-      scene: scene || this.data.selectedScene
-    });
-    wx.showToast({
-      title: "已套用推荐",
-      icon: "success"
-    });
-  },
-
-  async openRecommendationFlow() {
+  openRecommendation() {
     if (!this.data.selectedImage) {
       wx.showToast({
         title: "请先上传照片",
@@ -759,7 +448,19 @@ Page({
       });
       return;
     }
+    wx.navigateTo({
+      url: "/pages/recommend/index"
+    });
+  },
 
+  goNext() {
+    if (!this.data.selectedImage) {
+      wx.showToast({
+        title: "请先上传照片",
+        icon: "none"
+      });
+      return;
+    }
     if (this.data.imagePreparing) {
       wx.showToast({
         title: "图片处理中，请稍候",
@@ -767,53 +468,16 @@ Page({
       });
       return;
     }
-
-    if (this.data.recommendationReady) {
-      this.setData({
-        recommendationExpanded: !this.data.recommendationExpanded
-      });
-      return;
-    }
-
-    await this.refreshRecommendationCard({ silent: false, expand: true });
-  },
-
-  openTemplatePicker() {
-    wx.navigateTo({
-      url: "/pages/templates/index"
-    });
-  },
-
-  openScenePicker() {
-    const hairstyle = this.data.selectedHairstyle;
-    if (!hairstyle) {
-      this.openTemplatePicker();
-      return;
-    }
-
-    wx.navigateTo({
-      url: buildScenePageUrl(hairstyle)
-    });
-  },
-
-  goHistory() {
-    wx.switchTab({
-      url: "/pages/history/index"
-    });
-  },
-
-  goNextStep() {
-    const url = getNextStepUrl(
-      this.data.selectedImage,
-      this.data.selectedHairstyle
-    );
-    if (!url) {
+    if (this.data.uploadInvalid) {
       wx.showToast({
-        title: "请先上传照片",
+        title: "请先更换合格照片",
         icon: "none"
       });
       return;
     }
-    wx.navigateTo({ url });
+
+    wx.navigateTo({
+      url: "/pages/templates/index"
+    });
   }
 });
