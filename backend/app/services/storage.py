@@ -20,6 +20,11 @@ except ImportError:  # pragma: no cover
     np = None
 
 try:
+    import mediapipe as mp  # type: ignore
+except ImportError:  # pragma: no cover
+    mp = None
+
+try:
     import oss2  # type: ignore
 except ImportError:  # pragma: no cover
     oss2 = None
@@ -38,6 +43,7 @@ MIN_PROMINENT_FACE_HEIGHT_RATIO = 0.14
 FACE_OVERLAP_IOU_THRESHOLD = 0.35
 SECONDARY_FACE_AREA_SHARE = 0.5
 FACE_DETECTION_MAX_DIMENSION = 1280
+FACE_DETECTION_MIN_CONFIDENCE = 0.45
 
 
 class UploadValidationError(Exception):
@@ -185,29 +191,157 @@ class AliyunOssObjectStorage(ObjectStorageBackend):
         return f"{scheme}://{self.bucket_name}.{host}/{object_key}"
 
 
-def _detect_faces(image_bytes: bytes) -> tuple[tuple[int, int, int, int], ...] | None:
+def _decode_cv_image(image_bytes: bytes):
     if cv2 is None or np is None:
         return None
 
     image_array = np.frombuffer(image_bytes, dtype=np.uint8)
-    decoded = cv2.imdecode(image_array, cv2.IMREAD_COLOR)
-    if decoded is None:
-        return None
+    return cv2.imdecode(image_array, cv2.IMREAD_COLOR)
 
+
+def _resize_detection_image(decoded):
     original_height, original_width = decoded.shape[:2]
     detection_image = decoded
     largest_dimension = max(original_width, original_height)
-    if largest_dimension > FACE_DETECTION_MAX_DIMENSION:
-        scale = FACE_DETECTION_MAX_DIMENSION / float(largest_dimension)
-        detection_image = cv2.resize(
-            decoded,
-            (
-                max(1, int(round(original_width * scale))),
-                max(1, int(round(original_height * scale))),
-            ),
-            interpolation=cv2.INTER_AREA,
-        )
+    if largest_dimension <= FACE_DETECTION_MAX_DIMENSION:
+        return detection_image, original_width, original_height
 
+    scale = FACE_DETECTION_MAX_DIMENSION / float(largest_dimension)
+    resized = cv2.resize(
+        decoded,
+        (
+            max(1, int(round(original_width * scale))),
+            max(1, int(round(original_height * scale))),
+        ),
+        interpolation=cv2.INTER_AREA,
+    )
+    return resized, original_width, original_height
+
+
+def _clamp_face_bounds(
+    x: int,
+    y: int,
+    face_width: int,
+    face_height: int,
+    image_width: int,
+    image_height: int,
+) -> tuple[int, int, int, int] | None:
+    if face_width <= 0 or face_height <= 0:
+        return None
+
+    left = max(0, min(image_width - 1, x))
+    top = max(0, min(image_height - 1, y))
+    right = max(left + 1, min(image_width, x + face_width))
+    bottom = max(top + 1, min(image_height, y + face_height))
+    bounded_width = right - left
+    bounded_height = bottom - top
+    if bounded_width <= 0 or bounded_height <= 0:
+        return None
+    return left, top, bounded_width, bounded_height
+
+
+def _restore_faces_to_original_scale(
+    faces: list[tuple[int, int, int, int]],
+    *,
+    detection_width: int,
+    detection_height: int,
+    original_width: int,
+    original_height: int,
+) -> tuple[tuple[int, int, int, int], ...]:
+    if detection_width == original_width and detection_height == original_height:
+        return tuple(faces)
+
+    scale_x = original_width / float(detection_width)
+    scale_y = original_height / float(detection_height)
+    restored_faces: list[tuple[int, int, int, int]] = []
+    for x, y, face_width, face_height in faces:
+        restored = _clamp_face_bounds(
+            int(round(x * scale_x)),
+            int(round(y * scale_y)),
+            int(round(face_width * scale_x)),
+            int(round(face_height * scale_y)),
+            original_width,
+            original_height,
+        )
+        if restored is not None:
+            restored_faces.append(restored)
+    return tuple(restored_faces)
+
+
+def _deduplicate_face_boxes(
+    faces: list[tuple[int, int, int, int]],
+) -> tuple[tuple[int, int, int, int], ...]:
+    deduplicated: list[tuple[int, int, int, int]] = []
+    for face in sorted(faces, key=_face_area, reverse=True):
+        if any(_face_iou(face, kept) >= FACE_OVERLAP_IOU_THRESHOLD for kept in deduplicated):
+            continue
+        deduplicated.append(face)
+    return tuple(deduplicated)
+
+
+def _detect_faces_with_mediapipe(
+    image_bytes: bytes,
+) -> tuple[tuple[int, int, int, int], ...] | None:
+    if cv2 is None or mp is None:
+        return None
+
+    decoded = _decode_cv_image(image_bytes)
+    if decoded is None:
+        return None
+
+    detection_image, original_width, original_height = _resize_detection_image(decoded)
+    detection_height, detection_width = detection_image.shape[:2]
+    rgb_image = cv2.cvtColor(detection_image, cv2.COLOR_BGR2RGB)
+    collected_faces: list[tuple[int, int, int, int]] = []
+
+    for model_selection in (0, 1):
+        try:
+            with mp.solutions.face_detection.FaceDetection(
+                model_selection=model_selection,
+                min_detection_confidence=FACE_DETECTION_MIN_CONFIDENCE,
+            ) as detector:
+                result = detector.process(rgb_image)
+        except Exception:  # pragma: no cover
+            return None
+
+        for detection in result.detections or []:
+            location = detection.location_data
+            if location is None:
+                continue
+            relative_box = location.relative_bounding_box
+            if relative_box is None:
+                continue
+            if detection.score and detection.score[0] < FACE_DETECTION_MIN_CONFIDENCE:
+                continue
+            face = _clamp_face_bounds(
+                int(round(relative_box.xmin * detection_width)),
+                int(round(relative_box.ymin * detection_height)),
+                int(round(relative_box.width * detection_width)),
+                int(round(relative_box.height * detection_height)),
+                detection_width,
+                detection_height,
+            )
+            if face is not None:
+                collected_faces.append(face)
+
+    restored_faces = _restore_faces_to_original_scale(
+        list(_deduplicate_face_boxes(collected_faces)),
+        detection_width=detection_width,
+        detection_height=detection_height,
+        original_width=original_width,
+        original_height=original_height,
+    )
+    return _deduplicate_face_boxes(list(restored_faces))
+
+
+def _detect_faces_with_haar(
+    image_bytes: bytes,
+) -> tuple[tuple[int, int, int, int], ...] | None:
+    decoded = _decode_cv_image(image_bytes)
+    if decoded is None:
+        return None
+
+    detection_image, original_width, original_height = _resize_detection_image(decoded)
     height, width = detection_image.shape[:2]
     grayscale = cv2.cvtColor(detection_image, cv2.COLOR_BGR2GRAY)
     grayscale = cv2.equalizeHist(grayscale)
@@ -222,22 +356,29 @@ def _detect_faces(image_bytes: bytes) -> tuple[tuple[int, int, int, int], ...] |
         minSize=min_size,
     )
 
-    if height == original_height and width == original_width:
-        return tuple(tuple(int(value) for value in face) for face in faces)
+    restored_faces = _restore_faces_to_original_scale(
+        [
+            tuple(int(value) for value in face)
+            for face in faces
+        ],
+        detection_width=width,
+        detection_height=height,
+        original_width=original_width,
+        original_height=original_height,
+    )
+    return _deduplicate_face_boxes(list(restored_faces))
 
-    scale_x = original_width / float(width)
-    scale_y = original_height / float(height)
-    restored_faces: list[tuple[int, int, int, int]] = []
-    for x, y, face_width, face_height in faces:
-        restored_faces.append(
-            (
-                int(round(x * scale_x)),
-                int(round(y * scale_y)),
-                int(round(face_width * scale_x)),
-                int(round(face_height * scale_y)),
-            )
-        )
-    return tuple(restored_faces)
+
+def _detect_faces(image_bytes: bytes) -> tuple[tuple[int, int, int, int], ...] | None:
+    mediapipe_faces = _detect_faces_with_mediapipe(image_bytes)
+    if mediapipe_faces:
+        return mediapipe_faces
+
+    haar_faces = _detect_faces_with_haar(image_bytes)
+    if haar_faces is not None:
+        return haar_faces
+
+    return mediapipe_faces
 
 
 def _face_area(face: tuple[int, int, int, int]) -> int:
@@ -316,6 +457,18 @@ def _normalize_detected_faces(
         return (deduplicated[0],)
 
     return tuple(prominent_faces)
+
+
+def _is_face_close_enough(face: tuple[int, int, int, int], width: int, height: int) -> bool:
+    _, _, face_width, face_height = face
+    face_area_ratio = (face_width * face_height) / float(width * height)
+    face_width_ratio = face_width / float(width)
+    face_height_ratio = face_height / float(height)
+    return (
+        face_width_ratio >= MIN_FACE_WIDTH_RATIO
+        and face_height_ratio >= MIN_FACE_HEIGHT_RATIO
+        and face_area_ratio >= MIN_FACE_AREA_RATIO
+    )
 
 
 @lru_cache
@@ -414,15 +567,7 @@ def validate_upload_bytes(image_bytes: bytes, mime_type: str | None) -> ImageMet
                 "检测到多张明显人脸，请上传仅包含一位人物的自拍或单人照。",
             )
 
-        _, _, face_width, face_height = faces[0]
-        face_area_ratio = (face_width * face_height) / float(width * height)
-        face_width_ratio = face_width / float(width)
-        face_height_ratio = face_height / float(height)
-        if (
-            face_width_ratio < MIN_FACE_WIDTH_RATIO
-            or face_height_ratio < MIN_FACE_HEIGHT_RATIO
-            or face_area_ratio < MIN_FACE_AREA_RATIO
-        ):
+        if not _is_face_close_enough(faces[0], width, height):
             raise UploadValidationError(
                 "face_too_small",
                 "人脸占比太小，请上传胸口以上近景或更靠近镜头的人像照片。",

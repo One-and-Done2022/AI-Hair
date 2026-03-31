@@ -1,5 +1,9 @@
 const { ensureLogin } = require("../../utils/auth");
 const { showError } = require("../../utils/errors");
+const {
+  mergePendingHistoryJobs,
+  removePendingHistoryJob
+} = require("../../utils/pending-history");
 const { request } = require("../../utils/request");
 
 const FAVORITES_STORAGE_KEY = "favoriteJobIds";
@@ -132,7 +136,10 @@ Page({
       await ensureLogin();
       const payload = await request({ url: "/api/history" });
       const favoriteIds = loadFavoriteIds();
-      const items = decorateHistoryItems(payload.items, favoriteIds);
+      const items = decorateHistoryItems(
+        mergePendingHistoryJobs(payload.items || []),
+        favoriteIds
+      );
       this.setData({
         items,
         favoriteIds,
@@ -305,6 +312,7 @@ Page({
         url: `/api/jobs/${jobId}`,
         method: "DELETE"
       });
+      removePendingHistoryJob(jobId);
       const favoriteIds = this.data.favoriteIds.filter((id) => id !== jobId);
       saveFavoriteIds(favoriteIds);
       const items = this.data.items.filter((item) => item.job_id !== jobId);

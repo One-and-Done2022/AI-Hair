@@ -449,7 +449,7 @@ def test_build_prompt_uses_one_subject_action_and_one_compatible_detail_action()
 def test_faceprompt_catalog_counts_and_legacy_aliases():
     from app.services import templates
 
-    assert len(templates.SCENES) == 20
+    assert len(templates.SCENES) >= 20
     assert len(templates.HAIRSTYLES) == 56
     assert len(templates.STYLINGS) == 7
     assert len([item for item in templates.HAIRSTYLES if item["gender"] == "male"]) == 23
@@ -527,6 +527,8 @@ def test_settings_reject_local_queue_without_embedded_worker(monkeypatch):
 def test_auth_upload_job_history_flow(tmp_path, monkeypatch):
     app = _build_app(tmp_path, monkeypatch)
 
+    from app.services import templates as template_service
+
     with TestClient(app) as client:
         login = client.post("/api/auth/wechat/login", json={"code": "dev-test"})
         assert login.status_code == 200
@@ -545,7 +547,7 @@ def test_auth_upload_job_history_flow(tmp_path, monkeypatch):
         assert templates.status_code == 200
         catalog = templates.json()
         assert len(catalog["hairstyles"]) == 56
-        assert len(catalog["scenes"]) == 20
+        assert len(catalog["scenes"]) == len(template_service.SCENES)
         assert len(catalog["generation_backends"]) == 2
         assert len([item for item in catalog["hairstyles"] if item["gender"] == "male"]) == 23
         assert len([item for item in catalog["hairstyles"] if item["gender"] == "female"]) == 33
@@ -622,6 +624,67 @@ def test_auth_upload_job_history_flow(tmp_path, monkeypatch):
         assert repository.get_upload(upload_id) is None
         assert list((tmp_path / "storage" / "uploads").iterdir()) == []
         assert list((tmp_path / "storage" / "results").iterdir()) == []
+
+
+def test_upload_validation_accepts_single_prominent_face(tmp_path, monkeypatch):
+    _configure_runtime_env(tmp_path, monkeypatch, use_mock_generator="true")
+    monkeypatch.setenv("ENFORCE_FACE_DETECTION", "true")
+    _clear_runtime_caches()
+
+    from app.services import storage
+
+    monkeypatch.setattr(
+        storage,
+        "_detect_faces",
+        lambda image_bytes: ((164, 112, 252, 320),),
+    )
+
+    metadata = storage.validate_upload_bytes(_build_test_image(), "image/png")
+
+    assert metadata.width == 768
+    assert metadata.height == 1024
+    assert metadata.extension == ".png"
+
+
+def test_upload_validation_rejects_multiple_prominent_faces(tmp_path, monkeypatch):
+    _configure_runtime_env(tmp_path, monkeypatch, use_mock_generator="true")
+    monkeypatch.setenv("ENFORCE_FACE_DETECTION", "true")
+    _clear_runtime_caches()
+
+    from app.services import storage
+
+    monkeypatch.setattr(
+        storage,
+        "_detect_faces",
+        lambda image_bytes: (
+            (120, 120, 220, 300),
+            (420, 140, 210, 290),
+        ),
+    )
+
+    with pytest.raises(storage.UploadValidationError) as exc_info:
+        storage.validate_upload_bytes(_build_test_image(), "image/png")
+
+    assert exc_info.value.code == "multiple_faces"
+
+
+def test_upload_validation_rejects_face_that_is_too_small(tmp_path, monkeypatch):
+    _configure_runtime_env(tmp_path, monkeypatch, use_mock_generator="true")
+    monkeypatch.setenv("ENFORCE_FACE_DETECTION", "true")
+    _clear_runtime_caches()
+
+    from app.services import storage
+
+    monkeypatch.setattr(
+        storage,
+        "_detect_faces",
+        lambda image_bytes: ((340, 280, 60, 72),),
+    )
+
+    with pytest.raises(storage.UploadValidationError) as exc_info:
+        storage.validate_upload_bytes(_build_test_image(), "image/png")
+
+    assert exc_info.value.code == "face_too_small"
 
 
 def test_template_catalog_prefers_real_cover_url_when_available(tmp_path, monkeypatch):

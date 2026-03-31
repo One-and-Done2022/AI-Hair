@@ -1,5 +1,6 @@
 const { ensureLogin } = require("../../utils/auth");
 const { showError } = require("../../utils/errors");
+const { upsertPendingHistoryJob } = require("../../utils/pending-history");
 const { request } = require("../../utils/request");
 const {
   ensureCurrentUpload,
@@ -153,6 +154,18 @@ Page({
           aspect_ratio: this.data.selectedAspectRatio,
           resolution: this.data.selectedResolution || null
         }
+      });
+      upsertPendingHistoryJob({
+        job_id: job.job_id,
+        status: job.status,
+        upload_url: upload.upload_url || "",
+        hairstyle_id: this.data.selectedHairstyle.id,
+        hairstyle_name: job.hairstyle_name || this.data.selectedHairstyle.name || "",
+        scene_id: this.data.selectedScene.id,
+        scene_name: job.scene_name || this.data.selectedScene.name || "",
+        generator_backend: this.data.selectedGeneratorBackend,
+        created_at: job.created_at || new Date().toISOString(),
+        updated_at: job.updated_at || job.created_at || new Date().toISOString()
       });
 
       wx.navigateTo({

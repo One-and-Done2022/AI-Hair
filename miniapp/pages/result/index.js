@@ -1,5 +1,9 @@
 const { ensureLogin } = require("../../utils/auth");
 const { showError } = require("../../utils/errors");
+const {
+  removePendingHistoryJob,
+  upsertPendingHistoryJob
+} = require("../../utils/pending-history");
 const { request } = require("../../utils/request");
 
 const POLL_INTERVAL = 1200;
@@ -467,7 +471,40 @@ Page({
       this.setData(nextState);
     }
 
+    this.syncPendingHistory(job, nextHairPreviewUrl, nextSceneUrls, nextCompletedSceneCount);
     this.updateProgressState();
+  },
+
+  syncPendingHistory(job, hairPreviewUrl, sceneUrls, completedSceneCount) {
+    if (!job || !job.job_id) {
+      return;
+    }
+
+    if (isTerminalStatus(job.status)) {
+      removePendingHistoryJob(job.job_id);
+      return;
+    }
+
+    upsertPendingHistoryJob({
+      job_id: job.job_id,
+      status: job.status,
+      upload_url: job.upload_url || "",
+      hair_preview_url: hairPreviewUrl || "",
+      result_image_url: job.result_image_url || hairPreviewUrl || "",
+      result_image_urls: sceneUrls || [],
+      completed_scene_count: completedSceneCount || 0,
+      media_expired: !!job.media_expired,
+      media_expires_at: job.media_expires_at || "",
+      hairstyle_id: job.hairstyle_id || (this.data.job && this.data.job.hairstyle_id) || "",
+      hairstyle_name: job.hairstyle_name || (this.data.job && this.data.job.hairstyle_name) || "",
+      scene_id: job.scene_id || (this.data.job && this.data.job.scene_id) || "",
+      scene_name: job.scene_name || (this.data.job && this.data.job.scene_name) || "",
+      generator_backend: job.generator_backend || (this.data.job && this.data.job.generator_backend) || "",
+      error_code: job.error_code || "",
+      error_message: job.error_message || "",
+      created_at: job.created_at || (this.data.job && this.data.job.created_at) || new Date().toISOString(),
+      updated_at: job.updated_at || new Date().toISOString()
+    });
   },
 
   handleResultImageLoad() {
