@@ -1,34 +1,43 @@
 <view class="screen landing-screen">
   <view class="landing-head">
     <view class="title hero-title">上传照片，开始换发</view>
-    <view wx:if="{{profileSummary}}" class="quota-pill">
-      剩余次数 {{profileSummary.remaining_quota}} · 本月已用 {{profileSummary.monthly_used}}
-    </view>
+    <view class="subtitle hero-subtitle">先上传清晰自拍照，再按步骤选择发型、场景和生成方案。</view>
+    <view wx:if="{{profileSummary}}" class="quota-pill">剩余 {{profileSummary.remaining_quota}} 次</view>
   </view>
 
-  <view wx:if="{{showcaseItems.length}}" class="showcase-section">
-    <view class="showcase-head">
-      <view class="showcase-title">效果示例</view>
+  <view wx:if="{{showcases.length}}" class="showcase-section">
+    <view class="section-row">
+      <view class="section-title">精选示例</view>
+      <view class="section-note">先看 6 组灵感搭配</view>
     </view>
-    <scroll-view class="showcase-scroll" scroll-x="true" enable-flex="true" show-scrollbar="false">
+    <view class="showcase-grid">
       <view
-        wx:for="{{showcaseItems}}"
+        wx:for="{{showcases}}"
         wx:key="id"
-        class="showcase-card"
+        class="showcase-card panel"
+        bindtap="openExampleDetail"
+        data-id="{{item.id}}"
       >
-        <image class="showcase-image" src="{{item.coverUrl}}" mode="aspectFill" lazy-load="true"></image>
-        <view class="showcase-tag">{{item.tag}}</view>
-        <view class="showcase-name">{{item.name}}</view>
+        <image class="showcase-cover" src="{{item.cover_url}}" mode="aspectFill" lazy-load="true"></image>
+        <view class="showcase-body">
+          <view class="showcase-name">{{item.title}}</view>
+          <view class="showcase-summary">{{item.summary}}</view>
+        </view>
       </view>
-    </scroll-view>
+    </view>
   </view>
 
   <view class="panel upload-panel">
+    <view class="section-row section-row-tight">
+      <view class="section-title">上传照片</view>
+      <view class="section-note">支持 JPG、PNG</view>
+    </view>
+
     <view wx:if="{{selectedImage}}" class="preview-shell">
       <view class="preview-card" bindtap="previewImage">
         <image class="preview-image" src="{{selectedImage}}" mode="aspectFill"></image>
         <view class="preview-badge">
-          {{imagePreparing ? '处理中' : (uploadReady ? '已就绪' : (uploadPriming ? '上传中' : '已选择'))}}
+          {{imagePreparing ? '处理中' : (uploadReady ? '已通过' : (uploadPriming ? '上传中' : (uploadInvalid ? '需重选' : '已选择')))}}
         </view>
       </view>
       <view class="preview-actions">
@@ -39,16 +48,15 @@
 
     <view wx:else class="upload-stage" bindtap="openImageSource">
       <view class="upload-stage-frame">
-        <view class="upload-stage-deco"></view>
         <view class="upload-stage-icon">+</view>
         <view class="upload-stage-title">点击上传照片</view>
-        <view class="upload-stage-copy">支持 JPG、PNG 格式</view>
+        <view class="upload-stage-copy">建议清晰单人正脸或半侧脸自拍</view>
       </view>
     </view>
 
     <view
       wx:if="{{selectedImage && uploadMessage}}"
-      class="upload-status {{uploadReady ? 'ready' : ((imagePreparing || uploadPriming) ? 'working' : 'idle')}}"
+      class="upload-status {{uploadInvalid ? 'invalid' : (uploadReady ? 'ready' : ((imagePreparing || uploadPriming) ? 'working' : 'idle'))}}"
     >
       <view class="upload-status-text">{{uploadMessage}}</view>
       <view wx:if="{{imagePreparing || uploadPriming}}" class="upload-progress">
@@ -59,176 +67,51 @@
       </view>
     </view>
 
-  </view>
-
-  <view class="panel selection-panel">
-    <view class="selection-top">
-      <view>
-        <view class="section-title selection-title">选择搭配</view>
-      </view>
-      <view class="selection-link" bindtap="goHistory">作品</view>
-    </view>
-
-    <view class="selection-grid">
-      <view class="selection-card {{selectedHairstyle ? 'filled' : ''}}" bindtap="openTemplatePicker">
-        <view wx:if="{{selectedHairstyle && selectedHairstyle.cover_url}}" class="selection-cover-stage">
-          <image
-            class="selection-cover selection-cover-hair"
-            src="{{selectedHairstyle.cover_url}}"
-            mode="aspectFill"
-            lazy-load="true"
-          ></image>
-        </view>
-        <view wx:else class="selection-cover selection-placeholder">发型</view>
-        <view class="selection-label">已选发型</view>
-        <view class="selection-value">{{selectedHairstyle ? selectedHairstyle.name : '去选择发型'}}</view>
-      </view>
-
-      <view class="selection-card {{selectedScene ? 'filled' : ''}}" bindtap="openScenePicker">
-        <image
-          wx:if="{{selectedScene && selectedScene.cover_url}}"
-          class="selection-cover selection-cover-scene"
-          src="{{selectedScene.cover_url}}"
-          mode="aspectFill"
-          lazy-load="true"
-        ></image>
-        <view wx:else class="selection-cover selection-placeholder">场景</view>
-        <view class="selection-label">已选场景</view>
-        <view class="selection-value">{{selectedScene ? selectedScene.name : '去选择场景'}}</view>
-      </view>
-    </view>
-
-    <view class="recommend-shell">
-      <view class="recommend-top">
-        <view class="recommend-title">智能推荐</view>
-        <view class="recommend-gender-switch">
-          <view
-            class="recommend-gender-pill {{recommendationGender === 'female' ? 'active' : ''}}"
-            data-gender="female"
-            bindtap="selectRecommendationGender"
-          >
-            女生
-          </view>
-          <view
-            class="recommend-gender-pill {{recommendationGender === 'male' ? 'active' : ''}}"
-            data-gender="male"
-            bindtap="selectRecommendationGender"
-          >
-            男生
-          </view>
-        </view>
-      </view>
-
-      <button
-        class="secondary-button recommend-trigger"
-        bindtap="runRecommendation"
-        loading="{{recommendationLoading}}"
-        disabled="{{!selectedImage || recommendationLoading || imagePreparing}}"
-      >
-        {{selectedImage ? '生成智能推荐' : '上传照片后可用'}}
-      </button>
-
-      <view wx:if="{{recommendationMessage}}" class="recommend-status">{{recommendationMessage}}</view>
-
-      <view wx:if="{{recommendedHairstyles.length || recommendedScenes.length}}" class="recommend-result">
-        <view wx:if="{{recommendedHairstyles.length}}" class="recommend-group">
-          <view class="recommend-group-title">推荐发型</view>
-          <scroll-view class="recommend-scroll" scroll-x="true" enable-flex="true" show-scrollbar="false">
-            <view
-              wx:for="{{recommendedHairstyles}}"
-              wx:key="id"
-              class="recommend-card {{item.selected ? 'selected' : ''}}"
-              data-id="{{item.id}}"
-              bindtap="applyRecommendedHairstyle"
-            >
-              <view class="recommend-cover-stage">
-                <image class="recommend-cover recommend-cover-hair" src="{{item.cover_url}}" mode="aspectFill" lazy-load="true"></image>
-              </view>
-              <view class="recommend-name">{{item.name}}</view>
-              <view wx:if="{{item.reason}}" class="recommend-reason">{{item.reason}}</view>
-              <view class="recommend-action">{{item.selected ? '已应用' : '点击应用'}}</view>
-            </view>
-          </scroll-view>
-        </view>
-
-        <view wx:if="{{recommendedScenes.length}}" class="recommend-group">
-          <view class="recommend-group-title">推荐场景</view>
-          <scroll-view class="recommend-scroll" scroll-x="true" enable-flex="true" show-scrollbar="false">
-            <view
-              wx:for="{{recommendedScenes}}"
-              wx:key="id"
-              class="recommend-card {{item.selected ? 'selected' : ''}}"
-              data-id="{{item.id}}"
-              bindtap="applyRecommendedScene"
-            >
-              <image class="recommend-cover recommend-cover-scene" src="{{item.cover_url}}" mode="aspectFill" lazy-load="true"></image>
-              <view class="recommend-name">{{item.name}}</view>
-              <view wx:if="{{item.reason}}" class="recommend-reason">{{item.reason}}</view>
-              <view class="recommend-action">{{item.selected ? '已应用' : '点击应用'}}</view>
-            </view>
-          </scroll-view>
-        </view>
-      </view>
+    <view wx:if="{{selectedHairstyleName || selectedSceneName}}" class="current-selection">
+      <view class="current-selection-line">已选发型：{{selectedHairstyleName || '未选择'}}</view>
+      <view class="current-selection-line">已选场景：{{selectedSceneName || '未选择'}}</view>
     </view>
   </view>
 
-  <view class="panel output-panel">
-    <view class="section-title selection-title">输出设置</view>
-    <view class="option-group">
-      <view class="option-label">生成方案</view>
-      <view class="generator-grid">
-        <view
-          wx:for="{{generationBackends}}"
-          wx:key="id"
-          class="generator-card {{selectedGeneratorBackend === item.id ? 'active' : ''}} {{!item.enabled ? 'disabled' : ''}}"
-          data-value="{{item.id}}"
-          bindtap="selectGeneratorBackend"
-        >
-          <view class="generator-name">{{item.name}}</view>
-          <view class="generator-copy">{{item.description}}</view>
-        </view>
+  <view class="panel analysis-panel">
+    <view class="section-row section-row-tight">
+      <view class="section-title">{{recommendationTitle}}</view>
+      <view wx:if="{{recommendationState === 'ready'}}" class="analysis-pill">已完成</view>
+    </view>
+    <view class="analysis-summary">{{recommendationSummary}}</view>
+
+    <view wx:if="{{recommendationFaceShape}}" class="analysis-shape">脸型：{{recommendationFaceShape}}</view>
+
+    <view wx:if="{{recommendationFeatureTags.length}}" class="analysis-chip-row">
+      <view wx:for="{{recommendationFeatureTags}}" wx:key="*this" class="analysis-chip">{{item}}</view>
+    </view>
+
+    <view wx:if="{{recommendationHairstyles.length}}" class="analysis-group">
+      <view class="analysis-group-label">推荐发型</view>
+      <view class="analysis-chip-row">
+        <view wx:for="{{recommendationHairstyles}}" wx:key="*this" class="analysis-chip light">{{item}}</view>
       </view>
     </view>
 
-    <view class="option-group">
-      <view class="option-label">画幅比例</view>
-      <view class="option-row">
-        <view
-          wx:for="{{aspectRatioOptions}}"
-          wx:key="id"
-          class="option-chip {{selectedAspectRatio === item.id ? 'active' : ''}}"
-          data-value="{{item.id}}"
-          bindtap="selectAspectRatio"
-        >
-          {{item.label}}
-        </view>
+    <view wx:if="{{recommendationScenes.length}}" class="analysis-group">
+      <view class="analysis-group-label">推荐场景</view>
+      <view class="analysis-chip-row">
+        <view wx:for="{{recommendationScenes}}" wx:key="*this" class="analysis-chip light">{{item}}</view>
       </view>
     </view>
 
-    <view wx:if="{{resolutionOptions.length}}" class="option-group">
-      <view class="option-label">输出清晰度</view>
-      <view class="option-row">
-        <view
-          wx:for="{{resolutionOptions}}"
-          wx:key="id"
-          class="option-chip {{selectedResolution === item.id ? 'active' : ''}}"
-          data-value="{{item.id}}"
-          bindtap="selectResolution"
-        >
-          {{item.label}}
-        </view>
-      </view>
-    </view>
+    <button
+      wx:if="{{selectedImage}}"
+      class="secondary-button analysis-button"
+      bindtap="openRecommendation"
+    >
+      查看推荐
+    </button>
   </view>
 
   <view class="floating-bar">
-    <button
-      class="primary-button"
-      loading="{{submitting}}"
-      disabled="{{!selectedImage || !selectedHairstyle || !selectedScene || submitting || imagePreparing}}"
-      bindtap="createJob"
-    >
-      {{selectedImage && selectedHairstyle && selectedScene ? '开始生成' : '请先完成上传与搭配'}}
+    <button class="primary-button" bindtap="goNext" disabled="{{!selectedImage || imagePreparing || uploadInvalid}}">
+      选发型
     </button>
   </view>
 </view>

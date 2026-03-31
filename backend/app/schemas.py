@@ -41,6 +41,26 @@ class TemplateCatalogResponse(BaseModel):
     generation_backends: list["GenerationBackendOption"] = Field(default_factory=list)
 
 
+class ShowcaseItem(BaseModel):
+    id: str
+    title: str
+    summary: str
+    cover_url: str
+    hairstyle_id: str
+    hairstyle_name: str
+    hairstyle_cover_url: str
+    scene_id: str
+    scene_name: str
+    scene_cover_url: str
+    generator_backend: str
+    aspect_ratio: str
+    resolution: str | None = None
+
+
+class ShowcaseResponse(BaseModel):
+    items: list[ShowcaseItem] = Field(default_factory=list)
+
+
 class GenerationBackendOption(BaseModel):
     id: str
     name: str

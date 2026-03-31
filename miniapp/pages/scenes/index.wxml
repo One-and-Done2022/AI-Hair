@@ -1,16 +1,25 @@
 <view class="screen scene-screen">
+  <view class="flow-nav">
+    <view class="flow-nav-group">
+      <view class="flow-nav-button" bindtap="goBackStep">上一步</view>
+      <view class="flow-nav-button" bindtap="resetFlow">回首页</view>
+    </view>
+    <view class="flow-nav-caption">定好场景后再选生成方案</view>
+  </view>
+
   <view class="progress-shell">
     <view class="progress-top">
-      <view class="progress-step-text">第二步 / 共三步</view>
-      <view class="progress-percent">66%</view>
+      <view class="progress-step-text">第二步 / 共四步</view>
+      <view class="progress-percent">50%</view>
     </view>
     <view class="progress-track">
-      <view class="progress-fill"></view>
+      <view class="progress-fill progress-fill-half"></view>
     </view>
   </view>
 
   <view class="editorial-head">
-    <view class="title editorial-title">步骤 2：选择场景</view>
+    <view class="title editorial-title">选择场景</view>
+    <view class="subtitle editorial-subtitle">场景只负责氛围、光线和服饰，不改你的已选发型。</view>
   </view>
 
   <view class="panel combo-card">
@@ -24,12 +33,10 @@
     </view>
     <view wx:else class="combo-cover"></view>
     <view class="combo-body">
-      <view class="combo-label">当前组合</view>
+      <view class="combo-label">当前发型</view>
       <view class="combo-title">{{selectedHairstyle ? selectedHairstyle.name : '未选择发型'}}</view>
-      <view class="combo-meta">{{selectedHairstyleMeta || '待选择'}}</view>
-      <view class="combo-current">场景：{{selectedSceneName || '未选择'}}</view>
+      <view class="combo-meta">{{selectedHairstyleMeta || '继续挑一个合适场景'}}</view>
     </view>
-    <view class="combo-link" bindtap="goBackStep">返回</view>
   </view>
 
   <scroll-view class="style-switch" scroll-x="true" enable-flex="true" show-scrollbar="false">
@@ -68,14 +75,14 @@
         <view class="scene-name">{{item.name}}</view>
         <view class="scene-desc">{{item.description}}</view>
         <view class="scene-chip-row">
-          <view class="scene-chip">{{item.style_line_label}}</view>
+          <view wx:if="{{item.style_line_label}}" class="scene-chip">{{item.style_line_label}}</view>
           <view wx:if="{{item.primaryTag}}" class="scene-chip">{{item.primaryTag}}</view>
         </view>
       </view>
     </view>
   </view>
 
-  <view class="bottom-bar">
-    <button class="primary-button" bindtap="saveSelection">下一步</button>
+  <view class="floating-bar">
+    <button class="primary-button" bindtap="goNext">下一步，选参数</button>
   </view>
 </view>

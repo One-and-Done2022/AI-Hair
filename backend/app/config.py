@@ -116,6 +116,8 @@ class Settings:
     ark_api_key: str
     ark_api_keys: tuple[ArkApiCredential, ...]
     ark_api_disabled_key_ids: tuple[str, ...]
+    seedream_basic_allowed_key_ids: tuple[str, ...]
+    seedream_premium_allowed_key_ids: tuple[str, ...]
     ark_base_url: str
     ark_image_model: str
     seedream_basic_model: str
@@ -125,15 +127,18 @@ class Settings:
     nano_banana_pro_api_key: str
     nano_banana_pro_base_url: str
     nano_banana_pro_model: str
+    nano_banana_pro_max_concurrency: int
     nano_banana_2_api_key: str
     nano_banana_2_base_url: str
     nano_banana_2_model: str
+    nano_banana_2_max_concurrency: int
     sora_image_api_key: str
     sora_image_base_url: str
     sora_image_model: str
     image_understanding_api_key: str
     image_understanding_base_url: str
     image_understanding_model: str
+    image_understanding_max_concurrency: int
     image_understanding_timeout_seconds: int
     job_worker_concurrency: int
     queue_backend: str
@@ -182,6 +187,27 @@ class Settings:
             self.result_dir.mkdir(parents=True, exist_ok=True)
         if self.is_sqlite:
             self.database_path.parent.mkdir(parents=True, exist_ok=True)
+
+    def ark_api_keys_for_model(self, model_name: str | None = None) -> tuple[ArkApiCredential, ...]:
+        normalized_model = (model_name or "").strip()
+        if not normalized_model:
+            return self.ark_api_keys
+
+        allowed_key_ids: tuple[str, ...] = ()
+        if normalized_model == self.seedream_basic_model:
+            allowed_key_ids = self.seedream_basic_allowed_key_ids
+        elif normalized_model in {self.seedream_premium_model, self.ark_image_model}:
+            allowed_key_ids = self.seedream_premium_allowed_key_ids
+
+        if not allowed_key_ids:
+            return self.ark_api_keys
+
+        allowed_set = {item.strip() for item in allowed_key_ids if item.strip()}
+        return tuple(
+            credential
+            for credential in self.ark_api_keys
+            if credential.key_id in allowed_set
+        )
 
 
 def _default_database_url(storage_dir: Path) -> str:
@@ -268,18 +294,20 @@ def get_settings() -> Settings:
         ark_api_key=(ark_api_keys[0].api_key if ark_api_keys else "").strip(),
         ark_api_keys=ark_api_keys,
         ark_api_disabled_key_ids=_env_csv_tuple("ARK_API_DISABLED_KEY_IDS"),
+        seedream_basic_allowed_key_ids=_env_csv_tuple("SEEDREAM_BASIC_ALLOWED_KEY_IDS"),
+        seedream_premium_allowed_key_ids=_env_csv_tuple("SEEDREAM_PREMIUM_ALLOWED_KEY_IDS"),
         ark_base_url=os.getenv(
             "ARK_BASE_URL", "https://ark.cn-beijing.volces.com/api/v3"
         ).strip(),
         ark_image_model=os.getenv(
-            "ARK_IMAGE_MODEL", "doubao-seedream-5-0-260128"
+            "ARK_IMAGE_MODEL", "doubao-seedream-4-5-251128"
         ).strip(),
         seedream_basic_model=os.getenv(
             "SEEDREAM_BASIC_MODEL", "doubao-seedream-4-5-251128"
         ).strip(),
         seedream_premium_model=os.getenv(
             "SEEDREAM_PREMIUM_MODEL",
-            os.getenv("ARK_IMAGE_MODEL", "doubao-seedream-5-0-260128"),
+            os.getenv("ARK_IMAGE_MODEL", "doubao-seedream-4-5-251128"),
         ).strip(),
         ark_key_cooldown_seconds=_env_int("ARK_API_KEY_COOLDOWN_SECONDS", 120),
         image_generator_backend=image_generator_backend,
@@ -290,6 +318,10 @@ def get_settings() -> Settings:
         nano_banana_pro_model=os.getenv(
             "NANO_BANANA_PRO_MODEL", "gemini-3-pro-image-preview"
         ).strip(),
+        nano_banana_pro_max_concurrency=max(
+            1,
+            _env_int("NANO_BANANA_PRO_MAX_CONCURRENCY", 8),
+        ),
         nano_banana_2_api_key=os.getenv("NANO_BANANA_2_API_KEY", "").strip(),
         nano_banana_2_base_url=os.getenv(
             "NANO_BANANA_2_BASE_URL", "https://api.apiyi.com"
@@ -297,6 +329,10 @@ def get_settings() -> Settings:
         nano_banana_2_model=os.getenv(
             "NANO_BANANA_2_MODEL", "gemini-3.1-flash-image-preview"
         ).strip(),
+        nano_banana_2_max_concurrency=max(
+            1,
+            _env_int("NANO_BANANA_2_MAX_CONCURRENCY", 8),
+        ),
         sora_image_api_key=os.getenv("SORA_IMAGE_API_KEY", "").strip(),
         sora_image_base_url=os.getenv(
             "SORA_IMAGE_BASE_URL", "https://api.apiyi.com/v1"
@@ -313,6 +349,10 @@ def get_settings() -> Settings:
         image_understanding_model=os.getenv(
             "IMAGE_UNDERSTANDING_MODEL", "gemini-3-pro-preview"
         ).strip(),
+        image_understanding_max_concurrency=max(
+            1,
+            _env_int("IMAGE_UNDERSTANDING_MAX_CONCURRENCY", 8),
+        ),
         image_understanding_timeout_seconds=max(
             30,
             _env_int("IMAGE_UNDERSTANDING_TIMEOUT_SECONDS", 120),
@@ -340,7 +380,7 @@ def get_settings() -> Settings:
         wechat_app_id=os.getenv("WECHAT_APP_ID", "").strip(),
         wechat_app_secret=os.getenv("WECHAT_APP_SECRET", "").strip(),
         allow_dev_login=_env_bool("ALLOW_DEV_LOGIN", True),
-        enforce_face_detection=_env_bool("ENFORCE_FACE_DETECTION", True),
+        enforce_face_detection=_env_bool("ENFORCE_FACE_DETECTION", False),
         max_upload_size_mb=int(os.getenv("MAX_UPLOAD_SIZE_MB", "10")),
         media_retention_days=max(1, _env_int("MEDIA_RETENTION_DAYS", 7)),
         api_token_ttl_hours=int(os.getenv("API_TOKEN_TTL_HOURS", "72")),

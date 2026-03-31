@@ -1,0 +1,47 @@
+<view class="screen examples-screen">
+  <view class="flow-nav">
+    <view class="flow-nav-group">
+      <view class="flow-nav-button" bindtap="goBackStep">返回</view>
+      <view class="flow-nav-button" bindtap="resetFlow">回首页</view>
+    </view>
+    <view class="flow-nav-caption">查看精选搭配示例</view>
+  </view>
+
+  <view wx:if="{{loading}}" class="panel loading-panel">
+    <view class="section-title">正在加载示例</view>
+  </view>
+
+  <block wx:elif="{{item}}">
+    <view class="hero-card panel">
+      <image class="hero-image" src="{{item.cover_url}}" mode="aspectFill" lazy-load="true"></image>
+      <view class="hero-body">
+        <view class="title hero-title">{{item.title}}</view>
+        <view class="subtitle hero-subtitle">{{item.summary}}</view>
+      </view>
+    </view>
+
+    <view class="detail-grid">
+      <view class="panel detail-card">
+        <image class="detail-cover detail-cover-hair" src="{{item.hairstyle_cover_url}}" mode="aspectFill" lazy-load="true"></image>
+        <view class="detail-label">对应发型</view>
+        <view class="detail-title">{{item.hairstyle_name}}</view>
+      </view>
+
+      <view class="panel detail-card">
+        <image class="detail-cover detail-cover-scene" src="{{item.scene_cover_url}}" mode="aspectFill" lazy-load="true"></image>
+        <view class="detail-label">对应场景</view>
+        <view class="detail-title">{{item.scene_name}}</view>
+      </view>
+    </view>
+
+    <view class="panel info-card">
+      <view class="section-title">建议方案</view>
+      <view class="info-line">{{item.generator_backend === 'premium' ? '高级版' : '基础版'}}</view>
+      <view class="info-meta">默认比例 {{item.aspect_ratio}}{{item.resolution ? ' · 清晰度 ' + item.resolution : ''}}</view>
+    </view>
+
+    <view class="floating-bar">
+      <button class="primary-button" bindtap="applyShowcase">{{hasImage ? '使用这组搭配' : '先上传照片再使用'}}</button>
+    </view>
+  </block>
+</view>

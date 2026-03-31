@@ -37,13 +37,15 @@ def create_app() -> FastAPI:
         generator = build_generator()
         job_queue = build_job_queue()
         key_pool = None
+        initial_model_name = getattr(generator, "model_name", None)
+        initial_credentials = current_settings.ark_api_keys_for_model(initial_model_name)
         if (
             not current_settings.use_mock_generator
             and getattr(generator, "supports_key_pool", False)
-            and current_settings.ark_api_keys
+            and initial_credentials
         ):
             key_pool = ApiKeyPool(
-                current_settings.ark_api_keys,
+                initial_credentials,
                 default_cooldown_seconds=current_settings.ark_key_cooldown_seconds,
                 disabled_key_ids=current_settings.ark_api_disabled_key_ids,
             )

@@ -12,6 +12,7 @@ from dataclasses import dataclass
 from PIL import Image
 
 from app.config import get_settings
+from app.services.concurrency_limiter import concurrency_slot
 
 
 SCENE_BLOCK_KEYS = (
@@ -650,19 +651,24 @@ class ImageUnderstandingService:
         self.model_name = settings.image_understanding_model
         self._api_key = settings.image_understanding_api_key
         self._base_url = settings.image_understanding_base_url.rstrip("/")
+        self._max_concurrency = settings.image_understanding_max_concurrency
         self._timeout_seconds = settings.image_understanding_timeout_seconds
+        self._limiter_name = (
+            f"image-understanding:{hashlib.sha1(self._api_key.encode('utf-8')).hexdigest()[:12]}"
+        )
 
     def extract_scene_blocks(self, image_bytes: bytes) -> SceneUnderstandingResult:
         optimized_bytes = _prepare_understanding_image(image_bytes)
         data_url = _build_data_url(optimized_bytes)
-        payload = _run_chat_completion_via_curl(
-            base_url=self._base_url,
-            api_key=self._api_key,
-            model_name=self.model_name,
-            prompt_text=build_scene_understanding_prompt(),
-            data_url=data_url,
-            timeout_seconds=self._timeout_seconds,
-        )
+        with concurrency_slot(self._limiter_name, self._max_concurrency):
+            payload = _run_chat_completion_via_curl(
+                base_url=self._base_url,
+                api_key=self._api_key,
+                model_name=self.model_name,
+                prompt_text=build_scene_understanding_prompt(),
+                data_url=data_url,
+                timeout_seconds=self._timeout_seconds,
+            )
 
         raw_content = _extract_message_content(payload)
         if not raw_content.strip():

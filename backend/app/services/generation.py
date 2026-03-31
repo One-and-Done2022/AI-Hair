@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import base64
+import hashlib
 import io
 import logging
 import re
@@ -25,6 +26,7 @@ from openai import (
 from PIL import Image, ImageDraw, ImageFilter, ImageOps
 
 from app.config import get_settings
+from app.services.concurrency_limiter import concurrency_slot
 from app.services.key_pool import ApiKeyLease
 
 
@@ -510,7 +512,7 @@ class SeedreamGenerator(BaseGenerator):
         except httpx.TimeoutException as exc:
             raise ImageGenerationError(
                 "upstream_timeout",
-                "Seedream 5.0 request timed out.",
+                "Seedream request timed out.",
                 retryable=True,
                 retry_after_seconds=30,
             ) from exc
@@ -536,7 +538,7 @@ class SeedreamGenerator(BaseGenerator):
 
         raise ImageGenerationError(
             "upstream_empty",
-            "Seedream 5.0 returned no image payload.",
+            "Seedream returned no image payload.",
         )
 
     def _generate_via_rest_api(
@@ -685,14 +687,15 @@ class SeedreamGenerator(BaseGenerator):
     ) -> GenerationResult:
         if provider_key is None:
             settings = get_settings()
-            if not settings.ark_api_keys:
+            eligible_credentials = settings.ark_api_keys_for_model(self.model_name)
+            if not eligible_credentials:
                 raise ImageGenerationError(
                     "missing_api_key",
-                    "At least one Ark API key must be configured when using Seedream.",
+                    f"No Ark API key is allowed for Seedream model {self.model_name}.",
                 )
             provider_key = ApiKeyLease(
-                key_id=settings.ark_api_keys[0].key_id,
-                api_key=settings.ark_api_keys[0].api_key,
+                key_id=eligible_credentials[0].key_id,
+                api_key=eligible_credentials[0].api_key,
             )
         context = context or GenerationContext(
             hairstyle_name="",
@@ -962,6 +965,7 @@ class ApiYiImageGenerator(BaseGenerator):
         model_name: str,
         provider_name: str,
         api_key_env_name: str,
+        max_concurrency: int,
     ) -> None:
         if not api_key:
             raise ImageGenerationError(
@@ -972,6 +976,10 @@ class ApiYiImageGenerator(BaseGenerator):
         self._base_url = base_url
         self.model_name = model_name
         self.provider_name = provider_name
+        self._max_concurrency = max(1, int(max_concurrency))
+        self._limiter_name = (
+            f"{provider_name}:{hashlib.sha1(api_key.encode('utf-8')).hexdigest()[:12]}"
+        )
 
     def _endpoint(self) -> str:
         return f"{self._base_url}/v1beta/models/{self.model_name}:generateContent"
@@ -1013,15 +1021,16 @@ class ApiYiImageGenerator(BaseGenerator):
 
         timeout_seconds = NANO_IMAGE_TIMEOUT_MAP.get(context.resolution, 300)
         try:
-            response = httpx.post(
-                self._endpoint(),
-                headers={
-                    "Authorization": f"Bearer {self._api_key}",
-                    "Content-Type": "application/json",
-                },
-                json=request_payload,
-                timeout=timeout_seconds,
-            )
+            with concurrency_slot(self._limiter_name, self._max_concurrency):
+                response = httpx.post(
+                    self._endpoint(),
+                    headers={
+                        "Authorization": f"Bearer {self._api_key}",
+                        "Content-Type": "application/json",
+                    },
+                    json=request_payload,
+                    timeout=timeout_seconds,
+                )
         except httpx.TimeoutException as exc:
             raise ImageGenerationError(
                 "upstream_timeout",
@@ -1068,6 +1077,7 @@ class NanoBananaProGenerator(ApiYiImageGenerator):
             model_name=settings.nano_banana_pro_model,
             provider_name="nano-banana-pro",
             api_key_env_name="NANO_BANANA_PRO_API_KEY",
+            max_concurrency=settings.nano_banana_pro_max_concurrency,
         )
 
 
@@ -1080,6 +1090,7 @@ class NanoBanana2Generator(ApiYiImageGenerator):
             model_name=settings.nano_banana_2_model,
             provider_name="nano-banana-2",
             api_key_env_name="NANO_BANANA_2_API_KEY",
+            max_concurrency=settings.nano_banana_2_max_concurrency,
         )
 
 

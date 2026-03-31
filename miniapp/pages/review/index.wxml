@@ -1,0 +1,68 @@
+<view class="screen review-screen">
+  <view class="flow-nav">
+    <view class="flow-nav-group">
+      <view class="flow-nav-button" bindtap="goBackStep">上一步</view>
+      <view class="flow-nav-button" bindtap="resetFlow">回首页</view>
+    </view>
+    <view class="flow-nav-caption">确认全部选择后开始生成</view>
+  </view>
+
+  <view class="progress-shell">
+    <view class="progress-top">
+      <view class="progress-step-text">第四步 / 共四步</view>
+      <view class="progress-percent">100%</view>
+    </view>
+    <view class="progress-track">
+      <view class="progress-fill"></view>
+    </view>
+  </view>
+
+  <view class="editorial-head">
+    <view class="title editorial-title">确认生成</view>
+    <view class="subtitle editorial-subtitle">最后看一眼全部设置，确认无误后开始生成。</view>
+  </view>
+
+  <view wx:if="{{loading}}" class="panel loading-panel">
+    <view class="section-title">正在加载确认信息</view>
+  </view>
+
+  <block wx:else>
+    <view class="panel preview-panel">
+      <image class="preview-image" src="{{selectedImage}}" mode="aspectFill"></image>
+      <view class="preview-body">
+        <view class="preview-title">本次将返回 1 张换发预览和 2 张场景成片</view>
+        <view class="preview-copy">你可以先拿到仅换发图，再继续等待 2 张完整场景图。</view>
+      </view>
+    </view>
+
+    <view class="panel review-card" bindtap="goEditHairstyle">
+      <image class="review-cover review-cover-hair" src="{{selectedHairstyle.cover_url}}" mode="aspectFill" lazy-load="true"></image>
+      <view class="review-body">
+        <view class="review-label">发型</view>
+        <view class="review-title">{{selectedHairstyle.name}}</view>
+      </view>
+      <view class="review-link">修改</view>
+    </view>
+
+    <view class="panel review-card" bindtap="goEditScene">
+      <image class="review-cover review-cover-scene" src="{{selectedScene.cover_url}}" mode="aspectFill" lazy-load="true"></image>
+      <view class="review-body">
+        <view class="review-label">场景</view>
+        <view class="review-title">{{selectedScene.name}}</view>
+      </view>
+      <view class="review-link">修改</view>
+    </view>
+
+    <view class="panel settings-card" bindtap="goEditOptions">
+      <view class="section-title">生成方案</view>
+      <view class="settings-line">{{backendLabel}}</view>
+      <view class="settings-copy">{{backendDescription}}</view>
+      <view class="settings-meta">比例 {{selectedAspectRatio}}{{selectedResolution ? ' · 清晰度 ' + selectedResolution : ''}}</view>
+      <view class="settings-link">修改参数</view>
+    </view>
+
+    <view class="floating-bar">
+      <button class="primary-button" loading="{{submitting}}" bindtap="createJob">开始生成</button>
+    </view>
+  </block>
+</view>

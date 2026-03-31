@@ -62,7 +62,7 @@ GENERATOR_BACKEND_CAPABILITIES = {
     },
     "premium": {
         "label": "高级版",
-        "description": "先用 Nano Banana Pro 生成仅换发图，再用 Seedream 5.0 生成 2 张场景成片。支持常用画幅，清晰度可选 1K / 2K。",
+        "description": "先用 Nano Banana Pro 生成仅换发图，再用 Seedream 4.5 生成 2 张场景成片。支持常用画幅，清晰度可选 1K / 2K。",
         "supports_reference_image": True,
         "aspect_ratios": PLAN_SAFE_ASPECT_RATIOS,
         "resolutions": PREMIUM_PLAN_RESOLUTIONS,
@@ -71,9 +71,72 @@ GENERATOR_BACKEND_CAPABILITIES = {
         "hair_backend": "nano_banana_pro",
         "scene_backend": "seedream",
         "scene_model_tier": "premium",
-        "badge": "Nano Banana Pro + Seedream 5.0",
+        "badge": "Nano Banana Pro + Seedream 4.5",
     },
 }
+
+CURATED_SHOWCASES = (
+    {
+        "id": "showcase-morning-soft-bob",
+        "title": "清晨软光锁骨发",
+        "summary": "柔和窗光配锁骨层次，适合自然松弛的日常写真。",
+        "hairstyle_id": "female-collarbone-xinzhilei",
+        "scene_id": "morning-window-softlight",
+        "generator_backend": "basic",
+        "aspect_ratio": "3:4",
+        "resolution": "2K",
+    },
+    {
+        "id": "showcase-cafe-wave",
+        "title": "咖啡馆微卷长发",
+        "summary": "轻卷发尾搭配咖啡馆抓拍，氛围柔软又显精致。",
+        "hairstyle_id": "female-soft-wave-collarbone",
+        "scene_id": "cafe-candid-seat",
+        "generator_backend": "premium",
+        "aspect_ratio": "3:4",
+        "resolution": "2K",
+    },
+    {
+        "id": "showcase-rainy-straight",
+        "title": "雨窗黑长直氛围",
+        "summary": "黑长直与雨天窗边更容易做出安静情绪感。",
+        "hairstyle_id": "female-black-long-straight",
+        "scene_id": "rainy-window-mood",
+        "generator_backend": "premium",
+        "aspect_ratio": "3:4",
+        "resolution": "2K",
+    },
+    {
+        "id": "showcase-study-forward-spikes",
+        "title": "书房前刺头人像",
+        "summary": "利落短发配木质书房，整体会更干净有精神。",
+        "hairstyle_id": "male-forward-spikes",
+        "scene_id": "walnut-study-portrait",
+        "generator_backend": "basic",
+        "aspect_ratio": "3:4",
+        "resolution": "2K",
+    },
+    {
+        "id": "showcase-film-parted",
+        "title": "室内生活感三七分",
+        "summary": "韩系三七分适合自然生活流场景，完成度更稳定。",
+        "hairstyle_id": "male-korean-37-part",
+        "scene_id": "indoor-film-lifestyle",
+        "generator_backend": "basic",
+        "aspect_ratio": "3:4",
+        "resolution": "2K",
+    },
+    {
+        "id": "showcase-side-light-vintage",
+        "title": "强侧光复古背头",
+        "summary": "侧光结构和复古背头更适合偏时尚的大片氛围。",
+        "hairstyle_id": "male-vintage-slick-back",
+        "scene_id": "dramatic-side-light",
+        "generator_backend": "premium",
+        "aspect_ratio": "3:4",
+        "resolution": "2K",
+    },
+)
 
 LEGACY_GENERATOR_BACKEND_ALIASES = {
     "seedream": "premium",
@@ -426,6 +489,10 @@ def get_generation_backend_catalog() -> list[dict]:
         }
         for backend_id, config in GENERATOR_BACKEND_CAPABILITIES.items()
     ]
+
+
+def get_curated_showcases() -> list[dict]:
+    return [dict(item) for item in CURATED_SHOWCASES]
 
 
 def _load_json(name: str) -> list[dict]:

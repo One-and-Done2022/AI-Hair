@@ -55,6 +55,7 @@ def create_scene_understanding(
     return SceneUnderstandingResponse(
         upload_id=payload.upload_id,
         model_name=result.model_name,
+        subject_gender=result.subject_gender,
         blocks=result.blocks,
         scene_draft=scene_draft,
     )

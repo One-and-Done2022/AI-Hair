@@ -1,37 +1,24 @@
 const { ensureLogin } = require("../../utils/auth");
 const { showError } = require("../../utils/errors");
 const { request } = require("../../utils/request");
-
-function findById(items, id) {
-  if (!id) {
-    return null;
-  }
-  return items.find((item) => item.id === id) || null;
-}
-
-function decodeText(value) {
-  if (!value) {
-    return "";
-  }
-  try {
-    return decodeURIComponent(value);
-  } catch (error) {
-    return value;
-  }
-}
-
-function buildHairstyleMeta(item) {
-  if (!item) {
-    return "";
-  }
-  return item.category_label || item.style_line_label || "";
-}
+const {
+  readCreationDraft,
+  resetCreationDraft,
+  updateCreationDraft
+} = require("../../utils/creation-draft");
 
 const STYLE_LINE_OPTIONS = [
   { id: "all", label: "全部场景" },
   { id: "realistic_editorial", label: "写实写真" },
   { id: "fashion_editorial", label: "时尚大片" }
 ];
+
+function findById(items, id) {
+  if (!id) {
+    return null;
+  }
+  return (items || []).find((item) => item.id === id) || null;
+}
 
 function decorateScene(item) {
   return {
@@ -42,7 +29,7 @@ function decorateScene(item) {
 }
 
 function buildVisibleScenes(scenes, styleLine) {
-  return scenes.filter((item) => {
+  return (scenes || []).filter((item) => {
     if (styleLine !== "all" && item.style_line !== styleLine) {
       return false;
     }
@@ -60,45 +47,65 @@ function resolveVisibleSceneSelection(scenes, styleLine, selectedSceneId) {
   };
 }
 
+function buildHairstyleMeta(item) {
+  if (!item) {
+    return "";
+  }
+  return item.category_label || item.style_line_label || "";
+}
+
 Page({
   data: {
     loading: true,
     selectedHairstyle: null,
     selectedHairstyleMeta: "",
-    selectedGender: "",
     scenes: [],
-    selectedSceneId: "",
-    selectedStyleLine: "all",
-    styleLineOptions: STYLE_LINE_OPTIONS,
     visibleScenes: [],
-    selectedSceneName: ""
+    selectedSceneId: "",
+    selectedSceneName: "",
+    selectedStyleLine: "all",
+    styleLineOptions: STYLE_LINE_OPTIONS
   },
 
-  async onLoad(options) {
-    this.hairstyleId = options.hairstyleId || "";
-    this.hairstyleName = decodeText(options.hairstyleName);
-    this.gender = options.gender || "";
+  async onLoad() {
     await this.loadScenes();
   },
 
   async loadScenes() {
+    const draft = readCreationDraft();
+    if (!draft.imagePath) {
+      wx.showToast({
+        title: "请先上传照片",
+        icon: "none"
+      });
+      wx.switchTab({
+        url: "/pages/index/index"
+      });
+      return;
+    }
+
+    if (!draft.hairstyle || !draft.hairstyle.id) {
+      wx.redirectTo({
+        url: "/pages/templates/index"
+      });
+      return;
+    }
+
     this.setData({ loading: true });
     try {
       await ensureLogin();
       const catalog = await request({ url: "/api/templates" });
-      const cached = wx.getStorageSync("templateSelection") || {};
-      const selectedHairstyle =
-        findById(catalog.hairstyles, this.hairstyleId) ||
-        findById(catalog.hairstyles, cached.hairstyle && cached.hairstyle.id) ||
-        catalog.hairstyles[0] ||
-        null;
-      const selectedScene =
-        findById(catalog.scenes, cached.scene && cached.scene.id) ||
-        catalog.scenes[0] ||
-        null;
-      const decoratedScenes = (catalog.scenes || []).map(decorateScene);
-      const selectedStyleLine = (selectedHairstyle && selectedHairstyle.style_line) || "all";
+      this.catalog = catalog;
 
+      const selectedHairstyle =
+        findById(catalog.hairstyles, draft.hairstyle.id) || draft.hairstyle;
+      const decoratedScenes = (catalog.scenes || []).map(decorateScene);
+      const selectedScene =
+        findById(decoratedScenes, draft.scene && draft.scene.id) || null;
+      const selectedStyleLine =
+        (selectedScene && selectedScene.style_line) ||
+        (selectedHairstyle && selectedHairstyle.style_line) ||
+        "all";
       const sceneSelection = resolveVisibleSceneSelection(
         decoratedScenes,
         selectedStyleLine,
@@ -106,15 +113,9 @@ Page({
       );
 
       this.setData({
-        selectedHairstyle: selectedHairstyle
-          ? selectedHairstyle
-          : {
-              id: this.hairstyleId,
-              name: this.hairstyleName,
-              gender: this.gender
-            },
+        loading: false,
+        selectedHairstyle,
         selectedHairstyleMeta: buildHairstyleMeta(selectedHairstyle),
-        selectedGender: selectedHairstyle ? selectedHairstyle.gender : this.gender,
         scenes: decoratedScenes,
         selectedStyleLine,
         visibleScenes: sceneSelection.visibleScenes,
@@ -122,30 +123,23 @@ Page({
         selectedSceneName: sceneSelection.selectedSceneName
       });
     } catch (error) {
-      showError(error, { fallback: "加载失败" });
-    } finally {
       this.setData({ loading: false });
+      showError(error, { fallback: "加载场景失败" });
     }
   },
 
-  selectScene(event) {
-    const selectedId = event.currentTarget.dataset.id;
-    const selectedScene = findById(this.data.scenes, selectedId);
-    this.setData({
-      selectedSceneId: selectedId,
-      selectedSceneName: selectedScene ? selectedScene.name : ""
+  goBackStep() {
+    wx.navigateBack({
+      fail: () => {
+        wx.redirectTo({ url: "/pages/templates/index" });
+      }
     });
   },
 
-  previewScene(event) {
-    const selectedId = event.currentTarget.dataset.id;
-    const selectedScene = findById(this.data.scenes, selectedId);
-    if (!selectedScene || !selectedScene.cover_url) {
-      return;
-    }
-    wx.previewImage({
-      current: selectedScene.cover_url,
-      urls: [selectedScene.cover_url]
+  resetFlow() {
+    resetCreationDraft();
+    wx.switchTab({
+      url: "/pages/index/index"
     });
   },
 
@@ -164,15 +158,37 @@ Page({
     });
   },
 
-  goBackStep() {
-    wx.navigateBack();
+  selectScene(event) {
+    const selectedId = event.currentTarget.dataset.id;
+    const selectedScene = findById(this.data.scenes, selectedId);
+    if (!selectedScene) {
+      return;
+    }
+
+    this.setData({
+      selectedSceneId: selectedId,
+      selectedSceneName: selectedScene.name || ""
+    });
+    updateCreationDraft({
+      scene: selectedScene
+    });
   },
 
-  saveSelection() {
-    const selectedHairstyle = this.data.selectedHairstyle;
-    const selectedScene = findById(this.data.scenes, this.data.selectedSceneId);
+  previewScene(event) {
+    const selectedId = event.currentTarget.dataset.id;
+    const selectedScene = findById(this.data.scenes, selectedId);
+    if (!selectedScene || !selectedScene.cover_url) {
+      return;
+    }
+    wx.previewImage({
+      current: selectedScene.cover_url,
+      urls: [selectedScene.cover_url]
+    });
+  },
 
-    if (!selectedHairstyle || !selectedScene) {
+  goNext() {
+    const selectedScene = findById(this.data.scenes, this.data.selectedSceneId);
+    if (!selectedScene) {
       wx.showToast({
         title: "请先选择场景",
         icon: "none"
@@ -180,26 +196,11 @@ Page({
       return;
     }
 
-    wx.setStorageSync("templateSelection", {
-      hairstyle: selectedHairstyle,
-      scene: selectedScene,
-      gender: selectedHairstyle.gender || this.data.selectedGender || "male"
+    updateCreationDraft({
+      scene: selectedScene
     });
-
-    wx.showToast({
-      title: "模板已更新",
-      icon: "success"
+    wx.navigateTo({
+      url: "/pages/options/index"
     });
-
-    setTimeout(() => {
-      const pageCount = getCurrentPages().length;
-      if (pageCount >= 3) {
-        wx.navigateBack({ delta: 2 });
-        return;
-      }
-      wx.switchTab({
-        url: "/pages/index/index"
-      });
-    }, 350);
   }
 });
