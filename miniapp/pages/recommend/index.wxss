@@ -16,8 +16,7 @@
 
 .status-panel,
 .source-card,
-.recommend-grid,
-.scene-list {
+.recommend-list-panel {
   margin-top: 24rpx;
 }
 
@@ -65,14 +64,18 @@
 
 .recommend-top,
 .recommend-section-head {
-  margin-top: 28rpx;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 16rpx;
 }
 
+.recommend-list-panel {
+  padding: 24rpx;
+}
+
 .gender-switch {
+  margin-top: 18rpx;
   display: inline-flex;
   padding: 6rpx;
   border-radius: 999rpx;
@@ -94,14 +97,9 @@
   color: #ffffff;
 }
 
-.recommend-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 18rpx;
-}
-
-.recommend-card,
-.scene-card {
+.recommend-row,
+.scene-row {
+  margin-top: 18rpx;
   border-radius: 28rpx;
   overflow: hidden;
   background: #ffffff;
@@ -109,8 +107,8 @@
   box-shadow: 0 16rpx 36rpx rgba(0, 88, 186, 0.05);
 }
 
-.recommend-card.selected,
-.scene-card.selected {
+.recommend-row.selected,
+.scene-row.selected {
   box-shadow: 0 0 0 3rpx rgba(11, 94, 207, 0.18), 0 18rpx 40rpx rgba(0, 88, 186, 0.08);
 }
 
@@ -126,17 +124,14 @@
 
 .recommend-name,
 .scene-name {
-  margin-top: 14rpx;
   font-size: 26rpx;
   font-weight: 700;
   color: #20242a;
 }
 
-.recommend-card .recommend-name,
-.recommend-card .recommend-reason,
-.recommend-card .recommend-action {
-  padding-left: 18rpx;
-  padding-right: 18rpx;
+.recommend-row-body,
+.scene-row-body {
+  padding: 20rpx 22rpx 22rpx;
 }
 
 .recommend-reason,
@@ -156,11 +151,6 @@
   color: #0b5ecf;
 }
 
-.scene-list {
-  display: grid;
-  gap: 18rpx;
-}
-
 .scene-cover {
   width: 100%;
   height: 430rpx;
@@ -168,8 +158,11 @@
   background: #e2e8f0;
 }
 
-.scene-body {
-  padding: 20rpx 22rpx 22rpx;
+.empty-copy {
+  margin-top: 16rpx;
+  font-size: 24rpx;
+  line-height: 1.48;
+  color: #5d6670;
 }
 
 .floating-bar {

@@ -229,7 +229,7 @@ Page({
     }
   },
 
-  async refreshRecommendation({ silent = true, autoOpen = false } = {}) {
+  async refreshRecommendation({ silent = true } = {}) {
     const selectedImage = this.data.selectedImage || getCurrentImagePath();
     const draft = readCreationDraft();
     if (!selectedImage) {
@@ -243,9 +243,6 @@ Page({
       getCachedRecommendation();
     if (cachedRecommendation) {
       this.setData(buildRecommendationCard(cachedRecommendation, false, draft, selectedImage));
-      if (autoOpen) {
-        await this.openRecommendation({ skipImageCheck: true });
-      }
       return;
     }
 
@@ -264,9 +261,6 @@ Page({
         recommendationLoading: false,
         ...buildRecommendationCard(recommendation, false, readCreationDraft(), latestImage)
       });
-      if (recommendation && autoOpen) {
-        await this.openRecommendation({ skipImageCheck: true });
-      }
     } catch (error) {
       if (!silent) {
         showError(error, { fallback: "AI 分析失败，请稍后再试" });
@@ -455,7 +449,7 @@ Page({
         uploadInvalid: false,
         uploadMessage: `${compressionPrefix}照片已上传完成，可继续创作`
       });
-      await this.refreshRecommendation({ silent: true, autoOpen: true });
+      this.refreshRecommendation({ silent: true });
     } catch (error) {
       if (
         this.currentImageSelectionToken !== selectionToken ||
@@ -482,9 +476,8 @@ Page({
     }
   },
 
-  openRecommendation(options = {}) {
-    const { skipImageCheck = false } = options;
-    if (!skipImageCheck && !this.data.selectedImage) {
+  openRecommendation() {
+    if (!this.data.selectedImage) {
       wx.showToast({
         title: "请先上传照片",
         icon: "none"

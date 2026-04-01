@@ -1,7 +1,7 @@
 <view class="screen recommend-screen">
   <view class="editorial-head">
-    <view class="title editorial-title">AI 推荐搭配</view>
-    <view class="subtitle editorial-subtitle">基于当前照片，给你更合适的发型和场景组合。</view>
+    <view class="title editorial-title">AI 推荐</view>
+    <view class="subtitle editorial-subtitle">基于当前照片，为你推荐更合适的发型和场景。</view>
   </view>
 
   <view wx:if="{{showLoadingState}}" class="panel status-panel">
@@ -17,15 +17,17 @@
 
   <block wx:if="{{showContentState}}">
     <view class="panel source-card">
-      <image class="source-image" src="{{selectedImage}}" mode="aspectFill"></image>
+      <image wx:if="{{selectedImage}}" class="source-image" src="{{selectedImage}}" mode="aspectFill"></image>
       <view class="source-body">
         <view class="section-title source-title">已完成照片分析</view>
-        <view class="source-copy">你可以直接应用推荐，也可以继续手动挑选。</view>
+        <view class="source-copy">你可以先应用推荐，也可以继续手动挑选。</view>
       </view>
     </view>
 
-    <view class="recommend-top">
-      <view class="section-title">推荐发型</view>
+    <view class="panel recommend-list-panel">
+      <view class="recommend-top">
+        <view class="section-title">推荐发型</view>
+      </view>
       <view class="gender-switch">
         <view
           class="gender-pill {{femaleGenderClass}}"
@@ -42,37 +44,37 @@
           男生
         </view>
       </view>
-    </view>
-
-    <view class="recommend-grid">
+      <view wx:if="{{!recommendedHairstyles.length}}" class="empty-copy">暂无发型推荐</view>
       <view
         wx:for="{{recommendedHairstyles}}"
         wx:key="id"
-        class="recommend-card {{item.selectedClass}}"
+        class="recommend-row {{item.selectedClass}}"
         data-id="{{item.id}}"
         bindtap="applyRecommendedHairstyle"
       >
-        <image class="recommend-cover recommend-cover-hair" src="{{item.cover_url}}" mode="aspectFill" lazy-load="true"></image>
-        <view class="recommend-name">{{item.name}}</view>
-        <view class="recommend-reason">{{item.reason}}</view>
-        <view class="recommend-action">{{item.actionText}}</view>
+        <image wx:if="{{item.cover_url}}" class="recommend-cover recommend-cover-hair" src="{{item.cover_url}}" mode="aspectFill"></image>
+        <view class="recommend-row-body">
+          <view class="recommend-name">{{item.name}}</view>
+          <view class="recommend-reason">{{item.reason}}</view>
+          <view class="recommend-action">{{item.actionText}}</view>
+        </view>
       </view>
     </view>
 
-    <view class="recommend-section-head">
-      <view class="section-title">推荐场景</view>
-    </view>
-
-    <view class="scene-list">
+    <view class="panel recommend-list-panel">
+      <view class="recommend-section-head">
+        <view class="section-title">推荐场景</view>
+      </view>
+      <view wx:if="{{!recommendedScenes.length}}" class="empty-copy">暂无场景推荐</view>
       <view
         wx:for="{{recommendedScenes}}"
         wx:key="id"
-        class="scene-card {{item.selectedClass}}"
+        class="scene-row {{item.selectedClass}}"
         data-id="{{item.id}}"
         bindtap="applyRecommendedScene"
       >
-        <image class="scene-cover" src="{{item.cover_url}}" mode="aspectFill" lazy-load="true"></image>
-        <view class="scene-body">
+        <image wx:if="{{item.cover_url}}" class="scene-cover" src="{{item.cover_url}}" mode="aspectFill"></image>
+        <view class="scene-row-body">
           <view class="scene-name">{{item.name}}</view>
           <view class="scene-reason">{{item.reason}}</view>
           <view class="scene-action">{{item.actionText}}</view>
