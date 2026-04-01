@@ -37,6 +37,9 @@ ALLOWED_MIME_TYPES = {
 MIN_FACE_WIDTH_RATIO = 0.11
 MIN_FACE_HEIGHT_RATIO = 0.11
 MIN_FACE_AREA_RATIO = 0.015
+UPLOAD_MIN_FACE_WIDTH_RATIO = 0.08
+UPLOAD_MIN_FACE_HEIGHT_RATIO = 0.08
+UPLOAD_MIN_FACE_AREA_RATIO = 0.008
 MIN_PROMINENT_FACE_AREA_RATIO = 0.015
 MIN_PROMINENT_FACE_WIDTH_RATIO = 0.14
 MIN_PROMINENT_FACE_HEIGHT_RATIO = 0.14
@@ -471,6 +474,18 @@ def _is_face_close_enough(face: tuple[int, int, int, int], width: int, height: i
     )
 
 
+def _is_upload_face_usable(face: tuple[int, int, int, int], width: int, height: int) -> bool:
+    _, _, face_width, face_height = face
+    face_area_ratio = (face_width * face_height) / float(width * height)
+    face_width_ratio = face_width / float(width)
+    face_height_ratio = face_height / float(height)
+    return (
+        face_width_ratio >= UPLOAD_MIN_FACE_WIDTH_RATIO
+        and face_height_ratio >= UPLOAD_MIN_FACE_HEIGHT_RATIO
+        and face_area_ratio >= UPLOAD_MIN_FACE_AREA_RATIO
+    )
+
+
 @lru_cache
 def get_object_storage() -> ObjectStorageBackend:
     settings = get_settings()
@@ -547,6 +562,21 @@ def validate_upload_bytes(image_bytes: bytes, mime_type: str | None) -> ImageMet
             "bad_aspect_ratio",
             "图片比例不合适，请上传常见的人像照或生活照，避免过窄长图和全景图。",
         )
+
+    if settings.enforce_face_detection:
+        faces = _detect_faces(image_bytes)
+        if faces is not None:
+            normalized_faces = _normalize_detected_faces(faces, width, height)
+            if not normalized_faces:
+                raise UploadValidationError(
+                    "face_not_detected",
+                    "未检测到清晰人脸，请上传单人近景照片或脸部更清晰的照片。",
+                )
+            if not any(_is_upload_face_usable(face, width, height) for face in normalized_faces):
+                raise UploadValidationError(
+                    "face_too_small",
+                    "人脸距离镜头有点远，请换一张脸部更清晰、更靠近画面的照片。",
+                )
 
     return ImageMetadata(width=width, height=height, extension=ALLOWED_MIME_TYPES[mime_type])
 

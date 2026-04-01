@@ -221,7 +221,7 @@ class Settings:
         chat_fallback_base_url = self.nano_banana_pro_chat_fallback_base_url.strip()
         chat_fallback_model = (
             self.nano_banana_pro_chat_fallback_model.strip()
-            or self.nano_banana_pro_model
+            or "Nano_Banana_Pro_2K_1"
         )
         if chat_fallback_base_url and chat_fallback_api_key and chat_fallback_model:
             profiles.append(
@@ -396,7 +396,7 @@ def get_settings() -> Settings:
             "NANO_BANANA_PRO_CHAT_FALLBACK_BASE_URL", ""
         ).strip(),
         nano_banana_pro_chat_fallback_model=os.getenv(
-            "NANO_BANANA_PRO_CHAT_FALLBACK_MODEL", ""
+            "NANO_BANANA_PRO_CHAT_FALLBACK_MODEL", "Nano_Banana_Pro_2K_1"
         ).strip(),
         nano_banana_2_api_key=os.getenv("NANO_BANANA_2_API_KEY", "").strip(),
         nano_banana_2_base_url=os.getenv(

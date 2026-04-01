@@ -38,6 +38,8 @@ PRIMARY_PREVIEW_IMAGE_COUNT = 1
 PreviewCallback = Callable[[bytes], None]
 CandidateCallback = Callable[[bytes], None]
 NANO_IMAGE_TIMEOUT_MAP = {"512px": 120, "1K": 180, "2K": 300, "4K": 360}
+CHAT_COMPLETION_RETRYABLE_STATUS_CODES = {408, 409, 429, 500, 502, 503, 504}
+CHAT_COMPLETION_MAX_ATTEMPTS = 2
 SEEDREAM_REST_TIMEOUT_SECONDS = 180
 _PROVIDER_BACKOFF_UNTIL: dict[str, float] = {}
 _PROVIDER_BACKOFF_LOCK = Lock()
@@ -1055,9 +1057,28 @@ class ApiYiImageGenerator(BaseGenerator):
             return f"{profile.base_url}/chat/completions"
         return f"{profile.base_url}/v1beta/models/{profile.model_name}:generateContent"
 
-    @staticmethod
-    def _should_try_next_profile(exc: ImageGenerationError) -> bool:
-        return exc.code == "authentication_failed" or exc.retryable
+    def _should_try_next_profile(
+        self,
+        profile: ProviderProfile,
+        exc: ImageGenerationError,
+    ) -> bool:
+        if exc.code == "authentication_failed" or exc.retryable:
+            return True
+
+        # The chat-compatible Nano Banana fallback route is intentionally best-effort.
+        # Some upstream OpenAI-compatible gateways reject multimodal payloads with a
+        # 400 that is specific to their role parser. In that case we should continue
+        # to the next configured provider instead of failing the whole job.
+        normalized_message = str(exc).strip().lower()
+        if (
+            self.provider_name == "nano-banana-pro"
+            and profile.protocol == "openai_chat_markdown"
+            and exc.code == "bad_request"
+            and "valid role" in normalized_message
+        ):
+            return True
+
+        return False
 
     def _profile_backoff_key(self, profile: ProviderProfile) -> str:
         return f"{self.provider_name}:{profile.profile_id}"
@@ -1144,34 +1165,73 @@ class ApiYiImageGenerator(BaseGenerator):
         }
 
         timeout_seconds = NANO_IMAGE_TIMEOUT_MAP.get(context.resolution, 300)
-        try:
-            with concurrency_slot(profile.limiter_name, self._max_concurrency):
-                response = httpx.post(
-                    self._endpoint(profile),
-                    headers={
-                        "Authorization": f"Bearer {profile.api_key}",
-                        "Content-Type": "application/json",
-                    },
-                    json=request_payload,
-                    timeout=timeout_seconds,
+        response = None
+        for attempt in range(CHAT_COMPLETION_MAX_ATTEMPTS):
+            try:
+                with concurrency_slot(profile.limiter_name, self._max_concurrency):
+                    response = httpx.post(
+                        self._endpoint(profile),
+                        headers={
+                            "Authorization": f"Bearer {profile.api_key}",
+                            "Content-Type": "application/json",
+                        },
+                        json=request_payload,
+                        timeout=timeout_seconds,
+                    )
+            except httpx.TimeoutException as exc:
+                if attempt + 1 < CHAT_COMPLETION_MAX_ATTEMPTS:
+                    logger.warning(
+                        "%s chat route %s timed out; retrying once.",
+                        self.provider_name,
+                        profile.profile_id,
+                    )
+                    continue
+                raise ImageGenerationError(
+                    "upstream_timeout",
+                    f"{self.provider_name} request timed out.",
+                    retryable=True,
+                    retry_after_seconds=30,
+                ) from exc
+            except httpx.HTTPError as exc:
+                if attempt + 1 < CHAT_COMPLETION_MAX_ATTEMPTS:
+                    logger.warning(
+                        "%s chat route %s hit transport error; retrying once: %s",
+                        self.provider_name,
+                        profile.profile_id,
+                        exc,
+                    )
+                    continue
+                raise ImageGenerationError(
+                    "upstream_unreachable",
+                    str(exc),
+                    retryable=True,
+                    retry_after_seconds=30,
+                ) from exc
+
+            if response.status_code < 400:
+                break
+
+            mapped_error = _map_nano_http_error(response)
+            if (
+                attempt + 1 < CHAT_COMPLETION_MAX_ATTEMPTS
+                and response.status_code in CHAT_COMPLETION_RETRYABLE_STATUS_CODES
+            ):
+                logger.warning(
+                    "%s chat route %s returned %s; retrying once.",
+                    self.provider_name,
+                    profile.profile_id,
+                    response.status_code,
                 )
-        except httpx.TimeoutException as exc:
-            raise ImageGenerationError(
-                "upstream_timeout",
-                f"{self.provider_name} request timed out.",
-                retryable=True,
-                retry_after_seconds=30,
-            ) from exc
-        except httpx.HTTPError as exc:
+                continue
+            raise mapped_error
+
+        if response is None:
             raise ImageGenerationError(
                 "upstream_unreachable",
-                str(exc),
+                f"{self.provider_name} returned no response.",
                 retryable=True,
                 retry_after_seconds=30,
-            ) from exc
-
-        if response.status_code >= 400:
-            raise _map_nano_http_error(response)
+            )
 
         payload = response.json()
         remote_url = _extract_first_remote_image_url(payload)
@@ -1341,7 +1401,7 @@ class ApiYiImageGenerator(BaseGenerator):
                         exc.retry_after_seconds or 600,
                     )
                 has_next_profile = index < len(available_profiles) - 1
-                if not has_next_profile or not self._should_try_next_profile(exc):
+                if not has_next_profile or not self._should_try_next_profile(profile, exc):
                     raise
                 logger.warning(
                     "%s failed on provider profile %s/%s (%s); falling back to next profile.",

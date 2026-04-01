@@ -643,18 +643,14 @@ def test_auth_upload_job_history_flow(tmp_path, monkeypatch):
         assert list((tmp_path / "storage" / "results").iterdir()) == []
 
 
-def test_upload_validation_ignores_face_detection_even_when_enabled(tmp_path, monkeypatch):
+def test_upload_validation_allows_when_detector_is_unavailable(tmp_path, monkeypatch):
     _configure_runtime_env(tmp_path, monkeypatch, use_mock_generator="true")
     monkeypatch.setenv("ENFORCE_FACE_DETECTION", "true")
     _clear_runtime_caches()
 
     from app.services import storage
 
-    monkeypatch.setattr(
-        storage,
-        "_detect_faces",
-        lambda image_bytes: (_ for _ in ()).throw(AssertionError("should not run face detection")),
-    )
+    monkeypatch.setattr(storage, "_detect_faces", lambda image_bytes: None)
 
     metadata = storage.validate_upload_bytes(_build_test_image(), "image/png")
 
@@ -1319,6 +1315,32 @@ def test_nano_banana_pro_settings_use_renamed_envs(tmp_path, monkeypatch):
     )
 
 
+def test_nano_banana_pro_chat_fallback_model_defaults_to_xais_route_model(
+    tmp_path,
+    monkeypatch,
+):
+    _configure_runtime_env(tmp_path, monkeypatch, use_mock_generator="false")
+    monkeypatch.setenv("NANO_BANANA_PRO_CHAT_FALLBACK_API_KEY", "chat-pro-key")
+    monkeypatch.setenv("NANO_BANANA_PRO_CHAT_FALLBACK_BASE_URL", "https://chat.example.test/v1")
+
+    from app.config import get_settings
+
+    _clear_runtime_caches()
+    settings = get_settings()
+
+    assert settings.nano_banana_pro_chat_fallback_model == "Nano_Banana_Pro_2K_1"
+    assert settings.nano_banana_pro_profiles() == (
+        (
+            "route2",
+            "备用路线2",
+            "https://chat.example.test/v1",
+            "chat-pro-key",
+            "openai_chat_markdown",
+            "Nano_Banana_Pro_2K_1",
+        ),
+    )
+
+
 def test_nano_banana_generator_uses_native_image_config(tmp_path, monkeypatch):
     _configure_runtime_env(tmp_path, monkeypatch, use_mock_generator="false")
     monkeypatch.setenv("IMAGE_GENERATOR_BACKEND", "nano_banana_pro")
@@ -1530,14 +1552,89 @@ def test_nano_banana_pro_falls_back_to_chat_provider(tmp_path, monkeypatch):
         on_preview=lambda image_bytes: previews.append(image_bytes),
     )
 
-    assert len(request_log) == 3
+    assert len(request_log) == 4
     assert request_log[0]["headers"]["Authorization"] == "Bearer chat-key"
-    assert request_log[1]["headers"]["Authorization"] == "Bearer backup-key"
-    assert request_log[2]["headers"]["Authorization"] == "Bearer primary-key"
+    assert request_log[1]["headers"]["Authorization"] == "Bearer chat-key"
+    assert request_log[2]["headers"]["Authorization"] == "Bearer backup-key"
+    assert request_log[3]["headers"]["Authorization"] == "Bearer primary-key"
     assert request_log[0]["url"] == "https://chat.example.test/v1/chat/completions"
     assert request_log[0]["json"]["model"] == "Nano_Banana_Pro_2K_0"
     assert request_log[0]["json"]["messages"][0]["content"][1]["type"] == "image_url"
     assert len(previews) == 1
+    assert result.primary_image_bytes
+
+
+def test_nano_banana_pro_falls_back_when_chat_provider_rejects_role_format(
+    tmp_path,
+    monkeypatch,
+):
+    _configure_runtime_env(tmp_path, monkeypatch, use_mock_generator="false")
+    monkeypatch.setenv("NANO_BANANA_PRO_API_KEY", "primary-key")
+    monkeypatch.setenv("NANO_BANANA_PRO_BASE_URL", "https://primary.example.test")
+    monkeypatch.setenv("NANO_BANANA_PRO_FALLBACK_API_KEY", "backup-key")
+    monkeypatch.setenv("NANO_BANANA_PRO_FALLBACK_BASE_URL", "https://backup.example.test")
+    monkeypatch.setenv("NANO_BANANA_PRO_CHAT_FALLBACK_API_KEY", "chat-key")
+    monkeypatch.setenv("NANO_BANANA_PRO_CHAT_FALLBACK_BASE_URL", "https://chat.example.test/v1")
+    monkeypatch.setenv("NANO_BANANA_PRO_CHAT_FALLBACK_MODEL", "Nano_Banana_Pro_2K_0")
+
+    import httpx
+
+    from app.services.generation import GenerationContext, NanoBananaProGenerator
+
+    _clear_runtime_caches()
+
+    source_path = tmp_path / "source.png"
+    source_path.write_bytes(_build_test_image())
+
+    request_log = []
+
+    def fake_post(url, *, headers=None, json=None, timeout=None):
+        request_log.append({"url": url, "headers": headers, "json": json, "timeout": timeout})
+        if url.startswith("https://chat.example.test"):
+            return httpx.Response(
+                400,
+                request=httpx.Request("POST", url),
+                json={"error": {"message": "Please use a valid role: user, model."}},
+            )
+        return httpx.Response(
+            200,
+            request=httpx.Request("POST", url),
+            json={
+                "candidates": [
+                    {
+                        "content": {
+                            "parts": [
+                                {
+                                    "inlineData": {
+                                        "mimeType": "image/png",
+                                        "data": base64.b64encode(_build_colored_image("#386641")).decode("utf-8"),
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                ]
+            },
+        )
+
+    monkeypatch.setattr("app.services.generation.httpx.post", fake_post)
+
+    generator = NanoBananaProGenerator()
+    result = generator.generate(
+        source_image_path=str(source_path),
+        prompt="test chat role fallback prompt",
+        context=GenerationContext(
+            hairstyle_name="前刺短发",
+            scene_name="窗边生活感",
+            aspect_ratio="3:4",
+            resolution="1K",
+        ),
+    )
+
+    assert len(request_log) == 2
+    assert request_log[0]["headers"]["Authorization"] == "Bearer chat-key"
+    assert request_log[1]["headers"]["Authorization"] == "Bearer backup-key"
+    assert request_log[0]["url"] == "https://chat.example.test/v1/chat/completions"
     assert result.primary_image_bytes
 
 
@@ -2280,18 +2377,14 @@ def test_job_worker_keeps_preview_result_when_error_happens_after_preview(
     assert len(storage.list_scene_results(job["id"])) == 0
 
 
-def test_upload_validation_no_longer_depends_on_face_detection(monkeypatch):
+def test_upload_validation_allows_when_detector_is_unavailable_without_runtime_fixture(monkeypatch):
     monkeypatch.setenv("ENFORCE_FACE_DETECTION", "true")
 
     from app.config import get_settings
     from app.services import storage
 
     get_settings.cache_clear()
-    monkeypatch.setattr(
-        storage,
-        "_detect_faces",
-        lambda _: (_ for _ in ()).throw(AssertionError("should not run face detection")),
-    )
+    monkeypatch.setattr(storage, "_detect_faces", lambda _: None)
 
     metadata = storage.validate_upload_bytes(_build_test_image(), "image/png")
 
@@ -2299,7 +2392,7 @@ def test_upload_validation_no_longer_depends_on_face_detection(monkeypatch):
     assert metadata.height == 1024
 
 
-def test_upload_validation_accepts_image_without_any_detected_face(monkeypatch):
+def test_upload_validation_rejects_image_without_detected_face(monkeypatch):
     monkeypatch.setenv("ENFORCE_FACE_DETECTION", "true")
 
     from app.config import get_settings
@@ -2308,10 +2401,25 @@ def test_upload_validation_accepts_image_without_any_detected_face(monkeypatch):
     get_settings.cache_clear()
     monkeypatch.setattr(storage, "_detect_faces", lambda _: ())
 
-    metadata = storage.validate_upload_bytes(_build_test_image(), "image/png")
+    with pytest.raises(storage.UploadValidationError) as exc_info:
+        storage.validate_upload_bytes(_build_test_image(), "image/png")
 
-    assert metadata.width == 768
-    assert metadata.height == 1024
+    assert exc_info.value.code == "face_not_detected"
+
+
+def test_upload_validation_rejects_when_face_is_too_small(monkeypatch):
+    monkeypatch.setenv("ENFORCE_FACE_DETECTION", "true")
+
+    from app.config import get_settings
+    from app.services import storage
+
+    get_settings.cache_clear()
+    monkeypatch.setattr(storage, "_detect_faces", lambda _: ((40, 60, 48, 52),))
+
+    with pytest.raises(storage.UploadValidationError) as exc_info:
+        storage.validate_upload_bytes(_build_test_image(), "image/png")
+
+    assert exc_info.value.code == "face_too_small"
 
 
 def test_upload_validation_accepts_multiple_faces_without_blocking(monkeypatch):
