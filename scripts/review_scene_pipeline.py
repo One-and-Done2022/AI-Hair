@@ -61,6 +61,57 @@ def load_package_metadata(package_dir: Path) -> dict[str, Any]:
     return json.loads(metadata_path.read_text(encoding="utf-8"))
 
 
+def list_review_packages(review_root: Path) -> list[dict[str, Any]]:
+    if not review_root.exists():
+        return []
+
+    packages: list[dict[str, Any]] = []
+    for package_dir in sorted(path for path in review_root.iterdir() if path.is_dir()):
+        try:
+            metadata = load_package_metadata(package_dir)
+        except FileNotFoundError:
+            continue
+
+        recommended_cover = metadata.get("recommended_cover") or {}
+        review_results = metadata.get("review_results") or {}
+        packages.append(
+            {
+                "scene_id": package_dir.name,
+                "scene_title": metadata.get("scene_title", ""),
+                "status": metadata.get("status", ""),
+                "subject_gender": metadata.get("subject_gender", "unknown"),
+                "recommended_cover_gender": recommended_cover.get("gender", ""),
+                "recommended_cover_image": recommended_cover.get("image", ""),
+                "succeeded_genders": [
+                    gender
+                    for gender, result in review_results.items()
+                    if result.get("status") == "succeeded"
+                ],
+                "path": str(package_dir),
+            }
+        )
+    return packages
+
+
+def render_review_package_lines(packages: list[dict[str, Any]]) -> list[str]:
+    if not packages:
+        return ["当前没有待审核场景包。"]
+
+    lines: list[str] = []
+    for item in packages:
+        succeeded = "、".join(item.get("succeeded_genders", [])) or "无"
+        lines.extend(
+            [
+                f"- {item['scene_id']} | {item.get('scene_title', '')}",
+                f"  状态：{item.get('status', '')}；原图人物：{item.get('subject_gender', 'unknown')}；成功审核图：{succeeded}",
+                "  推荐封面："
+                f"{item.get('recommended_cover_gender', '')} / {item.get('recommended_cover_image', '')}",
+                f"  路径：{item.get('path', '')}",
+            ]
+        )
+    return lines
+
+
 def _pick_cover_filename(package_dir: Path, metadata: dict[str, Any], cover_gender: str) -> str:
     if cover_gender != "auto":
         review_item = (metadata.get("review_results") or {}).get(cover_gender, {})
@@ -173,6 +224,10 @@ def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="审核 scene pipeline 生成的场景包。")
     subparsers = parser.add_subparsers(dest="command", required=True)
 
+    list_parser = subparsers.add_parser("list", help="列出当前待审核场景包。")
+    list_parser.add_argument("--review-root", default=str(REVIEW_ROOT), help="待审核包目录。")
+    list_parser.add_argument("--json", action="store_true", help="以 JSON 输出。")
+
     approve_parser = subparsers.add_parser("approve", help="通过审核并写入官方场景库。")
     approve_parser.add_argument("scene_id", help="审核包目录名，也就是 scene_draft 的 id。")
     approve_parser.add_argument("--review-root", default=str(REVIEW_ROOT), help="待审核包目录。")
@@ -201,6 +256,16 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
 
     try:
+        if args.command == "list":
+            packages = list_review_packages(
+                Path(args.review_root).expanduser().resolve(),
+            )
+            if args.json:
+                print(json.dumps(packages, ensure_ascii=False, indent=2))
+            else:
+                print("\n".join(render_review_package_lines(packages)))
+            return 0
+
         if args.command == "approve":
             destination = approve_scene_package(
                 scene_id=args.scene_id,

@@ -31,6 +31,7 @@ make summary
 make lint
 make test
 make interactive
+make interactive-blocks
 ```
 
 也可以直接调用 CLI：
@@ -43,6 +44,7 @@ PYTHONPATH=src python3 -m faceprompt.cli render --scene indoor-film-lifestyle --
 PYTHONPATH=src python3 -m faceprompt.cli render --scene morning-window-softlight --hairstyle female-korean-air-cushion-perm --face-shape long --forehead broad --jawline soft --cheekbone prominent
 PYTHONPATH=src python3 -m faceprompt.cli recommend --gender female --face-shape round --forehead broad --jawline soft --cheekbone prominent --limit 3
 PYTHONPATH=src python3 -m faceprompt.cli interactive
+PYTHONPATH=src python3 -m faceprompt.cli interactive-blocks
 ```
 
 ## 仓库结构
@@ -76,7 +78,7 @@ PYTHONPATH=src python3 -m faceprompt.cli interactive
   这是核心逻辑文件。统一定义基础身份提示词、负面约束、数据加载、记录过滤、提示词渲染和数据校验。
 
 - `src/faceprompt/cli.py`
-  CLI 入口。支持 `summary`、`validate`、`list`、`render`、`recommend`、`interactive`。
+  CLI 入口。支持 `summary`、`validate`、`list`、`render`、`recommend`、`interactive`、`blocks`、`interactive-blocks`。
 
 - `src/faceprompt/data/scenes.json`
   20 条场景数据。

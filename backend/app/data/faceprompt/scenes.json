@@ -1926,5 +1926,93 @@
     "coverImagePath": "template_assets/scenes/green-outdoor-b9edbc24.jpg",
     "coverImageUpdatedAt": "2026-03-29T09:04:22+00:00",
     "coverImageSource": "scene_pipeline:review_female.jpg"
+  },
+  {
+    "id": "scene-473e9e49",
+    "title": "生活感人像",
+    "styleLine": "realistic_editorial",
+    "summary": "户外春日场景，背景是盛开的白色樱花树，花朵密集，枝条交错，明亮的自然光，阳光透过树枝在人物肩背上形成斑驳的光斑，光线柔和，构成稳定可复用的场景化人像环境。",
+    "environment": "户外春日场景，背景是盛开的白色樱花树，花朵密集，枝条交错",
+    "lighting": "明亮的自然光，阳光透过树枝在人物肩背上形成斑驳的光斑，光线柔和",
+    "lightingProfile": {
+      "lightDirection": "side",
+      "lightQuality": "soft",
+      "colorTemperature": "neutral",
+      "contrastLevel": "low",
+      "shadowDensity": "light",
+      "hairHighlightMode": "soft_edge",
+      "skinRendering": "clean_texture",
+      "exposureBias": "slightly_over",
+      "practicalLightsAllowed": false
+    },
+    "styleMood": "清新，唯美，浪漫，温柔的春日氛围",
+    "detailTags": [
+      "户外",
+      "自然光",
+      "近景"
+    ],
+    "expressions": [
+      "眼神清澈温柔，微微张嘴，神态自然放松"
+    ],
+    "actions": [
+      "上半身轻微侧转并回头凝视镜头，单手轻扶领口，肩颈自然放松舒展，头发整体向背后或远离脖颈的一侧梳开"
+    ],
+    "outfitHints": [
+      "白色柔软上衣，肩颈区域平整顺滑、贴合自然，不在脖颈根部形成堆叠褶皱"
+    ],
+    "outfitPalette": [
+      "白色"
+    ],
+    "outfitMaterials": [
+      "柔软针织"
+    ],
+    "outfitShapes": [
+      "宽松衬衫",
+      "松弛上衣"
+    ],
+    "outfitAvoids": [
+      "强结构礼服感",
+      "高饱和撞色",
+      "复杂夸张配饰"
+    ],
+    "pairingAdvice": [
+      "法式慵懒卷",
+      "空气感锁骨发",
+      "轻盈波波头"
+    ],
+    "shotAdvice": "近景特写，侧身回眸，视线直视镜头",
+    "constraints": [
+      "背景需保持花海的密集感，必须保留打在皮肤上的树影光斑，确保回眸动作的自然流畅",
+      "脖颈线条与领口必须干净流畅，衣领和针织领口自然平顺，不要在脖子根部形成明显堆积褶皱、勒痕或厚重阴影",
+      "靠近镜头一侧的脖颈必须清晰露出，头发不要贴在脖子上，不要有零散发丝垂落或缠绕在脖颈和锁骨处",
+      "脖颈皮肤必须光滑干净，不允许出现任何明显颈纹、折线、褶皱、堆积阴影或被衣物挤压出的纹理"
+    ],
+    "controlProfile": {
+      "windLevel": "still",
+      "humidityLook": "balanced",
+      "backgroundComplexity": "low",
+      "lightingHardness": "soft",
+      "mirrorRisk": "none",
+      "compatibleHairstyleTags": [
+        "lifestyle_softlight",
+        "layered_face_framing"
+      ],
+      "recommendedHairstyleIds": []
+    },
+    "sampleImageIds": {
+      "female": [
+        "female1"
+      ],
+      "male": [
+        "male3"
+      ]
+    },
+    "referenceNotes": "由内部 scene pipeline 自动拆解并生成审核图，请人工确认审核图效果后再决定是否加入官方场景库",
+    "referenceSourceIds": [
+      "scene-pipeline"
+    ],
+    "coverImagePath": "template_assets/scenes/scene-473e9e49.jpg",
+    "coverImageUpdatedAt": "2026-03-29T09:27:09+00:00",
+    "coverImageSource": "scene_pipeline:review_female.jpg"
   }
 ]

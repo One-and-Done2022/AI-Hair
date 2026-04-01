@@ -9,6 +9,7 @@ from .catalog import (
     VALID_FACE_SHAPES,
     VALID_FOREHEAD_TYPES,
     VALID_JAWLINES,
+    build_prompt_assembly,
     catalog_summary,
     list_records,
     recommend_pairings,
@@ -26,6 +27,11 @@ STYLE_LINE_LABELS = {
 GENDER_CHOICES = [
     ("male", "男性"),
     ("female", "女性"),
+]
+
+BLOCK_MODE_CHOICES = [
+    ("hairstyle_only", "发型 block", "只改发型，输出该模式下的全部 block"),
+    ("scene_only", "场景 block", "锁定现有发型，只换场景并输出全部 block"),
 ]
 
 
@@ -73,6 +79,15 @@ def _build_parser() -> argparse.ArgumentParser:
     scene_only_parser.add_argument("--subject-action")
     scene_only_parser.add_argument("--seed-source")
 
+    blocks_parser = subparsers.add_parser("blocks", help="Print prompt blocks for a given mode")
+    blocks_parser.add_argument("--mode", required=True, choices=["hairstyle_only", "scene_only"])
+    blocks_parser.add_argument("--scene")
+    blocks_parser.add_argument("--hairstyle")
+    blocks_parser.add_argument("--outfit")
+    blocks_parser.add_argument("--expression")
+    blocks_parser.add_argument("--subject-action")
+    blocks_parser.add_argument("--seed-source")
+
     recommend_parser = subparsers.add_parser("recommend", help="Recommend hairstyle and scene pairings")
     recommend_parser.add_argument("--gender", required=True, choices=["male", "female"])
     recommend_parser.add_argument("--face-shape", required=True, choices=sorted(VALID_FACE_SHAPES))
@@ -86,6 +101,7 @@ def _build_parser() -> argparse.ArgumentParser:
     recommend_parser.add_argument("--limit", type=int, default=5)
 
     subparsers.add_parser("interactive", help="Interactively choose gender, scene, and hairstyle")
+    subparsers.add_parser("interactive-blocks", help="Interactively choose and print prompt blocks")
 
     return parser
 
@@ -127,6 +143,49 @@ def _record_options(category: str, *, gender: str | None = None) -> list[tuple[s
     ]
 
 
+def _write_block_output(assembly, output_func: Callable[[str], None]) -> None:
+    output_func(f"共 {len(assembly.blocks)} 个 block：")
+    for index, block in enumerate(assembly.blocks, start=1):
+        output_func(f"{index}. {block.label} [{block.key}]")
+        for line in block.text.splitlines():
+            output_func(f"   {line}")
+        if index != len(assembly.blocks):
+            output_func("")
+
+
+def _build_block_assembly(
+    *,
+    mode: str,
+    scene_id: str | None = None,
+    hairstyle_id: str | None = None,
+    outfit_override: str | None = None,
+    expression_override: str | None = None,
+    subject_action_override: str | None = None,
+    seed_source: str | None = None,
+):
+    if mode == "hairstyle_only":
+        if not hairstyle_id:
+            raise ValueError("hairstyle_id is required for hairstyle_only mode")
+        return build_prompt_assembly(
+            mode=mode,
+            hairstyle_id=hairstyle_id,
+        )
+
+    if mode == "scene_only":
+        if not scene_id:
+            raise ValueError("scene_id is required for scene_only mode")
+        return build_prompt_assembly(
+            mode=mode,
+            scene_id=scene_id,
+            outfit_override=outfit_override,
+            expression_override=expression_override,
+            subject_action_override=subject_action_override,
+            seed_source=seed_source,
+        )
+
+    raise ValueError(f"Unsupported block mode: {mode}")
+
+
 def run_interactive(
     *,
     input_func: Callable[[str], str] | None = None,
@@ -164,6 +223,67 @@ def run_interactive(
     output_func(
         f"也可以直接复用命令：PYTHONPATH=src python3 -m faceprompt.cli render --scene {scene_id} --hairstyle {hairstyle_id}"
     )
+    return 0
+
+
+def run_interactive_blocks(
+    *,
+    input_func: Callable[[str], str] | None = None,
+    output_func: Callable[[str], None] | None = None,
+) -> int:
+    input_func = input_func or input
+    output_func = output_func or print
+    output_func("交互式 block 输出")
+    output_func("先选择要查看的 block 类型，再选择具体记录，系统会输出该模式下的全部 prompt block。")
+
+    block_mode = _prompt_choice(
+        title="请选择输出类型：",
+        options=BLOCK_MODE_CHOICES,
+        input_func=input_func,
+        output_func=output_func,
+    )
+
+    scene_id = None
+    hairstyle_id = None
+
+    if block_mode == "hairstyle_only":
+        gender = _prompt_choice(
+            title="请选择发型所属人物性别：",
+            options=[(value, label, f"显示 {label}发型库") for value, label in GENDER_CHOICES],
+            input_func=input_func,
+            output_func=output_func,
+        )
+        hairstyle_id = _prompt_choice(
+            title="请选择发型：",
+            options=_record_options("hairstyle", gender=gender),
+            input_func=input_func,
+            output_func=output_func,
+        )
+    else:
+        scene_id = _prompt_choice(
+            title="请选择场景：",
+            options=_record_options("scene"),
+            input_func=input_func,
+            output_func=output_func,
+        )
+
+    assembly = _build_block_assembly(
+        mode=block_mode,
+        scene_id=scene_id,
+        hairstyle_id=hairstyle_id,
+    )
+    output_func("")
+    output_func("Block 结果：")
+    _write_block_output(assembly, output_func)
+    output_func("")
+    if block_mode == "hairstyle_only":
+        output_func(
+            f"也可以直接复用命令：PYTHONPATH=src python3 -m faceprompt.cli blocks --mode {block_mode} --hairstyle {hairstyle_id}"
+        )
+    else:
+        output_func(
+            f"也可以直接复用命令：PYTHONPATH=src python3 -m faceprompt.cli blocks --mode {block_mode} --scene {scene_id}"
+        )
     return 0
 
 
@@ -236,6 +356,23 @@ def main(argv: list[str] | None = None) -> int:
         )
         return 0
 
+    if args.command == "blocks":
+        if args.mode == "hairstyle_only" and not args.hairstyle:
+            parser.error("--hairstyle is required when --mode hairstyle_only")
+        if args.mode == "scene_only" and not args.scene:
+            parser.error("--scene is required when --mode scene_only")
+        assembly = _build_block_assembly(
+            mode=args.mode,
+            scene_id=args.scene,
+            hairstyle_id=args.hairstyle,
+            outfit_override=args.outfit,
+            expression_override=args.expression,
+            subject_action_override=args.subject_action,
+            seed_source=args.seed_source,
+        )
+        _write_block_output(assembly, print)
+        return 0
+
     if args.command == "recommend":
         recommendations = recommend_pairings(
             gender=args.gender,
@@ -261,6 +398,9 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.command == "interactive":
         return run_interactive()
+
+    if args.command == "interactive-blocks":
+        return run_interactive_blocks()
 
     parser.error("Unknown command")
     return 2

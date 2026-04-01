@@ -20,6 +20,7 @@
 - `make test` 运行自动化测试。
 - `make render-example` 渲染一条场景 + 发型组合示例。
 - `make interactive` 进入交互式选择模式，按编号选择性别、场景和发型后生成完整提示词。
+- `make interactive-blocks` 进入交互式 block 查看模式，可选择输出发型 block 或场景 block。
 
 也可以直接使用 CLI：
 
@@ -33,6 +34,7 @@ PYTHONPATH=src python3 -m faceprompt.cli render --scene morning-window-softlight
 PYTHONPATH=src python3 -m faceprompt.cli render --scene morning-window-softlight --hairstyle female-korean-air-cushion-perm --face-shape long --forehead broad --jawline soft --cheekbone prominent
 PYTHONPATH=src python3 -m faceprompt.cli recommend --gender female --face-shape round --forehead broad --jawline soft --cheekbone prominent --limit 3
 PYTHONPATH=src python3 -m faceprompt.cli interactive
+PYTHONPATH=src python3 -m faceprompt.cli interactive-blocks
 ```
 
 交互模式会按 3 步完成：
@@ -42,6 +44,17 @@ PYTHONPATH=src python3 -m faceprompt.cli interactive
 3. 选择对应性别的发型
 
 完成后会直接输出完整提示词，并附带对应的 `render` 命令，方便你后续复制复用。
+
+`interactive-blocks` 会按模式分两种路径：
+
+1. 选择 `发型 block`
+2. 选择性别
+3. 选择发型并输出该模式下的全部 block
+
+或者：
+
+1. 选择 `场景 block`
+2. 选择场景并输出该模式下的全部 block
 
 ## 场景分类
 共 20 类场景，分为两条主线：

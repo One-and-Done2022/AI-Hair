@@ -106,9 +106,10 @@
     </button>
   </view>
 
-  <view wx:if="{{uploadId || modelName}}" class="panel tool-meta-card">
+  <view wx:if="{{uploadId || modelName || subjectGender}}" class="panel tool-meta-card">
     <view wx:if="{{uploadId}}" class="meta-line">upload_id：{{uploadId}}</view>
     <view wx:if="{{modelName}}" class="meta-line">模型：{{modelName}}</view>
+    <view wx:if="{{subjectGender}}" class="meta-line">原图人物判断：{{subjectGenderLabel}}</view>
   </view>
 
   <view wx:if="{{blockItems.length}}" class="panel block-card">

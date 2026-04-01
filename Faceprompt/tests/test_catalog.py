@@ -265,6 +265,34 @@ class CatalogTests(unittest.TestCase):
         self.assertIn("主体必须始终是同一位单人肖像，仅对场景、动作、表情和服装进行艺术化创作", output)
         self.assertIn("人物发型：保持参考图中已经生成完成的发型不变", output)
 
+    def test_blocks_command_prints_hairstyle_only_blocks(self) -> None:
+        stdout = StringIO()
+        with patch("sys.stdout", stdout):
+            exit_code = main(["blocks", "--mode", "hairstyle_only", "--hairstyle", "female-cloud-perm"])
+
+        output = stdout.getvalue()
+        self.assertEqual(exit_code, 0)
+        self.assertIn("共 10 个 block：", output)
+        self.assertIn("编辑目标 [edit_scope]", output)
+        self.assertIn("目标发型 [hair_target]", output)
+        self.assertIn("换发目标：只更换图中人物的发型为：云朵烫。", output)
+
+    def test_interactive_blocks_command_prints_scene_blocks(self) -> None:
+        stdout = StringIO()
+        with patch("builtins.input", side_effect=["2", "1"]), patch("sys.stdout", stdout):
+            exit_code = main(["interactive-blocks"])
+
+        output = stdout.getvalue()
+        self.assertEqual(exit_code, 0)
+        self.assertIn("交互式 block 输出", output)
+        self.assertIn("Block 结果：", output)
+        self.assertIn("场景环境 [scene_environment]", output)
+        self.assertIn("发型锁定 [hair_lock]", output)
+        self.assertIn(
+            "也可以直接复用命令：PYTHONPATH=src python3 -m faceprompt.cli blocks --mode scene_only --scene",
+            output,
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

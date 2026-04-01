@@ -1,7 +1,7 @@
 PYTHON ?= python3
 PYTHONPATH=src
 
-.PHONY: summary lint test render-example interactive
+.PHONY: summary lint test render-example interactive interactive-blocks
 
 summary:
 	PYTHONPATH=$(PYTHONPATH) $(PYTHON) -m faceprompt.cli summary
@@ -17,3 +17,6 @@ render-example:
 
 interactive:
 	PYTHONPATH=$(PYTHONPATH) $(PYTHON) -m faceprompt.cli interactive
+
+interactive-blocks:
+	PYTHONPATH=$(PYTHONPATH) $(PYTHON) -m faceprompt.cli interactive-blocks

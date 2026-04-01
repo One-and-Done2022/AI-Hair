@@ -14,6 +14,12 @@ const BLOCK_LABELS = {
   scene_constraints: "场景约束"
 };
 
+const SUBJECT_GENDER_LABELS = {
+  male: "男生",
+  female: "女生",
+  unknown: "未识别"
+};
+
 function splitInputList(value) {
   return (value || "")
     .replace(/\n/g, "；")
@@ -43,6 +49,8 @@ Page({
     referenceNotesInput: "",
     uploadId: "",
     modelName: "",
+    subjectGender: "",
+    subjectGenderLabel: "",
     blockItems: [],
     sceneDraftJson: "",
     fullResponseJson: ""
@@ -88,6 +96,8 @@ Page({
           selectedImage: filePath,
           uploadId: "",
           modelName: "",
+          subjectGender: "",
+          subjectGenderLabel: "",
           blockItems: [],
           sceneDraftJson: "",
           fullResponseJson: ""
@@ -110,6 +120,8 @@ Page({
       selectedImage: "",
       uploadId: "",
       modelName: "",
+      subjectGender: "",
+      subjectGenderLabel: "",
       blockItems: [],
       sceneDraftJson: "",
       fullResponseJson: ""
@@ -196,9 +208,12 @@ Page({
         timeout: 90000
       });
 
+      const subjectGender = response.subject_gender || "";
       this.setData({
         uploadId: response.upload_id || "",
         modelName: response.model_name || "",
+        subjectGender,
+        subjectGenderLabel: SUBJECT_GENDER_LABELS[subjectGender] || "未识别",
         blockItems: buildBlockItems(response.blocks),
         sceneDraftJson: JSON.stringify(response.scene_draft, null, 2),
         fullResponseJson: JSON.stringify(response, null, 2)
