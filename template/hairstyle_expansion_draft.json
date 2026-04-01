@@ -1,0 +1,758 @@
+[
+  {
+    "id": "male-micro-part-cover",
+    "gender": "male",
+    "title": "微分碎盖",
+    "styleLine": "realistic_editorial",
+    "summary": "比普通碎盖更轻、更透，额前只做轻微分线，兼顾少年感和韩系松弛感。",
+    "promptCore": "发型改为微分碎盖，整体长度保持中短，顶部保留自然蓬松体积和细碎层次，前区刘海做轻微分线，不是完整中分，额前形成松散轻薄的碎发覆盖；两侧和后区顺着头型自然收短，不过度贴头皮，发丝轻盈有空气感，发色保持自然黑色或深棕色，整体干净、松弛、带明显少年感和韩系氛围。",
+    "detailTags": [
+      "微分碎盖",
+      "轻薄刘海",
+      "韩系少年感",
+      "空气感"
+    ],
+    "constraints": [
+      "额前必须是轻微分线，不是完整中分",
+      "顶部要有自然蓬松和细碎层次",
+      "不能塌成厚重普通碎盖"
+    ],
+    "pairingAdvice": [
+      "清晨窗边软光人像",
+      "室内生活感胶片写真",
+      "酒店房间松弛感人像"
+    ],
+    "shotAdvice": "适合平视近景和轻微偏侧拍，突出额前分线、发丝空气感和顶部蓬松度。",
+    "expressionAction": [
+      "自然看镜头",
+      "抬手轻拨额前碎发",
+      "微低头再抬眼看镜头"
+    ],
+    "controlProfile": null,
+    "referenceNotes": "重点是轻微分线和薄透碎盖，不要做成韩式厚刘海或完全露额分头。",
+    "referenceSourceIds": [
+      "gq-barber-language",
+      "gq-best-short-haircuts",
+      "gq-short-back-sides"
+    ],
+    "categoryKey": "korean_soft",
+    "categoryLabel": "韩系修饰",
+    "coverImagePath": "template_assets/hairstyles/male-micro-part-cover.jpg",
+    "coverImageUpdatedAt": "",
+    "coverImageSource": "draft_pending_render"
+  },
+  {
+    "id": "male-fade-buzz",
+    "gender": "male",
+    "title": "渐变寸头",
+    "styleLine": "realistic_editorial",
+    "summary": "比普通圆寸更强调侧区渐变，整体更硬朗、更现代，适合利落干净的男性近景。",
+    "promptCore": "发型改为渐变寸头，头顶保留极短但可见均匀发茬质感的长度，两侧和后区做清晰细致的渐变过渡，从贴皮区域自然抬升到顶部长度，鬓角和后颈线条修整得干净利落；整体紧贴头型但不过度剃白，发色为自然黑色或深棕色，气质硬朗、清爽、现代、极简。",
+    "detailTags": [
+      "渐变寸头",
+      "高净度轮廓",
+      "发茬质感",
+      "硬朗"
+    ],
+    "constraints": [
+      "两侧和后区的渐变必须清楚细致",
+      "头顶必须保留可见发茬，不能剃成发白头皮",
+      "不能做成无层次的一刀平寸"
+    ],
+    "pairingAdvice": [
+      "极简纯色棚拍",
+      "冷调金属空间人像",
+      "戏剧化强侧光人像"
+    ],
+    "shotAdvice": "适合正面近景和略低机位，也适合强侧光，突出头型轮廓和鬓角线条。",
+    "expressionAction": [
+      "平静直视镜头",
+      "微抬下巴",
+      "侧头展示渐变轮廓"
+    ],
+    "controlProfile": null,
+    "referenceNotes": "重点是干净渐变和现代短寸结构，不要做成传统板寸或贴头皮光头效果。",
+    "referenceSourceIds": [
+      "gq-high-fade",
+      "gq-fade-guide",
+      "gq-short-back-sides"
+    ],
+    "categoryKey": "clean_short",
+    "categoryLabel": "清爽短发",
+    "coverImagePath": "template_assets/hairstyles/male-fade-buzz.jpg",
+    "coverImageUpdatedAt": "",
+    "coverImageSource": "draft_pending_render"
+  },
+  {
+    "id": "male-air-cushion-perm",
+    "gender": "male",
+    "title": "气垫烫",
+    "styleLine": "realistic_editorial",
+    "summary": "重点提升发根支撑和头顶蓬松度，适合需要显发量、修头型的韩系男生模板。",
+    "promptCore": "发型改为气垫烫，重点提升发根支撑和顶部蓬松度，形成自然高颅顶和轻微头包脸轮廓，前区与顶部带柔和弯曲纹理，但不出现明显小卷束感；两侧和后区保持整洁收短，整体发丝走向轻盈自然，发色为自然黑色或深棕色，气质韩系、精致、清爽、显发量。",
+    "detailTags": [
+      "气垫烫",
+      "高颅顶",
+      "发根支撑",
+      "韩系蓬松"
+    ],
+    "constraints": [
+      "发根必须有明显支撑感和顶部蓬松度",
+      "纹理必须柔和，不能卷成细密小卷",
+      "不能塌成普通直发或短碎发"
+    ],
+    "pairingAdvice": [
+      "清晨窗边软光人像",
+      "咖啡馆抓拍座位人像",
+      "室内生活感胶片写真"
+    ],
+    "shotAdvice": "适合平视近景和柔和侧光，突出高颅顶、额前轮廓和整体蓬松结构。",
+    "expressionAction": [
+      "温和看镜头",
+      "抬手轻碰头顶发根",
+      "半侧脸停在抓拍瞬间"
+    ],
+    "controlProfile": null,
+    "referenceNotes": "重点是发根支撑和头包脸效果，不要做成锡纸烫、钢夹烫那种明显束感烫发。",
+    "referenceSourceIds": [
+      "gq-barber-language",
+      "gq-best-short-haircuts",
+      "gq-short-back-sides"
+    ],
+    "categoryKey": "textured_perm",
+    "categoryLabel": "纹理烫发",
+    "coverImagePath": "template_assets/hairstyles/male-air-cushion-perm.jpg",
+    "coverImageUpdatedAt": "",
+    "coverImageSource": "draft_pending_render"
+  },
+  {
+    "id": "male-root-lift-perm",
+    "gender": "male",
+    "title": "定位烫",
+    "styleLine": "realistic_editorial",
+    "summary": "以发根支撑和轮廓定型为主，卷感不强，适合做自然显发量的男生日常模板。",
+    "promptCore": "发型改为定位烫，整体重点放在发根支撑和头顶轮廓定型，顶部与前区建立自然蓬松弧度，但不做明显卷束，发尾保持轻微弯曲后自然回落；两侧和后区整洁收短，整体线条自然服帖又不塌，发色保持自然黑色或深棕色，气质干净、耐看、日常、显发量。",
+    "detailTags": [
+      "定位烫",
+      "发根支撑",
+      "自然蓬松",
+      "日常耐看"
+    ],
+    "constraints": [
+      "重点必须是发根支撑而不是明显卷度",
+      "整体轮廓要自然立起来但不过分夸张",
+      "不能做成纹理烫以外的小卷烫发"
+    ],
+    "pairingAdvice": [
+      "室内生活感胶片写真",
+      "清晨窗边软光人像",
+      "酒店房间松弛感人像"
+    ],
+    "shotAdvice": "适合平视胸口以上近景和柔和自然光，突出顶部轮廓和自然发量感。",
+    "expressionAction": [
+      "自然看镜头",
+      "抬手压住一侧发根",
+      "轻侧脸露出顶部轮廓"
+    ],
+    "controlProfile": null,
+    "referenceNotes": "重点是自然定型和显发量，不要误做成明显卷束的韩式纹理烫或钢夹烫。",
+    "referenceSourceIds": [
+      "gq-barber-language",
+      "gq-best-short-haircuts",
+      "gq-short-back-sides"
+    ],
+    "categoryKey": "textured_perm",
+    "categoryLabel": "纹理烫发",
+    "coverImagePath": "template_assets/hairstyles/male-root-lift-perm.jpg",
+    "coverImageUpdatedAt": "",
+    "coverImageSource": "draft_pending_render"
+  },
+  {
+    "id": "male-french-lazy-perm",
+    "gender": "male",
+    "title": "法式慵懒卷",
+    "styleLine": "realistic_editorial",
+    "summary": "卷度自然松散、没有太强造型痕迹，适合偏文艺、松弛、轻法式的男生人像。",
+    "promptCore": "发型改为法式慵懒卷，整体长度保持中短到中等，顶部与两侧带自然松散的弧度和轻微卷感，不追求整齐卷束，发丝之间保留空隙和自然凌乱感，前区可有几缕轻垂的碎发修饰额头；发色为自然黑色或深棕色，整体松弛、文艺、带轻法式氛围和温柔质感。",
+    "detailTags": [
+      "法式慵懒卷",
+      "松散卷度",
+      "文艺感",
+      "轻法式"
+    ],
+    "constraints": [
+      "卷度必须松散自然，不能卷得工整密集",
+      "整体要有空气感和微凌乱感",
+      "不能做成羊毛卷或烟花烫那种密卷结构"
+    ],
+    "pairingAdvice": [
+      "咖啡馆抓拍座位人像",
+      "室内生活感胶片写真",
+      "雨天窗边情绪人像"
+    ],
+    "shotAdvice": "适合平视近景和轻抓拍构图，保留额前碎发和整体松散卷度轮廓。",
+    "expressionAction": [
+      "慵懒看镜头",
+      "抬手拨开额前卷发",
+      "微侧身停在抓拍瞬间"
+    ],
+    "controlProfile": null,
+    "referenceNotes": "重点是自然松散和轻文艺感，不要做成夸张蓬松、强造型感或细密卷发。",
+    "referenceSourceIds": [
+      "gq-barber-language",
+      "gq-best-short-haircuts",
+      "gq-short-back-sides"
+    ],
+    "categoryKey": "textured_perm",
+    "categoryLabel": "纹理烫发",
+    "coverImagePath": "template_assets/hairstyles/male-french-lazy-perm.jpg",
+    "coverImageUpdatedAt": "",
+    "coverImageSource": "draft_pending_render"
+  },
+  {
+    "id": "female-inward-bob",
+    "gender": "female",
+    "title": "内扣波波头",
+    "styleLine": "realistic_editorial",
+    "summary": "比一刀切更柔和，发尾向内包裹下颌，适合通用型女生短发模板。",
+    "promptCore": "发型改为内扣波波头，整体长度控制在下巴到颈部附近，顶部顺滑服帖，发尾带自然内收和轻微弧度，向下颌线内侧柔和包裹，不做明显碎层；可搭配中分或轻偏分，发色以黑棕或深棕为主，整体温柔、干净、知性、修饰脸型。",
+    "detailTags": [
+      "内扣波波头",
+      "柔和包脸",
+      "知性短发",
+      "轻内弯"
+    ],
+    "constraints": [
+      "发尾必须有明确内扣弧度",
+      "整体轮廓要柔和包裹下颌线",
+      "不能做成平齐冷感一刀切"
+    ],
+    "pairingAdvice": [
+      "清晨窗边软光人像",
+      "咖啡馆抓拍座位人像",
+      "室内生活感胶片写真"
+    ],
+    "shotAdvice": "适合平视近景和柔和自然光，突出下巴附近的发尾内收轮廓。",
+    "expressionAction": [
+      "温和看镜头",
+      "轻轻把发尾拨到下颌前侧",
+      "侧头露出内扣切线"
+    ],
+    "controlProfile": null,
+    "referenceNotes": "重点是柔和内扣和包脸感，不要做成平齐 blunt bob，也不要做成层次太碎的短发。",
+    "referenceSourceIds": [
+      "allure-bob-gallery",
+      "allure-bob-haircut",
+      "harpersbazaar-french-bob"
+    ],
+    "categoryKey": "short_crisp",
+    "categoryLabel": "短发利落",
+    "coverImagePath": "template_assets/hairstyles/female-inward-bob.jpg",
+    "coverImageUpdatedAt": "",
+    "coverImageSource": "draft_pending_render"
+  },
+  {
+    "id": "female-chin-length-bob",
+    "gender": "female",
+    "title": "齐脸短发",
+    "styleLine": "realistic_editorial",
+    "summary": "长度落在下巴附近，轻盈干净，比波波头更日常，比锁骨发更有短发存在感。",
+    "promptCore": "发型改为齐脸短发，整体长度稳定在下巴附近，顶部自然服帖，脸侧发丝顺着面部轮廓轻轻贴落，发尾保持轻微层次和自然收口，不做厚重切线；可中分或轻偏分，颜色以黑棕或深棕为主，整体轻盈、清爽、减龄、自然。",
+    "detailTags": [
+      "齐脸短发",
+      "下巴长度",
+      "轻盈短发",
+      "减龄"
+    ],
+    "constraints": [
+      "长度必须稳定在下巴附近",
+      "脸侧要有自然贴面包裹感",
+      "不能做成过厚的波波头或过长锁骨发"
+    ],
+    "pairingAdvice": [
+      "浴室镜前晨间人像",
+      "清晨窗边软光人像",
+      "床边半卧近景人像"
+    ],
+    "shotAdvice": "适合胸口以上近景和平视镜头，突出下巴长度和脸侧轻盈轮廓。",
+    "expressionAction": [
+      "自然看镜头",
+      "抬手把一侧短发拨到耳后",
+      "微侧身回看镜头"
+    ],
+    "controlProfile": null,
+    "referenceNotes": "重点是短而轻盈的脸侧轮廓，不要做成厚重大体积 bob，也不要延长成锁骨发。",
+    "referenceSourceIds": [
+      "allure-bob-gallery",
+      "allure-bob-haircut",
+      "masterclass-portrait-tips"
+    ],
+    "categoryKey": "short_crisp",
+    "categoryLabel": "短发利落",
+    "coverImagePath": "template_assets/hairstyles/female-chin-length-bob.jpg",
+    "coverImageUpdatedAt": "",
+    "coverImageSource": "draft_pending_render"
+  },
+  {
+    "id": "female-audrey-short",
+    "gender": "female",
+    "title": "赫本短发",
+    "styleLine": "fashion_editorial",
+    "summary": "带明显复古气质的精致短发，强调颈线、耳部和五官骨相，适合高级感短发模板。",
+    "promptCore": "发型改为赫本短发，整体长度控制在耳上到耳下附近，顶部带圆润精致的体积，侧区和后区顺着头型收紧，发尾极短且整洁，额前可有非常轻的短刘海或干净露额处理；发色以黑色或深棕色为主，整体复古、优雅、利落、突出五官和颈线。",
+    "detailTags": [
+      "赫本短发",
+      "复古短发",
+      "精致轮廓",
+      "露颈线"
+    ],
+    "constraints": [
+      "整体长度必须明显短于普通波波头",
+      "顶部轮廓要圆润精致而不是凌乱碎短",
+      "不能做成少年感超短发或中性推边短发"
+    ],
+    "pairingAdvice": [
+      "复古电影包厢人像",
+      "画廊白盒子空间人像",
+      "戏剧化强侧光人像"
+    ],
+    "shotAdvice": "适合正面近景和强轮廓光，突出耳部、颈线和精致短发外轮廓。",
+    "expressionAction": [
+      "从容看镜头",
+      "微抬下巴",
+      "侧头展示耳后和后脑轮廓"
+    ],
+    "controlProfile": null,
+    "referenceNotes": "重点是复古精致和五官外露，不要做成凌乱少年短发或蓬松法式短发。",
+    "referenceSourceIds": [
+      "allure-bob-haircut",
+      "harpersbazaar-french-bob",
+      "masterclass-annie-working-light"
+    ],
+    "categoryKey": "short_crisp",
+    "categoryLabel": "短发利落",
+    "coverImagePath": "template_assets/hairstyles/female-audrey-short.jpg",
+    "coverImageUpdatedAt": "",
+    "coverImageSource": "draft_pending_render"
+  },
+  {
+    "id": "female-classic-collarbone",
+    "gender": "female",
+    "title": "锁骨发",
+    "styleLine": "realistic_editorial",
+    "summary": "最通用的女生中短发长度，稳定、耐看、好出片，适合作为基础模板发型。",
+    "promptCore": "发型改为锁骨发，整体长度稳定落在锁骨附近，顶部自然服帖，脸侧和发尾保留轻微层次但不过分打薄，整体轮廓干净顺直，发尾自然下落或带极轻微内收；发色以黑棕或深棕为主，整体温柔、通用、自然、耐看。",
+    "detailTags": [
+      "锁骨发",
+      "通用中短发",
+      "自然顺直",
+      "耐看"
+    ],
+    "constraints": [
+      "长度必须稳定在锁骨附近",
+      "整体层次只能轻微，不能做成高层次结构",
+      "不能做成齐肩短发或胸前长发"
+    ],
+    "pairingAdvice": [
+      "室内生活感胶片写真",
+      "清晨窗边软光人像",
+      "咖啡馆抓拍座位人像"
+    ],
+    "shotAdvice": "适合 3:4 竖构图和胸口以上近景，保留锁骨、肩颈和整体长度比例。",
+    "expressionAction": [
+      "温柔看镜头",
+      "抬手拢住一侧发尾",
+      "微侧身露出锁骨线条"
+    ],
+    "controlProfile": null,
+    "referenceNotes": "重点是稳定的锁骨长度和通用性，不要做成辛芷蕾那种明显高层次，也不要做成卷度太重的锁骨烫。",
+    "referenceSourceIds": [
+      "allure-bob-haircut",
+      "allure-curtain-bangs",
+      "masterclass-portrait-tips"
+    ],
+    "categoryKey": "layered_medium",
+    "categoryLabel": "层次中长发",
+    "coverImagePath": "template_assets/hairstyles/female-classic-collarbone.jpg",
+    "coverImageUpdatedAt": "",
+    "coverImageSource": "draft_pending_render"
+  },
+  {
+    "id": "female-high-layer-collarbone",
+    "gender": "female",
+    "title": "高层次锁骨发",
+    "styleLine": "realistic_editorial",
+    "summary": "在锁骨长度基础上增加明显层次落差，更轻、更灵动，也更强调修脸效果。",
+    "promptCore": "发型改为高层次锁骨发，整体长度落在锁骨附近，但顶部和脸侧做更明显的层次落差，形成上轻下薄、脸侧更有包裹感的结构，发尾被打薄得更轻、更透；可做中分或轻偏分，发色以深棕或黑棕为主，整体轻盈、时髦、修脸、富有动势。",
+    "detailTags": [
+      "高层次锁骨发",
+      "轻盈修脸",
+      "发尾轻薄",
+      "动势感"
+    ],
+    "constraints": [
+      "层次落差必须比普通锁骨发更明显",
+      "发尾要轻薄通透，不能厚重齐整",
+      "不能做成普通齐发尾锁骨发"
+    ],
+    "pairingAdvice": [
+      "室内生活感胶片写真",
+      "傍晚家居逆光人像",
+      "咖啡馆抓拍座位人像"
+    ],
+    "shotAdvice": "适合平视近景和轻抓拍构图，保留脸侧层次和肩部附近的发尾动势。",
+    "expressionAction": [
+      "轻松看镜头",
+      "抬手整理脸侧层次",
+      "转头让发尾自然甩动"
+    ],
+    "controlProfile": null,
+    "referenceNotes": "重点是锁骨长度上的轻层次和动势感，不要做成辛芷蕾锁骨发那种集中包脸的明星款。",
+    "referenceSourceIds": [
+      "allure-bob-haircut",
+      "allure-curtain-bangs",
+      "masterclass-portrait-tips"
+    ],
+    "categoryKey": "layered_medium",
+    "categoryLabel": "层次中长发",
+    "coverImagePath": "template_assets/hairstyles/female-high-layer-collarbone.jpg",
+    "coverImageUpdatedAt": "",
+    "coverImageSource": "draft_pending_render"
+  },
+  {
+    "id": "female-soft-wave-collarbone",
+    "gender": "female",
+    "title": "微卷锁骨发",
+    "styleLine": "realistic_editorial",
+    "summary": "锁骨长度加轻微自然卷度，适合生活感、松弛感和通勤感兼顾的女生日常模板。",
+    "promptCore": "发型改为微卷锁骨发，整体长度稳定在锁骨附近，顶部自然服帖，脸侧到发尾带轻微柔和弯曲，不做明显规则卷束，发尾有自然弹性和呼吸感；发色以黑棕、深棕或冷棕为主，整体温柔、松弛、日常、显得发量轻盈又自然。",
+    "detailTags": [
+      "微卷锁骨发",
+      "轻柔弯曲",
+      "松弛感",
+      "通勤感"
+    ],
+    "constraints": [
+      "卷度必须轻微自然，不能卷成法式大卷或韩式密卷",
+      "长度必须稳定在锁骨附近",
+      "不能塌成完全无弧度的直发锁骨发"
+    ],
+    "pairingAdvice": [
+      "清晨窗边软光人像",
+      "酒店房间松弛感人像",
+      "床边半卧近景人像"
+    ],
+    "shotAdvice": "适合胸口以上近景和柔和侧光，突出锁骨长度与发尾轻弯轮廓。",
+    "expressionAction": [
+      "温柔看镜头",
+      "抬手拨开发尾微卷",
+      "微侧头停在自然抓拍瞬间"
+    ],
+    "controlProfile": null,
+    "referenceNotes": "重点是轻柔微卷和日常感，不要做成明显层次剪，也不要卷得太精致厚重。",
+    "referenceSourceIds": [
+      "allure-curtain-bangs",
+      "allure-jennifer-curtain",
+      "masterclass-portrait-tips"
+    ],
+    "categoryKey": "layered_medium",
+    "categoryLabel": "层次中长发",
+    "coverImagePath": "template_assets/hairstyles/female-soft-wave-collarbone.jpg",
+    "coverImageUpdatedAt": "",
+    "coverImageSource": "draft_pending_render"
+  },
+  {
+    "id": "female-shoulder-length-cut",
+    "gender": "female",
+    "title": "齐肩发",
+    "styleLine": "realistic_editorial",
+    "summary": "长度稳定在肩部附近，比锁骨发更短更利落，是非常稳妥的中短发基础款。",
+    "promptCore": "发型改为齐肩发，整体长度稳定在肩部上下附近，顶部顺滑自然，脸侧轮廓干净，发尾整洁下落并在肩部附近形成清楚长度边界，可带极轻微内弯或自然直落；发色以深棕、黑棕为主，整体清爽、自然、日常、容易驾驭。",
+    "detailTags": [
+      "齐肩发",
+      "基础中短发",
+      "自然直顺",
+      "稳妥通用"
+    ],
+    "constraints": [
+      "长度必须明确落在肩部附近",
+      "整体轮廓要比锁骨发更短更利落",
+      "不能延长成锁骨发或打薄成高层次结构"
+    ],
+    "pairingAdvice": [
+      "浴室镜前晨间人像",
+      "室内生活感胶片写真",
+      "咖啡馆抓拍座位人像"
+    ],
+    "shotAdvice": "适合平视近景和肩颈可见的构图，突出肩部位置的长度边界。",
+    "expressionAction": [
+      "自然看镜头",
+      "把一侧头发拨到肩后",
+      "轻微侧身露出肩部长度"
+    ],
+    "controlProfile": null,
+    "referenceNotes": "重点是肩部长度的稳定性和基础款属性，不要做成锁骨发、短 bob 或胸前长发。",
+    "referenceSourceIds": [
+      "allure-bob-haircut",
+      "masterclass-portrait-tips",
+      "masterclass-annie-natural-light"
+    ],
+    "categoryKey": "layered_medium",
+    "categoryLabel": "层次中长发",
+    "coverImagePath": "template_assets/hairstyles/female-shoulder-length-cut.jpg",
+    "coverImageUpdatedAt": "",
+    "coverImageSource": "draft_pending_render"
+  },
+  {
+    "id": "female-wolf-cut",
+    "gender": "female",
+    "title": "狼剪",
+    "styleLine": "fashion_editorial",
+    "summary": "高层次、碎发感和轻尾感并存，比普通层次发更个性，也更适合风感和街头氛围画面。",
+    "promptCore": "发型改为狼剪，顶部和脸侧做明显高层次与碎感结构，形成上蓬下轻的轮廓落差，脸侧碎发更突出，后区保留一定长度和轻尾感，整体发丝更碎、更轻、更有动势；可带轻微自然弧度，发色以黑棕或深棕为主，整体个性、时髦、带一点日系街头感。",
+    "detailTags": [
+      "狼剪",
+      "高层次",
+      "轻尾感",
+      "街头感"
+    ],
+    "constraints": [
+      "高层次和碎发感必须明显",
+      "后区要保留轻尾感和轮廓落差",
+      "不能做成普通高层次中长发或鲻鱼头"
+    ],
+    "pairingAdvice": [
+      "天台风场人像",
+      "都市夜色霓虹人像",
+      "冷调金属空间人像"
+    ],
+    "shotAdvice": "适合带风感的半侧脸近景和动态构图，突出脸侧碎发与整体层次落差。",
+    "expressionAction": [
+      "带一点疏离感地看镜头",
+      "抬手拨开脸侧碎发",
+      "转头让后区轻尾自然扬起"
+    ],
+    "controlProfile": null,
+    "referenceNotes": "重点是轻、碎、动势和层次落差，不要做成厚重长发或过于复古的鲻鱼结构。",
+    "referenceSourceIds": [
+      "allure-curtain-bangs",
+      "masterclass-portrait-tips",
+      "masterclass-annie-working-light"
+    ],
+    "categoryKey": "layered_medium",
+    "categoryLabel": "层次中长发",
+    "coverImagePath": "template_assets/hairstyles/female-wolf-cut.jpg",
+    "coverImageUpdatedAt": "",
+    "coverImageSource": "draft_pending_render"
+  },
+  {
+    "id": "female-classic-hime-cut",
+    "gender": "female",
+    "title": "原版公主切 / 姬发式",
+    "styleLine": "fashion_editorial",
+    "summary": "比改良公主切更强调耳前短切和后方长发的强断层，对轮廓和风格感要求更高。",
+    "promptCore": "发型改为原版公主切，整体以后方长直发为主体，长度至少过胸，耳前两侧做清楚整齐的短切结构，长度落在下巴到锁骨之间，形成与后部长发明显分离的强断层；顶部顺滑服帖，发色以乌黑或极深棕为主，整体东方、冷感、风格化、辨识度极高。",
+    "detailTags": [
+      "原版公主切",
+      "姬发式",
+      "强断层",
+      "东方感"
+    ],
+    "constraints": [
+      "耳前短切和后部长发的断层必须非常明确",
+      "后区长度必须明显长于前区短切",
+      "不能做成轻度改良公主切或普通层次长发"
+    ],
+    "pairingAdvice": [
+      "画廊白盒子空间人像",
+      "雨天窗边情绪人像",
+      "极简纯色棚拍"
+    ],
+    "shotAdvice": "适合正面近景和半侧身构图，清楚展示耳前短切与后方长发的结构反差。",
+    "expressionAction": [
+      "清冷看镜头",
+      "抬手把短切部分拨到耳后",
+      "微侧身露出后方长发与前区断层"
+    ],
+    "controlProfile": null,
+    "referenceNotes": "重点是强结构断层和冷感东方气质，不要弱化成轻层次中长发。",
+    "referenceSourceIds": [
+      "allure-bob-haircut",
+      "masterclass-portrait-tips",
+      "masterclass-jimmy-natural-light"
+    ],
+    "categoryKey": "layered_medium",
+    "categoryLabel": "层次中长发",
+    "coverImagePath": "template_assets/hairstyles/female-classic-hime-cut.jpg",
+    "coverImageUpdatedAt": "",
+    "coverImageSource": "draft_pending_render"
+  },
+  {
+    "id": "female-black-long-straight",
+    "gender": "female",
+    "title": "黑长直",
+    "styleLine": "realistic_editorial",
+    "summary": "比新中式长直发更通用，强调顺直、自然、干净的基础东方长发气质。",
+    "promptCore": "发型改为黑长直，整体长度超过胸线，发面顺滑自然、垂坠清晰，层次极少，顶部贴合头型，脸侧发丝自然垂落，发尾整齐但不过于僵硬，颜色以乌黑或极深棕为主；整体清爽、通透、东方感强、自然耐看。",
+    "detailTags": [
+      "黑长直",
+      "顺滑垂坠",
+      "东方基础款",
+      "自然长发"
+    ],
+    "constraints": [
+      "颜色必须乌黑或极深棕",
+      "整体必须顺直垂坠，不能加入明显卷度",
+      "不能做成新中式重风格化长发或超长瀑布直发"
+    ],
+    "pairingAdvice": [
+      "清晨窗边软光人像",
+      "胡桃木书房静物人像",
+      "雨天窗边情绪人像"
+    ],
+    "shotAdvice": "适合平视近景和胸口以上构图，保留脸侧顺直发丝和自然垂坠长度。",
+    "expressionAction": [
+      "安静看镜头",
+      "抬手把一侧长发拨到肩前",
+      "轻轻低头后再抬眼"
+    ],
+    "controlProfile": null,
+    "referenceNotes": "重点是基础黑长直的通用性和自然感，不要做得过于仪式化、新中式或超长戏剧化。",
+    "referenceSourceIds": [
+      "allure-curtain-bangs",
+      "masterclass-portrait-tips",
+      "masterclass-jimmy-natural-light"
+    ],
+    "categoryKey": "long_statement",
+    "categoryLabel": "长发气质",
+    "coverImagePath": "template_assets/hairstyles/female-black-long-straight.jpg",
+    "coverImageUpdatedAt": "",
+    "coverImageSource": "draft_pending_render"
+  },
+  {
+    "id": "female-mermaid-wave",
+    "gender": "female",
+    "title": "人鱼卷",
+    "styleLine": "fashion_editorial",
+    "summary": "大波浪更绵长、更流动，带海藻感和浪漫感，适合高氛围值的女生卷发模板。",
+    "promptCore": "发型改为人鱼卷，整体长度落在胸前或更长，卷度呈连续流动的大波浪结构，从中段向下展开，整体像海藻一样绵长、柔软、有明显起伏，发丝丰盈但不厚重；发色以深棕、黑棕或冷深色为主，整体浪漫、梦幻、氛围感强。",
+    "detailTags": [
+      "人鱼卷",
+      "海藻感波浪",
+      "梦幻浪漫",
+      "长卷发"
+    ],
+    "constraints": [
+      "波浪必须连续流动，不能切成规则小卷",
+      "整体长度必须足够长，至少到胸前",
+      "不能做成法式慵懒卷或港风大波浪"
+    ],
+    "pairingAdvice": [
+      "傍晚家居逆光人像",
+      "都市夜色霓虹人像",
+      "高级酒店大堂人像"
+    ],
+    "shotAdvice": "适合胸口以上近景和半侧身构图，突出中段到发尾的流动波浪线条。",
+    "expressionAction": [
+      "柔和看镜头",
+      "抬手穿过一侧波浪长发",
+      "转身时让长卷发自然摆动"
+    ],
+    "controlProfile": null,
+    "referenceNotes": "重点是流动感、长度感和浪漫氛围，不要卷得过密或压缩成普通波纹卷。",
+    "referenceSourceIds": [
+      "allure-curtain-bangs",
+      "allure-jennifer-curtain",
+      "masterclass-annie-working-light"
+    ],
+    "categoryKey": "soft_curls",
+    "categoryLabel": "氛围卷发",
+    "coverImagePath": "template_assets/hairstyles/female-mermaid-wave.jpg",
+    "coverImageUpdatedAt": "",
+    "coverImageSource": "draft_pending_render"
+  },
+  {
+    "id": "female-egg-roll-perm",
+    "gender": "female",
+    "title": "蛋蛋卷 / 蛋卷头",
+    "styleLine": "realistic_editorial",
+    "summary": "卷度规律、细密但不炸，带韩系甜感和显发量效果，适合减龄女生模板。",
+    "promptCore": "发型改为蛋蛋卷，整体长度可在锁骨到胸前之间，卷度呈规则连续的小弧度起伏，从中段到发尾分布均匀，整体丰盈有弹性，发丝排列整齐但不死板；可搭配中分、八字边缘或轻空气刘海，发色以黑棕、深棕为主，整体甜感、减龄、精致、显发量。",
+    "detailTags": [
+      "蛋蛋卷",
+      "规则小波浪",
+      "韩系甜感",
+      "显发量"
+    ],
+    "constraints": [
+      "卷度必须规则连续，不能松散到看不出结构",
+      "整体丰盈但不能炸成羊毛卷",
+      "不能做成法式大卷或水波纹"
+    ],
+    "pairingAdvice": [
+      "清晨窗边软光人像",
+      "咖啡馆抓拍座位人像",
+      "酒店房间松弛感人像"
+    ],
+    "shotAdvice": "适合胸口以上近景和柔和自然光，突出规则卷度和整体发量感。",
+    "expressionAction": [
+      "甜感看镜头",
+      "轻轻拨开发尾卷度",
+      "侧头展示整体卷度轮廓"
+    ],
+    "controlProfile": null,
+    "referenceNotes": "重点是连续规则的小波浪和韩系甜感，不要卷得过乱，也不要做成羊毛卷的密小卷。",
+    "referenceSourceIds": [
+      "allure-curtain-bangs",
+      "allure-jennifer-curtain",
+      "masterclass-portrait-tips"
+    ],
+    "categoryKey": "soft_curls",
+    "categoryLabel": "氛围卷发",
+    "coverImagePath": "template_assets/hairstyles/female-egg-roll-perm.jpg",
+    "coverImageUpdatedAt": "",
+    "coverImageSource": "draft_pending_render"
+  },
+  {
+    "id": "female-hongkong-glam-wave",
+    "gender": "female",
+    "title": "港风大波浪",
+    "styleLine": "fashion_editorial",
+    "summary": "强调饱满体积、浓郁女人味和复古光泽感，是成熟氛围和港风写真常见代表发型。",
+    "promptCore": "发型改为港风大波浪，整体长度落在胸前或更长，卷度大而饱满，从中段到发尾展开明显波浪，整体发量丰盈有存在感，脸侧带自然翻卷和蓬松支撑，发面保留顺滑光泽；发色以黑棕、深棕或复古深色系为主，整体成熟、明艳、复古、极具港风女人味。",
+    "detailTags": [
+      "港风大波浪",
+      "成熟女人味",
+      "复古光泽",
+      "丰盈大卷"
+    ],
+    "constraints": [
+      "波浪必须大而饱满，不能卷成轻飘小卷",
+      "整体体积感必须明显",
+      "不能做成法式慵懒卷或人鱼卷那种轻柔流动结构"
+    ],
+    "pairingAdvice": [
+      "复古电影包厢人像",
+      "高级酒店大堂人像",
+      "暗调酒吧吧台人像"
+    ],
+    "shotAdvice": "适合胸口以上近景和略低机位，突出大卷体积、肩颈轮廓和复古气场。",
+    "expressionAction": [
+      "从容看镜头",
+      "抬手拢住一侧大波浪",
+      "转头让大卷轮廓完整展开"
+    ],
+    "controlProfile": null,
+    "referenceNotes": "重点是丰盈、成熟和复古港风感，不要弱化成日常轻卷或韩式甜美卷发。",
+    "referenceSourceIds": [
+      "allure-curtain-bangs",
+      "masterclass-portrait-tips",
+      "masterclass-annie-working-light"
+    ],
+    "categoryKey": "soft_curls",
+    "categoryLabel": "氛围卷发",
+    "coverImagePath": "template_assets/hairstyles/female-hongkong-glam-wave.jpg",
+    "coverImageUpdatedAt": "",
+    "coverImageSource": "draft_pending_render"
+  }
+]
