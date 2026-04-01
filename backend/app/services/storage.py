@@ -5,6 +5,7 @@ import shutil
 import uuid
 from dataclasses import dataclass
 from functools import lru_cache
+from importlib import import_module
 from pathlib import Path
 from urllib.parse import urlparse
 
@@ -47,6 +48,8 @@ FACE_OVERLAP_IOU_THRESHOLD = 0.35
 SECONDARY_FACE_AREA_SHARE = 0.5
 FACE_DETECTION_MAX_DIMENSION = 1280
 FACE_DETECTION_MIN_CONFIDENCE = 0.45
+HAAR_BASE_MIN_FACE_RATIO = 0.06
+HAAR_RELAXED_MIN_FACE_RATIO = 0.05
 
 
 class UploadValidationError(Exception):
@@ -288,6 +291,10 @@ def _detect_faces_with_mediapipe(
     if cv2 is None or mp is None:
         return None
 
+    face_detection_cls = _resolve_mediapipe_face_detection_class()
+    if face_detection_cls is None:
+        return None
+
     decoded = _decode_cv_image(image_bytes)
     if decoded is None:
         return None
@@ -299,7 +306,7 @@ def _detect_faces_with_mediapipe(
 
     for model_selection in (0, 1):
         try:
-            with mp.solutions.face_detection.FaceDetection(
+            with face_detection_cls(
                 model_selection=model_selection,
                 min_detection_confidence=FACE_DETECTION_MIN_CONFIDENCE,
             ) as detector:
@@ -337,27 +344,139 @@ def _detect_faces_with_mediapipe(
     return _deduplicate_face_boxes(list(restored_faces))
 
 
+def _resolve_mediapipe_face_detection_class():
+    if mp is None:
+        return None
+
+    solutions = getattr(mp, "solutions", None)
+    if solutions is not None:
+        face_detection = getattr(solutions, "face_detection", None)
+        face_detection_cls = getattr(face_detection, "FaceDetection", None)
+        if face_detection_cls is not None:
+            return face_detection_cls
+
+    try:
+        module = import_module("mediapipe.python.solutions.face_detection")
+    except Exception:
+        return None
+    return getattr(module, "FaceDetection", None)
+
+
+def _build_detection_grayscale_variants(detection_image) -> list:
+    grayscale = cv2.cvtColor(detection_image, cv2.COLOR_BGR2GRAY)
+    variants = [grayscale]
+
+    try:
+        clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
+        variants.append(clahe.apply(grayscale))
+    except Exception:  # pragma: no cover
+        pass
+
+    return variants
+
+
+def _load_haar_cascade(filename: str):
+    cascade = cv2.CascadeClassifier(cv2.data.haarcascades + filename)
+    if cascade.empty():
+        return None
+    return cascade
+
+
+def _detect_faces_with_cascade(
+    grayscale_variants: list,
+    *,
+    width: int,
+    cascade_filenames: tuple[str, ...],
+    configs: tuple[tuple[float, int, tuple[int, int]], ...],
+    include_mirror: bool = False,
+) -> list[tuple[int, int, int, int]]:
+    collected_faces: list[tuple[int, int, int, int]] = []
+
+    for cascade_filename in cascade_filenames:
+        cascade = _load_haar_cascade(cascade_filename)
+        if cascade is None:
+            continue
+
+        for grayscale in grayscale_variants:
+            for scale_factor, min_neighbors, min_size in configs:
+                faces = cascade.detectMultiScale(
+                    grayscale,
+                    scaleFactor=scale_factor,
+                    minNeighbors=min_neighbors,
+                    minSize=min_size,
+                )
+                collected_faces.extend(
+                    tuple(int(value) for value in face)
+                    for face in faces
+                )
+
+                if not include_mirror:
+                    continue
+
+                mirrored = cv2.flip(grayscale, 1)
+                mirrored_faces = cascade.detectMultiScale(
+                    mirrored,
+                    scaleFactor=scale_factor,
+                    minNeighbors=min_neighbors,
+                    minSize=min_size,
+                )
+                for x, y, face_width, face_height in mirrored_faces:
+                    mirrored_x = width - int(x) - int(face_width)
+                    collected_faces.append(
+                        (
+                            int(mirrored_x),
+                            int(y),
+                            int(face_width),
+                            int(face_height),
+                        )
+                    )
+
+    return collected_faces
+
+
 def _detect_faces_with_haar(
     image_bytes: bytes,
 ) -> tuple[tuple[int, int, int, int], ...] | None:
+    if cv2 is None:
+        return None
+
     decoded = _decode_cv_image(image_bytes)
     if decoded is None:
         return None
 
     detection_image, original_width, original_height = _resize_detection_image(decoded)
     height, width = detection_image.shape[:2]
-    grayscale = cv2.cvtColor(detection_image, cv2.COLOR_BGR2GRAY)
-    grayscale = cv2.equalizeHist(grayscale)
-    cascade = cv2.CascadeClassifier(
-        cv2.data.haarcascades + "haarcascade_frontalface_default.xml"
+    grayscale_variants = _build_detection_grayscale_variants(detection_image)
+    base_min_size = (
+        max(40, int(round(width * HAAR_BASE_MIN_FACE_RATIO))),
+        max(40, int(round(height * HAAR_BASE_MIN_FACE_RATIO))),
     )
-    min_size = (max(64, int(width * 0.08)), max(64, int(height * 0.08)))
-    faces = cascade.detectMultiScale(
-        grayscale,
-        scaleFactor=1.08,
-        minNeighbors=6,
-        minSize=min_size,
+    relaxed_min_size = (
+        max(40, int(round(width * HAAR_RELAXED_MIN_FACE_RATIO))),
+        max(40, int(round(height * HAAR_RELAXED_MIN_FACE_RATIO))),
     )
+    frontal_configs = (
+        (1.05, 5, base_min_size),
+        (1.03, 4, relaxed_min_size),
+    )
+    frontal_faces = _detect_faces_with_cascade(
+        grayscale_variants,
+        width=width,
+        cascade_filenames=(
+            "haarcascade_frontalface_default.xml",
+            "haarcascade_frontalface_alt.xml",
+            "haarcascade_frontalface_alt2.xml",
+        ),
+        configs=frontal_configs,
+    )
+    profile_faces = _detect_faces_with_cascade(
+        grayscale_variants,
+        width=width,
+        cascade_filenames=("haarcascade_profileface.xml",),
+        configs=((1.05, 5, base_min_size), (1.03, 4, relaxed_min_size)),
+        include_mirror=True,
+    )
+    faces = list(_deduplicate_face_boxes(frontal_faces + profile_faces))
 
     restored_faces = _restore_faces_to_original_scale(
         [

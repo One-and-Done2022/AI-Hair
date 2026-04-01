@@ -34,6 +34,10 @@ def _build_colored_image(color: str) -> bytes:
     return buffer.getvalue()
 
 
+def _load_asset_image_bytes(name: str) -> bytes:
+    return (ROOT_DIR / "assets" / name).read_bytes()
+
+
 def _configure_runtime_env(tmp_path, monkeypatch, *, use_mock_generator: str = "true") -> None:
     monkeypatch.setenv("USE_MOCK_GENERATOR", use_mock_generator)
     monkeypatch.setenv("ALLOW_DEV_LOGIN", "true")
@@ -2439,6 +2443,46 @@ def test_upload_validation_accepts_multiple_faces_without_blocking(monkeypatch):
 
     assert metadata.width == 768
     assert metadata.height == 1024
+
+
+def test_upload_validation_accepts_male2_with_haar_fallback(monkeypatch):
+    monkeypatch.setenv("ENFORCE_FACE_DETECTION", "true")
+
+    from app.config import get_settings
+    from app.services import storage
+
+    if storage.cv2 is None:
+        pytest.skip("opencv is unavailable")
+
+    get_settings.cache_clear()
+    monkeypatch.setattr(storage, "mp", None)
+
+    metadata = storage.validate_upload_bytes(_load_asset_image_bytes("male2.jpg"), "image/jpeg")
+
+    assert metadata.width == 768
+    assert metadata.height == 1024
+    assert metadata.extension == ".jpg"
+
+
+def test_detect_faces_returns_prominent_face_for_male2(monkeypatch):
+    from app.services import storage
+
+    if storage.cv2 is None:
+        pytest.skip("opencv is unavailable")
+
+    monkeypatch.setattr(storage, "mp", None)
+
+    image_bytes = _load_asset_image_bytes("male2.jpg")
+    faces = storage._detect_faces(image_bytes)
+
+    assert faces
+    with Image.open(io.BytesIO(image_bytes)) as image:
+        width, height = image.size
+
+    normalized_faces = storage._normalize_detected_faces(faces, width, height)
+
+    assert normalized_faces
+    assert any(storage._is_upload_face_usable(face, width, height) for face in normalized_faces)
 
 
 def test_showcases_endpoint_returns_curated_examples(tmp_path, monkeypatch):
