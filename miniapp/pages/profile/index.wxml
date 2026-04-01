@@ -40,6 +40,20 @@
     </view>
   </view>
 
+  <view
+    wx:if="{{profile && profile.provider_alerts && profile.provider_alerts.length}}"
+    class="panel provider-alert-card"
+  >
+    <view class="section-title">线路提醒</view>
+    <view
+      wx:for="{{profile.provider_alerts}}"
+      wx:key="*this"
+      class="provider-alert-copy"
+    >
+      {{item}}
+    </view>
+  </view>
+
   <view wx:if="{{profile}}" class="panel membership-card">
     <view class="card-head">
       <view class="section-title">会员权益</view>

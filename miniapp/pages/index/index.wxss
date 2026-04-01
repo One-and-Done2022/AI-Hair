@@ -33,6 +33,26 @@
   margin-top: 8rpx;
 }
 
+.provider-alert {
+  margin-top: 18rpx;
+  padding: 22rpx 24rpx;
+  background: #fff8eb;
+  border: 1rpx solid rgba(245, 158, 11, 0.22);
+}
+
+.provider-alert-title {
+  font-size: 24rpx;
+  font-weight: 700;
+  color: #9a6700;
+}
+
+.provider-alert-message {
+  margin-top: 10rpx;
+  font-size: 22rpx;
+  line-height: 1.5;
+  color: #7a4a00;
+}
+
 .section-row {
   display: flex;
   align-items: center;

@@ -59,6 +59,11 @@ def _configure_runtime_env(tmp_path, monkeypatch, *, use_mock_generator: str = "
     monkeypatch.delenv("NANO_BANANA_PRO_BASE_URL", raising=False)
     monkeypatch.delenv("NANO_BANANA_PRO_MODEL", raising=False)
     monkeypatch.delenv("NANO_BANANA_PRO_MAX_CONCURRENCY", raising=False)
+    monkeypatch.delenv("NANO_BANANA_PRO_FALLBACK_API_KEY", raising=False)
+    monkeypatch.delenv("NANO_BANANA_PRO_FALLBACK_BASE_URL", raising=False)
+    monkeypatch.delenv("NANO_BANANA_PRO_CHAT_FALLBACK_API_KEY", raising=False)
+    monkeypatch.delenv("NANO_BANANA_PRO_CHAT_FALLBACK_BASE_URL", raising=False)
+    monkeypatch.delenv("NANO_BANANA_PRO_CHAT_FALLBACK_MODEL", raising=False)
     monkeypatch.delenv("NANO_BANANA_2_API_KEY", raising=False)
     monkeypatch.delenv("NANO_BANANA_2_BASE_URL", raising=False)
     monkeypatch.delenv("NANO_BANANA_2_MODEL", raising=False)
@@ -89,12 +94,14 @@ def _configure_runtime_env(tmp_path, monkeypatch, *, use_mock_generator: str = "
 def _clear_runtime_caches() -> None:
     from app.config import get_settings
     from app.db import get_engine, get_session_factory
+    from app.services import generation
     from app.services.storage import get_object_storage
 
     get_settings.cache_clear()
     get_engine.cache_clear()
     get_session_factory.cache_clear()
     get_object_storage.cache_clear()
+    generation._PROVIDER_BACKOFF_UNTIL.clear()
 
 
 def _build_app(tmp_path, monkeypatch):
@@ -139,7 +146,7 @@ def _create_job_fixture(tmp_path, monkeypatch, *, ark_api_keys: str | None = Non
     prompt = templates.build_job_prompt_payload(
         hairstyle,
         scene,
-        generator_backend="basic",
+        generator_backend="premium",
         aspect_ratio="3:4",
         resolution="2K",
         seed_source="job-fixture",
@@ -209,7 +216,7 @@ def test_build_and_parse_job_prompt_payload_preserves_output_options():
     parsed = templates.parse_job_prompt_payload(payload)
 
     assert parsed["output_options"] == {
-        "generator_backend": "basic",
+        "generator_backend": "premium",
         "aspect_ratio": "3:4",
         "resolution": "2K",
     }
@@ -238,9 +245,9 @@ def test_parse_job_prompt_payload_keeps_legacy_output_options_for_history():
     parsed = templates.parse_job_prompt_payload(json.dumps(payload, ensure_ascii=False))
 
     assert parsed["output_options"] == {
-        "generator_backend": "basic",
+        "generator_backend": "premium",
         "aspect_ratio": "1:8",
-        "resolution": "4K",
+        "resolution": "2K",
     }
 
 
@@ -557,7 +564,7 @@ def test_auth_upload_job_history_flow(tmp_path, monkeypatch):
         catalog = templates.json()
         assert len(catalog["hairstyles"]) == 56
         assert len(catalog["scenes"]) == len(template_service.SCENES)
-        assert len(catalog["generation_backends"]) == 2
+        assert len(catalog["generation_backends"]) == 1
         assert len([item for item in catalog["hairstyles"] if item["gender"] == "male"]) == 23
         assert len([item for item in catalog["hairstyles"] if item["gender"] == "female"]) == 33
         assert catalog["hairstyles"][0]["style_line_label"]
@@ -619,6 +626,7 @@ def test_auth_upload_job_history_flow(tmp_path, monkeypatch):
         assert me_payload["completed_jobs"] == 1
         assert me_payload["processing_jobs"] == 0
         assert me_payload["remaining_quota"] == 19
+        assert me_payload["provider_alerts"] == []
 
         delete_response = client.delete(f"/api/jobs/{job_id}", headers=headers)
         assert delete_response.status_code == 204
@@ -739,7 +747,7 @@ def test_job_accepts_extended_output_options(tmp_path, monkeypatch):
 
         assert job_create.status_code == 201
         payload = job_create.json()
-        assert payload["generator_backend"] == "basic"
+        assert payload["generator_backend"] == "premium"
         assert payload["aspect_ratio"] == "21:9"
         assert payload["resolution"] == "2K"
 
@@ -755,8 +763,8 @@ def test_templates_catalog_exposes_plan_specific_output_capabilities(tmp_path, m
         catalog = client.get("/api/templates", headers=headers)
         assert catalog.status_code == 200
         backends = {item["id"]: item for item in catalog.json()["generation_backends"]}
-
-        assert backends["basic"]["aspect_ratios"] == [
+        assert list(backends.keys()) == ["premium"]
+        assert backends["premium"]["aspect_ratios"] == [
             "1:1",
             "16:9",
             "9:16",
@@ -768,9 +776,7 @@ def test_templates_catalog_exposes_plan_specific_output_capabilities(tmp_path, m
             "5:4",
             "4:5",
         ]
-        assert backends["basic"]["resolutions"] == ["2K"]
-        assert backends["basic"]["default_resolution"] == "2K"
-        assert backends["premium"]["resolutions"] == ["1K", "2K"]
+        assert backends["premium"]["resolutions"] == ["2K"]
         assert backends["premium"]["default_resolution"] == "2K"
 
 
@@ -802,8 +808,9 @@ def test_job_rejects_plan_specific_unsupported_output_options(tmp_path, monkeypa
                 "resolution": "4K",
             },
         )
-        assert job_basic_4k.status_code == 400
-        assert "Unsupported resolution: 4K" in job_basic_4k.json()["detail"]
+        assert job_basic_4k.status_code == 201
+        assert job_basic_4k.json()["generator_backend"] == "premium"
+        assert job_basic_4k.json()["resolution"] == "2K"
 
         job_premium_extreme_ratio = client.post(
             "/api/jobs",
@@ -1115,11 +1122,10 @@ def test_seedream_generator_requests_preview_first_then_tops_up(tmp_path, monkey
     monkeypatch.setenv("ARK_API_KEY", "test-key")
     monkeypatch.setenv("ARK_IMAGE_MODEL", "doubao-seedream-4-5-251128")
 
-    from app.config import get_settings
     from app.services.generation import SeedreamGenerator
     from app.services.key_pool import ApiKeyLease
 
-    get_settings.cache_clear()
+    _clear_runtime_caches()
 
     source_path = tmp_path / "source.png"
     source_path.write_bytes(_build_test_image())
@@ -1184,11 +1190,10 @@ def test_seedream_5_generator_uses_rest_images_generation_api(tmp_path, monkeypa
     monkeypatch.setenv("ARK_API_KEY", "test-key")
     monkeypatch.setenv("ARK_IMAGE_MODEL", "doubao-seedream-5-0-260128")
 
-    from app.config import get_settings
     from app.services.generation import GenerationContext, SeedreamGenerator
     from app.services.key_pool import ApiKeyLease
 
-    get_settings.cache_clear()
+    _clear_runtime_caches()
 
     source_path = tmp_path / "source.png"
     source_path.write_bytes(_build_test_image())
@@ -1267,15 +1272,51 @@ def test_nano_banana_pro_settings_use_renamed_envs(tmp_path, monkeypatch):
     monkeypatch.setenv("NANO_BANANA_PRO_API_KEY", "new-pro-key")
     monkeypatch.setenv("NANO_BANANA_PRO_BASE_URL", "https://example.test/api")
     monkeypatch.setenv("NANO_BANANA_PRO_MODEL", "gemini-3-pro-image-preview")
+    monkeypatch.setenv("NANO_BANANA_PRO_FALLBACK_API_KEY", "backup-pro-key")
+    monkeypatch.setenv("NANO_BANANA_PRO_FALLBACK_BASE_URL", "https://backup.example.test")
+    monkeypatch.setenv("NANO_BANANA_PRO_CHAT_FALLBACK_API_KEY", "chat-pro-key")
+    monkeypatch.setenv("NANO_BANANA_PRO_CHAT_FALLBACK_BASE_URL", "https://chat.example.test/v1")
+    monkeypatch.setenv("NANO_BANANA_PRO_CHAT_FALLBACK_MODEL", "Nano_Banana_Pro_2K_0")
 
     from app.config import get_settings
 
-    get_settings.cache_clear()
+    _clear_runtime_caches()
     settings = get_settings()
 
     assert settings.nano_banana_pro_api_key == "new-pro-key"
     assert settings.nano_banana_pro_base_url == "https://example.test/api"
     assert settings.nano_banana_pro_model == "gemini-3-pro-image-preview"
+    assert settings.nano_banana_pro_fallback_api_key == "backup-pro-key"
+    assert settings.nano_banana_pro_fallback_base_url == "https://backup.example.test"
+    assert settings.nano_banana_pro_chat_fallback_api_key == "chat-pro-key"
+    assert settings.nano_banana_pro_chat_fallback_base_url == "https://chat.example.test/v1"
+    assert settings.nano_banana_pro_chat_fallback_model == "Nano_Banana_Pro_2K_0"
+    assert settings.nano_banana_pro_profiles() == (
+        (
+            "route2",
+            "备用路线2",
+            "https://chat.example.test/v1",
+            "chat-pro-key",
+            "openai_chat_markdown",
+            "Nano_Banana_Pro_2K_0",
+        ),
+        (
+            "route1",
+            "备用路线1",
+            "https://backup.example.test",
+            "backup-pro-key",
+            "gemini_v1beta",
+            "gemini-3-pro-image-preview",
+        ),
+        (
+            "primary",
+            "主线路",
+            "https://example.test/api",
+            "new-pro-key",
+            "gemini_v1beta",
+            "gemini-3-pro-image-preview",
+        ),
+    )
 
 
 def test_nano_banana_generator_uses_native_image_config(tmp_path, monkeypatch):
@@ -1283,10 +1324,9 @@ def test_nano_banana_generator_uses_native_image_config(tmp_path, monkeypatch):
     monkeypatch.setenv("IMAGE_GENERATOR_BACKEND", "nano_banana_pro")
     monkeypatch.setenv("NANO_BANANA_PRO_API_KEY", "nano-test-key")
 
-    from app.config import get_settings
     from app.services.generation import GenerationContext, NanoBananaProGenerator
 
-    get_settings.cache_clear()
+    _clear_runtime_caches()
 
     source_path = tmp_path / "source.png"
     source_path.write_bytes(_build_test_image())
@@ -1348,15 +1388,240 @@ def test_nano_banana_generator_uses_native_image_config(tmp_path, monkeypatch):
     assert len(result.candidate_image_bytes) == 1
 
 
+def test_nano_banana_pro_falls_back_to_backup_provider(tmp_path, monkeypatch):
+    _configure_runtime_env(tmp_path, monkeypatch, use_mock_generator="false")
+    monkeypatch.setenv("NANO_BANANA_PRO_API_KEY", "primary-key")
+    monkeypatch.setenv("NANO_BANANA_PRO_BASE_URL", "https://primary.example.test")
+    monkeypatch.setenv("NANO_BANANA_PRO_FALLBACK_API_KEY", "backup-key")
+    monkeypatch.setenv("NANO_BANANA_PRO_FALLBACK_BASE_URL", "https://backup.example.test")
+
+    import httpx
+
+    from app.services.generation import GenerationContext, NanoBananaProGenerator
+
+    _clear_runtime_caches()
+
+    source_path = tmp_path / "source.png"
+    source_path.write_bytes(_build_test_image())
+
+    request_log = []
+
+    class FakeSuccessResponse:
+        status_code = 200
+
+        def json(self):
+            return {
+                "candidates": [
+                    {
+                        "content": {
+                            "parts": [
+                                {
+                                    "inlineData": {
+                                        "mimeType": "image/png",
+                                        "data": base64.b64encode(_build_colored_image("#2a9d8f")).decode("utf-8"),
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                ]
+            }
+
+    def fake_post(url, *, headers=None, json=None, timeout=None):
+        request_log.append({"url": url, "headers": headers, "timeout": timeout})
+        if url.startswith("https://backup.example.test"):
+            return httpx.Response(
+                401,
+                request=httpx.Request("POST", url),
+                json={"error": {"message": "无效的令牌"}},
+            )
+        return FakeSuccessResponse()
+
+    monkeypatch.setattr("app.services.generation.httpx.post", fake_post)
+
+    generator = NanoBananaProGenerator()
+    result = generator.generate(
+        source_image_path=str(source_path),
+        prompt="test fallback prompt",
+        context=GenerationContext(
+            hairstyle_name="前刺短发",
+            scene_name="窗边生活感",
+            aspect_ratio="3:4",
+            resolution="1K",
+        ),
+    )
+
+    assert len(request_log) == 2
+    assert request_log[0]["headers"]["Authorization"] == "Bearer backup-key"
+    assert request_log[1]["headers"]["Authorization"] == "Bearer primary-key"
+    assert request_log[0]["url"].startswith("https://backup.example.test")
+    assert result.primary_image_bytes
+
+
+def test_nano_banana_pro_falls_back_to_chat_provider(tmp_path, monkeypatch):
+    _configure_runtime_env(tmp_path, monkeypatch, use_mock_generator="false")
+    monkeypatch.setenv("NANO_BANANA_PRO_API_KEY", "primary-key")
+    monkeypatch.setenv("NANO_BANANA_PRO_BASE_URL", "https://primary.example.test")
+    monkeypatch.setenv("NANO_BANANA_PRO_FALLBACK_API_KEY", "backup-key")
+    monkeypatch.setenv("NANO_BANANA_PRO_FALLBACK_BASE_URL", "https://backup.example.test")
+    monkeypatch.setenv("NANO_BANANA_PRO_CHAT_FALLBACK_API_KEY", "chat-key")
+    monkeypatch.setenv("NANO_BANANA_PRO_CHAT_FALLBACK_BASE_URL", "https://chat.example.test/v1")
+    monkeypatch.setenv("NANO_BANANA_PRO_CHAT_FALLBACK_MODEL", "Nano_Banana_Pro_2K_0")
+
+    import httpx
+
+    from app.services.generation import GenerationContext, NanoBananaProGenerator
+
+    _clear_runtime_caches()
+
+    source_path = tmp_path / "source.png"
+    source_path.write_bytes(_build_test_image())
+
+    request_log = []
+
+    def fake_post(url, *, headers=None, json=None, timeout=None):
+        request_log.append({"url": url, "headers": headers, "json": json, "timeout": timeout})
+        if url.startswith("https://chat.example.test"):
+            return httpx.Response(
+                503,
+                request=httpx.Request("POST", url),
+                json={"error": {"message": "upstream unavailable"}},
+            )
+        if url.startswith("https://backup.example.test"):
+            return httpx.Response(
+                401,
+                request=httpx.Request("POST", url),
+                json={"error": {"message": "无效的令牌"}},
+            )
+        return httpx.Response(
+            200,
+            request=httpx.Request("POST", url),
+            json={
+                "candidates": [
+                    {
+                        "content": {
+                            "parts": [
+                                {
+                                    "inlineData": {
+                                        "mimeType": "image/png",
+                                        "data": base64.b64encode(_build_colored_image("#6a994e")).decode("utf-8"),
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                ]
+            },
+        )
+
+    monkeypatch.setattr("app.services.generation.httpx.post", fake_post)
+
+    generator = NanoBananaProGenerator()
+    previews = []
+    result = generator.generate(
+        source_image_path=str(source_path),
+        prompt="test chat fallback prompt",
+        context=GenerationContext(
+            hairstyle_name="前刺短发",
+            scene_name="窗边生活感",
+            aspect_ratio="3:4",
+            resolution="1K",
+        ),
+        on_preview=lambda image_bytes: previews.append(image_bytes),
+    )
+
+    assert len(request_log) == 3
+    assert request_log[0]["headers"]["Authorization"] == "Bearer chat-key"
+    assert request_log[1]["headers"]["Authorization"] == "Bearer backup-key"
+    assert request_log[2]["headers"]["Authorization"] == "Bearer primary-key"
+    assert request_log[0]["url"] == "https://chat.example.test/v1/chat/completions"
+    assert request_log[0]["json"]["model"] == "Nano_Banana_Pro_2K_0"
+    assert request_log[0]["json"]["messages"][0]["content"][1]["type"] == "image_url"
+    assert len(previews) == 1
+    assert result.primary_image_bytes
+
+
+def test_nano_banana_pro_quota_exhaustion_adds_alert_and_falls_back(tmp_path, monkeypatch):
+    _configure_runtime_env(tmp_path, monkeypatch, use_mock_generator="false")
+    monkeypatch.setenv("NANO_BANANA_PRO_API_KEY", "primary-key")
+    monkeypatch.setenv("NANO_BANANA_PRO_BASE_URL", "https://primary.example.test")
+    monkeypatch.setenv("NANO_BANANA_PRO_FALLBACK_API_KEY", "backup-key")
+    monkeypatch.setenv("NANO_BANANA_PRO_FALLBACK_BASE_URL", "https://backup.example.test")
+    monkeypatch.setenv("NANO_BANANA_PRO_CHAT_FALLBACK_API_KEY", "chat-key")
+    monkeypatch.setenv("NANO_BANANA_PRO_CHAT_FALLBACK_BASE_URL", "https://chat.example.test/v1")
+    monkeypatch.setenv("NANO_BANANA_PRO_CHAT_FALLBACK_MODEL", "Nano_Banana_Pro_2K_0")
+
+    import httpx
+
+    from app.services import provider_alerts
+    from app.services.generation import GenerationContext, NanoBananaProGenerator
+
+    _clear_runtime_caches()
+
+    source_path = tmp_path / "source.png"
+    source_path.write_bytes(_build_test_image())
+
+    request_log = []
+
+    def fake_post(url, *, headers=None, json=None, timeout=None):
+        request_log.append({"url": url, "headers": headers, "timeout": timeout})
+        if url.startswith("https://chat.example.test"):
+            return httpx.Response(
+                402,
+                request=httpx.Request("POST", url),
+                json={"error": {"message": "quota exhausted"}},
+            )
+        return httpx.Response(
+            200,
+            request=httpx.Request("POST", url),
+            json={
+                "candidates": [
+                    {
+                        "content": {
+                            "parts": [
+                                {
+                                    "inlineData": {
+                                        "mimeType": "image/png",
+                                        "data": base64.b64encode(_build_colored_image("#2a9d8f")).decode("utf-8"),
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                ]
+            },
+        )
+
+    monkeypatch.setattr("app.services.generation.httpx.post", fake_post)
+
+    generator = NanoBananaProGenerator()
+    result = generator.generate(
+        source_image_path=str(source_path),
+        prompt="test quota fallback prompt",
+        context=GenerationContext(
+            hairstyle_name="前刺短发",
+            scene_name="窗边生活感",
+            aspect_ratio="3:4",
+            resolution="2K",
+        ),
+    )
+
+    assert result.primary_image_bytes
+    assert request_log[0]["headers"]["Authorization"] == "Bearer chat-key"
+    assert request_log[1]["headers"]["Authorization"] == "Bearer backup-key"
+    assert provider_alerts.list_alert_messages() == [
+        "Nano Banana Pro 备用路线2额度可能已用完，系统已自动切换到下一条线路。"
+    ]
+
+
 def test_nano_banana_2_generator_uses_native_image_config(tmp_path, monkeypatch):
     _configure_runtime_env(tmp_path, monkeypatch, use_mock_generator="false")
     monkeypatch.setenv("IMAGE_GENERATOR_BACKEND", "nano_banana_2")
     monkeypatch.setenv("NANO_BANANA_2_API_KEY", "nano-2-test-key")
 
-    from app.config import get_settings
     from app.services.generation import GenerationContext, NanoBanana2Generator
 
-    get_settings.cache_clear()
+    _clear_runtime_caches()
 
     source_path = tmp_path / "source.png"
     source_path.write_bytes(_build_test_image())
@@ -1423,10 +1688,9 @@ def test_sora_image_generator_uses_chat_completion_with_reference_image(tmp_path
     monkeypatch.setenv("IMAGE_GENERATOR_BACKEND", "sora_image")
     monkeypatch.setenv("SORA_IMAGE_API_KEY", "sora-test-key")
 
-    from app.config import get_settings
     from app.services.generation import GenerationContext, SoraImageGenerator
 
-    get_settings.cache_clear()
+    _clear_runtime_caches()
 
     source_path = tmp_path / "source.png"
     source_path.write_bytes(_build_test_image())

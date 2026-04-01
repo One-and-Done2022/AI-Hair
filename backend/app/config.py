@@ -128,6 +128,11 @@ class Settings:
     nano_banana_pro_base_url: str
     nano_banana_pro_model: str
     nano_banana_pro_max_concurrency: int
+    nano_banana_pro_fallback_api_key: str
+    nano_banana_pro_fallback_base_url: str
+    nano_banana_pro_chat_fallback_api_key: str
+    nano_banana_pro_chat_fallback_base_url: str
+    nano_banana_pro_chat_fallback_model: str
     nano_banana_2_api_key: str
     nano_banana_2_base_url: str
     nano_banana_2_model: str
@@ -208,6 +213,62 @@ class Settings:
             for credential in self.ark_api_keys
             if credential.key_id in allowed_set
         )
+
+    def nano_banana_pro_profiles(self) -> tuple[tuple[str, str, str, str, str, str], ...]:
+        profiles: list[tuple[str, str, str, str, str, str]] = []
+
+        chat_fallback_api_key = self.nano_banana_pro_chat_fallback_api_key.strip()
+        chat_fallback_base_url = self.nano_banana_pro_chat_fallback_base_url.strip()
+        chat_fallback_model = (
+            self.nano_banana_pro_chat_fallback_model.strip()
+            or self.nano_banana_pro_model
+        )
+        if chat_fallback_base_url and chat_fallback_api_key and chat_fallback_model:
+            profiles.append(
+                (
+                    "route2",
+                    "备用路线2",
+                    chat_fallback_base_url,
+                    chat_fallback_api_key,
+                    "openai_chat_markdown",
+                    chat_fallback_model,
+                )
+            )
+
+        fallback_api_key = self.nano_banana_pro_fallback_api_key.strip()
+        primary_base_url = self.nano_banana_pro_base_url.strip()
+        fallback_base_url = (
+            self.nano_banana_pro_fallback_base_url.strip() or primary_base_url
+        )
+        if fallback_base_url and fallback_api_key:
+            profiles.append(
+                (
+                    "route1",
+                    "备用路线1",
+                    fallback_base_url,
+                    fallback_api_key,
+                    "gemini_v1beta",
+                    self.nano_banana_pro_model,
+                )
+            )
+
+        primary_api_key = self.nano_banana_pro_api_key.strip()
+        if primary_base_url and primary_api_key:
+            primary_profile = (
+                "primary",
+                "主线路",
+                primary_base_url,
+                primary_api_key,
+                "gemini_v1beta",
+                self.nano_banana_pro_model,
+            )
+            if primary_profile not in profiles:
+                profiles.append(primary_profile)
+
+        return tuple(profiles)
+
+    def has_nano_banana_pro(self) -> bool:
+        return bool(self.nano_banana_pro_profiles())
 
 
 def _default_database_url(storage_dir: Path) -> str:
@@ -322,6 +383,21 @@ def get_settings() -> Settings:
             1,
             _env_int("NANO_BANANA_PRO_MAX_CONCURRENCY", 8),
         ),
+        nano_banana_pro_fallback_api_key=os.getenv(
+            "NANO_BANANA_PRO_FALLBACK_API_KEY", ""
+        ).strip(),
+        nano_banana_pro_fallback_base_url=os.getenv(
+            "NANO_BANANA_PRO_FALLBACK_BASE_URL", ""
+        ).strip(),
+        nano_banana_pro_chat_fallback_api_key=os.getenv(
+            "NANO_BANANA_PRO_CHAT_FALLBACK_API_KEY", ""
+        ).strip(),
+        nano_banana_pro_chat_fallback_base_url=os.getenv(
+            "NANO_BANANA_PRO_CHAT_FALLBACK_BASE_URL", ""
+        ).strip(),
+        nano_banana_pro_chat_fallback_model=os.getenv(
+            "NANO_BANANA_PRO_CHAT_FALLBACK_MODEL", ""
+        ).strip(),
         nano_banana_2_api_key=os.getenv("NANO_BANANA_2_API_KEY", "").strip(),
         nano_banana_2_base_url=os.getenv(
             "NANO_BANANA_2_BASE_URL", "https://api.apiyi.com"

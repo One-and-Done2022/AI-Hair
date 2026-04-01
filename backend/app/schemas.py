@@ -184,7 +184,7 @@ class JobCreateRequest(BaseModel):
     upload_id: str = Field(min_length=1)
     hairstyle_id: str = Field(min_length=1)
     scene_id: str = Field(min_length=1)
-    generator_backend: Literal["basic", "premium"] = "basic"
+    generator_backend: Literal["basic", "premium"] = "premium"
     aspect_ratio: str | None = None
     resolution: str | None = None
 
@@ -233,4 +233,5 @@ class MeResponse(BaseModel):
     total_jobs: int
     completed_jobs: int
     processing_jobs: int
+    provider_alerts: list[str] = Field(default_factory=list)
     created_at: str

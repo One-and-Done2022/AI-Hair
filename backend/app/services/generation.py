@@ -5,6 +5,7 @@ import hashlib
 import io
 import logging
 import re
+import time
 from dataclasses import dataclass
 from pathlib import Path
 from threading import Lock
@@ -28,6 +29,7 @@ from PIL import Image, ImageDraw, ImageFilter, ImageOps
 from app.config import get_settings
 from app.services.concurrency_limiter import concurrency_slot
 from app.services.key_pool import ApiKeyLease
+from app.services import provider_alerts
 
 
 logger = logging.getLogger(__name__)
@@ -37,6 +39,8 @@ PreviewCallback = Callable[[bytes], None]
 CandidateCallback = Callable[[bytes], None]
 NANO_IMAGE_TIMEOUT_MAP = {"512px": 120, "1K": 180, "2K": 300, "4K": 360}
 SEEDREAM_REST_TIMEOUT_SECONDS = 180
+_PROVIDER_BACKOFF_UNTIL: dict[str, float] = {}
+_PROVIDER_BACKOFF_LOCK = Lock()
 
 
 class ImageGenerationError(Exception):
@@ -882,6 +886,25 @@ def _extract_first_remote_image_url(payload: dict) -> str | None:
     return None
 
 
+def _extract_markdown_image_url(payload: dict) -> str | None:
+    choices = payload.get("choices")
+    if not isinstance(choices, list):
+        return None
+    for choice in choices:
+        if not isinstance(choice, dict):
+            continue
+        message = choice.get("message")
+        if not isinstance(message, dict):
+            continue
+        content = message.get("content")
+        if not isinstance(content, str):
+            continue
+        match = re.search(r"!\[[^\]]*\]\((https?://[^)\s]+)\)", content)
+        if match:
+            return match.group(1)
+    return None
+
+
 def _extract_nano_error_message(response: httpx.Response) -> str:
     try:
         payload = response.json()
@@ -899,6 +922,25 @@ def _extract_nano_error_message(response: httpx.Response) -> str:
 
 def _map_nano_http_error(response: httpx.Response) -> ImageGenerationError:
     message = _extract_nano_error_message(response)
+    normalized_message = message.lower()
+    quota_keywords = (
+        "quota",
+        "insufficient",
+        "balance",
+        "credit",
+        "额度",
+        "余额",
+        "用完",
+        "耗尽",
+        "exhausted",
+    )
+    if response.status_code == 402 or any(keyword in normalized_message for keyword in quota_keywords):
+        return ImageGenerationError(
+            "quota_exhausted",
+            message,
+            retryable=True,
+            retry_after_seconds=3600,
+        )
     if response.status_code in {401, 403}:
         return ImageGenerationError("authentication_failed", message)
     if response.status_code == 400:
@@ -957,42 +999,230 @@ def _map_seedream_http_error(response: httpx.Response) -> ImageGenerationError:
 class ApiYiImageGenerator(BaseGenerator):
     supports_key_pool = False
 
+    @dataclass(frozen=True, slots=True)
+    class ProviderProfile:
+        profile_id: str
+        profile_label: str
+        api_key: str
+        base_url: str
+        limiter_name: str
+        protocol: str
+        model_name: str
+
     def __init__(
         self,
         *,
-        api_key: str,
-        base_url: str,
+        profiles: tuple[tuple[str, str, str, str, str, str], ...],
         model_name: str,
         provider_name: str,
         api_key_env_name: str,
         max_concurrency: int,
     ) -> None:
-        if not api_key:
+        if not profiles:
             raise ImageGenerationError(
                 "missing_api_key",
                 f"{api_key_env_name} must be configured when using {provider_name}.",
             )
-        self._api_key = api_key
-        self._base_url = base_url
         self.model_name = model_name
         self.provider_name = provider_name
         self._max_concurrency = max(1, int(max_concurrency))
-        self._limiter_name = (
-            f"{provider_name}:{hashlib.sha1(api_key.encode('utf-8')).hexdigest()[:12]}"
+        self._profiles = tuple(
+            self.ProviderProfile(
+                profile_id=profile_id,
+                profile_label=profile_label,
+                api_key=api_key,
+                base_url=base_url.rstrip("/"),
+                limiter_name=(
+                    f"{provider_name}:"
+                    f"{hashlib.sha1(f'{profile_id}|{base_url}|{api_key}|{protocol}|{profile_model_name}'.encode('utf-8')).hexdigest()[:12]}"
+                ),
+                protocol=protocol,
+                model_name=profile_model_name.strip() or model_name,
+            )
+            for profile_id, profile_label, base_url, api_key, protocol, profile_model_name in profiles
+            if base_url.strip() and api_key.strip()
+        )
+        if not self._profiles:
+            raise ImageGenerationError(
+                "missing_api_key",
+                f"{api_key_env_name} must be configured when using {provider_name}.",
+            )
+
+    def _endpoint(self, profile: ProviderProfile) -> str:
+        if profile.protocol == "openai_chat_markdown":
+            if profile.base_url.endswith("/chat/completions"):
+                return profile.base_url
+            return f"{profile.base_url}/chat/completions"
+        return f"{profile.base_url}/v1beta/models/{profile.model_name}:generateContent"
+
+    @staticmethod
+    def _should_try_next_profile(exc: ImageGenerationError) -> bool:
+        return exc.code == "authentication_failed" or exc.retryable
+
+    def _profile_backoff_key(self, profile: ProviderProfile) -> str:
+        return f"{self.provider_name}:{profile.profile_id}"
+
+    def _is_profile_backed_off(self, profile: ProviderProfile) -> bool:
+        key = self._profile_backoff_key(profile)
+        with _PROVIDER_BACKOFF_LOCK:
+            until = _PROVIDER_BACKOFF_UNTIL.get(key)
+            if until is None:
+                return False
+            if until <= time.time():
+                _PROVIDER_BACKOFF_UNTIL.pop(key, None)
+                return False
+            return True
+
+    def _set_profile_backoff(self, profile: ProviderProfile, seconds: int) -> None:
+        key = self._profile_backoff_key(profile)
+        with _PROVIDER_BACKOFF_LOCK:
+            _PROVIDER_BACKOFF_UNTIL[key] = time.time() + max(1, seconds)
+
+    def _clear_profile_backoff(self, profile: ProviderProfile) -> None:
+        key = self._profile_backoff_key(profile)
+        with _PROVIDER_BACKOFF_LOCK:
+            _PROVIDER_BACKOFF_UNTIL.pop(key, None)
+
+    def _provider_alert_id(self, profile: ProviderProfile) -> str:
+        return f"{self.provider_name}:{profile.profile_id}:quota"
+
+    def _notify_profile_quota_exhausted(self, profile: ProviderProfile) -> None:
+        if self.provider_name != "nano-banana-pro":
+            return
+        if profile.profile_id not in {"route1", "route2"}:
+            return
+        provider_alerts.upsert_alert(
+            alert_id=self._provider_alert_id(profile),
+            message=f"Nano Banana Pro {profile.profile_label}额度可能已用完，系统已自动切换到下一条线路。",
         )
 
-    def _endpoint(self) -> str:
-        return f"{self._base_url}/v1beta/models/{self.model_name}:generateContent"
+    def _clear_profile_alert(self, profile: ProviderProfile) -> None:
+        provider_alerts.clear_alert(self._provider_alert_id(profile))
 
-    def generate(
+    @staticmethod
+    def _prompt_with_ratio(prompt: str, aspect_ratio: str) -> str:
+        ratio_tag = f"〖{aspect_ratio}〗"
+        if ratio_tag in prompt:
+            return prompt
+        return f"{ratio_tag}\n{prompt}"
+
+    def _generate_via_chat_markdown(
         self,
+        *,
+        profile: ProviderProfile,
         source_image_path: str,
         prompt: str,
         context: GenerationContext,
-        provider_key: ApiKeyLease | None = None,
         on_preview: PreviewCallback | None = None,
         on_candidate: CandidateCallback | None = None,
     ) -> GenerationResult:
+        with open(source_image_path, "rb") as handle:
+            image_bytes = handle.read()
+
+        mime_type = _guess_mime_type_from_path(source_image_path)
+        data_url = (
+            f"data:{mime_type};base64,"
+            f"{base64.b64encode(image_bytes).decode('utf-8')}"
+        )
+        request_payload = {
+            "model": profile.model_name,
+            "messages": [
+                {
+                    "role": "user",
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": self._prompt_with_ratio(prompt, context.aspect_ratio),
+                        },
+                        {
+                            "type": "image_url",
+                            "image_url": {"url": data_url},
+                        },
+                    ],
+                }
+            ],
+        }
+
+        timeout_seconds = NANO_IMAGE_TIMEOUT_MAP.get(context.resolution, 300)
+        try:
+            with concurrency_slot(profile.limiter_name, self._max_concurrency):
+                response = httpx.post(
+                    self._endpoint(profile),
+                    headers={
+                        "Authorization": f"Bearer {profile.api_key}",
+                        "Content-Type": "application/json",
+                    },
+                    json=request_payload,
+                    timeout=timeout_seconds,
+                )
+        except httpx.TimeoutException as exc:
+            raise ImageGenerationError(
+                "upstream_timeout",
+                f"{self.provider_name} request timed out.",
+                retryable=True,
+                retry_after_seconds=30,
+            ) from exc
+        except httpx.HTTPError as exc:
+            raise ImageGenerationError(
+                "upstream_unreachable",
+                str(exc),
+                retryable=True,
+                retry_after_seconds=30,
+            ) from exc
+
+        if response.status_code >= 400:
+            raise _map_nano_http_error(response)
+
+        payload = response.json()
+        remote_url = _extract_first_remote_image_url(payload)
+        if not remote_url:
+            remote_url = _extract_markdown_image_url(payload)
+        if not remote_url:
+            raise ImageGenerationError(
+                "upstream_empty",
+                f"{self.provider_name} returned no downloadable image url.",
+            )
+
+        try:
+            image_response = httpx.get(remote_url, timeout=120)
+            image_response.raise_for_status()
+        except httpx.HTTPError as exc:
+            raise ImageGenerationError(
+                "upstream_unreachable",
+                str(exc),
+                retryable=True,
+                retry_after_seconds=30,
+            ) from exc
+
+        primary_image = image_response.content
+        if on_preview is not None:
+            on_preview(primary_image)
+        if on_candidate is not None:
+            on_candidate(primary_image)
+        return GenerationResult(
+            primary_image_bytes=primary_image,
+            candidate_image_bytes=[primary_image],
+        )
+
+    def _generate_once(
+        self,
+        *,
+        profile: ProviderProfile,
+        source_image_path: str,
+        prompt: str,
+        context: GenerationContext,
+        on_preview: PreviewCallback | None = None,
+        on_candidate: CandidateCallback | None = None,
+    ) -> GenerationResult:
+        if profile.protocol == "openai_chat_markdown":
+            return self._generate_via_chat_markdown(
+                profile=profile,
+                source_image_path=source_image_path,
+                prompt=prompt,
+                context=context,
+                on_preview=on_preview,
+                on_candidate=on_candidate,
+            )
         with open(source_image_path, "rb") as handle:
             image_bytes = handle.read()
 
@@ -1021,11 +1251,11 @@ class ApiYiImageGenerator(BaseGenerator):
 
         timeout_seconds = NANO_IMAGE_TIMEOUT_MAP.get(context.resolution, 300)
         try:
-            with concurrency_slot(self._limiter_name, self._max_concurrency):
+            with concurrency_slot(profile.limiter_name, self._max_concurrency):
                 response = httpx.post(
-                    self._endpoint(),
+                    self._endpoint(profile),
                     headers={
-                        "Authorization": f"Bearer {self._api_key}",
+                        "Authorization": f"Bearer {profile.api_key}",
                         "Content-Type": "application/json",
                     },
                     json=request_payload,
@@ -1067,13 +1297,73 @@ class ApiYiImageGenerator(BaseGenerator):
             candidate_image_bytes=[primary_image],
         )
 
+    def generate(
+        self,
+        source_image_path: str,
+        prompt: str,
+        context: GenerationContext,
+        provider_key: ApiKeyLease | None = None,
+        on_preview: PreviewCallback | None = None,
+        on_candidate: CandidateCallback | None = None,
+    ) -> GenerationResult:
+        available_profiles = [
+            profile for profile in self._profiles if not self._is_profile_backed_off(profile)
+        ]
+        if not available_profiles:
+            available_profiles = list(self._profiles)
+
+        last_error: ImageGenerationError | None = None
+
+        for index, profile in enumerate(available_profiles):
+            try:
+                result = self._generate_once(
+                    profile=profile,
+                    source_image_path=source_image_path,
+                    prompt=prompt,
+                    context=context,
+                    on_preview=on_preview,
+                    on_candidate=on_candidate,
+                )
+                self._clear_profile_backoff(profile)
+                self._clear_profile_alert(profile)
+                return result
+            except ImageGenerationError as exc:
+                last_error = exc
+                if exc.code == "quota_exhausted":
+                    self._set_profile_backoff(
+                        profile,
+                        exc.retry_after_seconds or 3600,
+                    )
+                    self._notify_profile_quota_exhausted(profile)
+                elif exc.code == "authentication_failed":
+                    self._set_profile_backoff(
+                        profile,
+                        exc.retry_after_seconds or 600,
+                    )
+                has_next_profile = index < len(available_profiles) - 1
+                if not has_next_profile or not self._should_try_next_profile(exc):
+                    raise
+                logger.warning(
+                    "%s failed on provider profile %s/%s (%s); falling back to next profile.",
+                    self.provider_name,
+                    index + 1,
+                    len(available_profiles),
+                    exc.code,
+                )
+
+        if last_error is not None:
+            raise last_error
+        raise ImageGenerationError(
+            "missing_api_key",
+            f"No usable provider profiles are configured for {self.provider_name}.",
+        )
+
 
 class NanoBananaProGenerator(ApiYiImageGenerator):
     def __init__(self) -> None:
         settings = get_settings()
         super().__init__(
-            api_key=settings.nano_banana_pro_api_key,
-            base_url=settings.nano_banana_pro_base_url,
+            profiles=settings.nano_banana_pro_profiles(),
             model_name=settings.nano_banana_pro_model,
             provider_name="nano-banana-pro",
             api_key_env_name="NANO_BANANA_PRO_API_KEY",
@@ -1085,8 +1375,16 @@ class NanoBanana2Generator(ApiYiImageGenerator):
     def __init__(self) -> None:
         settings = get_settings()
         super().__init__(
-            api_key=settings.nano_banana_2_api_key,
-            base_url=settings.nano_banana_2_base_url,
+            profiles=(
+                (
+                    "primary",
+                    "主线路",
+                    settings.nano_banana_2_base_url,
+                    settings.nano_banana_2_api_key,
+                    "gemini_v1beta",
+                    settings.nano_banana_2_model,
+                ),
+            ),
             model_name=settings.nano_banana_2_model,
             provider_name="nano-banana-2",
             api_key_env_name="NANO_BANANA_2_API_KEY",

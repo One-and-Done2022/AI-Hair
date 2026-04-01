@@ -16,6 +16,7 @@
 
 .identity-card,
 .quota-card,
+.provider-alert-card,
 .membership-card,
 .tools-card {
   margin-top: 22rpx;
@@ -121,6 +122,18 @@
   margin-top: 10rpx;
   font-size: 22rpx;
   color: #5d6670;
+}
+
+.provider-alert-card {
+  background: #fff8eb;
+  border: 1rpx solid rgba(245, 158, 11, 0.22);
+}
+
+.provider-alert-copy {
+  margin-top: 12rpx;
+  font-size: 23rpx;
+  line-height: 1.55;
+  color: #7a4a00;
 }
 
 .membership-copy {

@@ -5,6 +5,20 @@
     <view wx:if="{{profileSummary}}" class="quota-pill">剩余 {{profileSummary.remaining_quota}} 次</view>
   </view>
 
+  <view
+    wx:if="{{profileSummary && profileSummary.provider_alerts && profileSummary.provider_alerts.length}}"
+    class="provider-alert panel"
+  >
+    <view class="provider-alert-title">线路提醒</view>
+    <view
+      wx:for="{{profileSummary.provider_alerts}}"
+      wx:key="*this"
+      class="provider-alert-message"
+    >
+      {{item}}
+    </view>
+  </view>
+
   <view wx:if="{{showcases.length}}" class="showcase-section">
     <view class="section-row">
       <view class="section-title">精选示例</view>
