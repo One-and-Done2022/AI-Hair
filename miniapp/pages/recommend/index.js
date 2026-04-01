@@ -78,7 +78,11 @@ function buildRecommendedHairstyles(recommendation, catalog, gender, selectedHai
       return {
         ...full,
         reason: (item.reasons || [])[0] || "",
-        selected: !!selectedHairstyle && selectedHairstyle.id === full.id
+        selected: !!selectedHairstyle && selectedHairstyle.id === full.id,
+        selectedClass:
+          !!selectedHairstyle && selectedHairstyle.id === full.id ? "selected" : "",
+        actionText:
+          !!selectedHairstyle && selectedHairstyle.id === full.id ? "已应用" : "点击应用"
       };
     })
     .filter(Boolean);
@@ -94,7 +98,11 @@ function buildRecommendedScenes(recommendation, catalog, selectedScene) {
       return {
         ...full,
         reason: (item.reasons || [])[0] || "",
-        selected: !!selectedScene && selectedScene.id === full.id
+        selected: !!selectedScene && selectedScene.id === full.id,
+        selectedClass:
+          !!selectedScene && selectedScene.id === full.id ? "selected" : "",
+        actionText:
+          !!selectedScene && selectedScene.id === full.id ? "已应用" : "点击应用"
       };
     })
     .filter(Boolean);
@@ -104,14 +112,38 @@ function getRecommendationSource(page) {
   return page.recommendation || getCachedRecommendation() || null;
 }
 
+function withViewState(nextData) {
+  const recommendationGender = nextData.recommendationGender || "female";
+  return {
+    ...nextData,
+    showLoadingState: !!nextData.loading,
+    showEmptyState: !nextData.loading && !!nextData.emptyMessage,
+    showContentState: !nextData.loading && !nextData.emptyMessage,
+    femaleGenderClass: recommendationGender === "female" ? "active" : "",
+    maleGenderClass: recommendationGender === "male" ? "active" : ""
+  };
+}
+
+function applyViewData(page, patch) {
+  page.setData(withViewState({
+    ...page.data,
+    ...patch
+  }));
+}
+
 Page({
   data: {
     loading: true,
+    showLoadingState: true,
+    showEmptyState: false,
+    showContentState: false,
     emptyMessage: "",
     selectedImage: "",
     selectedHairstyle: null,
     selectedScene: null,
     recommendationGender: "female",
+    femaleGenderClass: "active",
+    maleGenderClass: "",
     recommendedHairstyles: [],
     recommendedScenes: [],
     continueButtonLabel: "去选发型"
@@ -124,7 +156,7 @@ Page({
   async loadRecommendations() {
     const selectedImage = getCurrentImagePath();
     if (!selectedImage) {
-      this.setData({
+      applyViewData(this, {
         loading: false,
         emptyMessage: "请先上传照片，再查看 AI 推荐"
       });
@@ -139,7 +171,7 @@ Page({
       ]);
 
       if (!recommendation) {
-        this.setData({
+        applyViewData(this, {
           loading: false,
           selectedImage,
           emptyMessage: "暂时无法生成推荐结果，你可以继续手动选择"
@@ -160,7 +192,7 @@ Page({
         null;
       const recommendationGender = getRecommendationGender(selection, selectedHairstyle);
 
-      this.setData({
+      applyViewData(this, {
         loading: false,
         emptyMessage: "",
         selectedImage,
@@ -185,7 +217,7 @@ Page({
         )
       });
     } catch (error) {
-      this.setData({
+      applyViewData(this, {
         loading: false,
         selectedImage,
         emptyMessage: "推荐暂时不可用，你可以继续手动选择"
@@ -205,7 +237,7 @@ Page({
       return;
     }
 
-    this.setData({
+    applyViewData(this, {
       recommendationGender: gender,
       recommendedHairstyles: buildRecommendedHairstyles(
         recommendation,
@@ -235,7 +267,7 @@ Page({
     updateCreationDraft(nextSelection);
 
     const recommendation = getRecommendationSource(this);
-    this.setData({
+    applyViewData(this, {
       selectedHairstyle: hairstyle,
       recommendationGender: hairstyle.gender || this.data.recommendationGender,
       recommendedHairstyles: buildRecommendedHairstyles(
@@ -278,7 +310,7 @@ Page({
     });
 
     const recommendation = getRecommendationSource(this);
-    this.setData({
+    applyViewData(this, {
       selectedScene: scene,
       recommendedScenes: buildRecommendedScenes(recommendation, this.catalog, scene),
       continueButtonLabel: getContinueButtonLabel(
