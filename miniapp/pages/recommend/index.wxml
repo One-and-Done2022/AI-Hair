@@ -1,0 +1,87 @@
+<view class="screen recommend-screen">
+  <view class="editorial-head">
+    <view class="title editorial-title">AI 推荐搭配</view>
+    <view class="subtitle editorial-subtitle">基于当前照片，给你更合适的发型和场景组合。</view>
+  </view>
+
+  <view wx:if="{{loading}}" class="panel status-panel">
+    <view class="section-title status-title">正在准备推荐</view>
+    <view class="status-copy">系统正在分析你的照片并匹配更适合的发型与场景。</view>
+  </view>
+
+  <view wx:elif="{{emptyMessage}}" class="panel status-panel">
+    <view class="section-title status-title">推荐暂不可用</view>
+    <view class="status-copy">{{emptyMessage}}</view>
+    <button class="secondary-button status-button" bindtap="continueFlow">继续手动选择</button>
+  </view>
+
+  <block wx:else>
+    <view class="panel source-card">
+      <image class="source-image" src="{{selectedImage}}" mode="aspectFill"></image>
+      <view class="source-body">
+        <view class="section-title source-title">已完成照片分析</view>
+        <view class="source-copy">你可以直接应用推荐，也可以继续手动挑选。</view>
+      </view>
+    </view>
+
+    <view class="recommend-top">
+      <view class="section-title">推荐发型</view>
+      <view class="gender-switch">
+        <view
+          class="gender-pill {{recommendationGender === 'female' ? 'active' : ''}}"
+          data-gender="female"
+          bindtap="selectRecommendationGender"
+        >
+          女生
+        </view>
+        <view
+          class="gender-pill {{recommendationGender === 'male' ? 'active' : ''}}"
+          data-gender="male"
+          bindtap="selectRecommendationGender"
+        >
+          男生
+        </view>
+      </view>
+    </view>
+
+    <view class="recommend-grid">
+      <view
+        wx:for="{{recommendedHairstyles}}"
+        wx:key="id"
+        class="recommend-card {{item.selected ? 'selected' : ''}}"
+        data-id="{{item.id}}"
+        bindtap="applyRecommendedHairstyle"
+      >
+        <image class="recommend-cover recommend-cover-hair" src="{{item.cover_url}}" mode="aspectFill" lazy-load="true"></image>
+        <view class="recommend-name">{{item.name}}</view>
+        <view class="recommend-reason">{{item.reason}}</view>
+        <view class="recommend-action">{{item.selected ? '已应用' : '点击应用'}}</view>
+      </view>
+    </view>
+
+    <view class="recommend-section-head">
+      <view class="section-title">推荐场景</view>
+    </view>
+
+    <view class="scene-list">
+      <view
+        wx:for="{{recommendedScenes}}"
+        wx:key="id"
+        class="scene-card {{item.selected ? 'selected' : ''}}"
+        data-id="{{item.id}}"
+        bindtap="applyRecommendedScene"
+      >
+        <image class="scene-cover" src="{{item.cover_url}}" mode="aspectFill" lazy-load="true"></image>
+        <view class="scene-body">
+          <view class="scene-name">{{item.name}}</view>
+          <view class="scene-reason">{{item.reason}}</view>
+          <view class="scene-action">{{item.selected ? '已应用' : '点击应用'}}</view>
+        </view>
+      </view>
+    </view>
+
+    <view class="floating-bar">
+      <button class="primary-button" bindtap="continueFlow">{{continueButtonLabel}}</button>
+    </view>
+  </block>
+</view>
