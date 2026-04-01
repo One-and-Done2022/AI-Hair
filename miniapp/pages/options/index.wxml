@@ -4,7 +4,7 @@
       <view class="flow-nav-button" bindtap="goBackStep">上一步</view>
       <view class="flow-nav-button" bindtap="resetFlow">回首页</view>
     </view>
-    <view class="flow-nav-caption">选择生成方案与高级设置</view>
+    <view class="flow-nav-caption">选择比例与高级设置</view>
   </view>
 
   <view class="progress-shell">
@@ -19,39 +19,37 @@
 
   <view class="editorial-head">
     <view class="title editorial-title">选择参数</view>
-    <view class="subtitle editorial-subtitle">先定生成方案，再确认比例和清晰度。</view>
+    <view class="subtitle editorial-subtitle">统一使用默认方案生成，可继续调整比例和高级设置。</view>
   </view>
 
   <view class="summary-grid">
-    <view class="panel summary-card">
+    <view class="panel summary-card" bindtap="goEditHairstyle">
       <image class="summary-image summary-image-hair" src="{{selectedHairstyle.cover_url}}" mode="aspectFill" lazy-load="true"></image>
-      <view class="summary-label">已选发型</view>
-      <view class="summary-name">{{selectedHairstyle.name}}</view>
+      <view class="summary-meta">
+        <view>
+          <view class="summary-label">已选发型</view>
+          <view class="summary-name">{{selectedHairstyle.name}}</view>
+        </view>
+        <view class="summary-link">修改</view>
+      </view>
     </view>
 
-    <view class="panel summary-card">
+    <view class="panel summary-card" bindtap="goEditScene">
       <image class="summary-image summary-image-scene" src="{{selectedScene.cover_url}}" mode="aspectFill" lazy-load="true"></image>
-      <view class="summary-label">已选场景</view>
-      <view class="summary-name">{{selectedScene.name}}</view>
+      <view class="summary-meta">
+        <view>
+          <view class="summary-label">已选场景</view>
+          <view class="summary-name">{{selectedScene.name}}</view>
+        </view>
+        <view class="summary-link">修改</view>
+      </view>
     </view>
   </view>
 
   <view class="panel generator-panel">
     <view class="section-title">生成方案</view>
-    <view class="generator-switch">
-      <view
-        wx:for="{{generationBackends}}"
-        wx:key="id"
-        class="generator-pill {{selectedGeneratorBackend === item.id ? 'active' : ''}} {{!item.enabled ? 'disabled' : ''}}"
-        data-value="{{item.id}}"
-        bindtap="selectGeneratorBackend"
-      >
-        {{item.name}}
-      </view>
-    </view>
-    <view wx:for="{{generationBackends}}" wx:key="id">
-      <view wx:if="{{selectedGeneratorBackend === item.id}}" class="generator-copy">{{item.description}}</view>
-    </view>
+    <view class="generator-pill active">{{selectedBackendLabel || '默认方案'}}</view>
+    <view class="generator-copy">{{selectedBackendDescription || '固定返回 1 张换发预览和 2 张场景成片，清晰度统一为 2K。'}}</view>
   </view>
 
   <view class="panel advanced-panel">
@@ -78,20 +76,9 @@
           </view>
         </view>
       </view>
-
-      <view wx:if="{{resolutionOptions.length}}" class="option-group">
+      <view class="option-group">
         <view class="option-label">输出清晰度</view>
-        <view class="option-row">
-          <view
-            wx:for="{{resolutionOptions}}"
-            wx:key="id"
-            class="option-chip {{selectedResolution === item.id ? 'active' : ''}}"
-            data-value="{{item.id}}"
-            bindtap="selectResolution"
-          >
-            {{item.label}}
-          </view>
-        </view>
+        <view class="option-fixed">固定 2K 输出</view>
       </view>
     </view>
   </view>

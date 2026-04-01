@@ -69,7 +69,7 @@
           data-id="{{item.id}}"
         ></image>
         <view class="preview-pill" catchtap="previewHairstyle" data-id="{{item.id}}">预览</view>
-        <view wx:if="{{selectedHairstyleId === item.id}}" class="selected-dot">✓</view>
+        <view class="selection-indicator {{selectedHairstyleId === item.id ? 'active' : ''}}">✓</view>
       </view>
       <view class="tile-name">{{item.name}}</view>
       <view class="tile-chip-row">

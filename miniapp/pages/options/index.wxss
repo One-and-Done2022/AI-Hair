@@ -49,6 +49,14 @@
   color: #5d6670;
 }
 
+.summary-meta {
+  margin-top: 14rpx;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12rpx;
+}
+
 .summary-name {
   margin-top: 8rpx;
   font-size: 26rpx;
@@ -57,6 +65,14 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.summary-link {
+  flex-shrink: 0;
+  margin-top: 4rpx;
+  color: #0b5ecf;
+  font-size: 22rpx;
+  font-weight: 700;
 }
 
 .generator-panel,
@@ -112,6 +128,13 @@
   margin-top: 8rpx;
   font-size: 22rpx;
   color: #5d6670;
+}
+
+.option-fixed {
+  margin-top: 14rpx;
+  font-size: 24rpx;
+  line-height: 1.5;
+  color: #4d5762;
 }
 
 .advanced-toggle {

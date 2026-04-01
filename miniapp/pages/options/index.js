@@ -8,7 +8,6 @@ const {
 } = require("../../utils/creation-draft");
 const {
   buildGenerationSelection,
-  findBackendById,
   findById,
   formatGenerationBackends
 } = require("../../utils/generation");
@@ -20,10 +19,11 @@ Page({
     selectedScene: null,
     generationBackends: [],
     selectedGeneratorBackend: "",
+    selectedBackendLabel: "",
+    selectedBackendDescription: "",
     selectedAspectRatio: "3:4",
     selectedResolution: "",
     aspectRatioOptions: [],
-    resolutionOptions: [],
     advancedOpen: false
   },
 
@@ -81,10 +81,11 @@ Page({
         selectedScene,
         generationBackends,
         selectedGeneratorBackend: generationSelection.selectedGeneratorBackend,
+        selectedBackendLabel: generationSelection.selectedBackend ? generationSelection.selectedBackend.name : "",
+        selectedBackendDescription: generationSelection.selectedBackend ? generationSelection.selectedBackend.description : "",
         selectedAspectRatio: generationSelection.selectedAspectRatio,
         selectedResolution: generationSelection.selectedResolution,
-        aspectRatioOptions: generationSelection.aspectRatioOptions,
-        resolutionOptions: generationSelection.resolutionOptions
+        aspectRatioOptions: generationSelection.aspectRatioOptions
       });
     } catch (error) {
       this.setData({ loading: false });
@@ -107,42 +108,21 @@ Page({
     });
   },
 
-  toggleAdvanced() {
-    this.setData({
-      advancedOpen: !this.data.advancedOpen
+  goEditHairstyle() {
+    wx.redirectTo({
+      url: "/pages/templates/index"
     });
   },
 
-  selectGeneratorBackend(event) {
-    const backendId = event.currentTarget.dataset.value;
-    const backend = findBackendById(this.data.generationBackends, backendId);
-    if (!backend) {
-      return;
-    }
-    if (!backend.enabled) {
-      wx.showToast({
-        title: "该方案暂不可用",
-        icon: "none"
-      });
-      return;
-    }
-
-    const selection = buildGenerationSelection(this.data.generationBackends, {
-      generator_backend: backendId
+  goEditScene() {
+    wx.redirectTo({
+      url: "/pages/scenes/index"
     });
+  },
 
+  toggleAdvanced() {
     this.setData({
-      selectedGeneratorBackend: selection.selectedGeneratorBackend,
-      selectedAspectRatio: selection.selectedAspectRatio,
-      selectedResolution: selection.selectedResolution,
-      aspectRatioOptions: selection.aspectRatioOptions,
-      resolutionOptions: selection.resolutionOptions
-    });
-
-    updateCreationDraft({
-      generator_backend: selection.selectedGeneratorBackend,
-      aspect_ratio: selection.selectedAspectRatio,
-      resolution: selection.selectedResolution
+      advancedOpen: !this.data.advancedOpen
     });
   },
 
@@ -162,18 +142,7 @@ Page({
   },
 
   selectResolution(event) {
-    const resolution = event.currentTarget.dataset.value;
-    if (!resolution) {
-      return;
-    }
-    this.setData({
-      selectedResolution: resolution
-    });
-    updateCreationDraft({
-      generator_backend: this.data.selectedGeneratorBackend,
-      aspect_ratio: this.data.selectedAspectRatio,
-      resolution
-    });
+    return;
   },
 
   goNext() {

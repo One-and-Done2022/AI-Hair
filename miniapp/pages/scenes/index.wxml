@@ -69,7 +69,7 @@
           data-id="{{item.id}}"
         ></image>
         <view class="preview-pill" catchtap="previewScene" data-id="{{item.id}}">预览</view>
-        <view wx:if="{{selectedSceneId === item.id}}" class="scene-check">✓</view>
+        <view class="scene-check {{selectedSceneId === item.id ? 'active' : ''}}">✓</view>
       </view>
       <view class="scene-body">
         <view class="scene-name">{{item.name}}</view>
