@@ -105,6 +105,42 @@ function buildRecommendationCard(recommendation, loading, draft, selectedImage) 
   };
 }
 
+function openPageWithFallback(url, fallbackTitle) {
+  return new Promise((resolve) => {
+    wx.navigateTo({
+      url,
+      success() {
+        resolve(true);
+      },
+      fail(error) {
+        const message = (error && error.errMsg) || "";
+        if (message.includes("page stack")) {
+          wx.redirectTo({
+            url,
+            success() {
+              resolve(true);
+            },
+            fail() {
+              wx.showToast({
+                title: fallbackTitle,
+                icon: "none"
+              });
+              resolve(false);
+            }
+          });
+          return;
+        }
+
+        wx.showToast({
+          title: message.includes("is not found") ? "推荐页未编译" : fallbackTitle,
+          icon: "none"
+        });
+        resolve(false);
+      }
+    });
+  });
+}
+
 Page({
   data: {
     loading: true,
@@ -193,7 +229,7 @@ Page({
     }
   },
 
-  async refreshRecommendation({ silent = true } = {}) {
+  async refreshRecommendation({ silent = true, autoOpen = false } = {}) {
     const selectedImage = this.data.selectedImage || getCurrentImagePath();
     const draft = readCreationDraft();
     if (!selectedImage) {
@@ -207,6 +243,9 @@ Page({
       getCachedRecommendation();
     if (cachedRecommendation) {
       this.setData(buildRecommendationCard(cachedRecommendation, false, draft, selectedImage));
+      if (autoOpen) {
+        await this.openRecommendation({ skipImageCheck: true });
+      }
       return;
     }
 
@@ -225,6 +264,9 @@ Page({
         recommendationLoading: false,
         ...buildRecommendationCard(recommendation, false, readCreationDraft(), latestImage)
       });
+      if (recommendation && autoOpen) {
+        await this.openRecommendation({ skipImageCheck: true });
+      }
     } catch (error) {
       if (!silent) {
         showError(error, { fallback: "AI 分析失败，请稍后再试" });
@@ -413,7 +455,7 @@ Page({
         uploadInvalid: false,
         uploadMessage: `${compressionPrefix}照片已上传完成，可继续创作`
       });
-      this.refreshRecommendation({ silent: true });
+      await this.refreshRecommendation({ silent: true, autoOpen: true });
     } catch (error) {
       if (
         this.currentImageSelectionToken !== selectionToken ||
@@ -440,17 +482,16 @@ Page({
     }
   },
 
-  openRecommendation() {
-    if (!this.data.selectedImage) {
+  openRecommendation(options = {}) {
+    const { skipImageCheck = false } = options;
+    if (!skipImageCheck && !this.data.selectedImage) {
       wx.showToast({
         title: "请先上传照片",
         icon: "none"
       });
-      return;
+      return Promise.resolve(false);
     }
-    wx.navigateTo({
-      url: "/pages/recommend/index"
-    });
+    return openPageWithFallback("/pages/recommend/index", "打开推荐页失败");
   },
 
   goNext() {
