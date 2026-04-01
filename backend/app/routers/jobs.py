@@ -81,7 +81,7 @@ def create_job(
         if generation_plan is None:
             raise ValueError(f"Unsupported generator backend: {payload.generator_backend}")
         if not any(
-            item["id"] == payload.generator_backend and item["enabled"]
+            item["id"] == generation_plan["id"] and item["enabled"]
             for item in templates.get_generation_backend_catalog()
         ):
             raise ValueError("Selected generation plan is not currently available.")

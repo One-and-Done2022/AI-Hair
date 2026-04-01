@@ -95,8 +95,7 @@
       <view class="hero-meta-tag-row">
         <view class="hero-meta-tag">{{job.hairstyle_name || '处理中'}}</view>
         <view class="hero-meta-tag">{{job.scene_name || '处理中'}}</view>
-        <view wx:if="{{job.generator_backend === 'premium'}}" class="hero-meta-tag">高级版</view>
-        <view wx:elif="{{job.generator_backend === 'basic'}}" class="hero-meta-tag">基础版</view>
+        <view wx:if="{{job.resolution}}" class="hero-meta-tag">{{job.resolution}}</view>
       </view>
     </view>
   </view>

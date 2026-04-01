@@ -10,21 +10,20 @@ function toOptionItems(items) {
 }
 
 function findBackendById(items, id) {
-  return findById(items || [], id);
+  if (!id) {
+    return null;
+  }
+  const normalizedId = id === "basic" ? "premium" : id;
+  return findById(items || [], normalizedId);
 }
 
 function formatGenerationBackends(backends = []) {
   return backends.map((item) => {
-    if (item.id === "basic") {
-      return {
-        ...item,
-        description: "用基础模型，返回 1 张换发预览和 2 张场景成片"
-      };
-    }
     if (item.id === "premium") {
       return {
         ...item,
-        description: "用高级模型，返回 1 张换发预览和 2 张场景成片"
+        name: "默认方案",
+        description: "固定返回 1 张换发预览和 2 张场景成片，清晰度统一为 2K"
       };
     }
     return item;

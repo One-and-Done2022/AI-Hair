@@ -35,8 +35,8 @@
     </view>
 
     <view class="panel info-card">
-      <view class="section-title">建议方案</view>
-      <view class="info-line">{{item.generator_backend === 'premium' ? '高级版' : '基础版'}}</view>
+      <view class="section-title">建议生成</view>
+      <view class="info-line">默认返回 1 张换发预览和 2 张场景成片</view>
       <view class="info-meta">默认比例 {{item.aspect_ratio}}{{item.resolution ? ' · 清晰度 ' + item.resolution : ''}}</view>
     </view>
 

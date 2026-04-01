@@ -40,32 +40,18 @@ PLAN_SAFE_ASPECT_RATIOS = (
     "5:4",
     "4:5",
 )
-BASIC_PLAN_RESOLUTIONS = ("2K",)
-PREMIUM_PLAN_RESOLUTIONS = ("1K", "2K")
-DEFAULT_GENERATOR_BACKEND = "basic"
+UNIFIED_PLAN_RESOLUTIONS = ("2K",)
+DEFAULT_GENERATOR_BACKEND = "premium"
 DEFAULT_ASPECT_RATIO = "3:4"
 DEFAULT_RESOLUTION = "2K"
 
 GENERATOR_BACKEND_CAPABILITIES = {
-    "basic": {
-        "label": "基础版",
-        "description": "先用 Nano Banana 2 生成仅换发图，再用 Seedream 4.5 生成 2 张场景成片。支持常用画幅，清晰度固定 2K。",
-        "supports_reference_image": True,
-        "aspect_ratios": PLAN_SAFE_ASPECT_RATIOS,
-        "resolutions": BASIC_PLAN_RESOLUTIONS,
-        "default_aspect_ratio": "3:4",
-        "default_resolution": "2K",
-        "hair_backend": "nano_banana_2",
-        "scene_backend": "seedream",
-        "scene_model_tier": "basic",
-        "badge": "Nano Banana 2 + Seedream 4.5",
-    },
     "premium": {
-        "label": "高级版",
-        "description": "先用 Nano Banana Pro 生成仅换发图，再用 Seedream 4.5 生成 2 张场景成片。支持常用画幅，清晰度可选 1K / 2K。",
+        "label": "默认方案",
+        "description": "固定返回 1 张换发预览和 2 张场景成片，支持常用画幅，清晰度统一为 2K。",
         "supports_reference_image": True,
         "aspect_ratios": PLAN_SAFE_ASPECT_RATIOS,
-        "resolutions": PREMIUM_PLAN_RESOLUTIONS,
+        "resolutions": UNIFIED_PLAN_RESOLUTIONS,
         "default_aspect_ratio": "3:4",
         "default_resolution": "2K",
         "hair_backend": "nano_banana_pro",
@@ -82,7 +68,7 @@ CURATED_SHOWCASES = (
         "summary": "柔和窗光配锁骨层次，适合自然松弛的日常写真。",
         "hairstyle_id": "female-collarbone-xinzhilei",
         "scene_id": "morning-window-softlight",
-        "generator_backend": "basic",
+        "generator_backend": "premium",
         "aspect_ratio": "3:4",
         "resolution": "2K",
     },
@@ -112,7 +98,7 @@ CURATED_SHOWCASES = (
         "summary": "利落短发配木质书房，整体会更干净有精神。",
         "hairstyle_id": "male-forward-spikes",
         "scene_id": "walnut-study-portrait",
-        "generator_backend": "basic",
+        "generator_backend": "premium",
         "aspect_ratio": "3:4",
         "resolution": "2K",
     },
@@ -122,7 +108,7 @@ CURATED_SHOWCASES = (
         "summary": "韩系三七分适合自然生活流场景，完成度更稳定。",
         "hairstyle_id": "male-korean-37-part",
         "scene_id": "indoor-film-lifestyle",
-        "generator_backend": "basic",
+        "generator_backend": "premium",
         "aspect_ratio": "3:4",
         "resolution": "2K",
     },
@@ -141,7 +127,8 @@ CURATED_SHOWCASES = (
 LEGACY_GENERATOR_BACKEND_ALIASES = {
     "seedream": "premium",
     "nano_banana_pro": "premium",
-    "nano_banana_2": "basic",
+    "nano_banana_2": "premium",
+    "basic": "premium",
     "sora_image": "premium",
 }
 
@@ -446,11 +433,7 @@ def get_generation_plan(backend_id: str | None) -> dict | None:
     if capability is None:
         return None
     settings = get_settings()
-    scene_model_name = (
-        settings.seedream_basic_model
-        if capability["scene_model_tier"] == "basic"
-        else settings.seedream_premium_model
-    )
+    scene_model_name = settings.seedream_premium_model
     return {
         "id": resolved_backend,
         **capability,
@@ -468,9 +451,7 @@ def _backend_enabled(backend_id: str) -> bool:
     if not settings.ark_api_keys:
         return False
     if plan["hair_backend"] == "nano_banana_pro":
-        return bool(settings.nano_banana_pro_api_key)
-    if plan["hair_backend"] == "nano_banana_2":
-        return bool(settings.nano_banana_2_api_key)
+        return settings.has_nano_banana_pro()
     return False
 
 
@@ -1672,18 +1653,13 @@ def normalize_generation_options(
 
     default_aspect_ratio = capability["default_aspect_ratio"] or DEFAULT_ASPECT_RATIO
     resolved_aspect_ratio = (aspect_ratio or default_aspect_ratio).strip()
-    raw_resolution = (resolution or DEFAULT_RESOLUTION).strip()
-    resolved_resolution = "512px" if raw_resolution.lower() == "512px" else raw_resolution.upper()
 
     if resolved_aspect_ratio not in capability["aspect_ratios"]:
         raise ValueError(f"Unsupported aspect ratio: {resolved_aspect_ratio}")
 
     if capability["resolutions"]:
         default_resolution = capability["default_resolution"] or DEFAULT_RESOLUTION
-        if not resolution:
-            resolved_resolution = default_resolution
-        if resolved_resolution not in capability["resolutions"]:
-            raise ValueError(f"Unsupported resolution: {resolved_resolution}")
+        resolved_resolution = default_resolution
     else:
         resolved_resolution = None
 
@@ -1787,10 +1763,6 @@ def parse_job_prompt_payload(raw_prompt: str) -> dict:
         if resolved_backend not in GENERATOR_BACKEND_CAPABILITIES:
             resolved_backend = DEFAULT_GENERATOR_BACKEND
         capability = GENERATOR_BACKEND_CAPABILITIES[resolved_backend]
-        normalized_resolution = (
-            "512px" if isinstance(raw_resolution, str) and raw_resolution.lower() == "512px"
-            else str(raw_resolution).upper() if raw_resolution is not None else None
-        )
         output_options = {
             "generator_backend": resolved_backend,
             "aspect_ratio": (
@@ -1798,11 +1770,7 @@ def parse_job_prompt_payload(raw_prompt: str) -> dict:
                 if isinstance(raw_aspect_ratio, str) and raw_aspect_ratio in SUPPORTED_ASPECT_RATIOS
                 else capability["default_aspect_ratio"] or DEFAULT_ASPECT_RATIO
             ),
-            "resolution": (
-                normalized_resolution
-                if isinstance(normalized_resolution, str) and normalized_resolution in SUPPORTED_RESOLUTIONS
-                else (capability["default_resolution"] or DEFAULT_RESOLUTION)
-            ),
+            "resolution": capability["default_resolution"] or DEFAULT_RESOLUTION,
         }
     return {
         "version": payload.get("version", 1),
