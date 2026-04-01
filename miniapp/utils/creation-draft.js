@@ -20,7 +20,11 @@ function readCreationDraft() {
       "",
     generator_backend: options.generator_backend || "",
     aspect_ratio: options.aspect_ratio || "",
-    resolution: options.resolution || ""
+    resolution: options.resolution || "",
+    hair_color_tone: options.hair_color_tone || "",
+    hair_color_tone_label: options.hair_color_tone_label || "",
+    hair_color_technique: options.hair_color_technique || "",
+    hair_color_technique_label: options.hair_color_technique_label || ""
   };
 }
 
@@ -35,7 +39,11 @@ function writeCreationDraft(draft = {}) {
       "",
     generator_backend: draft.generator_backend || "",
     aspect_ratio: draft.aspect_ratio || "",
-    resolution: draft.resolution || ""
+    resolution: draft.resolution || "",
+    hair_color_tone: draft.hair_color_tone || "",
+    hair_color_tone_label: draft.hair_color_tone_label || "",
+    hair_color_technique: draft.hair_color_technique || "",
+    hair_color_technique_label: draft.hair_color_technique_label || ""
   };
 
   if (nextDraft.imagePath) {
@@ -52,7 +60,11 @@ function writeCreationDraft(draft = {}) {
   wx.setStorageSync("generationOptions", {
     generator_backend: nextDraft.generator_backend,
     aspect_ratio: nextDraft.aspect_ratio,
-    resolution: nextDraft.resolution
+    resolution: nextDraft.resolution,
+    hair_color_tone: nextDraft.hair_color_tone,
+    hair_color_tone_label: nextDraft.hair_color_tone_label,
+    hair_color_technique: nextDraft.hair_color_technique,
+    hair_color_technique_label: nextDraft.hair_color_technique_label
   });
 
   return nextDraft;

@@ -224,6 +224,14 @@ def test_build_and_parse_job_prompt_payload_preserves_output_options():
         "aspect_ratio": "3:4",
         "resolution": "2K",
     }
+    assert parsed["hair_color_selection"] == {
+        "tone_id": "dark_brown",
+        "tone_label": "深棕",
+        "tone_hex": "#3B2A24",
+        "technique_id": "solid",
+        "technique_label": "统一染",
+        "technique_description": "整体发色统一，只保留自然深浅层次。",
+    }
     assert parsed["styling_id"]
     assert "full_prompt" in parsed
     assert "hairstyle_only_prompt" in parsed
@@ -252,6 +260,14 @@ def test_parse_job_prompt_payload_keeps_legacy_output_options_for_history():
         "generator_backend": "premium",
         "aspect_ratio": "1:8",
         "resolution": "2K",
+    }
+    assert parsed["hair_color_selection"] == {
+        "tone_id": "",
+        "tone_label": "",
+        "tone_hex": "",
+        "technique_id": "",
+        "technique_label": "",
+        "technique_description": "",
     }
 
 
@@ -285,6 +301,8 @@ def test_build_prompt_assembly_returns_structured_blocks():
         "makeup",
         "outfit",
         "hair_target",
+        "hair_color_target",
+        "hair_color_technique",
         "styling_constraints",
         "scene_constraints",
         "hair_constraints",
@@ -308,6 +326,8 @@ def test_prompt_block_labels_use_english_keys_and_chinese_labels():
     assert labels["scene_environment"] == "场景环境"
     assert labels["makeup"] == "人物妆容"
     assert labels["hair_lock"] == "发型锁定"
+    assert labels["hair_color_target"] == "目标发色"
+    assert labels["hair_color_lock"] == "发色锁定"
     assert labels["negative_physical_logic"] == "物理逻辑负面约束"
 
 
@@ -319,9 +339,11 @@ def test_prompt_rule_table_declares_mode_boundaries():
     assert "scene_only" in rules
     assert "hairstyle_only" in rules
     assert "hair_lock" in rules["scene_only"].required_blocks
+    assert "hair_color_lock" in rules["scene_only"].required_blocks
     assert "makeup" in rules["scene_only"].required_blocks
     assert "styling_constraints" in rules["scene_only"].required_blocks
     assert "hair_target" in rules["hairstyle_only"].required_blocks
+    assert "hair_color_target" in rules["hairstyle_only"].required_blocks
     assert "hair_target" in rules["scene_only"].forbidden_blocks
     assert "scene_environment" in rules["hairstyle_only"].forbidden_blocks
     assert "shot" in rules["hairstyle_only"].forbidden_blocks
@@ -340,9 +362,11 @@ def test_build_hairstyle_only_prompt_uses_identity_lock_and_hair_swap_structure(
 
     prompt = templates.build_hairstyle_only_prompt(hairstyle)
 
-    assert "只更换图中人物的发型" in prompt
-    assert "换发目标：只更换图中人物的发型为：前刺头。" in prompt
+    assert "只更换图中人物的发型和发色" in prompt
+    assert "换发目标：只更换图中人物的发型与发色，其中发型固定为：前刺头。" in prompt
     assert "人物发型：发型改为前刺头" in prompt
+    assert "发色目标：发色调整为深棕" in prompt
+    assert "染发工艺：采用统一染" in prompt
     assert "尽量保持原图中的背景、服饰、姿态、表情、构图、镜头距离、光线和氛围不变" in prompt
     assert "不能把新发型做成悬浮假发" in prompt
     assert "负面约束：不要换脸、不要改变性别表达、不要生成第二个人" in prompt
@@ -360,6 +384,8 @@ def test_build_scene_only_prompt_locks_existing_hairstyle_and_updates_scene():
     assert "不改变人物的脸型、五官比例、眼距、鼻梁、嘴型、肤色、年龄感和整体气质和发型" in prompt
     assert "忽略原照片中的背景、原服饰、原有动作" in prompt
     assert "人物发型：保持参考图中已经生成完成的发型不变" in prompt
+    assert "发色锁定：" in prompt
+    assert "不要二次改色" in prompt
     assert "妆容：" in prompt
     assert "服饰：" in prompt
     assert "不要因为动作、风感或镜头变化把当前发型改成另一种发型" in prompt
@@ -406,6 +432,9 @@ def test_scene_only_prompt_assembly_exposes_hair_lock_block():
     hair_blocks = [block.text for block in assembly.blocks if block.key == "hair_lock"]
     assert len(hair_blocks) == 1
     assert "保持参考图中已经生成完成的发型不变" in hair_blocks[0]
+    hair_color_blocks = [block.text for block in assembly.blocks if block.key == "hair_color_lock"]
+    assert len(hair_color_blocks) == 1
+    assert "不要二次改色" in hair_color_blocks[0]
     assert any(block.key == "makeup" for block in assembly.blocks)
     assert any(block.key == "styling_constraints" for block in assembly.blocks)
 
@@ -561,6 +590,7 @@ def test_auth_upload_job_history_flow(tmp_path, monkeypatch):
             files={"file": ("portrait.png", _build_test_image(), "image/png")},
         )
         assert upload.status_code == 200
+        assert upload.json()["detected_hair_color"]["tone_id"]
         upload_id = upload.json()["upload_id"]
 
         templates = client.get("/api/templates")
@@ -569,6 +599,8 @@ def test_auth_upload_job_history_flow(tmp_path, monkeypatch):
         assert len(catalog["hairstyles"]) == 56
         assert len(catalog["scenes"]) == len(template_service.SCENES)
         assert len(catalog["generation_backends"]) == 1
+        assert len(catalog["hair_colors"]) >= 8
+        assert len(catalog["hair_color_techniques"]) >= 5
         assert len([item for item in catalog["hairstyles"] if item["gender"] == "male"]) == 23
         assert len([item for item in catalog["hairstyles"] if item["gender"] == "female"]) == 33
         assert catalog["hairstyles"][0]["style_line_label"]
@@ -609,6 +641,10 @@ def test_auth_upload_job_history_flow(tmp_path, monkeypatch):
         assert status_payload["completed_scene_count"] == 2
         assert status_payload["media_expired"] is False
         assert status_payload["media_expires_at"]
+        assert status_payload["hair_color_tone"]
+        assert status_payload["hair_color_tone_label"]
+        assert status_payload["hair_color_technique"]
+        assert status_payload["hair_color_technique_label"]
 
         history = client.get("/api/history", headers=headers)
         assert history.status_code == 200
@@ -618,6 +654,7 @@ def test_auth_upload_job_history_flow(tmp_path, monkeypatch):
         assert items[0]["hair_preview_url"]
         assert len(items[0]["result_image_urls"]) == 2
         assert items[0]["media_expired"] is False
+        assert items[0]["hair_color_tone_label"]
 
         me = client.get("/api/me", headers=headers)
         assert me.status_code == 200
@@ -742,6 +779,8 @@ def test_job_accepts_extended_output_options(tmp_path, monkeypatch):
                 "generator_backend": "basic",
                 "aspect_ratio": "21:9",
                 "resolution": "2K",
+                "hair_color_tone": "mocha_brown",
+                "hair_color_technique": "balayage",
             },
         )
 
@@ -750,6 +789,10 @@ def test_job_accepts_extended_output_options(tmp_path, monkeypatch):
         assert payload["generator_backend"] == "premium"
         assert payload["aspect_ratio"] == "21:9"
         assert payload["resolution"] == "2K"
+        assert payload["hair_color_tone"] == "mocha_brown"
+        assert payload["hair_color_tone_label"] == "摩卡棕"
+        assert payload["hair_color_technique"] == "balayage"
+        assert payload["hair_color_technique_label"] == "手扫染"
 
 
 def test_templates_catalog_exposes_plan_specific_output_capabilities(tmp_path, monkeypatch):
@@ -763,7 +806,12 @@ def test_templates_catalog_exposes_plan_specific_output_capabilities(tmp_path, m
         catalog = client.get("/api/templates", headers=headers)
         assert catalog.status_code == 200
         backends = {item["id"]: item for item in catalog.json()["generation_backends"]}
+        hair_colors = catalog.json()["hair_colors"]
+        hair_color_techniques = catalog.json()["hair_color_techniques"]
         assert list(backends.keys()) == ["premium"]
+        assert hair_colors[0]["id"] == "natural_black"
+        assert hair_colors[0]["allowed_techniques"] == ["solid", "highlight", "earloop"]
+        assert hair_color_techniques[0]["id"] == "solid"
         assert backends["premium"]["aspect_ratios"] == [
             "1:1",
             "16:9",

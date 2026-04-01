@@ -95,6 +95,7 @@
       <view class="hero-meta-tag-row">
         <view class="hero-meta-tag">{{job.hairstyle_name || '处理中'}}</view>
         <view class="hero-meta-tag">{{job.scene_name || '处理中'}}</view>
+        <view wx:if="{{job.hair_color_tone_label}}" class="hero-meta-tag">{{job.hair_color_tone_label}}{{job.hair_color_technique_label ? ' · ' + job.hair_color_technique_label : ''}}</view>
         <view wx:if="{{job.resolution}}" class="hero-meta-tag">{{job.resolution}}</view>
       </view>
     </view>

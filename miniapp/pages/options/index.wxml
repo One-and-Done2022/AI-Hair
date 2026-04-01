@@ -19,7 +19,7 @@
 
   <view class="editorial-head">
     <view class="title editorial-title">选择参数</view>
-    <view class="subtitle editorial-subtitle">统一使用默认方案生成，可继续调整比例和高级设置。</view>
+    <view class="subtitle editorial-subtitle">先确定发色，再决定输出比例与高级设置。</view>
   </view>
 
   <view class="summary-grid">
@@ -50,6 +50,43 @@
     <view class="section-title">生成方案</view>
     <view class="generator-pill active">{{selectedBackendLabel || '默认方案'}}</view>
     <view class="generator-copy">{{selectedBackendDescription || '固定返回 1 张换发预览和 2 张场景成片，清晰度统一为 2K。'}}</view>
+  </view>
+
+  <view class="panel hair-color-panel">
+    <view class="hair-color-head">
+      <view class="section-title">发色基调</view>
+      <view class="hair-color-hint">{{detectedHairColorHint}}</view>
+    </view>
+    <view class="hair-color-grid">
+      <view
+        wx:for="{{hairColors}}"
+        wx:key="id"
+        class="hair-color-chip {{selectedHairColor && selectedHairColor.id === item.id ? 'active' : ''}}"
+        data-value="{{item.id}}"
+        bindtap="selectHairColorTone"
+      >
+        <view class="hair-color-swatch" style="background: {{item.hex}};"></view>
+        <view class="hair-color-copy">
+          <view class="hair-color-name">{{item.label}}</view>
+          <view class="hair-color-desc">{{item.description}}</view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <view class="panel hair-technique-panel">
+    <view class="section-title">染发工艺</view>
+    <view class="option-row technique-row">
+      <view
+        wx:for="{{techniqueOptions}}"
+        wx:key="id"
+        class="option-chip {{selectedHairTechnique && selectedHairTechnique.id === item.id ? 'active' : ''}}"
+        data-value="{{item.id}}"
+        bindtap="selectHairColorTechnique"
+      >
+        {{item.label}}
+      </view>
+    </view>
   </view>
 
   <view class="panel advanced-panel">

@@ -1,0 +1,32 @@
+[
+  {
+    "id": "solid",
+    "label": "统一染",
+    "description": "整体发色统一，只保留自然深浅层次。",
+    "displayPriority": 10
+  },
+  {
+    "id": "highlight",
+    "label": "轻挑染",
+    "description": "在主体发色内加入少量提亮发束，让发型层次更立体。",
+    "displayPriority": 20
+  },
+  {
+    "id": "earloop",
+    "label": "耳圈染",
+    "description": "在耳侧或内层加入小面积点缀色块，变化克制。",
+    "displayPriority": 30
+  },
+  {
+    "id": "balayage",
+    "label": "手扫染",
+    "description": "从中段到发尾做自然提亮，过渡柔和不生硬。",
+    "displayPriority": 40
+  },
+  {
+    "id": "gradient",
+    "label": "渐变染",
+    "description": "从发根到发尾保持连续明暗变化，整体更有氛围。",
+    "displayPriority": 50
+  }
+]

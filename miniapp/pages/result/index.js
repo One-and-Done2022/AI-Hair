@@ -38,12 +38,18 @@ function buildJobMeta(job) {
     job_id: job.job_id || "",
     hairstyle_name: job.hairstyle_name || "",
     scene_name: job.scene_name || "",
+    hair_color_tone: job.hair_color_tone || "",
+    hair_color_tone_label: job.hair_color_tone_label || "",
+    hair_color_technique: job.hair_color_technique || "",
+    hair_color_technique_label: job.hair_color_technique_label || "",
     error_message: job.error_message || "",
     created_at: job.created_at || "",
     upload_url: job.upload_url || "",
     media_expired: !!job.media_expired,
     media_expires_at: job.media_expires_at || "",
-    generator_backend: job.generator_backend || ""
+    generator_backend: job.generator_backend || "",
+    aspect_ratio: job.aspect_ratio || "",
+    resolution: job.resolution || ""
   };
 }
 
@@ -58,12 +64,18 @@ function hasMetaChanged(currentJob, nextJob) {
     currentJob.job_id !== nextJob.job_id ||
     currentJob.hairstyle_name !== nextJob.hairstyle_name ||
     currentJob.scene_name !== nextJob.scene_name ||
+    currentJob.hair_color_tone !== nextJob.hair_color_tone ||
+    currentJob.hair_color_tone_label !== nextJob.hair_color_tone_label ||
+    currentJob.hair_color_technique !== nextJob.hair_color_technique ||
+    currentJob.hair_color_technique_label !== nextJob.hair_color_technique_label ||
     currentJob.error_message !== nextJob.error_message ||
     currentJob.created_at !== nextJob.created_at ||
     currentJob.upload_url !== nextJob.upload_url ||
     currentJob.media_expired !== nextJob.media_expired ||
     currentJob.media_expires_at !== nextJob.media_expires_at ||
-    currentJob.generator_backend !== nextJob.generator_backend
+    currentJob.generator_backend !== nextJob.generator_backend ||
+    currentJob.aspect_ratio !== nextJob.aspect_ratio ||
+    currentJob.resolution !== nextJob.resolution
   );
 }
 
@@ -500,6 +512,10 @@ Page({
       scene_id: job.scene_id || (this.data.job && this.data.job.scene_id) || "",
       scene_name: job.scene_name || (this.data.job && this.data.job.scene_name) || "",
       generator_backend: job.generator_backend || (this.data.job && this.data.job.generator_backend) || "",
+      hair_color_tone: job.hair_color_tone || (this.data.job && this.data.job.hair_color_tone) || "",
+      hair_color_tone_label: job.hair_color_tone_label || (this.data.job && this.data.job.hair_color_tone_label) || "",
+      hair_color_technique: job.hair_color_technique || (this.data.job && this.data.job.hair_color_technique) || "",
+      hair_color_technique_label: job.hair_color_technique_label || (this.data.job && this.data.job.hair_color_technique_label) || "",
       error_code: job.error_code || "",
       error_message: job.error_message || "",
       created_at: job.created_at || (this.data.job && this.data.job.created_at) || new Date().toISOString(),

@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request, status
 from app.dependencies import get_current_user
 from app.schemas import JobCreateRequest, JobResponse
 from app.services.generation import ImageGenerationError
-from app.services import repository, retention, storage, templates
+from app.services import hair_color, repository, retention, storage, templates
 
 
 router = APIRouter(prefix="/jobs", tags=["jobs"])
@@ -37,6 +37,13 @@ def _job_response(request: Request, job: dict) -> JobResponse:
     result_image_url = result_image_urls[0] if result_image_urls else hair_preview_url
     media_expires_at = retention.media_expires_at(job["created_at"])
     media_expired = retention.is_media_expired(job["created_at"])
+    hair_color_selection = prompt_payload.get("hair_color_selection") or {}
+    hair_color_tone = str(hair_color_selection.get("tone_id") or "").strip() or None
+    hair_color_tone_label = str(hair_color_selection.get("tone_label") or "").strip() or None
+    hair_color_technique = str(hair_color_selection.get("technique_id") or "").strip() or None
+    hair_color_technique_label = (
+        str(hair_color_selection.get("technique_label") or "").strip() or None
+    )
     return JobResponse(
         job_id=job["id"],
         status=job["status"],
@@ -54,6 +61,10 @@ def _job_response(request: Request, job: dict) -> JobResponse:
         generator_backend=prompt_payload["output_options"]["generator_backend"],
         aspect_ratio=prompt_payload["output_options"]["aspect_ratio"],
         resolution=prompt_payload["output_options"]["resolution"],
+        hair_color_tone=hair_color_tone,
+        hair_color_tone_label=hair_color_tone_label,
+        hair_color_technique=hair_color_technique,
+        hair_color_technique_label=hair_color_technique_label,
         error_code=job.get("error_code"),
         error_message=job.get("error_message"),
         created_at=job["created_at"],
@@ -85,12 +96,24 @@ def create_job(
             for item in templates.get_generation_backend_catalog()
         ):
             raise ValueError("Selected generation plan is not currently available.")
+        detected_hair_color_tone_id = None
+        if upload.get("stored_path"):
+            try:
+                upload_bytes = storage.read_file_bytes(upload["stored_path"])
+                detected_hair_color = hair_color.estimate_hair_color(upload_bytes)
+                if detected_hair_color is not None:
+                    detected_hair_color_tone_id = detected_hair_color.tone_id
+            except OSError:
+                detected_hair_color_tone_id = None
         prompt = templates.build_job_prompt_payload(
             hairstyle,
             scene,
             generator_backend=payload.generator_backend,
             aspect_ratio=payload.aspect_ratio,
             resolution=payload.resolution,
+            hair_color_tone_id=payload.hair_color_tone,
+            hair_color_technique_id=payload.hair_color_technique,
+            detected_hair_color_tone_id=detected_hair_color_tone_id,
             seed_source=f"{payload.upload_id}:{payload.hairstyle_id}:{payload.scene_id}",
         )
     except (ValueError, ImageGenerationError) as exc:

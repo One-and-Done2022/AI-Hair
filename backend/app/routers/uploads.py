@@ -3,8 +3,8 @@ from __future__ import annotations
 from fastapi import APIRouter, Depends, File, HTTPException, Request, UploadFile, status
 
 from app.dependencies import get_current_user
-from app.schemas import UploadResponse
-from app.services import repository, storage
+from app.schemas import UploadHairColorEstimate, UploadResponse
+from app.services import hair_color, repository, storage, templates
 
 
 router = APIRouter(prefix="/uploads", tags=["uploads"])
@@ -39,9 +39,21 @@ async def create_upload(
         upload["stored_path"],
         base_url=str(request.base_url).rstrip("/"),
     )
+    detected_hair_color = hair_color.estimate_hair_color(image_bytes)
+    detected_hair_color_response = None
+    if detected_hair_color is not None:
+        tone = templates.get_hair_color_tone(detected_hair_color.tone_id)
+        if tone is not None:
+            detected_hair_color_response = UploadHairColorEstimate(
+                tone_id=tone["id"],
+                label=tone["label"],
+                confidence=detected_hair_color.confidence,
+                sample_hex=detected_hair_color.sample_hex,
+            )
     return UploadResponse(
         upload_id=upload["id"],
         upload_url=upload_url,
         width=upload["width"],
         height=upload["height"],
+        detected_hair_color=detected_hair_color_response,
     )

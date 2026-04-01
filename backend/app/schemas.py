@@ -19,6 +19,7 @@ class UploadResponse(BaseModel):
     upload_url: str
     width: int
     height: int
+    detected_hair_color: "UploadHairColorEstimate | None" = None
 
 
 class TemplateItem(BaseModel):
@@ -38,6 +39,8 @@ class TemplateItem(BaseModel):
 class TemplateCatalogResponse(BaseModel):
     hairstyles: list[TemplateItem]
     scenes: list[TemplateItem]
+    hair_colors: list["HairColorOption"] = Field(default_factory=list)
+    hair_color_techniques: list["HairColorTechniqueOption"] = Field(default_factory=list)
     generation_backends: list["GenerationBackendOption"] = Field(default_factory=list)
 
 
@@ -71,6 +74,28 @@ class GenerationBackendOption(BaseModel):
     resolutions: list[str] = Field(default_factory=list)
     default_aspect_ratio: str
     default_resolution: str | None = None
+
+
+class HairColorTechniqueOption(BaseModel):
+    id: str
+    label: str
+    description: str
+
+
+class HairColorOption(BaseModel):
+    id: str
+    label: str
+    hex: str
+    description: str
+    allowed_techniques: list[str] = Field(default_factory=list)
+    default_technique: str
+
+
+class UploadHairColorEstimate(BaseModel):
+    tone_id: str
+    label: str
+    confidence: float
+    sample_hex: str | None = None
 
 
 class RecommendationFaceShape(BaseModel):
@@ -187,6 +212,8 @@ class JobCreateRequest(BaseModel):
     generator_backend: Literal["basic", "premium"] = "premium"
     aspect_ratio: str | None = None
     resolution: str | None = None
+    hair_color_tone: str | None = None
+    hair_color_technique: str | None = None
 
 
 class JobResponse(BaseModel):
@@ -214,6 +241,10 @@ class JobResponse(BaseModel):
     generator_backend: str | None = None
     aspect_ratio: str | None = None
     resolution: str | None = None
+    hair_color_tone: str | None = None
+    hair_color_tone_label: str | None = None
+    hair_color_technique: str | None = None
+    hair_color_technique_label: str | None = None
     error_code: str | None = None
     error_message: str | None = None
     created_at: str

@@ -44,6 +44,8 @@ UNIFIED_PLAN_RESOLUTIONS = ("2K",)
 DEFAULT_GENERATOR_BACKEND = "premium"
 DEFAULT_ASPECT_RATIO = "3:4"
 DEFAULT_RESOLUTION = "2K"
+DEFAULT_HAIR_COLOR_TONE = "natural_black"
+DEFAULT_HAIR_COLOR_TECHNIQUE = "solid"
 
 GENERATOR_BACKEND_CAPABILITIES = {
     "premium": {
@@ -188,7 +190,7 @@ HAIRSTYLE_ONLY_IDENTITY_LOCK_SECTION = (
     "第一优先级是严格保留参考人物的真实身份特征，保证一眼看出是同一个人。"
     "以上传照片中的人物为原型，不改变人物的脸型、五官比例、眼距、鼻梁、嘴型、肤色、年龄感和整体气质，"
     "不改变性别表达，不换脸，不生成第二个人。"
-    "只更换图中人物的发型，除头发、刘海、鬓角、后颈发区和发际线相关区域外，"
+    "只更换图中人物的发型和发色，除头发、刘海、鬓角、后颈发区和发际线相关区域外，"
     "尽量保持原图中的背景、服饰、姿态、表情、构图、镜头距离、光线和氛围不变。"
 )
 
@@ -216,7 +218,7 @@ QUALITY_IMAGE_FINISH_SECTION = (
 QUALITY_SECTION = QUALITY_SKIN_TEXTURE_SECTION + QUALITY_IMAGE_FINISH_SECTION
 
 HAIRSTYLE_ONLY_CONSTRAINTS_SECTION = (
-    "仅允许修改头发、刘海、鬓角、后颈发区和发际线相关视觉效果，不要改动背景、服饰、表情、动作和构图；"
+    "仅允许修改头发、刘海、鬓角、后颈发区和发际线相关视觉效果，以及这些区域内的发色、明暗层次与染发细节，不要改动背景、服饰、表情、动作和构图；"
     "发型必须贴合原人物头骨结构、头部朝向、耳位位置、肩颈遮挡关系与镜头透视；"
     "不能把新发型做成悬浮假发、错位发片或不贴合头皮的假发套效果。"
 )
@@ -224,7 +226,7 @@ HAIRSTYLE_ONLY_CONSTRAINTS_SECTION = (
 SCENE_ONLY_CONSTRAINTS_SECTION = (
     "人物发型必须保持参考图中已经生成完成的现有发型，不要二次修改发型种类；"
     "不要改变发长、顶部体积、刘海、分线、鬓角、后颈发区、卷度、发色和整体轮廓；"
-    "动作、表情、服装、场景和布光变化不能破坏既有发型结构、头皮贴合关系与发丝走向。"
+    "动作、表情、服装、场景和布光变化不能破坏既有发型结构、头皮贴合关系、发丝走向和发色过渡。"
 )
 
 NEGATIVE_IDENTITY_ARTIFACT_SECTION = (
@@ -407,7 +409,10 @@ def get_prompt_block_labels() -> dict[str, str]:
         "outfit": "人物服饰",
         "edit_scope": "编辑目标",
         "hair_target": "目标发型",
+        "hair_color_target": "目标发色",
+        "hair_color_technique": "染发工艺",
         "hair_lock": "发型锁定",
+        "hair_color_lock": "发色锁定",
         "styling_constraints": "妆造约束",
         "scene_constraints": "场景约束",
         "hair_constraints": "发型约束",
@@ -480,6 +485,130 @@ def _load_json(name: str) -> list[dict]:
     return json.loads((DATA_DIR / name).read_text(encoding="utf-8"))
 
 
+def _build_hair_color_tone(raw: dict) -> dict:
+    allowed_techniques = list(
+        dict.fromkeys(str(item).strip() for item in raw.get("allowedTechniques", []) if str(item).strip())
+    )
+    default_technique = str(raw.get("defaultTechnique") or DEFAULT_HAIR_COLOR_TECHNIQUE).strip()
+    if default_technique not in allowed_techniques:
+        default_technique = allowed_techniques[0] if allowed_techniques else DEFAULT_HAIR_COLOR_TECHNIQUE
+    return {
+        "id": raw["id"],
+        "label": raw["label"],
+        "hex": raw["hex"],
+        "description": raw["description"],
+        "allowed_techniques": allowed_techniques,
+        "default_technique": default_technique,
+        "display_priority": int(raw.get("displayPriority") or 999),
+    }
+
+
+def _build_hair_color_technique(raw: dict) -> dict:
+    return {
+        "id": raw["id"],
+        "label": raw["label"],
+        "description": raw["description"],
+        "display_priority": int(raw.get("displayPriority") or 999),
+    }
+
+
+@lru_cache(maxsize=1)
+def _hair_color_catalog() -> dict[str, list[dict]]:
+    tones = sorted(
+        (_build_hair_color_tone(item) for item in _load_json("hair_colors.json")),
+        key=lambda item: (item["display_priority"], item["label"]),
+    )
+    techniques = sorted(
+        (_build_hair_color_technique(item) for item in _load_json("hair_color_techniques.json")),
+        key=lambda item: (item["display_priority"], item["label"]),
+    )
+    return {
+        "tones": tones,
+        "techniques": techniques,
+    }
+
+
+HAIR_COLOR_TONES = _hair_color_catalog()["tones"]
+HAIR_COLOR_TECHNIQUES = _hair_color_catalog()["techniques"]
+
+
+def get_hair_color_tone(tone_id: str | None) -> dict | None:
+    if not tone_id:
+        return None
+    return _find_template(HAIR_COLOR_TONES, tone_id)
+
+
+def get_hair_color_technique(technique_id: str | None) -> dict | None:
+    if not technique_id:
+        return None
+    return _find_template(HAIR_COLOR_TECHNIQUES, technique_id)
+
+
+def _infer_default_hair_color_tone(prompt_text: str, gender: str | None = None) -> str:
+    blob = prompt_text.lower()
+    if any(keyword in blob for keyword in ("蓝黑",)):
+        return "blue_black"
+    if any(keyword in blob for keyword in ("亚麻", "浅金", "金色", "金棕")):
+        return "linen_blonde"
+    if any(keyword in blob for keyword in ("雾灰", "灰棕", "冷棕", "青木灰", "冷深棕")):
+        return "ash_brown"
+    if any(keyword in blob for keyword in ("蜂蜜", "奶茶", "茶棕", "焦糖")):
+        return "honey_brown"
+    if any(keyword in blob for keyword in ("摩卡", "可可", "巧克力")):
+        return "mocha_brown"
+    if any(keyword in blob for keyword in ("栗棕", "栗色")):
+        return "chestnut_brown"
+    if any(keyword in blob for keyword in ("深棕", "黑棕", "极深棕", "复古深色")):
+        return "dark_brown"
+    if any(keyword in blob for keyword in ("乌黑", "自然黑", "黑色")):
+        return "natural_black"
+    return "dark_brown" if gender == "female" else DEFAULT_HAIR_COLOR_TONE
+
+
+def normalize_hair_color_selection(
+    *,
+    tone_id: str | None = None,
+    technique_id: str | None = None,
+    hairstyle: dict | None = None,
+    detected_tone_id: str | None = None,
+) -> dict[str, str]:
+    requested_tone = get_hair_color_tone(tone_id)
+    detected_tone = get_hair_color_tone(detected_tone_id)
+    hairstyle_default_tone = get_hair_color_tone(
+        hairstyle.get("default_hair_color_tone") if hairstyle else None
+    )
+    selected_tone = (
+        requested_tone
+        or detected_tone
+        or hairstyle_default_tone
+        or get_hair_color_tone(DEFAULT_HAIR_COLOR_TONE)
+        or HAIR_COLOR_TONES[0]
+    )
+
+    allowed_techniques = selected_tone.get("allowed_techniques", [])
+    requested_technique = get_hair_color_technique(technique_id)
+    selected_technique = None
+    if requested_technique and requested_technique["id"] in allowed_techniques:
+        selected_technique = requested_technique
+    if selected_technique is None:
+        selected_technique = get_hair_color_technique(selected_tone.get("default_technique"))
+    if selected_technique is None or selected_technique["id"] not in allowed_techniques:
+        selected_technique = get_hair_color_technique(
+            allowed_techniques[0] if allowed_techniques else DEFAULT_HAIR_COLOR_TECHNIQUE
+        )
+    if selected_technique is None:
+        selected_technique = HAIR_COLOR_TECHNIQUES[0]
+
+    return {
+        "tone_id": selected_tone["id"],
+        "tone_label": selected_tone["label"],
+        "tone_hex": selected_tone["hex"],
+        "technique_id": selected_technique["id"],
+        "technique_label": selected_technique["label"],
+        "technique_description": selected_technique["description"],
+    }
+
+
 def _normalize_sentence(text: str) -> str:
     return text.strip().rstrip("。；,.，")
 
@@ -545,6 +674,8 @@ def get_prompt_rule_table() -> dict[str, PromptRule]:
                 "makeup",
                 "outfit",
                 "hair_target",
+                "hair_color_target",
+                "hair_color_technique",
                 "styling_constraints",
                 "scene_constraints",
                 "hair_constraints",
@@ -571,6 +702,8 @@ def get_prompt_rule_table() -> dict[str, PromptRule]:
                 "output_format",
                 "edit_scope",
                 "hair_target",
+                "hair_color_target",
+                "hair_color_technique",
                 "hair_edit_scope_constraints",
                 "hair_shape_constraints",
                 "quality_skin_texture",
@@ -591,6 +724,7 @@ def get_prompt_rule_table() -> dict[str, PromptRule]:
                 "makeup",
                 "outfit",
                 "hair_lock",
+                "hair_color_lock",
                 "hair_preservation_constraints",
                 "styling_constraints",
                 "scene_constraints",
@@ -613,6 +747,7 @@ def get_prompt_rule_table() -> dict[str, PromptRule]:
                 "makeup",
                 "outfit",
                 "hair_lock",
+                "hair_color_lock",
                 "hair_preservation_constraints",
                 "styling_constraints",
                 "scene_constraints",
@@ -1129,6 +1264,15 @@ def build_scene_template_from_record(raw: dict) -> dict:
 def _build_hairstyle_template(raw: dict) -> dict:
     gender = raw["gender"]
     style_line = raw["styleLine"]
+    default_hair_color_tone = _infer_default_hair_color_tone(
+        " ".join(
+            [
+                str(raw.get("promptCore") or ""),
+                *[str(item) for item in raw.get("constraints", [])],
+            ]
+        ),
+        gender,
+    )
     return {
         "id": raw["id"],
         "name": raw["title"],
@@ -1141,6 +1285,7 @@ def _build_hairstyle_template(raw: dict) -> dict:
         "style_line_label": STYLE_LINE_LABELS.get(style_line, style_line),
         "tags": raw.get("detailTags", []),
         "prompt_core": raw["promptCore"],
+        "default_hair_color_tone": default_hair_color_tone,
         "constraints": raw.get("constraints", []),
         "pairing_advice": raw.get("pairingAdvice", []),
         "shot_advice": raw["shotAdvice"],
@@ -1246,6 +1391,14 @@ def get_scene(template_id: str) -> dict | None:
     return _find_template(SCENES, resolved_id)
 
 
+def get_hair_color_catalog() -> list[dict]:
+    return [dict(item) for item in HAIR_COLOR_TONES]
+
+
+def get_hair_color_technique_catalog() -> list[dict]:
+    return [dict(item) for item in HAIR_COLOR_TECHNIQUES]
+
+
 def get_styling(template_id: str) -> dict | None:
     return _find_template(STYLINGS, template_id)
 
@@ -1345,12 +1498,43 @@ def _scene_rule_styling_candidates(
     return get_styling(selected_id)
 
 
+def _build_hair_color_target_text(selection: dict[str, str]) -> str:
+    return (
+        "发色目标：发色调整为"
+        f"{selection['tone_label']}，保持真实自然的人类染发质感与明暗层次。"
+    )
+
+
+def _build_hair_color_technique_text(selection: dict[str, str]) -> str:
+    return (
+        "染发工艺：采用"
+        f"{selection['technique_label']}，{_normalize_sentence(selection['technique_description'])}。"
+    )
+
+
+def _build_hair_color_lock_text(selection: dict[str, str] | None) -> str:
+    if selection is None:
+        return (
+            "发色锁定：保持参考图中已经生成完成的当前发色与染发层次不变，"
+            "不要二次改色，不要改变冷暖倾向、亮度层级、挑染位置和过渡关系。"
+        )
+    return (
+        "发色锁定：保持参考图中已经生成完成的"
+        f"{selection['tone_label']}发色和{selection['technique_label']}层次不变，"
+        "不要二次改色，不要改变冷暖倾向、亮度层级、挑染位置和过渡关系。"
+    )
+
+
 def build_prompt_assembly(
     *,
     mode: str,
     hairstyle: dict | None = None,
     scene: dict | None = None,
     styling: dict | None = None,
+    hair_color_selection: dict[str, str] | None = None,
+    hair_color_tone_id: str | None = None,
+    hair_color_technique_id: str | None = None,
+    detected_hair_color_tone_id: str | None = None,
     preferred_gender: str | None = None,
     seed_source: str | None = None,
     expression_override: str | None = None,
@@ -1363,6 +1547,12 @@ def build_prompt_assembly(
     if mode == "hairstyle_only":
         if hairstyle is None:
             raise ValueError("hairstyle is required for hairstyle_only mode")
+        selected_hair_color = hair_color_selection or normalize_hair_color_selection(
+            tone_id=hair_color_tone_id,
+            technique_id=hair_color_technique_id,
+            hairstyle=hairstyle,
+            detected_tone_id=detected_hair_color_tone_id,
+        )
         constraint_items = [
             _normalize_sentence(item)
             for item in _dedupe_keep_order(
@@ -1381,8 +1571,10 @@ def build_prompt_assembly(
             [
                 _make_prompt_block("identity_lock", HAIRSTYLE_ONLY_IDENTITY_LOCK_SECTION),
                 _make_prompt_block("output_format", OUTPUT_FORMAT_SECTION),
-                _make_prompt_block("edit_scope", f"换发目标：只更换图中人物的发型为：{hairstyle['name']}。"),
+                _make_prompt_block("edit_scope", f"换发目标：只更换图中人物的发型与发色，其中发型固定为：{hairstyle['name']}。"),
                 _make_prompt_block("hair_target", f"人物发型：{_normalize_sentence(hairstyle['prompt_core'])}。"),
+                _make_prompt_block("hair_color_target", _build_hair_color_target_text(selected_hair_color)),
+                _make_prompt_block("hair_color_technique", _build_hair_color_technique_text(selected_hair_color)),
                 _make_prompt_block("hair_edit_scope_constraints", f"编辑范围约束：{edit_scope_constraint_text}。"),
                 _make_prompt_block("hair_shape_constraints", f"发型落地约束：{shape_constraint_text}。"),
                 *_build_quality_blocks(),
@@ -1393,6 +1585,7 @@ def build_prompt_assembly(
     if mode == "scene_only":
         if scene is None:
             raise ValueError("scene is required for scene_only mode")
+        selected_hair_color = hair_color_selection
         selection_seed = seed_source or f"scene-only:{scene['id']}"
         scene_rule = get_scene_styling_rule(scene["id"])
         selected_styling = _resolve_styling(
@@ -1481,6 +1674,7 @@ def build_prompt_assembly(
                     "hair_lock",
                     "人物发型：保持参考图中已经生成完成的发型不变，不要二次改发，不改变发长、顶部体积、刘海、分线、鬓角、后颈发区、卷度、发色和整体轮廓。",
                 ),
+                _make_prompt_block("hair_color_lock", _build_hair_color_lock_text(selected_hair_color)),
                 _make_prompt_block("hair_preservation_constraints", f"发型保持约束：{hair_preservation_text}。"),
                 _make_prompt_block(
                     "styling_constraints",
@@ -1497,6 +1691,12 @@ def build_prompt_assembly(
         raise ValueError("hairstyle and scene are required for full_stylize mode")
 
     selection_seed = seed_source or f"{hairstyle['id']}:{scene['id']}"
+    selected_hair_color = hair_color_selection or normalize_hair_color_selection(
+        tone_id=hair_color_tone_id,
+        technique_id=hair_color_technique_id,
+        hairstyle=hairstyle,
+        detected_tone_id=detected_hair_color_tone_id,
+    )
     scene_rule = get_scene_styling_rule(scene["id"])
     selected_styling = _resolve_styling(
         style_line=scene["style_line"],
@@ -1582,6 +1782,8 @@ def build_prompt_assembly(
                 f"服饰：{styling_values['outfit_text'] or '白色宽松衬衫，内搭浅色背心或吊带'}。",
             ),
             _make_prompt_block("hair_target", f"人物发型：{_normalize_sentence(hairstyle['prompt_core'])}。"),
+            _make_prompt_block("hair_color_target", _build_hair_color_target_text(selected_hair_color)),
+            _make_prompt_block("hair_color_technique", _build_hair_color_technique_text(selected_hair_color)),
             _make_prompt_block(
                 "styling_constraints",
                 f"妆造约束：{styling_values['styling_constraints'] or '妆容与服饰需与发型、布光和场景基调统一，不要出现不合时宜的强妆或夸张服装'}。",
@@ -1600,6 +1802,10 @@ def build_prompt(
     scene: dict,
     *,
     styling: dict | None = None,
+    hair_color_selection: dict[str, str] | None = None,
+    hair_color_tone_id: str | None = None,
+    hair_color_technique_id: str | None = None,
+    detected_hair_color_tone_id: str | None = None,
     seed_source: str | None = None,
 ) -> str:
     return build_prompt_assembly(
@@ -1607,14 +1813,29 @@ def build_prompt(
         hairstyle=hairstyle,
         scene=scene,
         styling=styling,
+        hair_color_selection=hair_color_selection,
+        hair_color_tone_id=hair_color_tone_id,
+        hair_color_technique_id=hair_color_technique_id,
+        detected_hair_color_tone_id=detected_hair_color_tone_id,
         seed_source=seed_source,
     ).render()
 
 
-def build_hairstyle_only_prompt(hairstyle: dict) -> str:
+def build_hairstyle_only_prompt(
+    hairstyle: dict,
+    *,
+    hair_color_selection: dict[str, str] | None = None,
+    hair_color_tone_id: str | None = None,
+    hair_color_technique_id: str | None = None,
+    detected_hair_color_tone_id: str | None = None,
+) -> str:
     return build_prompt_assembly(
         mode="hairstyle_only",
         hairstyle=hairstyle,
+        hair_color_selection=hair_color_selection,
+        hair_color_tone_id=hair_color_tone_id,
+        hair_color_technique_id=hair_color_technique_id,
+        detected_hair_color_tone_id=detected_hair_color_tone_id,
     ).render()
 
 
@@ -1622,6 +1843,7 @@ def build_scene_only_prompt(
     scene: dict,
     *,
     styling: dict | None = None,
+    hair_color_selection: dict[str, str] | None = None,
     preferred_gender: str | None = None,
     seed_source: str | None = None,
     expression_override: str | None = None,
@@ -1632,6 +1854,7 @@ def build_scene_only_prompt(
         mode="scene_only",
         scene=scene,
         styling=styling,
+        hair_color_selection=hair_color_selection,
         preferred_gender=preferred_gender,
         seed_source=seed_source,
         expression_override=expression_override,
@@ -1677,6 +1900,9 @@ def build_job_prompt_payload(
     generator_backend: str | None = None,
     aspect_ratio: str | None = None,
     resolution: str | None = None,
+    hair_color_tone_id: str | None = None,
+    hair_color_technique_id: str | None = None,
+    detected_hair_color_tone_id: str | None = None,
     seed_source: str | None = None,
 ) -> str:
     generation_options = normalize_generation_options(
@@ -1692,22 +1918,34 @@ def build_job_prompt_payload(
         scene=scene,
         scene_rule=get_scene_styling_rule(scene["id"]),
     )
+    selected_hair_color = normalize_hair_color_selection(
+        tone_id=hair_color_tone_id,
+        technique_id=hair_color_technique_id,
+        hairstyle=hairstyle,
+        detected_tone_id=detected_hair_color_tone_id,
+    )
     payload = {
-        "version": 2,
+        "version": 3,
         "full_prompt": build_prompt(
             hairstyle,
             scene,
             styling=selected_styling,
+            hair_color_selection=selected_hair_color,
             seed_source=selection_seed,
         ),
-        "hairstyle_only_prompt": build_hairstyle_only_prompt(hairstyle),
+        "hairstyle_only_prompt": build_hairstyle_only_prompt(
+            hairstyle,
+            hair_color_selection=selected_hair_color,
+        ),
         "scene_only_prompt": build_scene_only_prompt(
             scene,
             styling=selected_styling,
+            hair_color_selection=selected_hair_color,
             preferred_gender=hairstyle.get("gender"),
             seed_source=f"scene-only:{selection_seed}",
         ),
         "styling_id": selected_styling["id"],
+        "hair_color_selection": selected_hair_color,
         "output_options": generation_options,
     }
     return json.dumps(payload, ensure_ascii=False)
@@ -1715,6 +1953,14 @@ def build_job_prompt_payload(
 
 def parse_job_prompt_payload(raw_prompt: str) -> dict:
     normalized_options = normalize_generation_options()
+    empty_hair_color_selection = {
+        "tone_id": "",
+        "tone_label": "",
+        "tone_hex": "",
+        "technique_id": "",
+        "technique_label": "",
+        "technique_description": "",
+    }
     if not raw_prompt.strip():
         return {
             "version": 0,
@@ -1722,6 +1968,7 @@ def parse_job_prompt_payload(raw_prompt: str) -> dict:
             "hairstyle_only_prompt": "",
             "scene_only_prompt": "",
             "styling_id": "",
+            "hair_color_selection": empty_hair_color_selection,
             "output_options": normalized_options,
         }
 
@@ -1734,6 +1981,7 @@ def parse_job_prompt_payload(raw_prompt: str) -> dict:
             "hairstyle_only_prompt": "",
             "scene_only_prompt": "",
             "styling_id": "",
+            "hair_color_selection": empty_hair_color_selection,
             "output_options": normalized_options,
         }
 
@@ -1744,6 +1992,7 @@ def parse_job_prompt_payload(raw_prompt: str) -> dict:
             "hairstyle_only_prompt": "",
             "scene_only_prompt": "",
             "styling_id": "",
+            "hair_color_selection": empty_hair_color_selection,
             "output_options": normalized_options,
         }
 
@@ -1772,12 +2021,25 @@ def parse_job_prompt_payload(raw_prompt: str) -> dict:
             ),
             "resolution": capability["default_resolution"] or DEFAULT_RESOLUTION,
         }
+    raw_hair_color_selection = (
+        payload.get("hair_color_selection")
+        if isinstance(payload.get("hair_color_selection"), dict)
+        else {}
+    )
+    if raw_hair_color_selection:
+        hair_color_selection = normalize_hair_color_selection(
+            tone_id=str(raw_hair_color_selection.get("tone_id") or "").strip() or None,
+            technique_id=str(raw_hair_color_selection.get("technique_id") or "").strip() or None,
+        )
+    else:
+        hair_color_selection = empty_hair_color_selection
     return {
         "version": payload.get("version", 1),
         "full_prompt": str(payload.get("full_prompt") or ""),
         "hairstyle_only_prompt": str(payload.get("hairstyle_only_prompt") or ""),
         "scene_only_prompt": str(payload.get("scene_only_prompt") or ""),
         "styling_id": str(payload.get("styling_id") or ""),
+        "hair_color_selection": hair_color_selection,
         "output_options": output_options,
     }
 
