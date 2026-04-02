@@ -88,7 +88,32 @@
     "categoryLabel": "清爽短发",
     "coverImagePath": "template_assets/hairstyles/male-forward-spikes.jpg",
     "coverImageUpdatedAt": "2026-03-27T06:59:24+00:00",
-    "coverImageSource": "template_image_pipeline:review_male.jpg"
+    "coverImageSource": "template_image_pipeline:review_male.jpg",
+    "presetBlocks": {
+      "hair_shape": {
+        "hair_length": "短发",
+        "hair_silhouette": "以前刺头轮廓为主体，两侧铲青、头顶短而向前抓刺，整体干练清爽，适合五官利落的近景头像",
+        "hair_texture": "直发纹理",
+        "hair_volume": "中等偏高，集中在头顶前区；低，侧区紧贴头型",
+        "hair_parting": "前区向前统一梳理、轻微偏中前推",
+        "sideburn_nape": "以前区碎束轻压太阳穴上缘，两侧继续收紧；耳侧和下颌线保持清楚外露，强化利落感",
+        "hair_tail_finish": "发尾收口与整体轮廓保持一致"
+      },
+      "bangs": {
+        "bangs_type": "前区短碎刺状刘海",
+        "bangs_density": "轻薄",
+        "bangs_length": "眉骨到眼周附近",
+        "bangs_split": "自然散开",
+        "bangs_face_framing": "不要在颧弓外侧堆体积，避免横向放大脸宽"
+      },
+      "recommended_hair_color": {
+        "hair_color_tone": "dark_brown",
+        "hair_color_depth": "偏深",
+        "hair_color_temperature": "中性",
+        "hair_color_technique": "solid",
+        "hair_color_distribution": "整体统一染发层次"
+      }
+    }
   },
   {
     "id": "male-french-short-texture",
@@ -129,7 +154,32 @@
     "categoryLabel": "清爽短发",
     "coverImagePath": "template_assets/hairstyles/male-french-short-texture.jpg",
     "coverImageUpdatedAt": "2026-03-27T06:59:25+00:00",
-    "coverImageSource": "template_image_pipeline:review_male.jpg"
+    "coverImageSource": "template_image_pipeline:review_male.jpg",
+    "presetBlocks": {
+      "hair_shape": {
+        "hair_length": "中短到中长发",
+        "hair_silhouette": "以法式短碎发轮廓为主体，顶部打碎打薄、刘海短而不规则，兼顾清爽和自然层次，是高频男生短发款",
+        "hair_texture": "自然纹理",
+        "hair_volume": "自然体积",
+        "hair_parting": "根据头型自然分线",
+        "sideburn_nape": "鬓角和后颈区域保持自然贴合",
+        "hair_tail_finish": "发尾收口与整体轮廓保持一致"
+      },
+      "bangs": {
+        "bangs_type": "无刘海或自然碎刘海",
+        "bangs_density": "不适用",
+        "bangs_length": "不适用",
+        "bangs_split": "不适用",
+        "bangs_face_framing": "脸侧保留自然修饰关系"
+      },
+      "recommended_hair_color": {
+        "hair_color_tone": "dark_brown",
+        "hair_color_depth": "偏深",
+        "hair_color_temperature": "中性",
+        "hair_color_technique": "solid",
+        "hair_color_distribution": "整体统一染发层次"
+      }
+    }
   },
   {
     "id": "male-micro-part-cover",
@@ -171,7 +221,32 @@
     "categoryLabel": "韩系修饰",
     "coverImagePath": "template_assets/hairstyles/male-micro-part-cover.jpg",
     "coverImageUpdatedAt": "2026-03-28T05:46:24+00:00",
-    "coverImageSource": "template_image_pipeline:review_male.jpg"
+    "coverImageSource": "template_image_pipeline:review_male.jpg",
+    "presetBlocks": {
+      "hair_shape": {
+        "hair_length": "中短到中长发",
+        "hair_silhouette": "以微分碎盖轮廓为主体，比普通碎盖更轻、更透，额前只做轻微分线，兼顾少年感和韩系松弛感",
+        "hair_texture": "自然纹理",
+        "hair_volume": "顶部有明显蓬松和空气感",
+        "hair_parting": "中分",
+        "sideburn_nape": "鬓角和后颈区域保持自然贴合",
+        "hair_tail_finish": "发尾收口与整体轮廓保持一致"
+      },
+      "bangs": {
+        "bangs_type": "无刘海或自然碎刘海",
+        "bangs_density": "不适用",
+        "bangs_length": "不适用",
+        "bangs_split": "不适用",
+        "bangs_face_framing": "脸侧保留自然修饰关系"
+      },
+      "recommended_hair_color": {
+        "hair_color_tone": "dark_brown",
+        "hair_color_depth": "偏深",
+        "hair_color_temperature": "中性",
+        "hair_color_technique": "solid",
+        "hair_color_distribution": "整体统一染发层次"
+      }
+    }
   },
   {
     "id": "male-chestnut-head",
@@ -212,7 +287,32 @@
     "categoryLabel": "清爽短发",
     "coverImagePath": "template_assets/hairstyles/male-chestnut-head.jpg",
     "coverImageUpdatedAt": "2026-03-27T06:59:23+00:00",
-    "coverImageSource": "template_image_pipeline:review_male.jpg"
+    "coverImageSource": "template_image_pipeline:review_male.jpg",
+    "presetBlocks": {
+      "hair_shape": {
+        "hair_length": "超短到短发",
+        "hair_silhouette": "以栗子头轮廓为主体，整体服帖、刘海极短平直，少年感强，适合干净、乖巧的生活化人像",
+        "hair_texture": "自然纹理",
+        "hair_volume": "顶部服帖、侧区整齐",
+        "hair_parting": "根据头型自然分线",
+        "sideburn_nape": "鬓角和后颈区域保持自然贴合",
+        "hair_tail_finish": "发尾收口与整体轮廓保持一致"
+      },
+      "bangs": {
+        "bangs_type": "无刘海或自然碎刘海",
+        "bangs_density": "不适用",
+        "bangs_length": "不适用",
+        "bangs_split": "不适用",
+        "bangs_face_framing": "脸侧保留自然修饰关系"
+      },
+      "recommended_hair_color": {
+        "hair_color_tone": "dark_brown",
+        "hair_color_depth": "偏深",
+        "hair_color_temperature": "偏暖",
+        "hair_color_technique": "solid",
+        "hair_color_distribution": "整体统一染发层次"
+      }
+    }
   },
   {
     "id": "male-american-buzz",
@@ -253,7 +353,32 @@
     "categoryLabel": "清爽短发",
     "coverImagePath": "template_assets/hairstyles/male-american-buzz.jpg",
     "coverImageUpdatedAt": "2026-03-27T06:59:23+00:00",
-    "coverImageSource": "template_image_pipeline:review_male.jpg"
+    "coverImageSource": "template_image_pipeline:review_male.jpg",
+    "presetBlocks": {
+      "hair_shape": {
+        "hair_length": "超短到短发",
+        "hair_silhouette": "以美式圆寸轮廓为主体，边缘渐变精致、头顶极短，能直接放大骨相和五官，整体非常利落",
+        "hair_texture": "自然纹理",
+        "hair_volume": "自然体积",
+        "hair_parting": "根据头型自然分线",
+        "sideburn_nape": "鬓角与后颈顺着头型自然处理",
+        "hair_tail_finish": "发尾收口与整体轮廓保持一致"
+      },
+      "bangs": {
+        "bangs_type": "无刘海或自然碎刘海",
+        "bangs_density": "不适用",
+        "bangs_length": "不适用",
+        "bangs_split": "不适用",
+        "bangs_face_framing": "脸侧保留自然修饰关系"
+      },
+      "recommended_hair_color": {
+        "hair_color_tone": "dark_brown",
+        "hair_color_depth": "偏深",
+        "hair_color_temperature": "中性",
+        "hair_color_technique": "solid",
+        "hair_color_distribution": "整体统一染发层次"
+      }
+    }
   },
   {
     "id": "male-flat-short-cut",
@@ -294,7 +419,32 @@
     "categoryLabel": "清爽短发",
     "coverImagePath": "template_assets/hairstyles/male-flat-short-cut.jpg",
     "coverImageUpdatedAt": "2026-03-27T06:59:24+00:00",
-    "coverImageSource": "template_image_pipeline:review_male.jpg"
+    "coverImageSource": "template_image_pipeline:review_male.jpg",
+    "presetBlocks": {
+      "hair_shape": {
+        "hair_length": "超短到短发",
+        "hair_silhouette": "以短平头轮廓为主体，顶部略长、两侧更短，传统利落、不需要打理，适合极简耐看的清爽头像",
+        "hair_texture": "自然纹理",
+        "hair_volume": "自然体积",
+        "hair_parting": "根据头型自然分线",
+        "sideburn_nape": "鬓角和后颈区域保持自然贴合",
+        "hair_tail_finish": "发尾收口与整体轮廓保持一致"
+      },
+      "bangs": {
+        "bangs_type": "无刘海或自然碎刘海",
+        "bangs_density": "不适用",
+        "bangs_length": "不适用",
+        "bangs_split": "不适用",
+        "bangs_face_framing": "脸侧保留自然修饰关系"
+      },
+      "recommended_hair_color": {
+        "hair_color_tone": "dark_brown",
+        "hair_color_depth": "偏深",
+        "hair_color_temperature": "中性",
+        "hair_color_technique": "solid",
+        "hair_color_distribution": "整体统一染发层次"
+      }
+    }
   },
   {
     "id": "male-fade-buzz",
@@ -336,7 +486,32 @@
     "categoryLabel": "清爽短发",
     "coverImagePath": "template_assets/hairstyles/male-fade-buzz.jpg",
     "coverImageUpdatedAt": "2026-03-28T05:46:46+00:00",
-    "coverImageSource": "template_image_pipeline:review_male.jpg"
+    "coverImageSource": "template_image_pipeline:review_male.jpg",
+    "presetBlocks": {
+      "hair_shape": {
+        "hair_length": "超短到短发",
+        "hair_silhouette": "以渐变寸头轮廓为主体，比普通圆寸更强调侧区渐变，整体更硬朗、更现代，适合利落干净的男性近景",
+        "hair_texture": "自然纹理",
+        "hair_volume": "自然体积",
+        "hair_parting": "根据头型自然分线",
+        "sideburn_nape": "鬓角与后颈顺着头型自然处理",
+        "hair_tail_finish": "发尾收口与整体轮廓保持一致"
+      },
+      "bangs": {
+        "bangs_type": "无刘海或自然碎刘海",
+        "bangs_density": "不适用",
+        "bangs_length": "不适用",
+        "bangs_split": "不适用",
+        "bangs_face_framing": "脸侧保留自然修饰关系"
+      },
+      "recommended_hair_color": {
+        "hair_color_tone": "dark_brown",
+        "hair_color_depth": "偏深",
+        "hair_color_temperature": "中性",
+        "hair_color_technique": "solid",
+        "hair_color_distribution": "整体统一染发层次"
+      }
+    }
   },
   {
     "id": "male-korean-37-part",
@@ -428,7 +603,32 @@
     "categoryLabel": "韩系修饰",
     "coverImagePath": "template_assets/hairstyles/male-korean-37-part.jpg",
     "coverImageUpdatedAt": "2026-03-27T06:59:25+00:00",
-    "coverImageSource": "template_image_pipeline:review_male.jpg"
+    "coverImageSource": "template_image_pipeline:review_male.jpg",
+    "presetBlocks": {
+      "hair_shape": {
+        "hair_length": "中短发",
+        "hair_silhouette": "以韩系三七分轮廓为主体，经典三七侧分配爱心弧度，修饰额头和脸型，是韩系男主常见发型之一",
+        "hair_texture": "微弯",
+        "hair_volume": "中等，发根轻撑起但不夸张；中等偏低，脸侧保留柔和包裹",
+        "hair_parting": "三七分、轻偏分",
+        "sideburn_nape": "让较长一侧刘海自然扫过太阳穴和颧骨外缘；下颌线保留一半到三分之二，不要全部包死",
+        "hair_tail_finish": "发尾收口与整体轮廓保持一致"
+      },
+      "bangs": {
+        "bangs_type": "带爱心弧度的侧分刘海",
+        "bangs_density": "自然密度",
+        "bangs_length": "颧骨到脸侧",
+        "bangs_split": "偏分",
+        "bangs_face_framing": "在颧骨上缘保留轻薄包裹层次，避免脸侧过空"
+      },
+      "recommended_hair_color": {
+        "hair_color_tone": "dark_brown",
+        "hair_color_depth": "偏深",
+        "hair_color_temperature": "中性",
+        "hair_color_technique": "solid",
+        "hair_color_distribution": "整体统一染发层次"
+      }
+    }
   },
   {
     "id": "male-middle-micro-part",
@@ -469,7 +669,32 @@
     "categoryLabel": "韩系修饰",
     "coverImagePath": "template_assets/hairstyles/male-middle-micro-part.jpg",
     "coverImageUpdatedAt": "2026-03-27T06:59:26+00:00",
-    "coverImageSource": "template_image_pipeline:review_male.jpg"
+    "coverImageSource": "template_image_pipeline:review_male.jpg",
+    "presetBlocks": {
+      "hair_shape": {
+        "hair_length": "中短到中长发",
+        "hair_silhouette": "以中分微分轮廓为主体，中间微微分开，两侧自然垂落，带学长感、温润感和松弛气质",
+        "hair_texture": "自然纹理",
+        "hair_volume": "顶部有明显蓬松和空气感",
+        "hair_parting": "中分",
+        "sideburn_nape": "鬓角和后颈区域保持自然贴合",
+        "hair_tail_finish": "发尾收口与整体轮廓保持一致"
+      },
+      "bangs": {
+        "bangs_type": "无刘海或自然碎刘海",
+        "bangs_density": "不适用",
+        "bangs_length": "不适用",
+        "bangs_split": "不适用",
+        "bangs_face_framing": "脸侧保留自然修饰关系"
+      },
+      "recommended_hair_color": {
+        "hair_color_tone": "dark_brown",
+        "hair_color_depth": "偏深",
+        "hair_color_temperature": "中性",
+        "hair_color_technique": "solid",
+        "hair_color_distribution": "整体统一染发层次"
+      }
+    }
   },
   {
     "id": "male-vintage-slick-back",
@@ -510,7 +735,32 @@
     "categoryLabel": "造型感",
     "coverImagePath": "template_assets/hairstyles/male-vintage-slick-back.jpg",
     "coverImageUpdatedAt": "2026-03-27T06:59:28+00:00",
-    "coverImageSource": "template_image_pipeline:review_male.jpg"
+    "coverImageSource": "template_image_pipeline:review_male.jpg",
+    "presetBlocks": {
+      "hair_shape": {
+        "hair_length": "中短到中长发",
+        "hair_silhouette": "以港风复古背头轮廓为主体，保留一定长度后全部向后或侧后梳理，成熟稳重且带复古港风气质",
+        "hair_texture": "自然纹理",
+        "hair_volume": "自然体积",
+        "hair_parting": "根据头型自然分线",
+        "sideburn_nape": "鬓角和后颈区域保持自然贴合",
+        "hair_tail_finish": "发尾收口与整体轮廓保持一致"
+      },
+      "bangs": {
+        "bangs_type": "无刘海或自然碎刘海",
+        "bangs_density": "不适用",
+        "bangs_length": "不适用",
+        "bangs_split": "不适用",
+        "bangs_face_framing": "脸侧保留自然修饰关系"
+      },
+      "recommended_hair_color": {
+        "hair_color_tone": "dark_brown",
+        "hair_color_depth": "偏深",
+        "hair_color_temperature": "中性",
+        "hair_color_technique": "solid",
+        "hair_color_distribution": "整体统一染发层次"
+      }
+    }
   },
   {
     "id": "male-side-part-pomade",
@@ -551,7 +801,32 @@
     "categoryLabel": "造型感",
     "coverImagePath": "template_assets/hairstyles/male-side-part-pomade.jpg",
     "coverImageUpdatedAt": "2026-03-27T06:59:27+00:00",
-    "coverImageSource": "template_image_pipeline:review_male.jpg"
+    "coverImageSource": "template_image_pipeline:review_male.jpg",
+    "presetBlocks": {
+      "hair_shape": {
+        "hair_length": "中短到中长发",
+        "hair_silhouette": "以侧分油头轮廓为主体，偏分刻线清楚、发油压实，正式感和商务感非常强，是经典男士正装发型",
+        "hair_texture": "自然纹理",
+        "hair_volume": "顶部服帖、侧区整齐",
+        "hair_parting": "偏分",
+        "sideburn_nape": "鬓角和后颈区域保持自然贴合",
+        "hair_tail_finish": "发尾收口与整体轮廓保持一致"
+      },
+      "bangs": {
+        "bangs_type": "无刘海或自然碎刘海",
+        "bangs_density": "不适用",
+        "bangs_length": "不适用",
+        "bangs_split": "不适用",
+        "bangs_face_framing": "脸侧保留自然修饰关系"
+      },
+      "recommended_hair_color": {
+        "hair_color_tone": "dark_brown",
+        "hair_color_depth": "偏深",
+        "hair_color_temperature": "中性",
+        "hair_color_technique": "solid",
+        "hair_color_distribution": "整体统一染发层次"
+      }
+    }
   },
   {
     "id": "male-texture-perm",
@@ -592,7 +867,32 @@
     "categoryLabel": "纹理烫发",
     "coverImagePath": "template_assets/hairstyles/male-texture-perm.jpg",
     "coverImageUpdatedAt": "2026-03-27T06:59:27+00:00",
-    "coverImageSource": "template_image_pipeline:review_male.jpg"
+    "coverImageSource": "template_image_pipeline:review_male.jpg",
+    "presetBlocks": {
+      "hair_shape": {
+        "hair_length": "中短到中长发",
+        "hair_silhouette": "以纹理烫轮廓为主体，通过柔和弯曲提升发丝走向和层次，属于最容易与日常拍摄兼容的男士烫发之一",
+        "hair_texture": "自然纹理",
+        "hair_volume": "顶部有明显蓬松和空气感",
+        "hair_parting": "根据头型自然分线",
+        "sideburn_nape": "鬓角和后颈区域保持自然贴合",
+        "hair_tail_finish": "发根有适度支撑，发尾自然回落，两侧和后区收短但不过度贴头皮，颜色为黑色或深棕，整体蓬松、干净、自然"
+      },
+      "bangs": {
+        "bangs_type": "无刘海或自然碎刘海",
+        "bangs_density": "不适用",
+        "bangs_length": "不适用",
+        "bangs_split": "不适用",
+        "bangs_face_framing": "脸侧保留自然修饰关系"
+      },
+      "recommended_hair_color": {
+        "hair_color_tone": "dark_brown",
+        "hair_color_depth": "偏深",
+        "hair_color_temperature": "中性",
+        "hair_color_technique": "solid",
+        "hair_color_distribution": "整体统一染发层次"
+      }
+    }
   },
   {
     "id": "male-air-cushion-perm",
@@ -634,7 +934,32 @@
     "categoryLabel": "纹理烫发",
     "coverImagePath": "template_assets/hairstyles/male-air-cushion-perm.jpg",
     "coverImageUpdatedAt": "2026-03-28T05:47:21+00:00",
-    "coverImageSource": "template_image_pipeline:review_male.jpg"
+    "coverImageSource": "template_image_pipeline:review_male.jpg",
+    "presetBlocks": {
+      "hair_shape": {
+        "hair_length": "中短到中长发",
+        "hair_silhouette": "以气垫烫轮廓为主体，重点提升发根支撑和头顶蓬松度，适合需要显发量、修头型的韩系男生模板",
+        "hair_texture": "自然纹理",
+        "hair_volume": "顶部有明显蓬松和空气感",
+        "hair_parting": "根据头型自然分线",
+        "sideburn_nape": "鬓角和后颈区域保持自然贴合",
+        "hair_tail_finish": "发尾收口与整体轮廓保持一致"
+      },
+      "bangs": {
+        "bangs_type": "无刘海或自然碎刘海",
+        "bangs_density": "不适用",
+        "bangs_length": "不适用",
+        "bangs_split": "不适用",
+        "bangs_face_framing": "脸侧保留自然修饰关系"
+      },
+      "recommended_hair_color": {
+        "hair_color_tone": "dark_brown",
+        "hair_color_depth": "偏深",
+        "hair_color_temperature": "中性",
+        "hair_color_technique": "solid",
+        "hair_color_distribution": "整体统一染发层次"
+      }
+    }
   },
   {
     "id": "male-root-lift-perm",
@@ -676,7 +1001,32 @@
     "categoryLabel": "纹理烫发",
     "coverImagePath": "template_assets/hairstyles/male-root-lift-perm.jpg",
     "coverImageUpdatedAt": "2026-03-28T05:47:46+00:00",
-    "coverImageSource": "template_image_pipeline:review_male.jpg"
+    "coverImageSource": "template_image_pipeline:review_male.jpg",
+    "presetBlocks": {
+      "hair_shape": {
+        "hair_length": "中短到中长发",
+        "hair_silhouette": "以定位烫轮廓为主体，以发根支撑和轮廓定型为主，卷感不强，适合做自然显发量的男生日常模板",
+        "hair_texture": "自然纹理",
+        "hair_volume": "顶部有明显蓬松和空气感",
+        "hair_parting": "根据头型自然分线",
+        "sideburn_nape": "鬓角和后颈区域保持自然贴合",
+        "hair_tail_finish": "发型改为定位烫，整体重点放在发根支撑和头顶轮廓定型，顶部与前区建立自然蓬松弧度，但不做明显卷束，发尾保持轻微弯曲后自然回落"
+      },
+      "bangs": {
+        "bangs_type": "无刘海或自然碎刘海",
+        "bangs_density": "不适用",
+        "bangs_length": "不适用",
+        "bangs_split": "不适用",
+        "bangs_face_framing": "脸侧保留自然修饰关系"
+      },
+      "recommended_hair_color": {
+        "hair_color_tone": "dark_brown",
+        "hair_color_depth": "偏深",
+        "hair_color_temperature": "中性",
+        "hair_color_technique": "solid",
+        "hair_color_distribution": "整体统一染发层次"
+      }
+    }
   },
   {
     "id": "male-clip-perm",
@@ -717,7 +1067,32 @@
     "categoryLabel": "纹理烫发",
     "coverImagePath": "template_assets/hairstyles/male-clip-perm.jpg",
     "coverImageUpdatedAt": "2026-03-27T06:59:23+00:00",
-    "coverImageSource": "template_image_pipeline:review_male.jpg"
+    "coverImageSource": "template_image_pipeline:review_male.jpg",
+    "presetBlocks": {
+      "hair_shape": {
+        "hair_length": "中短到中长发",
+        "hair_silhouette": "以钢夹烫轮廓为主体，蓬松纹理比锡纸烫更自然、更日常，适合想要增加层次但不想太炸的男生",
+        "hair_texture": "自然纹理",
+        "hair_volume": "顶部有明显蓬松和空气感",
+        "hair_parting": "根据头型自然分线",
+        "sideburn_nape": "鬓角和后颈区域保持自然贴合",
+        "hair_tail_finish": "发尾收口与整体轮廓保持一致"
+      },
+      "bangs": {
+        "bangs_type": "无刘海或自然碎刘海",
+        "bangs_density": "不适用",
+        "bangs_length": "不适用",
+        "bangs_split": "不适用",
+        "bangs_face_framing": "脸侧保留自然修饰关系"
+      },
+      "recommended_hair_color": {
+        "hair_color_tone": "dark_brown",
+        "hair_color_depth": "偏深",
+        "hair_color_temperature": "中性",
+        "hair_color_technique": "solid",
+        "hair_color_distribution": "整体统一染发层次"
+      }
+    }
   },
   {
     "id": "male-tin-foil-perm",
@@ -758,7 +1133,32 @@
     "categoryLabel": "纹理烫发",
     "coverImagePath": "template_assets/hairstyles/male-tin-foil-perm.jpg",
     "coverImageUpdatedAt": "2026-03-27T06:59:27+00:00",
-    "coverImageSource": "template_image_pipeline:review_male.jpg"
+    "coverImageSource": "template_image_pipeline:review_male.jpg",
+    "presetBlocks": {
+      "hair_shape": {
+        "hair_length": "中短到中长发",
+        "hair_silhouette": "以锡纸烫轮廓为主体，细密条状卷束带来强发量和明显街头感，视觉辨识度很高",
+        "hair_texture": "明显卷度或烫发纹理",
+        "hair_volume": "自然体积",
+        "hair_parting": "根据头型自然分线",
+        "sideburn_nape": "鬓角和后颈区域保持自然贴合",
+        "hair_tail_finish": "发尾收口与整体轮廓保持一致"
+      },
+      "bangs": {
+        "bangs_type": "无刘海或自然碎刘海",
+        "bangs_density": "不适用",
+        "bangs_length": "不适用",
+        "bangs_split": "不适用",
+        "bangs_face_framing": "脸侧保留自然修饰关系"
+      },
+      "recommended_hair_color": {
+        "hair_color_tone": "dark_brown",
+        "hair_color_depth": "偏深",
+        "hair_color_temperature": "中性",
+        "hair_color_technique": "solid",
+        "hair_color_distribution": "整体统一染发层次"
+      }
+    }
   },
   {
     "id": "male-firework-perm",
@@ -799,7 +1199,32 @@
     "categoryLabel": "纹理烫发",
     "coverImagePath": "template_assets/hairstyles/male-firework-perm.jpg",
     "coverImageUpdatedAt": "2026-03-27T06:59:24+00:00",
-    "coverImageSource": "template_image_pipeline:review_male.jpg"
+    "coverImageSource": "template_image_pipeline:review_male.jpg",
+    "presetBlocks": {
+      "hair_shape": {
+        "hair_length": "中短到中长发",
+        "hair_silhouette": "以烟花烫轮廓为主体，卷度极小且高度蓬松，个性非常强，适合态度型、视觉冲击力高的造型画面",
+        "hair_texture": "明显卷度或烫发纹理",
+        "hair_volume": "顶部有明显蓬松和空气感",
+        "hair_parting": "根据头型自然分线",
+        "sideburn_nape": "鬓角和后颈区域保持自然贴合",
+        "hair_tail_finish": "发尾收口与整体轮廓保持一致"
+      },
+      "bangs": {
+        "bangs_type": "无刘海或自然碎刘海",
+        "bangs_density": "不适用",
+        "bangs_length": "不适用",
+        "bangs_split": "不适用",
+        "bangs_face_framing": "脸侧保留自然修饰关系"
+      },
+      "recommended_hair_color": {
+        "hair_color_tone": "dark_brown",
+        "hair_color_depth": "偏深",
+        "hair_color_temperature": "中性",
+        "hair_color_technique": "solid",
+        "hair_color_distribution": "整体统一染发层次"
+      }
+    }
   },
   {
     "id": "male-wool-perm",
@@ -840,7 +1265,32 @@
     "categoryLabel": "纹理烫发",
     "coverImagePath": "template_assets/hairstyles/male-wool-perm.jpg",
     "coverImageUpdatedAt": "2026-03-27T06:59:28+00:00",
-    "coverImageSource": "template_image_pipeline:review_male.jpg"
+    "coverImageSource": "template_image_pipeline:review_male.jpg",
+    "presetBlocks": {
+      "hair_shape": {
+        "hair_length": "中短到中长发",
+        "hair_silhouette": "以男士羊毛卷轮廓为主体，细小卷度布满全头，复古艺术气质明显，适合文艺感或复古时装感画面",
+        "hair_texture": "明显卷度或烫发纹理",
+        "hair_volume": "顶部有明显蓬松和空气感",
+        "hair_parting": "根据头型自然分线",
+        "sideburn_nape": "鬓角和后颈区域保持自然贴合",
+        "hair_tail_finish": "发尾收口与整体轮廓保持一致"
+      },
+      "bangs": {
+        "bangs_type": "无刘海或自然碎刘海",
+        "bangs_density": "不适用",
+        "bangs_length": "不适用",
+        "bangs_split": "不适用",
+        "bangs_face_framing": "脸侧保留自然修饰关系"
+      },
+      "recommended_hair_color": {
+        "hair_color_tone": "dark_brown",
+        "hair_color_depth": "偏深",
+        "hair_color_temperature": "中性",
+        "hair_color_technique": "solid",
+        "hair_color_distribution": "整体统一染发层次"
+      }
+    }
   },
   {
     "id": "male-french-lazy-perm",
@@ -882,7 +1332,32 @@
     "categoryLabel": "纹理烫发",
     "coverImagePath": "template_assets/hairstyles/male-french-lazy-perm.jpg",
     "coverImageUpdatedAt": "2026-03-28T05:48:10+00:00",
-    "coverImageSource": "template_image_pipeline:review_male.jpg"
+    "coverImageSource": "template_image_pipeline:review_male.jpg",
+    "presetBlocks": {
+      "hair_shape": {
+        "hair_length": "中短到中长发",
+        "hair_silhouette": "以法式慵懒卷轮廓为主体，卷度自然松散、没有太强造型痕迹，适合偏文艺、松弛、轻法式的男生人像",
+        "hair_texture": "轻微弯曲纹理",
+        "hair_volume": "自然体积",
+        "hair_parting": "根据头型自然分线",
+        "sideburn_nape": "鬓角和后颈区域保持自然贴合",
+        "hair_tail_finish": "发尾收口与整体轮廓保持一致"
+      },
+      "bangs": {
+        "bangs_type": "无刘海或自然碎刘海",
+        "bangs_density": "不适用",
+        "bangs_length": "不适用",
+        "bangs_split": "不适用",
+        "bangs_face_framing": "脸侧保留自然修饰关系"
+      },
+      "recommended_hair_color": {
+        "hair_color_tone": "dark_brown",
+        "hair_color_depth": "偏深",
+        "hair_color_temperature": "中性",
+        "hair_color_technique": "solid",
+        "hair_color_distribution": "整体统一染发层次"
+      }
+    }
   },
   {
     "id": "male-mullet",
@@ -923,7 +1398,32 @@
     "categoryLabel": "造型感",
     "coverImagePath": "template_assets/hairstyles/male-mullet.jpg",
     "coverImageUpdatedAt": "2026-03-27T06:59:26+00:00",
-    "coverImageSource": "template_image_pipeline:review_male.jpg"
+    "coverImageSource": "template_image_pipeline:review_male.jpg",
+    "presetBlocks": {
+      "hair_shape": {
+        "hair_length": "中短到中长发",
+        "hair_silhouette": "以鲻鱼头轮廓为主体，前短后长、两侧贴头皮，后脑留长到脖颈，辨识度很强，带摇滚和时装感",
+        "hair_texture": "自然纹理",
+        "hair_volume": "自然体积",
+        "hair_parting": "根据头型自然分线",
+        "sideburn_nape": "鬓角与后颈顺着头型自然处理",
+        "hair_tail_finish": "发尾收口与整体轮廓保持一致"
+      },
+      "bangs": {
+        "bangs_type": "无刘海或自然碎刘海",
+        "bangs_density": "不适用",
+        "bangs_length": "不适用",
+        "bangs_split": "不适用",
+        "bangs_face_framing": "脸侧保留自然修饰关系"
+      },
+      "recommended_hair_color": {
+        "hair_color_tone": "dark_brown",
+        "hair_color_depth": "偏深",
+        "hair_color_temperature": "中性",
+        "hair_color_technique": "solid",
+        "hair_color_distribution": "整体统一染发层次"
+      }
+    }
   },
   {
     "id": "male-wolf-tail",
@@ -964,7 +1464,32 @@
     "categoryLabel": "造型感",
     "coverImagePath": "template_assets/hairstyles/male-wolf-tail.jpg",
     "coverImageUpdatedAt": "2026-03-27T06:59:28+00:00",
-    "coverImageSource": "template_image_pipeline:review_male.jpg"
+    "coverImageSource": "template_image_pipeline:review_male.jpg",
+    "presetBlocks": {
+      "hair_shape": {
+        "hair_length": "中短到中长发",
+        "hair_silhouette": "以狼尾发型轮廓为主体，和鲻鱼头相近但层次更高、后区更碎，整体更野、更有空气感",
+        "hair_texture": "自然纹理",
+        "hair_volume": "顶部有明显蓬松和空气感",
+        "hair_parting": "根据头型自然分线",
+        "sideburn_nape": "鬓角和后颈区域保持自然贴合",
+        "hair_tail_finish": "后区要碎并有轻尾感"
+      },
+      "bangs": {
+        "bangs_type": "无刘海或自然碎刘海",
+        "bangs_density": "不适用",
+        "bangs_length": "不适用",
+        "bangs_split": "不适用",
+        "bangs_face_framing": "脸侧保留自然修饰关系"
+      },
+      "recommended_hair_color": {
+        "hair_color_tone": "dark_brown",
+        "hair_color_depth": "偏深",
+        "hair_color_temperature": "中性",
+        "hair_color_technique": "solid",
+        "hair_color_distribution": "整体统一染发层次"
+      }
+    }
   },
   {
     "id": "male-japanese-wavy-long",
@@ -1005,7 +1530,32 @@
     "categoryLabel": "造型感",
     "coverImagePath": "template_assets/hairstyles/male-japanese-wavy-long.jpg",
     "coverImageUpdatedAt": "2026-03-27T06:59:25+00:00",
-    "coverImageSource": "template_image_pipeline:review_male.jpg"
+    "coverImageSource": "template_image_pipeline:review_male.jpg",
+    "presetBlocks": {
+      "hair_shape": {
+        "hair_length": "肩部长度",
+        "hair_silhouette": "以日系微卷长发轮廓为主体，长度及耳或及肩，配微卷弧度和松弛感，带日系颓废美和艺术气质",
+        "hair_texture": "轻微弯曲纹理",
+        "hair_volume": "自然体积",
+        "hair_parting": "根据头型自然分线",
+        "sideburn_nape": "鬓角和后颈区域保持自然贴合",
+        "hair_tail_finish": "发尾收口与整体轮廓保持一致"
+      },
+      "bangs": {
+        "bangs_type": "无刘海或自然碎刘海",
+        "bangs_density": "不适用",
+        "bangs_length": "不适用",
+        "bangs_split": "不适用",
+        "bangs_face_framing": "脸侧保留自然修饰关系"
+      },
+      "recommended_hair_color": {
+        "hair_color_tone": "dark_brown",
+        "hair_color_depth": "偏深",
+        "hair_color_temperature": "中性",
+        "hair_color_technique": "solid",
+        "hair_color_distribution": "整体统一染发层次"
+      }
+    }
   },
   {
     "id": "male-samurai-half-bun",
@@ -1046,6 +1596,31 @@
     "categoryLabel": "造型感",
     "coverImagePath": "template_assets/hairstyles/male-samurai-half-bun.jpg",
     "coverImageUpdatedAt": "2026-03-27T06:59:27+00:00",
-    "coverImageSource": "template_image_pipeline:review_male.jpg"
+    "coverImageSource": "template_image_pipeline:review_male.jpg",
+    "presetBlocks": {
+      "hair_shape": {
+        "hair_length": "中短到中长发",
+        "hair_silhouette": "以武士半扎发轮廓为主体，侧边和后脑下部剃短，头顶长发向后半扎，兼具结构感、个性和成熟度",
+        "hair_texture": "自然纹理",
+        "hair_volume": "自然体积",
+        "hair_parting": "根据头型自然分线",
+        "sideburn_nape": "鬓角和后颈区域保持自然贴合",
+        "hair_tail_finish": "发尾收口与整体轮廓保持一致"
+      },
+      "bangs": {
+        "bangs_type": "无刘海或自然碎刘海",
+        "bangs_density": "不适用",
+        "bangs_length": "不适用",
+        "bangs_split": "不适用",
+        "bangs_face_framing": "脸侧保留自然修饰关系"
+      },
+      "recommended_hair_color": {
+        "hair_color_tone": "dark_brown",
+        "hair_color_depth": "偏深",
+        "hair_color_temperature": "中性",
+        "hair_color_technique": "solid",
+        "hair_color_distribution": "整体统一染发层次"
+      }
+    }
   }
 ]

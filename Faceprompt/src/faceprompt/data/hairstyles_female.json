@@ -88,7 +88,32 @@
     "categoryLabel": "短发利落",
     "coverImagePath": "template_assets/hairstyles/female-blunt-bob.jpg",
     "coverImageUpdatedAt": "2026-03-27T06:59:16+00:00",
-    "coverImageSource": "template_image_pipeline:review_female.jpg"
+    "coverImageSource": "template_image_pipeline:review_female.jpg",
+    "presetBlocks": {
+      "hair_shape": {
+        "hair_length": "下巴到颈部短 bob",
+        "hair_silhouette": "以一刀切波波头轮廓为主体，长度齐颈或齐下巴、发尾零层次平齐，线条利落，适合清冷飒爽的高级感人像",
+        "hair_texture": "直发",
+        "hair_volume": "低到中等，顶部服帖；中等且整齐，依靠平齐重量线成形",
+        "hair_parting": "中分、利落偏分",
+        "sideburn_nape": "耳前线条贴合太阳穴，保持平整切线；下颌线大面积露出，让切线和骨相一起成立",
+        "hair_tail_finish": "发尾必须平齐没有明显层次"
+      },
+      "bangs": {
+        "bangs_type": "无刘海或极窄侧分刘海",
+        "bangs_density": "不适用",
+        "bangs_length": "不适用",
+        "bangs_split": "不适用",
+        "bangs_face_framing": "尽量不加脸侧碎层，只用整齐切线塑造轮廓"
+      },
+      "recommended_hair_color": {
+        "hair_color_tone": "dark_brown",
+        "hair_color_depth": "偏深",
+        "hair_color_temperature": "偏冷",
+        "hair_color_technique": "solid",
+        "hair_color_distribution": "整体统一染发层次"
+      }
+    }
   },
   {
     "id": "female-inward-bob",
@@ -130,7 +155,32 @@
     "categoryLabel": "短发利落",
     "coverImagePath": "template_assets/hairstyles/female-inward-bob.jpg",
     "coverImageUpdatedAt": "2026-03-28T05:48:41+00:00",
-    "coverImageSource": "template_image_pipeline:review_female.jpg"
+    "coverImageSource": "template_image_pipeline:review_female.jpg",
+    "presetBlocks": {
+      "hair_shape": {
+        "hair_length": "下巴到颈部短发",
+        "hair_silhouette": "以内扣波波头轮廓为主体，比一刀切更柔和，发尾向内包裹下颌，适合通用型女生短发模板",
+        "hair_texture": "顺直纹理",
+        "hair_volume": "顶部服帖、侧区整齐",
+        "hair_parting": "中分",
+        "sideburn_nape": "鬓角和后颈区域保持自然贴合",
+        "hair_tail_finish": "发尾必须有明确内扣弧度"
+      },
+      "bangs": {
+        "bangs_type": "无刘海或自然碎刘海",
+        "bangs_density": "不适用",
+        "bangs_length": "不适用",
+        "bangs_split": "不适用",
+        "bangs_face_framing": "脸侧保留自然修饰关系"
+      },
+      "recommended_hair_color": {
+        "hair_color_tone": "dark_brown",
+        "hair_color_depth": "偏深",
+        "hair_color_temperature": "中性",
+        "hair_color_technique": "solid",
+        "hair_color_distribution": "整体统一染发层次"
+      }
+    }
   },
   {
     "id": "female-chin-length-bob",
@@ -172,7 +222,32 @@
     "categoryLabel": "短发利落",
     "coverImagePath": "template_assets/hairstyles/female-chin-length-bob.jpg",
     "coverImageUpdatedAt": "2026-03-28T05:49:08+00:00",
-    "coverImageSource": "template_image_pipeline:review_female.jpg"
+    "coverImageSource": "template_image_pipeline:review_female.jpg",
+    "presetBlocks": {
+      "hair_shape": {
+        "hair_length": "下巴到颈部短发",
+        "hair_silhouette": "以齐脸短发轮廓为主体，长度落在下巴附近，轻盈干净，比波波头更日常，比锁骨发更有短发存在感",
+        "hair_texture": "自然纹理",
+        "hair_volume": "顶部服帖、侧区整齐",
+        "hair_parting": "中分",
+        "sideburn_nape": "鬓角和后颈区域保持自然贴合",
+        "hair_tail_finish": "发型改为齐脸短发，整体长度稳定在下巴附近，顶部自然服帖，脸侧发丝顺着面部轮廓轻轻贴落，发尾保持轻微层次和自然收口，不做厚重切线"
+      },
+      "bangs": {
+        "bangs_type": "无刘海或自然碎刘海",
+        "bangs_density": "不适用",
+        "bangs_length": "不适用",
+        "bangs_split": "不适用",
+        "bangs_face_framing": "脸侧保留自然修饰关系"
+      },
+      "recommended_hair_color": {
+        "hair_color_tone": "dark_brown",
+        "hair_color_depth": "偏深",
+        "hair_color_temperature": "中性",
+        "hair_color_technique": "solid",
+        "hair_color_distribution": "整体统一染发层次"
+      }
+    }
   },
   {
     "id": "female-ear-tucked-first-love",
@@ -213,7 +288,32 @@
     "categoryLabel": "短发利落",
     "coverImagePath": "template_assets/hairstyles/female-ear-tucked-first-love.jpg",
     "coverImageUpdatedAt": "2026-03-27T06:59:17+00:00",
-    "coverImageSource": "template_image_pipeline:review_female.jpg"
+    "coverImageSource": "template_image_pipeline:review_female.jpg",
+    "presetBlocks": {
+      "hair_shape": {
+        "hair_length": "下巴到颈部短发",
+        "hair_silhouette": "以挂耳初恋短发轮廓为主体，后脑饱满、两侧轻薄可挂耳，青春学生气息强，适合清爽自然的近景头像",
+        "hair_texture": "自然纹理",
+        "hair_volume": "自然体积",
+        "hair_parting": "根据头型自然分线",
+        "sideburn_nape": "鬓角与后颈顺着头型自然处理",
+        "hair_tail_finish": "发尾收口与整体轮廓保持一致"
+      },
+      "bangs": {
+        "bangs_type": "无刘海或自然碎刘海",
+        "bangs_density": "不适用",
+        "bangs_length": "不适用",
+        "bangs_split": "不适用",
+        "bangs_face_framing": "脸侧保留自然修饰关系"
+      },
+      "recommended_hair_color": {
+        "hair_color_tone": "dark_brown",
+        "hair_color_depth": "偏深",
+        "hair_color_temperature": "中性",
+        "hair_color_technique": "solid",
+        "hair_color_distribution": "整体统一染发层次"
+      }
+    }
   },
   {
     "id": "female-japanese-apple-head",
@@ -254,7 +354,32 @@
     "categoryLabel": "短发利落",
     "coverImagePath": "template_assets/hairstyles/female-japanese-apple-head.jpg",
     "coverImageUpdatedAt": "2026-03-27T06:59:19+00:00",
-    "coverImageSource": "template_image_pipeline:review_female.jpg"
+    "coverImageSource": "template_image_pipeline:review_female.jpg",
+    "presetBlocks": {
+      "hair_shape": {
+        "hair_length": "下巴到颈部短发",
+        "hair_silhouette": "以日系苹果头轮廓为主体，整体轮廓圆润、层次低、发尾微内扣，甜美可爱且非常减龄",
+        "hair_texture": "轻微弯曲纹理",
+        "hair_volume": "自然体积",
+        "hair_parting": "根据头型自然分线",
+        "sideburn_nape": "鬓角和后颈区域保持自然贴合",
+        "hair_tail_finish": "发尾只能轻微内扣"
+      },
+      "bangs": {
+        "bangs_type": "无刘海或自然碎刘海",
+        "bangs_density": "不适用",
+        "bangs_length": "不适用",
+        "bangs_split": "不适用",
+        "bangs_face_framing": "脸侧保留自然修饰关系"
+      },
+      "recommended_hair_color": {
+        "hair_color_tone": "dark_brown",
+        "hair_color_depth": "偏深",
+        "hair_color_temperature": "中性",
+        "hair_color_technique": "solid",
+        "hair_color_distribution": "整体统一染发层次"
+      }
+    }
   },
   {
     "id": "female-french-undercut-short",
@@ -295,7 +420,32 @@
     "categoryLabel": "短发利落",
     "coverImagePath": "template_assets/hairstyles/female-french-undercut-short.jpg",
     "coverImageUpdatedAt": "2026-03-27T06:59:19+00:00",
-    "coverImageSource": "template_image_pipeline:review_female.jpg"
+    "coverImageSource": "template_image_pipeline:review_female.jpg",
+    "presetBlocks": {
+      "hair_shape": {
+        "hair_length": "中短到中长发",
+        "hair_silhouette": "以法式推边短发轮廓为主体，后颈推高、顶部保留长度和卷度，兼具中性帅气与法式优雅",
+        "hair_texture": "自然纹理",
+        "hair_volume": "顶部有明显蓬松和空气感",
+        "hair_parting": "根据头型自然分线",
+        "sideburn_nape": "鬓角与后颈顺着头型自然处理",
+        "hair_tail_finish": "发尾收口与整体轮廓保持一致"
+      },
+      "bangs": {
+        "bangs_type": "无刘海或自然碎刘海",
+        "bangs_density": "不适用",
+        "bangs_length": "不适用",
+        "bangs_split": "不适用",
+        "bangs_face_framing": "脸侧保留自然修饰关系"
+      },
+      "recommended_hair_color": {
+        "hair_color_tone": "dark_brown",
+        "hair_color_depth": "偏深",
+        "hair_color_temperature": "中性",
+        "hair_color_technique": "solid",
+        "hair_color_distribution": "整体统一染发层次"
+      }
+    }
   },
   {
     "id": "female-boyish-super-short",
@@ -336,7 +486,32 @@
     "categoryLabel": "短发利落",
     "coverImagePath": "template_assets/hairstyles/female-boyish-super-short.jpg",
     "coverImageUpdatedAt": "2026-03-27T06:59:17+00:00",
-    "coverImageSource": "template_image_pipeline:review_female.jpg"
+    "coverImageSource": "template_image_pipeline:review_female.jpg",
+    "presetBlocks": {
+      "hair_shape": {
+        "hair_length": "下巴到颈部短发",
+        "hair_silhouette": "以少年感超短发轮廓为主体，露耳露颈、顶部微蓬，能最大程度突出骨相和五官，整体飒爽又轻盈",
+        "hair_texture": "自然纹理",
+        "hair_volume": "顶部有明显蓬松和空气感",
+        "hair_parting": "根据头型自然分线",
+        "sideburn_nape": "鬓角与后颈顺着头型自然处理",
+        "hair_tail_finish": "发尾收口与整体轮廓保持一致"
+      },
+      "bangs": {
+        "bangs_type": "无刘海或自然碎刘海",
+        "bangs_density": "不适用",
+        "bangs_length": "不适用",
+        "bangs_split": "不适用",
+        "bangs_face_framing": "脸侧保留自然修饰关系"
+      },
+      "recommended_hair_color": {
+        "hair_color_tone": "dark_brown",
+        "hair_color_depth": "偏深",
+        "hair_color_temperature": "中性",
+        "hair_color_technique": "solid",
+        "hair_color_distribution": "整体统一染发层次"
+      }
+    }
   },
   {
     "id": "female-audrey-short",
@@ -378,7 +553,32 @@
     "categoryLabel": "短发利落",
     "coverImagePath": "template_assets/hairstyles/female-audrey-short.jpg",
     "coverImageUpdatedAt": "2026-03-28T05:49:27+00:00",
-    "coverImageSource": "template_image_pipeline:review_female.jpg"
+    "coverImageSource": "template_image_pipeline:review_female.jpg",
+    "presetBlocks": {
+      "hair_shape": {
+        "hair_length": "超短到短发",
+        "hair_silhouette": "以赫本短发轮廓为主体，带明显复古气质的精致短发，强调颈线、耳部和五官骨相，适合高级感短发模板",
+        "hair_texture": "自然纹理",
+        "hair_volume": "自然体积",
+        "hair_parting": "露额或自然后梳",
+        "sideburn_nape": "鬓角和后颈区域保持自然贴合",
+        "hair_tail_finish": "发型改为赫本短发，整体长度控制在耳上到耳下附近，顶部带圆润精致的体积，侧区和后区顺着头型收紧，发尾极短且整洁，额前可有非常轻的短刘海或干净露额处理"
+      },
+      "bangs": {
+        "bangs_type": "无刘海或自然碎刘海",
+        "bangs_density": "不适用",
+        "bangs_length": "不适用",
+        "bangs_split": "不适用",
+        "bangs_face_framing": "脸侧保留自然修饰关系"
+      },
+      "recommended_hair_color": {
+        "hair_color_tone": "dark_brown",
+        "hair_color_depth": "偏深",
+        "hair_color_temperature": "中性",
+        "hair_color_technique": "solid",
+        "hair_color_distribution": "整体统一染发层次"
+      }
+    }
   },
   {
     "id": "female-classic-collarbone",
@@ -420,7 +620,32 @@
     "categoryLabel": "层次中长发",
     "coverImagePath": "template_assets/hairstyles/female-classic-collarbone.jpg",
     "coverImageUpdatedAt": "2026-03-28T05:49:49+00:00",
-    "coverImageSource": "template_image_pipeline:review_female.jpg"
+    "coverImageSource": "template_image_pipeline:review_female.jpg",
+    "presetBlocks": {
+      "hair_shape": {
+        "hair_length": "锁骨到胸前长度",
+        "hair_silhouette": "以锁骨发轮廓为主体，最通用的女生中短发长度，稳定、耐看、好出片，适合作为基础模板发型",
+        "hair_texture": "自然纹理",
+        "hair_volume": "顶部服帖、侧区整齐",
+        "hair_parting": "根据头型自然分线",
+        "sideburn_nape": "鬓角和后颈区域保持自然贴合",
+        "hair_tail_finish": "发型改为锁骨发，整体长度稳定落在锁骨附近，顶部自然服帖，脸侧和发尾保留轻微层次但不过分打薄，整体轮廓干净顺直，发尾自然下落或带极轻微内收"
+      },
+      "bangs": {
+        "bangs_type": "无刘海或自然碎刘海",
+        "bangs_density": "不适用",
+        "bangs_length": "不适用",
+        "bangs_split": "不适用",
+        "bangs_face_framing": "脸侧保留自然修饰关系"
+      },
+      "recommended_hair_color": {
+        "hair_color_tone": "dark_brown",
+        "hair_color_depth": "偏深",
+        "hair_color_temperature": "中性",
+        "hair_color_technique": "solid",
+        "hair_color_distribution": "整体统一染发层次"
+      }
+    }
   },
   {
     "id": "female-collarbone-xinzhilei",
@@ -512,7 +737,32 @@
     "categoryLabel": "层次中长发",
     "coverImagePath": "template_assets/hairstyles/female-collarbone-xinzhilei.jpg",
     "coverImageUpdatedAt": "2026-03-27T06:59:17+00:00",
-    "coverImageSource": "template_image_pipeline:review_female.jpg"
+    "coverImageSource": "template_image_pipeline:review_female.jpg",
+    "presetBlocks": {
+      "hair_shape": {
+        "hair_length": "锁骨发",
+        "hair_silhouette": "以辛芷蕾锁骨发轮廓为主体，长度落在锁骨，两侧高层次包脸，是目前国内理发店高频需求的修饰脸型代表款",
+        "hair_texture": "自然微弯",
+        "hair_volume": "中等，顶部自然服帖；中等，脸侧层次清楚但不过度膨胀",
+        "hair_parting": "中分、轻偏分",
+        "sideburn_nape": "脸侧高层次从颧骨上缘开始落下，柔化太阳穴空缺；下颌线保留若隐若现的边界，不要完全遮挡",
+        "hair_tail_finish": "不能做成普通齐发尾锁骨发"
+      },
+      "bangs": {
+        "bangs_type": "长脸侧羽毛层次",
+        "bangs_density": "轻薄",
+        "bangs_length": "颧骨到脸侧",
+        "bangs_split": "中缝或自然散开",
+        "bangs_face_framing": "把高层次集中在颧骨到下颌区间，形成轻包脸"
+      },
+      "recommended_hair_color": {
+        "hair_color_tone": "dark_brown",
+        "hair_color_depth": "偏深",
+        "hair_color_temperature": "中性",
+        "hair_color_technique": "solid",
+        "hair_color_distribution": "整体统一染发层次"
+      }
+    }
   },
   {
     "id": "female-high-layer-collarbone",
@@ -554,7 +804,32 @@
     "categoryLabel": "层次中长发",
     "coverImagePath": "template_assets/hairstyles/female-high-layer-collarbone.jpg",
     "coverImageUpdatedAt": "2026-03-28T05:50:12+00:00",
-    "coverImageSource": "template_image_pipeline:review_female.jpg"
+    "coverImageSource": "template_image_pipeline:review_female.jpg",
+    "presetBlocks": {
+      "hair_shape": {
+        "hair_length": "锁骨到胸前长度",
+        "hair_silhouette": "以高层次锁骨发轮廓为主体，在锁骨长度基础上增加明显层次落差，更轻、更灵动，也更强调修脸效果",
+        "hair_texture": "自然纹理",
+        "hair_volume": "自然体积",
+        "hair_parting": "中分",
+        "sideburn_nape": "鬓角和后颈区域保持自然贴合",
+        "hair_tail_finish": "发尾要轻薄通透，不能厚重齐整"
+      },
+      "bangs": {
+        "bangs_type": "无刘海或自然碎刘海",
+        "bangs_density": "不适用",
+        "bangs_length": "不适用",
+        "bangs_split": "不适用",
+        "bangs_face_framing": "脸侧保留自然修饰关系"
+      },
+      "recommended_hair_color": {
+        "hair_color_tone": "dark_brown",
+        "hair_color_depth": "偏深",
+        "hair_color_temperature": "中性",
+        "hair_color_technique": "solid",
+        "hair_color_distribution": "整体统一染发层次"
+      }
+    }
   },
   {
     "id": "female-soft-wave-collarbone",
@@ -596,7 +871,32 @@
     "categoryLabel": "层次中长发",
     "coverImagePath": "template_assets/hairstyles/female-soft-wave-collarbone.jpg",
     "coverImageUpdatedAt": "2026-03-28T05:50:48+00:00",
-    "coverImageSource": "template_image_pipeline:review_female.jpg"
+    "coverImageSource": "template_image_pipeline:review_female.jpg",
+    "presetBlocks": {
+      "hair_shape": {
+        "hair_length": "锁骨到胸前长度",
+        "hair_silhouette": "以微卷锁骨发轮廓为主体，锁骨长度加轻微自然卷度，适合生活感、松弛感和通勤感兼顾的女生日常模板",
+        "hair_texture": "轻微弯曲纹理",
+        "hair_volume": "顶部服帖、侧区整齐",
+        "hair_parting": "根据头型自然分线",
+        "sideburn_nape": "鬓角和后颈区域保持自然贴合",
+        "hair_tail_finish": "发型改为微卷锁骨发，整体长度稳定在锁骨附近，顶部自然服帖，脸侧到发尾带轻微柔和弯曲，不做明显规则卷束，发尾有自然弹性和呼吸感"
+      },
+      "bangs": {
+        "bangs_type": "无刘海或自然碎刘海",
+        "bangs_density": "不适用",
+        "bangs_length": "不适用",
+        "bangs_split": "不适用",
+        "bangs_face_framing": "脸侧保留自然修饰关系"
+      },
+      "recommended_hair_color": {
+        "hair_color_tone": "ash_brown",
+        "hair_color_depth": "中等",
+        "hair_color_temperature": "偏冷",
+        "hair_color_technique": "solid",
+        "hair_color_distribution": "整体统一染发层次"
+      }
+    }
   },
   {
     "id": "female-shoulder-length-cut",
@@ -638,7 +938,32 @@
     "categoryLabel": "层次中长发",
     "coverImagePath": "template_assets/hairstyles/female-shoulder-length-cut.jpg",
     "coverImageUpdatedAt": "2026-03-28T05:51:15+00:00",
-    "coverImageSource": "template_image_pipeline:review_female.jpg"
+    "coverImageSource": "template_image_pipeline:review_female.jpg",
+    "presetBlocks": {
+      "hair_shape": {
+        "hair_length": "肩部长度",
+        "hair_silhouette": "以齐肩发轮廓为主体，长度稳定在肩部附近，比锁骨发更短更利落，是非常稳妥的中短发基础款",
+        "hair_texture": "顺直纹理",
+        "hair_volume": "顶部服帖、侧区整齐",
+        "hair_parting": "根据头型自然分线",
+        "sideburn_nape": "鬓角和后颈区域保持自然贴合",
+        "hair_tail_finish": "发型改为齐肩发，整体长度稳定在肩部上下附近，顶部顺滑自然，脸侧轮廓干净，发尾整洁下落并在肩部附近形成清楚长度边界，可带极轻微内弯或自然直落"
+      },
+      "bangs": {
+        "bangs_type": "无刘海或自然碎刘海",
+        "bangs_density": "不适用",
+        "bangs_length": "不适用",
+        "bangs_split": "不适用",
+        "bangs_face_framing": "脸侧保留自然修饰关系"
+      },
+      "recommended_hair_color": {
+        "hair_color_tone": "dark_brown",
+        "hair_color_depth": "偏深",
+        "hair_color_temperature": "中性",
+        "hair_color_technique": "solid",
+        "hair_color_distribution": "整体统一染发层次"
+      }
+    }
   },
   {
     "id": "female-high-layer-midlong",
@@ -679,7 +1004,32 @@
     "categoryLabel": "层次中长发",
     "coverImagePath": "template_assets/hairstyles/female-high-layer-midlong.jpg",
     "coverImageUpdatedAt": "2026-03-27T06:59:19+00:00",
-    "coverImageSource": "template_image_pipeline:review_female.jpg"
+    "coverImageSource": "template_image_pipeline:review_female.jpg",
+    "presetBlocks": {
+      "hair_shape": {
+        "hair_length": "中短到中长发",
+        "hair_silhouette": "以高层次中长发轮廓为主体，上下落差大、上半部蓬松、下半部轻薄，整体动感很强，特别适合时装感和风感画面",
+        "hair_texture": "自然纹理",
+        "hair_volume": "顶部有明显蓬松和空气感",
+        "hair_parting": "根据头型自然分线",
+        "sideburn_nape": "鬓角和后颈区域保持自然贴合",
+        "hair_tail_finish": "发型改为高层次中长发，顶部和上半部做明显高层次，形成较强蓬松体积，底部长度保留到锁骨下或胸线附近，但发尾被打薄得更轻、更碎，整体上下落差清楚"
+      },
+      "bangs": {
+        "bangs_type": "无刘海或自然碎刘海",
+        "bangs_density": "不适用",
+        "bangs_length": "不适用",
+        "bangs_split": "不适用",
+        "bangs_face_framing": "脸侧保留自然修饰关系"
+      },
+      "recommended_hair_color": {
+        "hair_color_tone": "dark_brown",
+        "hair_color_depth": "偏深",
+        "hair_color_temperature": "中性",
+        "hair_color_technique": "solid",
+        "hair_color_distribution": "整体统一染发层次"
+      }
+    }
   },
   {
     "id": "female-edge-layer-cut",
@@ -720,7 +1070,32 @@
     "categoryLabel": "层次中长发",
     "coverImagePath": "template_assets/hairstyles/female-edge-layer-cut.jpg",
     "coverImageUpdatedAt": "2026-03-27T06:59:18+00:00",
-    "coverImageSource": "template_image_pipeline:review_female.jpg"
+    "coverImageSource": "template_image_pipeline:review_female.jpg",
+    "presetBlocks": {
+      "hair_shape": {
+        "hair_length": "中短到中长发",
+        "hair_silhouette": "以边缘层次剪轮廓为主体，在脸部周围和发尾做羽毛状打薄，让直发更轻、更有呼吸感",
+        "hair_texture": "顺直纹理",
+        "hair_volume": "自然体积",
+        "hair_parting": "根据头型自然分线",
+        "sideburn_nape": "鬓角和后颈区域保持自然贴合",
+        "hair_tail_finish": "层次必须集中在脸侧和发尾边缘"
+      },
+      "bangs": {
+        "bangs_type": "无刘海或自然碎刘海",
+        "bangs_density": "不适用",
+        "bangs_length": "不适用",
+        "bangs_split": "不适用",
+        "bangs_face_framing": "脸侧保留自然修饰关系"
+      },
+      "recommended_hair_color": {
+        "hair_color_tone": "dark_brown",
+        "hair_color_depth": "偏深",
+        "hair_color_temperature": "中性",
+        "hair_color_technique": "solid",
+        "hair_color_distribution": "整体统一染发层次"
+      }
+    }
   },
   {
     "id": "female-japanese-feather-cut",
@@ -761,7 +1136,32 @@
     "categoryLabel": "层次中长发",
     "coverImagePath": "template_assets/hairstyles/female-japanese-feather-cut.jpg",
     "coverImageUpdatedAt": "2026-03-27T06:59:20+00:00",
-    "coverImageSource": "template_image_pipeline:review_female.jpg"
+    "coverImageSource": "template_image_pipeline:review_female.jpg",
+    "presetBlocks": {
+      "hair_shape": {
+        "hair_length": "中短到中长发",
+        "hair_silhouette": "以日系羽毛剪轮廓为主体，发尾像羽毛一样轻盈飘逸，能化解厚重发量，整体非常柔和耐看",
+        "hair_texture": "顺直纹理",
+        "hair_volume": "顶部服帖、侧区整齐",
+        "hair_parting": "根据头型自然分线",
+        "sideburn_nape": "鬓角和后颈区域保持自然贴合",
+        "hair_tail_finish": "发尾必须呈现羽毛般轻薄层次"
+      },
+      "bangs": {
+        "bangs_type": "无刘海或自然碎刘海",
+        "bangs_density": "不适用",
+        "bangs_length": "不适用",
+        "bangs_split": "不适用",
+        "bangs_face_framing": "脸侧保留自然修饰关系"
+      },
+      "recommended_hair_color": {
+        "hair_color_tone": "dark_brown",
+        "hair_color_depth": "偏深",
+        "hair_color_temperature": "中性",
+        "hair_color_technique": "solid",
+        "hair_color_distribution": "整体统一染发层次"
+      }
+    }
   },
   {
     "id": "female-wolf-cut",
@@ -803,7 +1203,32 @@
     "categoryLabel": "层次中长发",
     "coverImagePath": "template_assets/hairstyles/female-wolf-cut.jpg",
     "coverImageUpdatedAt": "2026-03-28T05:51:47+00:00",
-    "coverImageSource": "template_image_pipeline:review_female.jpg"
+    "coverImageSource": "template_image_pipeline:review_female.jpg",
+    "presetBlocks": {
+      "hair_shape": {
+        "hair_length": "中短到中长发",
+        "hair_silhouette": "以狼剪轮廓为主体，高层次、碎发感和轻尾感并存，比普通层次发更个性，也更适合风感和街头氛围画面",
+        "hair_texture": "自然纹理",
+        "hair_volume": "自然体积",
+        "hair_parting": "根据头型自然分线",
+        "sideburn_nape": "鬓角和后颈区域保持自然贴合",
+        "hair_tail_finish": "后区要保留轻尾感和轮廓落差"
+      },
+      "bangs": {
+        "bangs_type": "无刘海或自然碎刘海",
+        "bangs_density": "不适用",
+        "bangs_length": "不适用",
+        "bangs_split": "不适用",
+        "bangs_face_framing": "脸侧保留自然修饰关系"
+      },
+      "recommended_hair_color": {
+        "hair_color_tone": "dark_brown",
+        "hair_color_depth": "偏深",
+        "hair_color_temperature": "中性",
+        "hair_color_technique": "solid",
+        "hair_color_distribution": "整体统一染发层次"
+      }
+    }
   },
   {
     "id": "female-modern-hime-cut",
@@ -844,7 +1269,32 @@
     "categoryLabel": "长发气质",
     "coverImagePath": "template_assets/hairstyles/female-modern-hime-cut.jpg",
     "coverImageUpdatedAt": "2026-03-27T06:59:20+00:00",
-    "coverImageSource": "template_image_pipeline:review_female.jpg"
+    "coverImageSource": "template_image_pipeline:review_female.jpg",
+    "presetBlocks": {
+      "hair_shape": {
+        "hair_length": "中短到中长发",
+        "hair_silhouette": "以改良公主切轮廓为主体，脸侧一刀切短层与后方长发形成断层，修饰宽脸颊，现代感和辨识度都很强",
+        "hair_texture": "顺直纹理",
+        "hair_volume": "自然体积",
+        "hair_parting": "根据头型自然分线",
+        "sideburn_nape": "鬓角和后颈区域保持自然贴合",
+        "hair_tail_finish": "发尾收口与整体轮廓保持一致"
+      },
+      "bangs": {
+        "bangs_type": "无刘海或自然碎刘海",
+        "bangs_density": "不适用",
+        "bangs_length": "不适用",
+        "bangs_split": "不适用",
+        "bangs_face_framing": "脸侧保留自然修饰关系"
+      },
+      "recommended_hair_color": {
+        "hair_color_tone": "dark_brown",
+        "hair_color_depth": "偏深",
+        "hair_color_temperature": "偏冷",
+        "hair_color_technique": "solid",
+        "hair_color_distribution": "整体统一染发层次"
+      }
+    }
   },
   {
     "id": "female-classic-hime-cut",
@@ -886,7 +1336,32 @@
     "categoryLabel": "层次中长发",
     "coverImagePath": "template_assets/hairstyles/female-classic-hime-cut.jpg",
     "coverImageUpdatedAt": "2026-03-28T05:52:08+00:00",
-    "coverImageSource": "template_image_pipeline:review_female.jpg"
+    "coverImageSource": "template_image_pipeline:review_female.jpg",
+    "presetBlocks": {
+      "hair_shape": {
+        "hair_length": "胸前到超长发",
+        "hair_silhouette": "以原版公主切 / 姬发式轮廓为主体，比改良公主切更强调耳前短切和后方长发的强断层，对轮廓和风格感要求更高",
+        "hair_texture": "顺直纹理",
+        "hair_volume": "顶部服帖、侧区整齐",
+        "hair_parting": "根据头型自然分线",
+        "sideburn_nape": "鬓角和后颈区域保持自然贴合",
+        "hair_tail_finish": "发尾收口与整体轮廓保持一致"
+      },
+      "bangs": {
+        "bangs_type": "无刘海或自然碎刘海",
+        "bangs_density": "不适用",
+        "bangs_length": "不适用",
+        "bangs_split": "不适用",
+        "bangs_face_framing": "脸侧保留自然修饰关系"
+      },
+      "recommended_hair_color": {
+        "hair_color_tone": "dark_brown",
+        "hair_color_depth": "偏深",
+        "hair_color_temperature": "偏冷",
+        "hair_color_technique": "solid",
+        "hair_color_distribution": "整体统一染发层次"
+      }
+    }
   },
   {
     "id": "female-black-long-straight",
@@ -928,7 +1403,32 @@
     "categoryLabel": "长发气质",
     "coverImagePath": "template_assets/hairstyles/female-black-long-straight.jpg",
     "coverImageUpdatedAt": "2026-03-28T05:52:32+00:00",
-    "coverImageSource": "template_image_pipeline:review_female.jpg"
+    "coverImageSource": "template_image_pipeline:review_female.jpg",
+    "presetBlocks": {
+      "hair_shape": {
+        "hair_length": "胸前到超长发",
+        "hair_silhouette": "以黑长直轮廓为主体，比新中式长直发更通用，强调顺直、自然、干净的基础东方长发气质",
+        "hair_texture": "顺直纹理",
+        "hair_volume": "顶部服帖、侧区整齐",
+        "hair_parting": "根据头型自然分线",
+        "sideburn_nape": "鬓角和后颈区域保持自然贴合",
+        "hair_tail_finish": "发型改为黑长直，整体长度超过胸线，发面顺滑自然、垂坠清晰，层次极少，顶部贴合头型，脸侧发丝自然垂落，发尾整齐但不过于僵硬，颜色以乌黑或极深棕为主"
+      },
+      "bangs": {
+        "bangs_type": "无刘海或自然碎刘海",
+        "bangs_density": "不适用",
+        "bangs_length": "不适用",
+        "bangs_split": "不适用",
+        "bangs_face_framing": "脸侧保留自然修饰关系"
+      },
+      "recommended_hair_color": {
+        "hair_color_tone": "dark_brown",
+        "hair_color_depth": "偏深",
+        "hair_color_temperature": "中性",
+        "hair_color_technique": "solid",
+        "hair_color_distribution": "整体统一染发层次"
+      }
+    }
   },
   {
     "id": "female-waterfall-straight",
@@ -969,7 +1469,32 @@
     "categoryLabel": "长发气质",
     "coverImagePath": "template_assets/hairstyles/female-waterfall-straight.jpg",
     "coverImageUpdatedAt": "2026-03-27T06:59:21+00:00",
-    "coverImageSource": "template_image_pipeline:review_female.jpg"
+    "coverImageSource": "template_image_pipeline:review_female.jpg",
+    "presetBlocks": {
+      "hair_shape": {
+        "hair_length": "胸前到超长发",
+        "hair_silhouette": "以瀑布直发轮廓为主体，头发极长且发量丰沛，像瀑布一样倾泻而下，视觉冲击力极强",
+        "hair_texture": "顺直纹理",
+        "hair_volume": "顶部服帖、侧区整齐",
+        "hair_parting": "根据头型自然分线",
+        "sideburn_nape": "鬓角和后颈区域保持自然贴合",
+        "hair_tail_finish": "发尾收口与整体轮廓保持一致"
+      },
+      "bangs": {
+        "bangs_type": "无刘海或自然碎刘海",
+        "bangs_density": "不适用",
+        "bangs_length": "不适用",
+        "bangs_split": "不适用",
+        "bangs_face_framing": "脸侧保留自然修饰关系"
+      },
+      "recommended_hair_color": {
+        "hair_color_tone": "dark_brown",
+        "hair_color_depth": "偏深",
+        "hair_color_temperature": "中性",
+        "hair_color_technique": "solid",
+        "hair_color_distribution": "整体统一染发层次"
+      }
+    }
   },
   {
     "id": "female-new-chinese-long-straight",
@@ -1010,7 +1535,32 @@
     "categoryLabel": "长发气质",
     "coverImagePath": "template_assets/hairstyles/female-new-chinese-long-straight.jpg",
     "coverImageUpdatedAt": "2026-03-27T06:59:21+00:00",
-    "coverImageSource": "template_image_pipeline:review_female.jpg"
+    "coverImageSource": "template_image_pipeline:review_female.jpg",
+    "presetBlocks": {
+      "hair_shape": {
+        "hair_length": "胸前到超长发",
+        "hair_silhouette": "以新中式黑长直轮廓为主体，强调乌黑亮丽与顺滑垂坠感，呈现纯粹的东方清冷美，是近年新中式审美高频发型",
+        "hair_texture": "顺直纹理",
+        "hair_volume": "顶部服帖、侧区整齐",
+        "hair_parting": "根据头型自然分线",
+        "sideburn_nape": "鬓角和后颈区域保持自然贴合",
+        "hair_tail_finish": "发型改为新中式黑长直，整体长度超过胸线甚至接近腰部，发面乌黑、顺滑、垂坠，层次极少，发丝整齐但保留真实纹理，顶部贴合头型，发尾自然下落"
+      },
+      "bangs": {
+        "bangs_type": "无刘海或自然碎刘海",
+        "bangs_density": "不适用",
+        "bangs_length": "不适用",
+        "bangs_split": "不适用",
+        "bangs_face_framing": "脸侧保留自然修饰关系"
+      },
+      "recommended_hair_color": {
+        "hair_color_tone": "natural_black",
+        "hair_color_depth": "偏深",
+        "hair_color_temperature": "偏冷",
+        "hair_color_technique": "solid",
+        "hair_color_distribution": "整体统一染发层次"
+      }
+    }
   },
   {
     "id": "female-french-lazy-waves",
@@ -1051,7 +1601,32 @@
     "categoryLabel": "氛围卷发",
     "coverImagePath": "template_assets/hairstyles/female-french-lazy-waves.jpg",
     "coverImageUpdatedAt": "2026-03-27T06:59:18+00:00",
-    "coverImageSource": "template_image_pipeline:review_female.jpg"
+    "coverImageSource": "template_image_pipeline:review_female.jpg",
+    "presetBlocks": {
+      "hair_shape": {
+        "hair_length": "胸前到超长发",
+        "hair_silhouette": "以法式慵懒卷轮廓为主体，卷度大且松散，没有刻意造型痕迹，散发漫不经心的浪漫氛围",
+        "hair_texture": "大弯或波浪卷度",
+        "hair_volume": "自然体积",
+        "hair_parting": "根据头型自然分线",
+        "sideburn_nape": "鬓角和后颈区域保持自然贴合",
+        "hair_tail_finish": "发型改为法式慵懒卷，整体长度落在锁骨以下到胸前附近，卷度大而松散，主要集中在中段和发尾，发丝之间保留自然空隙和不对称感，脸侧可有几缕碎发轻轻修饰"
+      },
+      "bangs": {
+        "bangs_type": "无刘海或自然碎刘海",
+        "bangs_density": "不适用",
+        "bangs_length": "不适用",
+        "bangs_split": "不适用",
+        "bangs_face_framing": "脸侧保留自然修饰关系"
+      },
+      "recommended_hair_color": {
+        "hair_color_tone": "dark_brown",
+        "hair_color_depth": "偏深",
+        "hair_color_temperature": "中性",
+        "hair_color_technique": "solid",
+        "hair_color_distribution": "整体统一染发层次"
+      }
+    }
   },
   {
     "id": "female-korean-air-cushion-perm",
@@ -1143,7 +1718,32 @@
     "categoryLabel": "氛围卷发",
     "coverImagePath": "template_assets/hairstyles/female-korean-air-cushion-perm.jpg",
     "coverImageUpdatedAt": "2026-03-27T06:59:20+00:00",
-    "coverImageSource": "template_image_pipeline:review_female.jpg"
+    "coverImageSource": "template_image_pipeline:review_female.jpg",
+    "presetBlocks": {
+      "hair_shape": {
+        "hair_length": "锁骨下到胸上中长发",
+        "hair_silhouette": "以韩式气垫烫轮廓为主体，通过垫高发根和自然卷度打造高颅顶、头包脸的柔和轮廓，是韩系爆款之一",
+        "hair_texture": "柔和中大卷",
+        "hair_volume": "中等偏高，发根明显支撑；中等偏高，但卷度必须柔和",
+        "hair_parting": "中分、八字边缘分线",
+        "sideburn_nape": "两侧卷度从太阳穴外侧自然包裹，形成头包脸；下颌线只露出下半段，保留柔和包裹感",
+        "hair_tail_finish": "发型改为韩式气垫烫，重点垫高发根和头顶，形成明显但自然的高颅顶与头包脸效果，整体卷度柔和流畅，从头顶到发尾逐渐展开，不出现僵硬卷束"
+      },
+      "bangs": {
+        "bangs_type": "轻薄八字边缘",
+        "bangs_density": "轻薄",
+        "bangs_length": "颧骨到脸侧",
+        "bangs_split": "中缝或自然散开",
+        "bangs_face_framing": "利用柔和弧线把颧骨外缘包进整体轮廓"
+      },
+      "recommended_hair_color": {
+        "hair_color_tone": "ash_brown",
+        "hair_color_depth": "中等",
+        "hair_color_temperature": "偏冷",
+        "hair_color_technique": "solid",
+        "hair_color_distribution": "整体统一染发层次"
+      }
+    }
   },
   {
     "id": "female-wooden-horse-curls",
@@ -1184,7 +1784,32 @@
     "categoryLabel": "氛围卷发",
     "coverImagePath": "template_assets/hairstyles/female-wooden-horse-curls.jpg",
     "coverImageUpdatedAt": "2026-03-27T06:59:22+00:00",
-    "coverImageSource": "template_image_pipeline:review_female.jpg"
+    "coverImageSource": "template_image_pipeline:review_female.jpg",
+    "presetBlocks": {
+      "hair_shape": {
+        "hair_length": "中短到中长发",
+        "hair_silhouette": "以木马卷轮廓为主体，卷度立体、整齐、有弹性，像海藻一样垂落，能够显著丰富发量感和精致度",
+        "hair_texture": "自然纹理",
+        "hair_volume": "自然体积",
+        "hair_parting": "根据头型自然分线",
+        "sideburn_nape": "鬓角和后颈区域保持自然贴合",
+        "hair_tail_finish": "发型改为木马卷，整体卷度立体、整齐且富有弹性，从中段到发尾形成清楚的大号 S 形或圆润卷弧，卷束之间分布均匀，发量感充足"
+      },
+      "bangs": {
+        "bangs_type": "无刘海或自然碎刘海",
+        "bangs_density": "不适用",
+        "bangs_length": "不适用",
+        "bangs_split": "不适用",
+        "bangs_face_framing": "脸侧保留自然修饰关系"
+      },
+      "recommended_hair_color": {
+        "hair_color_tone": "chestnut_brown",
+        "hair_color_depth": "中等",
+        "hair_color_temperature": "偏暖",
+        "hair_color_technique": "solid",
+        "hair_color_distribution": "整体统一染发层次"
+      }
+    }
   },
   {
     "id": "female-water-wave-mid",
@@ -1225,7 +1850,32 @@
     "categoryLabel": "氛围卷发",
     "coverImagePath": "template_assets/hairstyles/female-water-wave-mid.jpg",
     "coverImageUpdatedAt": "2026-03-27T06:59:21+00:00",
-    "coverImageSource": "template_image_pipeline:review_female.jpg"
+    "coverImageSource": "template_image_pipeline:review_female.jpg",
+    "presetBlocks": {
+      "hair_shape": {
+        "hair_length": "锁骨到胸前长度",
+        "hair_silhouette": "以水波纹轮廓为主体，波纹平缓且规则，温柔知性，是兼容性很强的经典卷发类型",
+        "hair_texture": "大弯或波浪卷度",
+        "hair_volume": "自然体积",
+        "hair_parting": "根据头型自然分线",
+        "sideburn_nape": "鬓角和后颈区域保持自然贴合",
+        "hair_tail_finish": "不能做成夸张大卷或外翻鱼尾烫"
+      },
+      "bangs": {
+        "bangs_type": "无刘海或自然碎刘海",
+        "bangs_density": "不适用",
+        "bangs_length": "不适用",
+        "bangs_split": "不适用",
+        "bangs_face_framing": "脸侧保留自然修饰关系"
+      },
+      "recommended_hair_color": {
+        "hair_color_tone": "dark_brown",
+        "hair_color_depth": "偏深",
+        "hair_color_temperature": "中性",
+        "hair_color_technique": "solid",
+        "hair_color_distribution": "整体统一染发层次"
+      }
+    }
   },
   {
     "id": "female-mermaid-wave",
@@ -1267,7 +1917,32 @@
     "categoryLabel": "氛围卷发",
     "coverImagePath": "template_assets/hairstyles/female-mermaid-wave.jpg",
     "coverImageUpdatedAt": "2026-03-28T05:53:04+00:00",
-    "coverImageSource": "template_image_pipeline:review_female.jpg"
+    "coverImageSource": "template_image_pipeline:review_female.jpg",
+    "presetBlocks": {
+      "hair_shape": {
+        "hair_length": "胸前到超长发",
+        "hair_silhouette": "以人鱼卷轮廓为主体，大波浪更绵长、更流动，带海藻感和浪漫感，适合高氛围值的女生卷发模板",
+        "hair_texture": "大弯或波浪卷度",
+        "hair_volume": "自然体积",
+        "hair_parting": "根据头型自然分线",
+        "sideburn_nape": "鬓角和后颈区域保持自然贴合",
+        "hair_tail_finish": "发尾收口与整体轮廓保持一致"
+      },
+      "bangs": {
+        "bangs_type": "无刘海或自然碎刘海",
+        "bangs_density": "不适用",
+        "bangs_length": "不适用",
+        "bangs_split": "不适用",
+        "bangs_face_framing": "脸侧保留自然修饰关系"
+      },
+      "recommended_hair_color": {
+        "hair_color_tone": "dark_brown",
+        "hair_color_depth": "偏深",
+        "hair_color_temperature": "偏冷",
+        "hair_color_technique": "solid",
+        "hair_color_distribution": "整体统一染发层次"
+      }
+    }
   },
   {
     "id": "female-wool-curls",
@@ -1308,7 +1983,32 @@
     "categoryLabel": "氛围卷发",
     "coverImagePath": "template_assets/hairstyles/female-wool-curls.jpg",
     "coverImageUpdatedAt": "2026-03-27T06:59:22+00:00",
-    "coverImageSource": "template_image_pipeline:review_female.jpg"
+    "coverImageSource": "template_image_pipeline:review_female.jpg",
+    "presetBlocks": {
+      "hair_shape": {
+        "hair_length": "中短到中长发",
+        "hair_silhouette": "以羊毛卷轮廓为主体，从发根开始的细小密集卷发，复古港风气质强，少发量人群也能获得明显膨松感",
+        "hair_texture": "明显卷度或烫发纹理",
+        "hair_volume": "自然体积",
+        "hair_parting": "根据头型自然分线",
+        "sideburn_nape": "鬓角和后颈区域保持自然贴合",
+        "hair_tail_finish": "发尾收口与整体轮廓保持一致"
+      },
+      "bangs": {
+        "bangs_type": "无刘海或自然碎刘海",
+        "bangs_density": "不适用",
+        "bangs_length": "不适用",
+        "bangs_split": "不适用",
+        "bangs_face_framing": "脸侧保留自然修饰关系"
+      },
+      "recommended_hair_color": {
+        "hair_color_tone": "chestnut_brown",
+        "hair_color_depth": "中等",
+        "hair_color_temperature": "偏暖",
+        "hair_color_technique": "solid",
+        "hair_color_distribution": "整体统一染发层次"
+      }
+    }
   },
   {
     "id": "female-cloud-perm",
@@ -1349,7 +2049,32 @@
     "categoryLabel": "氛围卷发",
     "coverImagePath": "template_assets/hairstyles/female-cloud-perm.jpg",
     "coverImageUpdatedAt": "2026-03-27T06:59:17+00:00",
-    "coverImageSource": "template_image_pipeline:review_female.jpg"
+    "coverImageSource": "template_image_pipeline:review_female.jpg",
+    "presetBlocks": {
+      "hair_shape": {
+        "hair_length": "中短到中长发",
+        "hair_silhouette": "以云朵烫轮廓为主体，卷度柔软蓬松，常集中在发尾，轻盈减龄，适合日常和生活化写真",
+        "hair_texture": "轻微弯曲纹理",
+        "hair_volume": "顶部有明显蓬松和空气感",
+        "hair_parting": "根据头型自然分线",
+        "sideburn_nape": "鬓角和后颈区域保持自然贴合",
+        "hair_tail_finish": "发尾微卷比中段更明显"
+      },
+      "bangs": {
+        "bangs_type": "无刘海或自然碎刘海",
+        "bangs_density": "不适用",
+        "bangs_length": "不适用",
+        "bangs_split": "不适用",
+        "bangs_face_framing": "脸侧保留自然修饰关系"
+      },
+      "recommended_hair_color": {
+        "hair_color_tone": "dark_brown",
+        "hair_color_depth": "偏深",
+        "hair_color_temperature": "中性",
+        "hair_color_technique": "solid",
+        "hair_color_distribution": "整体统一染发层次"
+      }
+    }
   },
   {
     "id": "female-egg-roll-perm",
@@ -1391,7 +2116,32 @@
     "categoryLabel": "氛围卷发",
     "coverImagePath": "template_assets/hairstyles/female-egg-roll-perm.jpg",
     "coverImageUpdatedAt": "2026-03-28T05:53:31+00:00",
-    "coverImageSource": "template_image_pipeline:review_female.jpg"
+    "coverImageSource": "template_image_pipeline:review_female.jpg",
+    "presetBlocks": {
+      "hair_shape": {
+        "hair_length": "胸前到超长发",
+        "hair_silhouette": "以蛋蛋卷 / 蛋卷头轮廓为主体，卷度规律、细密但不炸，带韩系甜感和显发量效果，适合减龄女生模板",
+        "hair_texture": "自然纹理",
+        "hair_volume": "自然体积",
+        "hair_parting": "中分",
+        "sideburn_nape": "鬓角和后颈区域保持自然贴合",
+        "hair_tail_finish": "发型改为蛋蛋卷，整体长度可在锁骨到胸前之间，卷度呈规则连续的小弧度起伏，从中段到发尾分布均匀，整体丰盈有弹性，发丝排列整齐但不死板"
+      },
+      "bangs": {
+        "bangs_type": "空气刘海",
+        "bangs_density": "轻薄",
+        "bangs_length": "颧骨到脸侧",
+        "bangs_split": "中缝或自然散开",
+        "bangs_face_framing": "脸侧保留自然修饰关系"
+      },
+      "recommended_hair_color": {
+        "hair_color_tone": "dark_brown",
+        "hair_color_depth": "偏深",
+        "hair_color_temperature": "中性",
+        "hair_color_technique": "solid",
+        "hair_color_distribution": "整体统一染发层次"
+      }
+    }
   },
   {
     "id": "female-wheat-curls",
@@ -1432,7 +2182,32 @@
     "categoryLabel": "氛围卷发",
     "coverImagePath": "template_assets/hairstyles/female-wheat-curls.jpg",
     "coverImageUpdatedAt": "2026-03-27T06:59:22+00:00",
-    "coverImageSource": "template_image_pipeline:review_female.jpg"
+    "coverImageSource": "template_image_pipeline:review_female.jpg",
+    "presetBlocks": {
+      "hair_shape": {
+        "hair_length": "中短到中长发",
+        "hair_silhouette": "以麦穗卷轮廓为主体，比羊毛卷更扁平、规则，带森系文艺感，适合安静又有辨识度的造型画面",
+        "hair_texture": "自然纹理",
+        "hair_volume": "自然体积",
+        "hair_parting": "根据头型自然分线",
+        "sideburn_nape": "鬓角和后颈区域保持自然贴合",
+        "hair_tail_finish": "发尾收口与整体轮廓保持一致"
+      },
+      "bangs": {
+        "bangs_type": "无刘海或自然碎刘海",
+        "bangs_density": "不适用",
+        "bangs_length": "不适用",
+        "bangs_split": "不适用",
+        "bangs_face_framing": "脸侧保留自然修饰关系"
+      },
+      "recommended_hair_color": {
+        "hair_color_tone": "dark_brown",
+        "hair_color_depth": "偏深",
+        "hair_color_temperature": "中性",
+        "hair_color_technique": "solid",
+        "hair_color_distribution": "整体统一染发层次"
+      }
+    }
   },
   {
     "id": "female-fishtail-perm",
@@ -1473,7 +2248,32 @@
     "categoryLabel": "层次中长发",
     "coverImagePath": "template_assets/hairstyles/female-fishtail-perm.jpg",
     "coverImageUpdatedAt": "2026-03-27T06:59:18+00:00",
-    "coverImageSource": "template_image_pipeline:review_female.jpg"
+    "coverImageSource": "template_image_pipeline:review_female.jpg",
+    "presetBlocks": {
+      "hair_shape": {
+        "hair_length": "中短到中长发",
+        "hair_silhouette": "以鱼尾烫中长发轮廓为主体，发尾外翻成鱼尾形，俏皮、活泼，能修饰肩颈和中长发线条",
+        "hair_texture": "顺直纹理",
+        "hair_volume": "顶部服帖、侧区整齐",
+        "hair_parting": "根据头型自然分线",
+        "sideburn_nape": "鬓角和后颈区域保持自然贴合",
+        "hair_tail_finish": "外翻弧度必须集中在发尾"
+      },
+      "bangs": {
+        "bangs_type": "无刘海或自然碎刘海",
+        "bangs_density": "不适用",
+        "bangs_length": "不适用",
+        "bangs_split": "不适用",
+        "bangs_face_framing": "脸侧保留自然修饰关系"
+      },
+      "recommended_hair_color": {
+        "hair_color_tone": "dark_brown",
+        "hair_color_depth": "偏深",
+        "hair_color_temperature": "中性",
+        "hair_color_technique": "solid",
+        "hair_color_distribution": "整体统一染发层次"
+      }
+    }
   },
   {
     "id": "female-hongkong-glam-wave",
@@ -1515,6 +2315,31 @@
     "categoryLabel": "氛围卷发",
     "coverImagePath": "template_assets/hairstyles/female-hongkong-glam-wave.jpg",
     "coverImageUpdatedAt": "2026-03-28T05:53:53+00:00",
-    "coverImageSource": "template_image_pipeline:review_female.jpg"
+    "coverImageSource": "template_image_pipeline:review_female.jpg",
+    "presetBlocks": {
+      "hair_shape": {
+        "hair_length": "胸前到超长发",
+        "hair_silhouette": "以港风大波浪轮廓为主体，强调饱满体积、浓郁女人味和复古光泽感，是成熟氛围和港风写真常见代表发型",
+        "hair_texture": "顺直纹理",
+        "hair_volume": "顶部有明显蓬松和空气感",
+        "hair_parting": "根据头型自然分线",
+        "sideburn_nape": "鬓角和后颈区域保持自然贴合",
+        "hair_tail_finish": "发型改为港风大波浪，整体长度落在胸前或更长，卷度大而饱满，从中段到发尾展开明显波浪，整体发量丰盈有存在感，脸侧带自然翻卷和蓬松支撑，发面保留顺滑光泽"
+      },
+      "bangs": {
+        "bangs_type": "无刘海或自然碎刘海",
+        "bangs_density": "不适用",
+        "bangs_length": "不适用",
+        "bangs_split": "不适用",
+        "bangs_face_framing": "脸侧保留自然修饰关系"
+      },
+      "recommended_hair_color": {
+        "hair_color_tone": "dark_brown",
+        "hair_color_depth": "偏深",
+        "hair_color_temperature": "中性",
+        "hair_color_technique": "solid",
+        "hair_color_distribution": "整体统一染发层次"
+      }
+    }
   }
 ]

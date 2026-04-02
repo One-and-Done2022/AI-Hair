@@ -21,8 +21,8 @@ def _load_module(module_path: Path, module_name: str):
 def test_publish_scene_covers_uses_single_mapped_gender_and_syncs_once(tmp_path, monkeypatch):
     publish = _load_module(SCRIPT_PATH, "publish_template_covers_scene")
 
-    male_sample = tmp_path / "male.jpg"
-    female_sample = tmp_path / "female.jpg"
+    male_sample = tmp_path / "male2.jpg"
+    female_sample = tmp_path / "female3.jpg"
     male_sample.write_bytes(b"male")
     female_sample.write_bytes(b"female")
 
@@ -57,7 +57,7 @@ def test_publish_scene_covers_uses_single_mapped_gender_and_syncs_once(tmp_path,
     monkeypatch.setattr(
         publish,
         "DEFAULT_SAMPLE_IMAGES",
-        {"male": male_sample, "female": female_sample},
+        {"male2": male_sample, "female3": female_sample},
     )
     monkeypatch.setattr(publish, "template_pipeline", fake_template_pipeline)
     monkeypatch.setattr(publish, "review_pipeline", fake_review_pipeline)
@@ -92,8 +92,8 @@ def test_publish_scene_covers_uses_single_mapped_gender_and_syncs_once(tmp_path,
 def test_publish_hairstyle_covers_only_processes_unpublished_or_draft_items(tmp_path, monkeypatch):
     publish = _load_module(SCRIPT_PATH, "publish_template_covers_hairstyles")
 
-    male_sample = tmp_path / "male.jpg"
-    female_sample = tmp_path / "female.jpg"
+    male_sample = tmp_path / "male2.jpg"
+    female_sample = tmp_path / "female3.jpg"
     male_sample.write_bytes(b"male")
     female_sample.write_bytes(b"female")
 
@@ -136,7 +136,7 @@ def test_publish_hairstyle_covers_only_processes_unpublished_or_draft_items(tmp_
     monkeypatch.setattr(
         publish,
         "DEFAULT_SAMPLE_IMAGES",
-        {"male": male_sample, "female": female_sample},
+        {"male2": male_sample, "female3": female_sample},
     )
     monkeypatch.setattr(publish, "template_pipeline", fake_template_pipeline)
     monkeypatch.setattr(publish, "review_pipeline", fake_review_pipeline)

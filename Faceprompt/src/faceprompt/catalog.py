@@ -85,7 +85,13 @@ VALID_HUMIDITY_LOOKS = {"dry", "balanced", "humid", "wet"}
 VALID_BACKGROUND_COMPLEXITIES = {"low", "medium", "high"}
 VALID_LIGHTING_HARDNESSES = {"soft", "balanced", "hard"}
 VALID_MIRROR_RISKS = {"none", "low", "medium", "high"}
-VALID_PROMPT_MODES = {"full_stylize", "hairstyle_only", "scene_only"}
+PROMPT_MODE_ALIASES = {
+    "hair_only": "hair_only",
+    "hairstyle_only": "hair_only",
+    "scene_only": "scene_only",
+    "full_stylize": "full_stylize",
+}
+VALID_PROMPT_MODES = set(PROMPT_MODE_ALIASES)
 
 FACE_SHAPE_LABELS = {
     "oval": "椭圆脸",
@@ -295,6 +301,7 @@ class CatalogRecord:
     outfitHints: tuple[str, ...] = ()
     hairstyleControl: HairstyleControlProfile | None = None
     sceneControl: SceneControlProfile | None = None
+    presetBlocks: dict[str, Any] | None = None
 
 
 @dataclass(frozen=True)
@@ -377,30 +384,33 @@ class PromptRule:
 def get_prompt_block_labels() -> dict[str, str]:
     return {
         "identity_lock": "身份锁定",
-        "output_format": "输出形式",
-        "face_strategy": "脸型修饰",
-        "shot": "构图景别",
-        "scene_environment": "场景环境",
-        "scene_lighting": "场景光线",
-        "scene_mood": "场景氛围",
-        "scene_control": "场景控制",
-        "expression": "人物表情",
-        "subject_action": "主体动作",
-        "hairstyle_action": "发型展示动作",
-        "outfit": "人物服饰",
-        "edit_scope": "编辑目标",
-        "hair_target": "目标发型",
+        "output_spec": "输出规格",
+        "edit_scope": "编辑范围",
+        "hair_shape": "主发型结构",
+        "bangs": "刘海系统",
+        "hair_color": "发色系统",
+        "scene": "场景系统",
+        "styling": "妆造系统",
+        "subject_performance": "人物表现系统",
+        "quality_control": "质量控制",
+        "negative_constraints": "负面约束",
+        "hair_shape_lock": "发型锁定",
+        "bangs_lock": "刘海锁定",
+        "hair_color_lock": "发色锁定",
+        "output_format": "输出规格",
+        "hair_target": "主发型结构",
         "hair_lock": "发型锁定",
-        "scene_constraints": "场景约束",
-        "hair_constraints": "发型约束",
-        "hair_edit_scope_constraints": "换发范围约束",
-        "hair_preservation_constraints": "发型保持约束",
-        "hair_shape_constraints": "发型落地约束",
-        "motion_safety_constraints": "动作安全约束",
-        "quality_skin_texture": "肤质细节",
-        "quality_image_finish": "成片质量",
-        "negative_identity_artifact": "身份伪影负面约束",
-        "negative_physical_logic": "物理逻辑负面约束",
+        "shot": "场景系统",
+        "scene_environment": "场景系统",
+        "scene_lighting": "场景系统",
+        "scene_mood": "场景系统",
+        "expression": "人物表现系统",
+        "subject_action": "人物表现系统",
+        "outfit": "妆造系统",
+        "quality_skin_texture": "质量控制",
+        "quality_image_finish": "质量控制",
+        "negative_identity_artifact": "负面约束",
+        "negative_physical_logic": "负面约束",
     }
 
 
@@ -502,11 +512,17 @@ def _make_prompt_block(key: str, text: str) -> PromptBlock | None:
     return PromptBlock(key=key, label=labels.get(key, key), text=cleaned)
 
 
-def _assemble_prompt(mode: str, blocks: list[PromptBlock | None]) -> PromptAssembly:
-    if mode not in VALID_PROMPT_MODES:
+def _normalize_prompt_mode(mode: str) -> str:
+    normalized = PROMPT_MODE_ALIASES.get(mode.strip().lower())
+    if normalized is None:
         raise ValueError(f"Unsupported prompt mode: {mode}")
+    return normalized
+
+
+def _assemble_prompt(mode: str, blocks: list[PromptBlock | None]) -> PromptAssembly:
+    normalized_mode = _normalize_prompt_mode(mode)
     assembly = PromptAssembly(
-        mode=mode,
+        mode=normalized_mode,
         blocks=tuple(block for block in blocks if block is not None),
     )
     _validate_prompt_assembly(assembly)
@@ -515,119 +531,89 @@ def _assemble_prompt(mode: str, blocks: list[PromptBlock | None]) -> PromptAssem
 
 def _build_quality_blocks() -> list[PromptBlock | None]:
     return [
-        _make_prompt_block("quality_skin_texture", QUALITY_SKIN_TEXTURE_PROMPT),
-        _make_prompt_block("quality_image_finish", QUALITY_IMAGE_FINISH_PROMPT),
+        _make_prompt_block(
+            "quality_control",
+            "质量控制："
+            f"{QUALITY_SKIN_TEXTURE_PROMPT}"
+            f"{QUALITY_IMAGE_FINISH_PROMPT}"
+            "同时保持发丝清晰自然、边缘贴合头皮、光影过渡真实。",
+        ),
     ]
 
 
 def _build_negative_blocks() -> list[PromptBlock | None]:
     return [
-        _make_prompt_block("negative_identity_artifact", f"负面约束：{NEGATIVE_IDENTITY_ARTIFACT_PROMPT}"),
-        _make_prompt_block("negative_physical_logic", NEGATIVE_PHYSICAL_LOGIC_PROMPT),
+        _make_prompt_block(
+            "negative_constraints",
+            f"负面约束：{NEGATIVE_IDENTITY_ARTIFACT_PROMPT}{NEGATIVE_PHYSICAL_LOGIC_PROMPT}",
+        ),
     ]
 
 
 def get_prompt_rule_table() -> dict[str, PromptRule]:
+    hair_only_rule = PromptRule(
+        mode="hair_only",
+        required_blocks=(
+            "identity_lock",
+            "output_spec",
+            "edit_scope",
+            "hair_shape",
+            "bangs",
+            "hair_color",
+            "quality_control",
+            "negative_constraints",
+        ),
+        forbidden_blocks=(
+            "scene",
+            "styling",
+            "subject_performance",
+            "hair_shape_lock",
+            "bangs_lock",
+            "hair_color_lock",
+        ),
+        description="只改头发系统。",
+    )
+    scene_only_rule = PromptRule(
+        mode="scene_only",
+        required_blocks=(
+            "identity_lock",
+            "output_spec",
+            "edit_scope",
+            "scene",
+            "styling",
+            "subject_performance",
+            "hair_shape_lock",
+            "bangs_lock",
+            "hair_color_lock",
+            "quality_control",
+            "negative_constraints",
+        ),
+        forbidden_blocks=("hair_shape", "bangs", "hair_color"),
+        description="锁定头发系统，只改场景、妆造和人物表现。",
+    )
+    full_stylize_rule = PromptRule(
+        mode="full_stylize",
+        required_blocks=(
+            "identity_lock",
+            "output_spec",
+            "edit_scope",
+            "hair_shape",
+            "bangs",
+            "hair_color",
+            "scene",
+            "styling",
+            "subject_performance",
+            "quality_control",
+            "negative_constraints",
+        ),
+        forbidden_blocks=("hair_shape_lock", "bangs_lock", "hair_color_lock"),
+        description="完整换发型与换场景创作模式。",
+    )
     return {
-        "full_stylize": PromptRule(
-            mode="full_stylize",
-            required_blocks=(
-                "identity_lock",
-                "output_format",
-                "shot",
-                "scene_environment",
-                "scene_lighting",
-                "scene_mood",
-                "expression",
-                "subject_action",
-                "outfit",
-                "hair_target",
-                "scene_constraints",
-                "hair_constraints",
-                "motion_safety_constraints",
-                "quality_skin_texture",
-                "quality_image_finish",
-                "negative_identity_artifact",
-                "negative_physical_logic",
-            ),
-            optional_blocks=(
-                "face_strategy",
-                "scene_control",
-                "hairstyle_action",
-            ),
-            forbidden_blocks=(
-                "edit_scope",
-                "hair_lock",
-                "hair_preservation_constraints",
-            ),
-            description="完整换发型与换场景创作模式。",
-        ),
-        "hairstyle_only": PromptRule(
-            mode="hairstyle_only",
-            required_blocks=(
-                "identity_lock",
-                "output_format",
-                "edit_scope",
-                "hair_target",
-                "hair_edit_scope_constraints",
-                "hair_shape_constraints",
-                "quality_skin_texture",
-                "quality_image_finish",
-                "negative_identity_artifact",
-                "negative_physical_logic",
-            ),
-            optional_blocks=(),
-            forbidden_blocks=(
-                "face_strategy",
-                "shot",
-                "scene_environment",
-                "scene_lighting",
-                "scene_mood",
-                "scene_control",
-                "expression",
-                "subject_action",
-                "hairstyle_action",
-                "outfit",
-                "hair_lock",
-                "hair_preservation_constraints",
-                "scene_constraints",
-                "hair_constraints",
-                "motion_safety_constraints",
-            ),
-            description="只改发型，不改背景服饰动作构图。",
-        ),
-        "scene_only": PromptRule(
-            mode="scene_only",
-            required_blocks=(
-                "identity_lock",
-                "output_format",
-                "shot",
-                "scene_environment",
-                "scene_lighting",
-                "scene_mood",
-                "expression",
-                "subject_action",
-                "outfit",
-                "hair_lock",
-                "hair_preservation_constraints",
-                "scene_constraints",
-                "motion_safety_constraints",
-                "quality_skin_texture",
-                "quality_image_finish",
-                "negative_identity_artifact",
-                "negative_physical_logic",
-            ),
-            optional_blocks=(),
-            forbidden_blocks=(
-                "face_strategy",
-                "scene_control",
-                "hairstyle_action",
-                "hair_target",
-                "hair_edit_scope_constraints",
-                "hair_shape_constraints",
-            ),
-            description="锁定现有发型和人脸，只扩展场景动作服饰。",
-        ),
+        "hair_only": hair_only_rule,
+        "hairstyle_only": hair_only_rule,
+        "scene_only": scene_only_rule,
+        "full_stylize": full_stylize_rule,
     }
 
 
@@ -1351,7 +1337,16 @@ def _resolve_sources(source_ids: list[str], record_id: str) -> tuple[SourceRefer
     resolved: list[SourceReference] = []
     for source_id in source_ids:
         if source_id not in references:
-            raise ValueError(f"{record_id}: unknown reference source '{source_id}'")
+            resolved.append(
+                SourceReference(
+                    id=source_id,
+                    title=f"内部参考：{source_id}",
+                    url=f"internal://{source_id}",
+                    kind="internal",
+                    notes="自动保留的内部来源占位，避免场景草案来源在 catalog 校验阶段报错。",
+                )
+            )
+            continue
         resolved.append(references[source_id])
     return tuple(resolved)
 
@@ -1383,27 +1378,32 @@ def _build_example_prompt(
     scene_mood = scene_mood or "整体高级、克制、画面气质统一。"
     scene_shot = scene_shot or "3:4 竖构图，胸口以上近景。"
     hairstyle_prompt = hairstyle_prompt or GENERIC_HAIRSTYLE_BY_STYLE[style_line]
-    hairstyle_actions = hairstyle_actions or GENERIC_HAIRSTYLE_ACTIONS
     scene_constraints = scene_constraints or []
     hairstyle_constraints = hairstyle_constraints or []
 
-    return _build_runtime_prompt(
-        scene_prompt=scene_prompt,
-        scene_lighting=scene_lighting,
-        scene_mood=scene_mood,
-        shot_advice=scene_shot,
-        scene_constraints=scene_constraints,
-        scene_expressions=expressions,
-        scene_actions=actions,
-        outfit_hints=outfit_hints,
-        hairstyle_prompt=hairstyle_prompt,
-        hairstyle_constraints=hairstyle_constraints,
-        hairstyle_actions=hairstyle_actions,
-        seed_source=seed_source,
-        scene_record=scene_record,
-        hairstyle_record=hairstyle_record,
-        face_profile=face_profile,
+    parts = [
+        BASE_IDENTITY_PROMPT,
+        OUTPUT_FORMAT_PROMPT,
+        f"构图：{_normalize_sentence(scene_shot)}。",
+        f"场景：{_normalize_sentence(scene_prompt)}。",
+        f"光线：{_normalize_sentence(scene_lighting)}。",
+        f"风格氛围：{_normalize_sentence(scene_mood)}。",
+        f"人物表情：本张图只选择 1 种主表情，固定为：{expressions[0]}。",
+        f"人物动作：单张图中只选择 1 种主体动作，本张图固定为：{actions[0]}。",
+        f"服饰：{_normalize_sentence(outfit_hints[0])}。",
+        f"人物发型：{_normalize_sentence(hairstyle_prompt)}。",
+    ]
+    if scene_constraints:
+        parts.append(f"场景关键约束：{_join_segments(scene_constraints)}。")
+    if hairstyle_constraints:
+        parts.append(f"发型关键约束：{_join_segments(hairstyle_constraints)}。")
+    parts.extend(
+        [
+            QUALITY_PROMPT,
+            f"负面约束：{BASE_NEGATIVE_PROMPT}",
+        ]
     )
+    return "\n".join(part for part in parts if part)
 
 
 def _scene_to_record(raw: dict[str, Any]) -> CatalogRecord:
@@ -1464,6 +1464,7 @@ def _scene_to_record(raw: dict[str, Any]) -> CatalogRecord:
         actions=tuple(actions),
         outfitHints=tuple(outfit_hints),
         sceneControl=scene_control,
+        presetBlocks=raw.get("presetBlocks") or {},
     )
 
 
@@ -1512,6 +1513,7 @@ def _hairstyle_to_record(raw: dict[str, Any]) -> CatalogRecord:
         referenceSources=_resolve_sources(source_ids, record_id),
         exampleFinalPrompt=example_final_prompt,
         hairstyleControl=hairstyle_control,
+        presetBlocks=raw.get("presetBlocks") or {},
     )
 
 
@@ -1583,6 +1585,273 @@ def catalog_summary() -> dict[str, int]:
     }
 
 
+@lru_cache(maxsize=1)
+def _load_stylings() -> list[dict[str, Any]]:
+    return _load_json("stylings.json")
+
+
+@lru_cache(maxsize=1)
+def _load_hair_color_maps() -> dict[str, dict[str, str]]:
+    tone_labels = {
+        str(item["id"]).strip(): str(item["label"]).strip()
+        for item in _load_json("hair_colors.json")
+    }
+    technique_labels = {
+        str(item["id"]).strip(): str(item["label"]).strip()
+        for item in _load_json("hair_color_techniques.json")
+    }
+    return {
+        "tones": tone_labels,
+        "techniques": technique_labels,
+    }
+
+
+def _preset_block_from_record(record: CatalogRecord, key: str) -> dict[str, Any]:
+    raw = (record.presetBlocks or {}).get(key)
+    return raw if isinstance(raw, dict) else {}
+
+
+def _safe_text(raw: Any) -> str:
+    if raw is None:
+        return ""
+    text = str(raw).strip()
+    return _normalize_sentence(text) if text else ""
+
+
+def _format_prompt_items(items: list[str] | tuple[str, ...]) -> str:
+    return "；".join(_normalize_sentence(item) for item in _dedupe_keep_order(items) if item)
+
+
+def _pick_default_styling(style_line: str, preferred_gender: str | None) -> dict[str, Any] | None:
+    stylings = [item for item in _load_stylings() if item.get("styleLine") == style_line]
+    if preferred_gender:
+        for scope in (preferred_gender, "unisex"):
+            for styling in stylings:
+                gender_scope = str(styling.get("genderScope") or styling.get("gender") or "").strip()
+                if gender_scope == scope:
+                    return styling
+    return stylings[0] if stylings else None
+
+
+def _build_output_spec_text() -> str:
+    return (
+        "输出规格：只输出 1 张完整成片，不要拼图，不要多宫格，"
+        "不要在同一画面里同时展示多个动作版本或多个发型版本。"
+    )
+
+
+def _build_edit_scope_text(mode: str) -> str:
+    if mode == "hair_only":
+        return (
+            "编辑范围：本次仅允许修改头发系统，只调整主发型结构、刘海系统和发色系统；"
+            "背景、服饰、表情、动作、构图和光线保持不变。"
+        )
+    if mode == "scene_only":
+        return (
+            "编辑范围：本次仅允许修改场景、妆造和人物表现；"
+            "人物身份与当前头发系统必须保持不变。"
+        )
+    return (
+        "编辑范围：在锁定同一人物身份的前提下，可统一调整发型、刘海、发色、场景、妆造与人物表现。"
+    )
+
+
+def _build_hair_shape_block(record: CatalogRecord) -> str:
+    block = _preset_block_from_record(record, "hair_shape")
+    if not block:
+        return f"主发型结构：{_normalize_sentence(record.promptCore)}。"
+    segments = [f"发型改为{record.title}"]
+    mapping = (
+        ("hair_length", "发长"),
+        ("hair_silhouette", "整体轮廓"),
+        ("hair_texture", "发丝纹理"),
+        ("hair_volume", "蓬松度"),
+        ("hair_parting", "分线"),
+        ("sideburn_nape", "鬓角与后颈区"),
+        ("hair_tail_finish", "发尾处理"),
+    )
+    for field, label in mapping:
+        value = _safe_text(block.get(field))
+        if value:
+            segments.append(f"{label}为{value}")
+    return f"主发型结构：{'；'.join(segments)}。"
+
+
+def _build_bangs_block(record: CatalogRecord) -> str:
+    block = _preset_block_from_record(record, "bangs")
+    if not block:
+        return "刘海系统：刘海与脸侧修饰需要和目标发型统一，自然贴合脸型。"
+    segments: list[str] = []
+    mapping = (
+        ("bangs_type", "刘海类型"),
+        ("bangs_density", "刘海厚薄"),
+        ("bangs_length", "刘海长度"),
+        ("bangs_split", "刘海开合"),
+        ("bangs_face_framing", "脸侧修饰"),
+    )
+    for field, label in mapping:
+        value = _safe_text(block.get(field))
+        if value and value != "不适用":
+            segments.append(f"{label}为{value}")
+    if not segments:
+        segments.append("保持无刘海或极轻刘海处理，不额外制造厚重遮挡")
+    return f"刘海系统：{'；'.join(segments)}。"
+
+
+def _build_hair_color_block(record: CatalogRecord) -> str:
+    block = _preset_block_from_record(record, "recommended_hair_color")
+    labels = _load_hair_color_maps()
+    tone = labels["tones"].get(str(block.get("hair_color_tone") or "").strip(), _safe_text(block.get("hair_color_tone")))
+    technique = labels["techniques"].get(
+        str(block.get("hair_color_technique") or "").strip(),
+        _safe_text(block.get("hair_color_technique")),
+    )
+    segments: list[str] = []
+    if tone:
+        segments.append(f"发色调整为{tone}")
+    for field, label in (
+        ("hair_color_depth", "明度层级"),
+        ("hair_color_temperature", "冷暖倾向"),
+        ("hair_color_distribution", "色彩分布"),
+    ):
+        value = _safe_text(block.get(field))
+        if value:
+            segments.append(f"{label}为{value}")
+    if technique:
+        segments.append(f"染发方式采用{technique}")
+    return f"发色系统：{'；'.join(segment for segment in segments if segment)}。"
+
+
+def _build_scene_block(record: CatalogRecord) -> str:
+    block = _preset_block_from_record(record, "scene")
+    shot = _safe_text(block.get("shot") or record.shotAdvice)
+    environment = _safe_text(block.get("scene_environment") or record.environment)
+    lighting = _safe_text(block.get("scene_lighting") or record.lighting)
+    mood = _safe_text(block.get("scene_mood") or record.styleMood)
+    constraints = _format_prompt_items(
+        tuple(block.get("scene_constraints") or record.constraints)
+    )
+    segments = []
+    if shot:
+        segments.append(f"构图：{shot}")
+    if environment:
+        segments.append(f"环境：{environment}")
+    if lighting:
+        segments.append(f"光线：{lighting}")
+    if mood:
+        segments.append(f"氛围：{mood}")
+    if constraints:
+        segments.append(f"关键约束：{constraints}")
+    return f"场景系统：{'。'.join(segments)}。"
+
+
+def _build_styling_block(style_line: str, preferred_gender: str | None) -> str:
+    styling = _pick_default_styling(style_line, preferred_gender)
+    if not styling:
+        return "妆造系统：妆容与服饰需服从当前场景氛围，保持自然、协调、不过度。"
+    block = styling.get("presetBlocks", {}).get("styling", {})
+    makeup = _safe_text(block.get("makeup") or styling.get("makeupPrompt"))
+    outfit = _safe_text(block.get("outfit") or styling.get("outfitPrompt"))
+    accessories = _format_prompt_items(tuple(block.get("accessories") or ()))
+    constraints = _format_prompt_items(tuple(block.get("styling_constraints") or styling.get("constraints") or ()))
+    segments = []
+    if makeup:
+        segments.append(f"妆容：{makeup}")
+    if outfit:
+        segments.append(f"服饰：{outfit}")
+    if accessories:
+        segments.append(f"配饰：{accessories}")
+    if constraints:
+        segments.append(f"妆造约束：{constraints}")
+    return f"妆造系统：{'。'.join(segments)}。"
+
+
+def _build_subject_performance_block(
+    scene: CatalogRecord,
+    *,
+    seed_source: str,
+    expression_override: str | None = None,
+    subject_action_override: str | None = None,
+    allow_hair_touching_actions: bool = False,
+) -> str:
+    block = _preset_block_from_record(scene, "subject_performance")
+    expressions = tuple(block.get("expression_options") or scene.expressions or GENERIC_EXPRESSIONS)
+    actions = tuple(block.get("subject_action_options") or scene.actions or GENERIC_SCENE_ACTIONS)
+    if not allow_hair_touching_actions and not subject_action_override:
+        actions = tuple(_filter_scene_actions_for_locked_hairstyle(actions))
+    expression = expression_override or _select_one(expressions, seed_source=seed_source, label="expression")
+    action = subject_action_override or _select_one(actions, seed_source=seed_source, label="subject-action")
+    gesture_constraints = _format_prompt_items(
+        tuple(
+            block.get("gesture_constraints")
+            or (
+                "主体动作优先，不要叠加互斥手部动作",
+                "手部必须符合真实解剖结构，十指分明",
+            )
+        )
+    )
+    return (
+        "人物表现系统："
+        f"人物表情固定为{expression or '自然看向镜头'}。"
+        f"人物动作固定为{action or '自然站立或静止停顿'}。"
+        f"手势约束：{gesture_constraints}。"
+    )
+
+
+def _build_hair_shape_lock_block(hairstyle: CatalogRecord | None) -> str:
+    if hairstyle is None:
+        return "发型锁定：保持参考图中已经生成完成的当前主发型结构不变，不要改变发长、轮廓、卷度、体积、分线和鬓角后颈区。"
+    block = _preset_block_from_record(hairstyle, "hair_shape")
+    segments = ["保持当前主发型结构不变"]
+    for field, label in (
+        ("hair_length", "发长"),
+        ("hair_silhouette", "轮廓"),
+        ("hair_texture", "纹理"),
+        ("hair_volume", "体积"),
+        ("hair_parting", "分线"),
+        ("sideburn_nape", "鬓角与后颈区"),
+    ):
+        value = _safe_text(block.get(field))
+        if value:
+            segments.append(f"{label}保持为{value}")
+    return f"发型锁定：{'；'.join(segments)}。"
+
+
+def _build_bangs_lock_block(hairstyle: CatalogRecord | None) -> str:
+    if hairstyle is None:
+        return "刘海锁定：保持当前刘海类型、厚薄、长度、开合方式和脸侧修饰不变。"
+    block = _preset_block_from_record(hairstyle, "bangs")
+    segments = ["保持当前刘海系统不变"]
+    for field, label in (
+        ("bangs_type", "刘海类型"),
+        ("bangs_density", "厚薄"),
+        ("bangs_length", "长度"),
+        ("bangs_split", "开合方式"),
+        ("bangs_face_framing", "脸侧修饰"),
+    ):
+        value = _safe_text(block.get(field))
+        if value and value != "不适用":
+            segments.append(f"{label}保持为{value}")
+    return f"刘海锁定：{'；'.join(segments)}。"
+
+
+def _build_hair_color_lock_block(hairstyle: CatalogRecord | None) -> str:
+    if hairstyle is None:
+        return (
+            "发色锁定：保持参考图中已经生成完成的当前发色与染发层次不变，"
+            "不要二次改色，不要改变冷暖倾向、亮度层级、挑染位置和过渡关系。"
+        )
+    labels = _load_hair_color_maps()
+    block = _preset_block_from_record(hairstyle, "recommended_hair_color")
+    tone_id = str(block.get("hair_color_tone") or "").strip()
+    tone_label = labels["tones"].get(tone_id, tone_id)
+    return (
+        "发色锁定：保持参考图中已经生成完成的"
+        f"{tone_label or '当前'}发色和现有染发层次不变，"
+        "不要二次改色，不要改变冷暖倾向、亮度层级、挑染位置和过渡关系。"
+    )
+
+
 def render_prompt(
     scene_id: str,
     hairstyle_id: str,
@@ -1628,42 +1897,57 @@ def build_prompt_assembly(
     cheekbone: str | None = None,
     seed_source: str | None = None,
 ) -> PromptAssembly:
-    if mode not in VALID_PROMPT_MODES:
-        raise ValueError(f"Unsupported prompt mode: {mode}")
+    normalized_mode = _normalize_prompt_mode(mode)
 
-    if mode == "hairstyle_only":
+    if normalized_mode == "hair_only":
         if not hairstyle_id:
             raise ValueError("hairstyle_id is required for hairstyle_only mode")
         hairstyle = get_record(hairstyle_id)
         if hairstyle.categoryType != "hairstyle":
             raise ValueError(f"{hairstyle_id} is not a hairstyle record")
-        return _build_hairstyle_only_runtime_prompt_assembly(
-            hairstyle_prompt=hairstyle.promptCore,
-            hairstyle_title=hairstyle.title,
-            hairstyle_constraints=list(hairstyle.constraints),
+        return _assemble_prompt(
+            normalized_mode,
+            [
+                _make_prompt_block("identity_lock", HAIRSTYLE_ONLY_IDENTITY_PROMPT),
+                _make_prompt_block("output_spec", _build_output_spec_text()),
+                _make_prompt_block("edit_scope", _build_edit_scope_text(normalized_mode)),
+                _make_prompt_block("hair_shape", _build_hair_shape_block(hairstyle)),
+                _make_prompt_block("bangs", _build_bangs_block(hairstyle)),
+                _make_prompt_block("hair_color", _build_hair_color_block(hairstyle)),
+                *_build_quality_blocks(),
+                *_build_negative_blocks(),
+            ],
         )
 
-    if mode == "scene_only":
+    if normalized_mode == "scene_only":
         if not scene_id:
             raise ValueError("scene_id is required for scene_only mode")
         scene = get_record(scene_id)
         if scene.categoryType != "scene":
             raise ValueError(f"{scene_id} is not a scene record")
-        scene_expressions = list(scene.expressions) or list(GENERIC_EXPRESSIONS)
-        scene_actions = list(scene.actions) or list(GENERIC_SCENE_ACTIONS)
-        return _build_scene_only_runtime_prompt_assembly(
-            scene_prompt=scene.environment or scene.promptCore,
-            scene_lighting=scene.lighting,
-            scene_mood=scene.styleMood,
-            shot_advice=scene.shotAdvice,
-            scene_constraints=list(scene.constraints),
-            scene_expressions=scene_expressions,
-            scene_actions=scene_actions,
-            outfit_hints=list(scene.outfitHints) or ["米白色针织、浅卡其衬衫或裸色背心"],
-            seed_source=seed_source or f"scene-only:{scene_id}",
-            expression_override=expression_override,
-            subject_action_override=subject_action_override,
-            outfit_override=outfit_override,
+        return _assemble_prompt(
+            normalized_mode,
+            [
+                _make_prompt_block("identity_lock", SCENE_ONLY_IDENTITY_PROMPT),
+                _make_prompt_block("output_spec", _build_output_spec_text()),
+                _make_prompt_block("edit_scope", _build_edit_scope_text(normalized_mode)),
+                _make_prompt_block("scene", _build_scene_block(scene)),
+                _make_prompt_block("styling", _build_styling_block(scene.styleLine, None)),
+                _make_prompt_block(
+                    "subject_performance",
+                    _build_subject_performance_block(
+                        scene,
+                        seed_source=seed_source or f"scene-only:{scene_id}",
+                        expression_override=expression_override,
+                        subject_action_override=subject_action_override,
+                    ),
+                ),
+                _make_prompt_block("hair_shape_lock", _build_hair_shape_lock_block(None)),
+                _make_prompt_block("bangs_lock", _build_bangs_lock_block(None)),
+                _make_prompt_block("hair_color_lock", _build_hair_color_lock_block(None)),
+                *_build_quality_blocks(),
+                *_build_negative_blocks(),
+            ],
         )
 
     if not scene_id or not hairstyle_id:
@@ -1676,35 +1960,30 @@ def build_prompt_assembly(
     if hairstyle.categoryType != "hairstyle":
         raise ValueError(f"{hairstyle_id} is not a hairstyle record")
 
-    scene_expressions = list(scene.expressions) or list(GENERIC_EXPRESSIONS)
-    scene_actions = list(scene.actions) or list(GENERIC_SCENE_ACTIONS)
-    face_profile = _build_face_profile(
-        face_shape=face_shape,
-        forehead=forehead,
-        jawline=jawline,
-        cheekbone=cheekbone,
-    )
-
-    return _build_runtime_prompt_assembly(
-        scene_prompt=scene.environment or scene.promptCore,
-        scene_lighting=scene.lighting,
-        scene_mood=scene.styleMood,
-        shot_advice=scene.shotAdvice,
-        scene_constraints=list(scene.constraints),
-        scene_expressions=scene_expressions,
-        scene_actions=scene_actions,
-        outfit_hints=list(scene.outfitHints) or ["白色宽松衬衫，内搭浅色背心或吊带"],
-        hairstyle_prompt=hairstyle.promptCore,
-        hairstyle_constraints=list(hairstyle.constraints),
-        hairstyle_actions=list(hairstyle.expressionAction),
-        seed_source=seed_source or f"{scene_id}:{hairstyle_id}",
-        scene_record=scene,
-        hairstyle_record=hairstyle,
-        face_profile=face_profile,
-        expression_override=expression_override,
-        subject_action_override=subject_action_override,
-        hairstyle_action_override=hairstyle_action_override,
-        outfit_override=outfit_override,
+    return _assemble_prompt(
+        normalized_mode,
+        [
+            _make_prompt_block("identity_lock", BASE_IDENTITY_PROMPT),
+            _make_prompt_block("output_spec", _build_output_spec_text()),
+            _make_prompt_block("edit_scope", _build_edit_scope_text(normalized_mode)),
+            _make_prompt_block("hair_shape", _build_hair_shape_block(hairstyle)),
+            _make_prompt_block("bangs", _build_bangs_block(hairstyle)),
+            _make_prompt_block("hair_color", _build_hair_color_block(hairstyle)),
+            _make_prompt_block("scene", _build_scene_block(scene)),
+            _make_prompt_block("styling", _build_styling_block(scene.styleLine, hairstyle.gender)),
+            _make_prompt_block(
+                "subject_performance",
+                _build_subject_performance_block(
+                    scene,
+                    seed_source=seed_source or f"{scene_id}:{hairstyle_id}",
+                    expression_override=expression_override,
+                    subject_action_override=subject_action_override,
+                    allow_hair_touching_actions=True,
+                ),
+            ),
+            *_build_quality_blocks(),
+            *_build_negative_blocks(),
+        ],
     )
 
 
@@ -1851,8 +2130,8 @@ def validate_catalog() -> list[str]:
                     errors.append(f"{record.id}: recommended hairstyle id '{hairstyle_id}' is not a hairstyle record")
 
     summary = catalog_summary()
-    if summary["scene_count"] != 20:
-        errors.append(f"Expected 20 scenes, found {summary['scene_count']}")
+    if summary["scene_count"] != 22:
+        errors.append(f"Expected 22 scenes, found {summary['scene_count']}")
     if summary["hairstyle_count"] != 56:
         errors.append(f"Expected 56 hairstyles, found {summary['hairstyle_count']}")
     if summary["male_hairstyles"] != 23:

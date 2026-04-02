@@ -80,7 +80,7 @@ def _build_parser() -> argparse.ArgumentParser:
     scene_only_parser.add_argument("--seed-source")
 
     blocks_parser = subparsers.add_parser("blocks", help="Print prompt blocks for a given mode")
-    blocks_parser.add_argument("--mode", required=True, choices=["hairstyle_only", "scene_only"])
+    blocks_parser.add_argument("--mode", required=True, choices=["hair_only", "hairstyle_only", "scene_only"])
     blocks_parser.add_argument("--scene")
     blocks_parser.add_argument("--hairstyle")
     blocks_parser.add_argument("--outfit")
@@ -163,7 +163,7 @@ def _build_block_assembly(
     subject_action_override: str | None = None,
     seed_source: str | None = None,
 ):
-    if mode == "hairstyle_only":
+    if mode in {"hair_only", "hairstyle_only"}:
         if not hairstyle_id:
             raise ValueError("hairstyle_id is required for hairstyle_only mode")
         return build_prompt_assembly(
@@ -357,8 +357,8 @@ def main(argv: list[str] | None = None) -> int:
         return 0
 
     if args.command == "blocks":
-        if args.mode == "hairstyle_only" and not args.hairstyle:
-            parser.error("--hairstyle is required when --mode hairstyle_only")
+        if args.mode in {"hair_only", "hairstyle_only"} and not args.hairstyle:
+            parser.error("--hairstyle is required when --mode hair_only / hairstyle_only")
         if args.mode == "scene_only" and not args.scene:
             parser.error("--scene is required when --mode scene_only")
         assembly = _build_block_assembly(

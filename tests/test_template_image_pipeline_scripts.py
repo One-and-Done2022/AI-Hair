@@ -76,7 +76,7 @@ def test_template_image_pipeline_processes_scene_template_and_generates_review_b
 
         def generate(self, source_image_path, prompt, context, provider_key=None):
             assert Path(source_image_path).exists()
-            assert "人物发型：保持参考图中已经生成完成的发型不变" in prompt
+            assert "发型锁定：保持参考图中已经生成完成的当前主发型结构不变" in prompt
             return GenerationResult(
                 primary_image_bytes=_build_test_image("#264653"),
                 candidate_image_bytes=[_build_test_image("#264653")],
@@ -87,8 +87,8 @@ def test_template_image_pipeline_processes_scene_template_and_generates_review_b
     review_root = tmp_path / "review"
     sample_root = tmp_path / "assets"
     sample_root.mkdir()
-    male_sample = sample_root / "male.jpg"
-    female_sample = sample_root / "female.jpg"
+    male_sample = sample_root / "male1.jpg"
+    female_sample = sample_root / "female1.jpg"
     male_sample.write_bytes(_build_test_image("#6fa8dc"))
     female_sample.write_bytes(_build_test_image("#f4c2c2"))
 
@@ -131,7 +131,7 @@ def test_template_image_pipeline_hairstyle_prompt_adds_white_background_cover_su
     prompt_mode, prompt = template_pipeline._build_template_prompt("hairstyles", hairstyle)
 
     assert prompt_mode == "hairstyle_only"
-    assert "换发目标：只更换图中人物的发型为：前刺头" in prompt
+    assert "主发型结构：发型改为前刺头" in prompt
     assert "官方发型模板封面图" in prompt
     assert "背景必须保持纯白或接近纯白的干净影棚白底" in prompt
     assert "适合前端模板卡片展示" in prompt

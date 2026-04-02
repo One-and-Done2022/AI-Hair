@@ -195,7 +195,7 @@ def test_build_prompt_uses_faceprompt_single_image_structure():
     assert "不要拼图排版" in prompt
     assert "图片需要符合物理逻辑" in prompt
     assert "不可以有不符合物理逻辑的身体部位" in prompt
-    assert "只选择 1 种主体动作" in prompt
+    assert "人物动作固定为" in prompt
     assert "不要与主体动作叠加成不合理肢体效果" in prompt
     assert "后端每次只选 1 个主体动作" in prompt
 
@@ -290,31 +290,20 @@ def test_build_prompt_assembly_returns_structured_blocks():
     assert assembly.mode == "full_stylize"
     assert [block.key for block in assembly.blocks] == [
         "identity_lock",
-        "output_format",
-        "shot",
-        "scene_environment",
-        "scene_lighting",
-        "scene_mood",
-        "expression",
-        "subject_action",
-        "hairstyle_action",
-        "makeup",
-        "outfit",
-        "hair_target",
-        "hair_color_target",
-        "hair_color_technique",
-        "styling_constraints",
-        "scene_constraints",
-        "hair_constraints",
-        "motion_safety_constraints",
-        "quality_skin_texture",
-        "quality_image_finish",
-        "negative_identity_artifact",
-        "negative_physical_logic",
+        "output_spec",
+        "edit_scope",
+        "hair_shape",
+        "bangs",
+        "hair_color",
+        "scene",
+        "styling",
+        "subject_performance",
+        "quality_control",
+        "negative_constraints",
     ]
     assert assembly.render() == templates.build_prompt(hairstyle, scene, seed_source="api-assembly")
     assert assembly.blocks[0].label == "身份锁定"
-    assert assembly.blocks[3].label == "场景环境"
+    assert assembly.blocks[3].label == "主发型结构"
 
 
 def test_prompt_block_labels_use_english_keys_and_chinese_labels():
@@ -323,12 +312,12 @@ def test_prompt_block_labels_use_english_keys_and_chinese_labels():
     labels = templates.get_prompt_block_labels()
 
     assert labels["identity_lock"] == "身份锁定"
-    assert labels["scene_environment"] == "场景环境"
-    assert labels["makeup"] == "人物妆容"
-    assert labels["hair_lock"] == "发型锁定"
-    assert labels["hair_color_target"] == "目标发色"
+    assert labels["scene"] == "场景系统"
+    assert labels["styling"] == "妆造系统"
+    assert labels["hair_shape_lock"] == "发型锁定"
+    assert labels["hair_color"] == "发色系统"
     assert labels["hair_color_lock"] == "发色锁定"
-    assert labels["negative_physical_logic"] == "物理逻辑负面约束"
+    assert labels["negative_constraints"] == "负面约束"
 
 
 def test_prompt_rule_table_declares_mode_boundaries():
@@ -337,20 +326,20 @@ def test_prompt_rule_table_declares_mode_boundaries():
     rules = templates.get_prompt_rule_table()
 
     assert "scene_only" in rules
+    assert "hair_only" in rules
     assert "hairstyle_only" in rules
-    assert "hair_lock" in rules["scene_only"].required_blocks
+    assert "hair_shape_lock" in rules["scene_only"].required_blocks
+    assert "bangs_lock" in rules["scene_only"].required_blocks
     assert "hair_color_lock" in rules["scene_only"].required_blocks
-    assert "makeup" in rules["scene_only"].required_blocks
-    assert "styling_constraints" in rules["scene_only"].required_blocks
-    assert "hair_target" in rules["hairstyle_only"].required_blocks
-    assert "hair_color_target" in rules["hairstyle_only"].required_blocks
-    assert "hair_target" in rules["scene_only"].forbidden_blocks
-    assert "scene_environment" in rules["hairstyle_only"].forbidden_blocks
-    assert "shot" in rules["hairstyle_only"].forbidden_blocks
-    assert "scene_control" in rules["hairstyle_only"].forbidden_blocks
-    assert "face_strategy" in rules["hairstyle_only"].forbidden_blocks
-    assert "makeup" in rules["hairstyle_only"].forbidden_blocks
-    assert "styling_constraints" in rules["hairstyle_only"].forbidden_blocks
+    assert "styling" in rules["scene_only"].required_blocks
+    assert "subject_performance" in rules["scene_only"].required_blocks
+    assert "hair_shape" in rules["hairstyle_only"].required_blocks
+    assert "bangs" in rules["hairstyle_only"].required_blocks
+    assert "hair_color" in rules["hairstyle_only"].required_blocks
+    assert "hair_shape" in rules["scene_only"].forbidden_blocks
+    assert "scene" in rules["hairstyle_only"].forbidden_blocks
+    assert "styling" in rules["hairstyle_only"].forbidden_blocks
+    assert "subject_performance" in rules["hairstyle_only"].forbidden_blocks
 
 
 def test_build_hairstyle_only_prompt_uses_identity_lock_and_hair_swap_structure():
@@ -363,12 +352,11 @@ def test_build_hairstyle_only_prompt_uses_identity_lock_and_hair_swap_structure(
     prompt = templates.build_hairstyle_only_prompt(hairstyle)
 
     assert "只更换图中人物的发型和发色" in prompt
-    assert "换发目标：只更换图中人物的发型与发色，其中发型固定为：前刺头。" in prompt
-    assert "人物发型：发型改为前刺头" in prompt
-    assert "发色目标：发色调整为深棕" in prompt
-    assert "染发工艺：采用统一染" in prompt
+    assert "编辑范围：本次仅允许修改头发系统" in prompt
+    assert "主发型结构：发型改为前刺头" in prompt
+    assert "刘海系统：" in prompt
+    assert "发色系统：发色调整为深棕" in prompt
     assert "尽量保持原图中的背景、服饰、姿态、表情、构图、镜头距离、光线和氛围不变" in prompt
-    assert "不能把新发型做成悬浮假发" in prompt
     assert "负面约束：不要换脸、不要改变性别表达、不要生成第二个人" in prompt
 
 
@@ -379,16 +367,21 @@ def test_build_scene_only_prompt_locks_existing_hairstyle_and_updates_scene():
 
     assert scene is not None
 
-    prompt = templates.build_scene_only_prompt(scene, seed_source="scene-only-lock")
+    hairstyle = templates.get_hairstyle("male-forward-spikes")
+
+    assert hairstyle is not None
+
+    prompt = templates.build_scene_only_prompt(scene, hairstyle=hairstyle, preferred_gender="male", seed_source="scene-only-lock")
 
     assert "不改变人物的脸型、五官比例、眼距、鼻梁、嘴型、肤色、年龄感和整体气质和发型" in prompt
     assert "忽略原照片中的背景、原服饰、原有动作" in prompt
-    assert "人物发型：保持参考图中已经生成完成的发型不变" in prompt
+    assert "发型锁定：" in prompt
+    assert "刘海锁定：" in prompt
     assert "发色锁定：" in prompt
     assert "不要二次改色" in prompt
-    assert "妆容：" in prompt
-    assert "服饰：" in prompt
-    assert "不要因为动作、风感或镜头变化把当前发型改成另一种发型" in prompt
+    assert "妆造系统：" in prompt
+    assert "场景系统：" in prompt
+    assert "人物表现系统：" in prompt
     assert "抬手整理窗边发丝" not in prompt
 
 
@@ -406,37 +399,43 @@ def test_scene_only_prompt_prefers_gendered_scene_styling_rules():
     )
     male_prompt = templates.build_scene_only_prompt(
         scene,
+        hairstyle=templates.get_hairstyle("male-forward-spikes"),
         preferred_gender="male",
         seed_source="scene-only-male-rule",
     )
 
     assert "内搭浅色背心或吊带" in female_prompt
-    assert "米白或浅灰针织上衣" in male_prompt
+    assert "浅灰针织" in male_prompt
     assert female_prompt != male_prompt
 
 
-def test_scene_only_prompt_assembly_exposes_hair_lock_block():
+def test_scene_only_prompt_assembly_exposes_hair_lock_blocks():
     from app.services import templates
 
     scene = templates.get_scene("walnut-study-portrait")
+    hairstyle = templates.get_hairstyle("male-forward-spikes")
 
     assert scene is not None
+    assert hairstyle is not None
 
     assembly = templates.build_prompt_assembly(
         mode="scene_only",
+        hairstyle=hairstyle,
         scene=scene,
         seed_source="scene-only-api-assembly",
     )
 
     assert assembly.mode == "scene_only"
-    hair_blocks = [block.text for block in assembly.blocks if block.key == "hair_lock"]
+    hair_blocks = [block.text for block in assembly.blocks if block.key == "hair_shape_lock"]
     assert len(hair_blocks) == 1
-    assert "保持参考图中已经生成完成的发型不变" in hair_blocks[0]
+    assert "保持当前主发型结构不变" in hair_blocks[0]
+    bangs_blocks = [block.text for block in assembly.blocks if block.key == "bangs_lock"]
+    assert len(bangs_blocks) == 1
     hair_color_blocks = [block.text for block in assembly.blocks if block.key == "hair_color_lock"]
     assert len(hair_color_blocks) == 1
     assert "不要二次改色" in hair_color_blocks[0]
-    assert any(block.key == "makeup" for block in assembly.blocks)
-    assert any(block.key == "styling_constraints" for block in assembly.blocks)
+    assert any(block.key == "styling" for block in assembly.blocks)
+    assert any(block.key == "subject_performance" for block in assembly.blocks)
 
 
 def test_default_styling_prefers_matching_gender_when_available():
@@ -490,7 +489,7 @@ def test_build_prompt_uses_one_subject_action_and_one_compatible_detail_action()
     prompt = templates.build_prompt(hairstyle, scene, seed_source="hand-conflict-scene")
 
     assert "靠在窗台边；抬手整理窗边发丝；双手轻握杯子停顿" not in prompt
-    assert "人物动作：单张图中只选择 1 种主体动作，本张图固定为：" in prompt
+    assert "人物表现系统：人物表情固定为" in prompt
     assert "单手抓起头顶前区发束" not in prompt
     assert "双手抓起顶部卷度" not in prompt
 

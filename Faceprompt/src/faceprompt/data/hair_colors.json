@@ -1,0 +1,74 @@
+[
+  {
+    "id": "natural_black",
+    "label": "自然黑",
+    "hex": "#1F1A18",
+    "description": "低调稳妥，接近自然原生深发色。",
+    "allowedTechniques": ["solid", "highlight", "earloop"],
+    "defaultTechnique": "solid",
+    "displayPriority": 10
+  },
+  {
+    "id": "blue_black",
+    "label": "蓝黑",
+    "hex": "#1D2331",
+    "description": "偏冷调的深色质感，干净利落。",
+    "allowedTechniques": ["solid", "highlight"],
+    "defaultTechnique": "solid",
+    "displayPriority": 20
+  },
+  {
+    "id": "dark_brown",
+    "label": "深棕",
+    "hex": "#3B2A24",
+    "description": "通用度最高，适合大多数发型与肤色。",
+    "allowedTechniques": ["solid", "highlight", "balayage"],
+    "defaultTechnique": "solid",
+    "displayPriority": 30
+  },
+  {
+    "id": "chestnut_brown",
+    "label": "栗棕",
+    "hex": "#6A4635",
+    "description": "暖感更明显，发丝层次和光泽更容易被看见。",
+    "allowedTechniques": ["solid", "highlight", "balayage", "gradient"],
+    "defaultTechnique": "solid",
+    "displayPriority": 40
+  },
+  {
+    "id": "mocha_brown",
+    "label": "摩卡棕",
+    "hex": "#5A4338",
+    "description": "柔和细腻，偏日常耐看的中深棕调。",
+    "allowedTechniques": ["solid", "highlight", "balayage", "gradient"],
+    "defaultTechnique": "solid",
+    "displayPriority": 50
+  },
+  {
+    "id": "honey_brown",
+    "label": "蜂蜜茶棕",
+    "hex": "#8B6241",
+    "description": "偏暖提亮，适合做更轻盈柔和的氛围感。",
+    "allowedTechniques": ["solid", "highlight", "balayage", "gradient"],
+    "defaultTechnique": "balayage",
+    "displayPriority": 60
+  },
+  {
+    "id": "ash_brown",
+    "label": "雾灰棕",
+    "hex": "#6B645F",
+    "description": "偏冷雾感，更显轻盈和高级。",
+    "allowedTechniques": ["solid", "highlight", "balayage"],
+    "defaultTechnique": "solid",
+    "displayPriority": 70
+  },
+  {
+    "id": "linen_blonde",
+    "label": "亚麻金",
+    "hex": "#B08F62",
+    "description": "更明显的浅色提亮，适合强调染发存在感。",
+    "allowedTechniques": ["solid", "highlight", "gradient"],
+    "defaultTechnique": "gradient",
+    "displayPriority": 80
+  }
+]

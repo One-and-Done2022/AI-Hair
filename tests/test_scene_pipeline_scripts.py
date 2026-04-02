@@ -113,7 +113,7 @@ def test_scene_pipeline_processes_inbox_item_and_generates_review_bundle(tmp_pat
 
         def generate(self, source_image_path, prompt, context, provider_key=None, on_preview=None):
             assert Path(source_image_path).exists()
-            assert "人物发型：保持参考图中已经生成完成的发型不变" in prompt
+            assert "发型锁定：保持参考图中已经生成完成的当前主发型结构不变" in prompt
             prompt_calls.append(prompt)
             image_bytes = _build_test_image("#264653")
             return GenerationResult(
