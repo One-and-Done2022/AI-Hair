@@ -15,6 +15,7 @@ const {
   readCreationDraft,
   updateCreationDraft
 } = require("../../utils/creation-draft");
+const { mergePendingHistoryJobs } = require("../../utils/pending-history");
 
 function formatFileSize(bytes) {
   if (!bytes || bytes <= 0) {
@@ -48,6 +49,33 @@ function getRecommendationGender(draft, recommendation) {
     return "female";
   }
   return "male";
+}
+
+function parseTimestamp(value) {
+  if (!value) {
+    return 0;
+  }
+  const normalized = String(value).replace(/\+00:00$/, "Z");
+  const timestamp = Date.parse(normalized);
+  return Number.isNaN(timestamp) ? 0 : timestamp;
+}
+
+function buildHistoryShowcases(items) {
+  return (items || [])
+    .filter((item) => item && item.status === "succeeded" && (item.result_image_url || item.hair_preview_url))
+    .sort((left, right) => parseTimestamp(right.created_at) - parseTimestamp(left.created_at))
+    .slice(0, 6)
+    .map((item) => ({
+      id: item.job_id,
+      job_id: item.job_id,
+      title: `${item.hairstyle_name || "发型"} · ${item.scene_name || "场景"}`,
+      summary: item.hair_color_tone_label
+        ? `${item.hair_color_tone_label}${item.hair_color_technique_label ? " · " + item.hair_color_technique_label : ""}`
+        : "完整历史生成记录",
+      cover_url: item.result_image_url || item.hair_preview_url || "",
+      created_at: item.created_at || "",
+      status: item.status || ""
+    }));
 }
 
 function buildRecommendationCard(recommendation, loading, draft, selectedImage) {
@@ -189,8 +217,8 @@ Page({
     this.setData({ loading: true });
     try {
       await ensureLogin();
-      const [showcasePayload, profileSummary] = await Promise.all([
-        request({ url: "/api/templates/showcases" }).catch(() => ({ items: [] })),
+      const [historyPayload, profileSummary] = await Promise.all([
+        request({ url: "/api/history" }).catch(() => ({ items: [] })),
         request({ url: "/api/me" }).catch(() => null)
       ]);
 
@@ -205,7 +233,7 @@ Page({
       this.setData({
         loading: false,
         profileSummary,
-        showcases: (showcasePayload && showcasePayload.items) || [],
+        showcases: buildHistoryShowcases(mergePendingHistoryJobs((historyPayload && historyPayload.items) || [])),
         selectedImage,
         selectedHairstyleName: (draft.hairstyle && draft.hairstyle.name) || "",
         selectedSceneName: (draft.scene && draft.scene.name) || "",
@@ -277,7 +305,14 @@ Page({
   },
 
   openExampleDetail(event) {
+    const jobId = event.currentTarget.dataset.jobId;
     const id = event.currentTarget.dataset.id;
+    if (jobId) {
+      wx.navigateTo({
+        url: `/pages/result/index?jobId=${jobId}`
+      });
+      return;
+    }
     if (!id) {
       return;
     }

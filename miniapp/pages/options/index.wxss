@@ -26,7 +26,6 @@
 }
 
 .summary-card,
-.generator-panel,
 .hair-color-panel,
 .hair-technique-panel,
 .advanced-panel {
@@ -77,48 +76,10 @@
   font-weight: 700;
 }
 
-.generator-panel,
 .hair-color-panel,
 .hair-technique-panel,
 .advanced-panel {
   margin-top: 24rpx;
-}
-
-.generator-switch {
-  margin-top: 18rpx;
-  display: flex;
-  gap: 12rpx;
-  flex-wrap: wrap;
-}
-
-.generator-pill {
-  min-width: 132rpx;
-  height: 72rpx;
-  padding: 0 24rpx;
-  border-radius: 999rpx;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  background: #edf3ff;
-  color: #5d6670;
-  font-size: 24rpx;
-  font-weight: 700;
-}
-
-.generator-pill.active {
-  background: #0058ba;
-  color: #ffffff;
-}
-
-.generator-pill.disabled {
-  opacity: 0.42;
-}
-
-.generator-copy {
-  margin-top: 14rpx;
-  font-size: 24rpx;
-  line-height: 1.48;
-  color: #4d5762;
 }
 
 .hair-color-head {

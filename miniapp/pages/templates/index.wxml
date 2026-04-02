@@ -19,7 +19,7 @@
 
   <view class="editorial-head">
     <view class="title editorial-title">选择发型</view>
-    <view class="subtitle editorial-subtitle">先定发型，再去配场景和生成方案。</view>
+    <view class="subtitle editorial-subtitle">先定发型，再去配场景和参数。</view>
   </view>
 
   <view class="gender-switch">

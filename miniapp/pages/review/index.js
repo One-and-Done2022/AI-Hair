@@ -31,8 +31,6 @@ Page({
     selectedResolution: "",
     selectedHairColorToneLabel: "",
     selectedHairColorTechniqueLabel: "",
-    backendLabel: "",
-    backendDescription: "",
     submitting: false
   },
 
@@ -69,7 +67,6 @@ Page({
       const catalog = await request({ url: "/api/templates" });
       const generationBackends = formatGenerationBackends(catalog.generation_backends || []);
       const generationSelection = buildGenerationSelection(generationBackends, draft);
-      const selectedBackend = generationSelection.selectedBackend;
       const selectedHairstyle =
         findById(catalog.hairstyles, draft.hairstyle.id) || draft.hairstyle;
       const selectedScene =
@@ -104,9 +101,7 @@ Page({
         selectedAspectRatio: generationSelection.selectedAspectRatio,
         selectedResolution: generationSelection.selectedResolution,
         selectedHairColorToneLabel: hairColorSelection.tone ? hairColorSelection.tone.label : "",
-        selectedHairColorTechniqueLabel: hairColorSelection.technique ? hairColorSelection.technique.label : "",
-        backendLabel: selectedBackend ? selectedBackend.name : "",
-        backendDescription: selectedBackend ? selectedBackend.description : ""
+        selectedHairColorTechniqueLabel: hairColorSelection.technique ? hairColorSelection.technique.label : ""
       });
     } catch (error) {
       this.setData({ loading: false });

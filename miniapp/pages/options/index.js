@@ -34,8 +34,6 @@ Page({
     selectedScene: null,
     generationBackends: [],
     selectedGeneratorBackend: "",
-    selectedBackendLabel: "",
-    selectedBackendDescription: "",
     selectedAspectRatio: "3:4",
     selectedResolution: "",
     aspectRatioOptions: [],
@@ -135,8 +133,6 @@ Page({
         selectedScene,
         generationBackends,
         selectedGeneratorBackend: generationSelection.selectedGeneratorBackend,
-        selectedBackendLabel: generationSelection.selectedBackend ? generationSelection.selectedBackend.name : "",
-        selectedBackendDescription: generationSelection.selectedBackend ? generationSelection.selectedBackend.description : "",
         selectedAspectRatio: generationSelection.selectedAspectRatio,
         selectedResolution: generationSelection.selectedResolution,
         aspectRatioOptions: generationSelection.aspectRatioOptions,
@@ -147,8 +143,8 @@ Page({
         techniqueOptions: hairColorSelection.techniqueOptions,
         detectedHairColorLabel: detectedHairColor ? detectedHairColor.label : "",
         detectedHairColorHint: detectedHairColor
-          ? `已按原图预估为 ${detectedHairColor.label}`
-          : "可手动调整更想尝试的发色"
+          ? `不选时默认沿用原图预估的 ${detectedHairColor.label}`
+          : "未识别到原发色时会按模板默认色生成，可手动调整"
       });
     } catch (error) {
       this.setData({ loading: false });

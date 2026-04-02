@@ -4,7 +4,7 @@
       <view class="flow-nav-button" bindtap="goBackStep">上一步</view>
       <view class="flow-nav-button" bindtap="resetFlow">回首页</view>
     </view>
-    <view class="flow-nav-caption">定好场景后再选生成方案</view>
+    <view class="flow-nav-caption">定好场景后再选参数</view>
   </view>
 
   <view class="progress-shell">

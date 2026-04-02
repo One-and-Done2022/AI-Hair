@@ -46,12 +46,6 @@
     </view>
   </view>
 
-  <view class="panel generator-panel">
-    <view class="section-title">生成方案</view>
-    <view class="generator-pill active">{{selectedBackendLabel || '默认方案'}}</view>
-    <view class="generator-copy">{{selectedBackendDescription || '固定返回 1 张换发预览和 2 张场景成片，清晰度统一为 2K。'}}</view>
-  </view>
-
   <view class="panel hair-color-panel">
     <view class="hair-color-head">
       <view class="section-title">发色基调</view>
@@ -93,12 +87,16 @@
     <view class="advanced-head" bindtap="toggleAdvanced">
       <view>
         <view class="section-title">高级设置</view>
-        <view class="advanced-summary">比例 {{selectedAspectRatio}}{{selectedResolution ? ' · 清晰度 ' + selectedResolution : ''}}</view>
+        <view class="advanced-summary">默认返回 1 张换发预览 + 2 张场景成片</view>
       </view>
       <view class="advanced-toggle">{{advancedOpen ? '收起' : '展开'}}</view>
     </view>
 
     <view wx:if="{{advancedOpen}}" class="advanced-body">
+      <view class="option-group">
+        <view class="option-label">默认输出</view>
+        <view class="option-fixed">固定返回 1 张换发预览和 2 张场景成片，清晰度统一为 2K。</view>
+      </view>
       <view class="option-group">
         <view class="option-label">画幅比例</view>
         <view class="option-row">
