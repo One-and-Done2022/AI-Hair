@@ -145,6 +145,9 @@ class Settings:
     image_understanding_model: str
     image_understanding_max_concurrency: int
     image_understanding_timeout_seconds: int
+    provider_connectivity_check_enabled: bool
+    provider_connectivity_check_interval_seconds: int
+    provider_connectivity_check_timeout_seconds: int
     job_worker_concurrency: int
     queue_backend: str
     redis_url: str
@@ -432,6 +435,18 @@ def get_settings() -> Settings:
         image_understanding_timeout_seconds=max(
             30,
             _env_int("IMAGE_UNDERSTANDING_TIMEOUT_SECONDS", 120),
+        ),
+        provider_connectivity_check_enabled=_env_bool(
+            "PROVIDER_CONNECTIVITY_CHECK_ENABLED",
+            True,
+        ),
+        provider_connectivity_check_interval_seconds=max(
+            30,
+            _env_int("PROVIDER_CONNECTIVITY_CHECK_INTERVAL_SECONDS", 300),
+        ),
+        provider_connectivity_check_timeout_seconds=max(
+            1,
+            _env_int("PROVIDER_CONNECTIVITY_CHECK_TIMEOUT_SECONDS", 5),
         ),
         job_worker_concurrency=max(
             1,

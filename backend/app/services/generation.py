@@ -37,9 +37,10 @@ CANDIDATE_IMAGE_COUNT = 3
 PRIMARY_PREVIEW_IMAGE_COUNT = 1
 PreviewCallback = Callable[[bytes], None]
 CandidateCallback = Callable[[bytes], None]
-NANO_IMAGE_TIMEOUT_MAP = {"512px": 120, "1K": 180, "2K": 300, "4K": 360}
+NANO_IMAGE_TIMEOUT_MAP = {"512px": 40, "1K": 60, "2K": 100, "4K": 120}
 CHAT_COMPLETION_RETRYABLE_STATUS_CODES = {408, 409, 429, 500, 502, 503, 504}
-CHAT_COMPLETION_MAX_ATTEMPTS = 2
+CHAT_COMPLETION_MAX_ATTEMPTS = 1
+NANO_PROFILE_RETRY_BACKOFF_SECONDS = 180
 SEEDREAM_REST_TIMEOUT_SECONDS = 180
 _PROVIDER_BACKOFF_UNTIL: dict[str, float] = {}
 _PROVIDER_BACKOFF_LOCK = Lock()
@@ -1065,20 +1066,20 @@ class ApiYiImageGenerator(BaseGenerator):
         if exc.code == "authentication_failed" or exc.retryable:
             return True
 
-        # The chat-compatible Nano Banana fallback route is intentionally best-effort.
-        # Some upstream OpenAI-compatible gateways reject multimodal payloads with a
-        # 400 that is specific to their role parser. In that case we should continue
-        # to the next configured provider instead of failing the whole job.
+        return self._is_profile_compatibility_error(profile, exc)
+
+    def _is_profile_compatibility_error(
+        self,
+        profile: ProviderProfile,
+        exc: ImageGenerationError,
+    ) -> bool:
         normalized_message = str(exc).strip().lower()
-        if (
+        return (
             self.provider_name == "nano-banana-pro"
-            and profile.protocol == "openai_chat_markdown"
             and exc.code == "bad_request"
             and "valid role" in normalized_message
-        ):
-            return True
-
-        return False
+            and profile.profile_id in {"route1", "route2"}
+        )
 
     def _profile_backoff_key(self, profile: ProviderProfile) -> str:
         return f"{self.provider_name}:{profile.profile_id}"
@@ -1103,6 +1104,21 @@ class ApiYiImageGenerator(BaseGenerator):
         key = self._profile_backoff_key(profile)
         with _PROVIDER_BACKOFF_LOCK:
             _PROVIDER_BACKOFF_UNTIL.pop(key, None)
+
+    def _profile_backoff_seconds(
+        self,
+        profile: ProviderProfile,
+        exc: ImageGenerationError,
+    ) -> int | None:
+        if exc.code == "quota_exhausted":
+            return exc.retry_after_seconds or 3600
+        if exc.code == "authentication_failed":
+            return exc.retry_after_seconds or 600
+        if self._is_profile_compatibility_error(profile, exc):
+            return exc.retry_after_seconds or NANO_PROFILE_RETRY_BACKOFF_SECONDS
+        if exc.retryable:
+            return exc.retry_after_seconds or NANO_PROFILE_RETRY_BACKOFF_SECONDS
+        return None
 
     def _provider_alert_id(self, profile: ProviderProfile) -> str:
         return f"{self.provider_name}:{profile.profile_id}:quota"
@@ -1389,17 +1405,11 @@ class ApiYiImageGenerator(BaseGenerator):
                 return result
             except ImageGenerationError as exc:
                 last_error = exc
+                backoff_seconds = self._profile_backoff_seconds(profile, exc)
+                if backoff_seconds is not None:
+                    self._set_profile_backoff(profile, backoff_seconds)
                 if exc.code == "quota_exhausted":
-                    self._set_profile_backoff(
-                        profile,
-                        exc.retry_after_seconds or 3600,
-                    )
                     self._notify_profile_quota_exhausted(profile)
-                elif exc.code == "authentication_failed":
-                    self._set_profile_backoff(
-                        profile,
-                        exc.retry_after_seconds or 600,
-                    )
                 has_next_profile = index < len(available_profiles) - 1
                 if not has_next_profile or not self._should_try_next_profile(profile, exc):
                     raise

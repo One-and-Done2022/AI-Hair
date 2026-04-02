@@ -1456,7 +1456,7 @@ def test_nano_banana_generator_uses_native_image_config(tmp_path, monkeypatch):
         "aspectRatio": "3:4",
         "imageSize": "4K",
     }
-    assert request_log["timeout"] == 360
+    assert request_log["timeout"] == 120
     assert len(previews) == 1
     assert len(result.candidate_image_bytes) == 1
 
@@ -1603,11 +1603,10 @@ def test_nano_banana_pro_falls_back_to_chat_provider(tmp_path, monkeypatch):
         on_preview=lambda image_bytes: previews.append(image_bytes),
     )
 
-    assert len(request_log) == 4
+    assert len(request_log) == 3
     assert request_log[0]["headers"]["Authorization"] == "Bearer chat-key"
-    assert request_log[1]["headers"]["Authorization"] == "Bearer chat-key"
-    assert request_log[2]["headers"]["Authorization"] == "Bearer backup-key"
-    assert request_log[3]["headers"]["Authorization"] == "Bearer primary-key"
+    assert request_log[1]["headers"]["Authorization"] == "Bearer backup-key"
+    assert request_log[2]["headers"]["Authorization"] == "Bearer primary-key"
     assert request_log[0]["url"] == "https://chat.example.test/v1/chat/completions"
     assert request_log[0]["json"]["model"] == "Nano_Banana_Pro_2K_0"
     assert request_log[0]["json"]["messages"][0]["content"][1]["type"] == "image_url"
@@ -1687,6 +1686,159 @@ def test_nano_banana_pro_falls_back_when_chat_provider_rejects_role_format(
     assert request_log[1]["headers"]["Authorization"] == "Bearer backup-key"
     assert request_log[0]["url"] == "https://chat.example.test/v1/chat/completions"
     assert result.primary_image_bytes
+
+
+def test_nano_banana_pro_falls_back_when_backup_provider_rejects_role_format(
+    tmp_path,
+    monkeypatch,
+):
+    _configure_runtime_env(tmp_path, monkeypatch, use_mock_generator="false")
+    monkeypatch.delenv("NANO_BANANA_PRO_CHAT_FALLBACK_API_KEY", raising=False)
+    monkeypatch.delenv("NANO_BANANA_PRO_CHAT_FALLBACK_BASE_URL", raising=False)
+    monkeypatch.setenv("NANO_BANANA_PRO_API_KEY", "primary-key")
+    monkeypatch.setenv("NANO_BANANA_PRO_BASE_URL", "https://primary.example.test")
+    monkeypatch.setenv("NANO_BANANA_PRO_FALLBACK_API_KEY", "backup-key")
+    monkeypatch.setenv("NANO_BANANA_PRO_FALLBACK_BASE_URL", "https://backup.example.test")
+
+    import httpx
+
+    from app.services.generation import GenerationContext, NanoBananaProGenerator
+
+    _clear_runtime_caches()
+
+    source_path = tmp_path / "source.png"
+    source_path.write_bytes(_build_test_image())
+
+    request_log = []
+
+    def fake_post(url, *, headers=None, json=None, timeout=None):
+        request_log.append({"url": url, "headers": headers, "json": json, "timeout": timeout})
+        if url.startswith("https://backup.example.test"):
+            return httpx.Response(
+                400,
+                request=httpx.Request("POST", url),
+                json={"error": {"message": "Please use a valid role: user, model."}},
+            )
+        return httpx.Response(
+            200,
+            request=httpx.Request("POST", url),
+            json={
+                "candidates": [
+                    {
+                        "content": {
+                            "parts": [
+                                {
+                                    "inlineData": {
+                                        "mimeType": "image/png",
+                                        "data": base64.b64encode(_build_colored_image("#4d908e")).decode("utf-8"),
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                ]
+            },
+        )
+
+    monkeypatch.setattr("app.services.generation.httpx.post", fake_post)
+
+    generator = NanoBananaProGenerator()
+    result = generator.generate(
+        source_image_path=str(source_path),
+        prompt="test backup role fallback prompt",
+        context=GenerationContext(
+            hairstyle_name="前刺短发",
+            scene_name="窗边生活感",
+            aspect_ratio="3:4",
+            resolution="1K",
+        ),
+    )
+
+    assert len(request_log) == 2
+    assert request_log[0]["headers"]["Authorization"] == "Bearer backup-key"
+    assert request_log[1]["headers"]["Authorization"] == "Bearer primary-key"
+    assert result.primary_image_bytes
+
+
+def test_nano_banana_pro_retryable_route_enters_backoff_and_next_request_skips_it(
+    tmp_path,
+    monkeypatch,
+):
+    _configure_runtime_env(tmp_path, monkeypatch, use_mock_generator="false")
+    monkeypatch.setenv("NANO_BANANA_PRO_API_KEY", "primary-key")
+    monkeypatch.setenv("NANO_BANANA_PRO_BASE_URL", "https://primary.example.test")
+    monkeypatch.setenv("NANO_BANANA_PRO_FALLBACK_API_KEY", "backup-key")
+    monkeypatch.setenv("NANO_BANANA_PRO_FALLBACK_BASE_URL", "https://backup.example.test")
+    monkeypatch.setenv("NANO_BANANA_PRO_CHAT_FALLBACK_API_KEY", "chat-key")
+    monkeypatch.setenv("NANO_BANANA_PRO_CHAT_FALLBACK_BASE_URL", "https://chat.example.test/v1")
+    monkeypatch.setenv("NANO_BANANA_PRO_CHAT_FALLBACK_MODEL", "Nano_Banana_Pro_2K_0")
+
+    import httpx
+
+    from app.services.generation import GenerationContext, NanoBananaProGenerator
+
+    _clear_runtime_caches()
+
+    source_path = tmp_path / "source.png"
+    source_path.write_bytes(_build_test_image())
+
+    request_log = []
+
+    def fake_post(url, *, headers=None, json=None, timeout=None):
+        request_log.append({"url": url, "headers": headers, "json": json, "timeout": timeout})
+        if url.startswith("https://chat.example.test"):
+            return httpx.Response(
+                503,
+                request=httpx.Request("POST", url),
+                json={"error": {"message": "upstream unavailable"}},
+            )
+        return httpx.Response(
+            200,
+            request=httpx.Request("POST", url),
+            json={
+                "candidates": [
+                    {
+                        "content": {
+                            "parts": [
+                                {
+                                    "inlineData": {
+                                        "mimeType": "image/png",
+                                        "data": base64.b64encode(_build_colored_image("#577590")).decode("utf-8"),
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                ]
+            },
+        )
+
+    monkeypatch.setattr("app.services.generation.httpx.post", fake_post)
+
+    generator = NanoBananaProGenerator()
+    context = GenerationContext(
+        hairstyle_name="前刺短发",
+        scene_name="窗边生活感",
+        aspect_ratio="3:4",
+        resolution="1K",
+    )
+    first = generator.generate(
+        source_image_path=str(source_path),
+        prompt="test retryable backoff prompt",
+        context=context,
+    )
+    second = generator.generate(
+        source_image_path=str(source_path),
+        prompt="test retryable backoff prompt again",
+        context=context,
+    )
+
+    assert first.primary_image_bytes
+    assert second.primary_image_bytes
+    assert len(request_log) == 3
+    assert request_log[0]["headers"]["Authorization"] == "Bearer chat-key"
+    assert request_log[1]["headers"]["Authorization"] == "Bearer backup-key"
+    assert request_log[2]["headers"]["Authorization"] == "Bearer backup-key"
 
 
 def test_nano_banana_pro_quota_exhaustion_adds_alert_and_falls_back(tmp_path, monkeypatch):
@@ -1826,7 +1978,7 @@ def test_nano_banana_2_generator_uses_native_image_config(tmp_path, monkeypatch)
         "aspectRatio": "1:8",
         "imageSize": "512px",
     }
-    assert request_log["timeout"] == 120
+    assert request_log["timeout"] == 40
     assert len(previews) == 1
     assert len(result.candidate_image_bytes) == 1
 

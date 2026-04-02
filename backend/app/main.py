@@ -22,7 +22,7 @@ from app.services.dispatch_queue import build_job_queue
 from app.services.generation import build_generator
 from app.services.job_queue import JobWorker
 from app.services.key_pool import ApiKeyPool
-from app.services import retention, storage
+from app.services import provider_connectivity, retention, storage
 
 
 def create_app() -> FastAPI:
@@ -59,11 +59,17 @@ def create_app() -> FastAPI:
         app.state.job_queue = job_queue
         app.state.key_pool = key_pool
         app.state.job_worker = worker
+        connectivity_monitor = provider_connectivity.ProviderConnectivityMonitor(
+            current_settings
+        )
+        app.state.provider_connectivity_monitor = connectivity_monitor
+        connectivity_monitor.start()
         if current_settings.run_embedded_worker:
             worker.start()
         yield
         if current_settings.run_embedded_worker:
             worker.stop()
+        connectivity_monitor.stop()
 
     app = FastAPI(title=settings.app_name, lifespan=lifespan)
     app.add_middleware(
@@ -89,6 +95,10 @@ def create_app() -> FastAPI:
     @app.get("/healthz")
     def healthcheck() -> dict[str, str]:
         return {"status": "ok"}
+
+    @app.get("/healthz/providers")
+    def provider_healthcheck() -> dict:
+        return provider_connectivity.load_state()
 
     @app.get("/")
     def root() -> dict[str, str]:
