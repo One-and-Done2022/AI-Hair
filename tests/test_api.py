@@ -317,6 +317,7 @@ def test_prompt_block_labels_use_english_keys_and_chinese_labels():
     assert labels["hair_shape_lock"] == "发型锁定"
     assert labels["hair_color"] == "发色系统"
     assert labels["hair_color_lock"] == "发色锁定"
+    assert labels["hair_motion_constraint"] == "风感约束"
     assert labels["negative_constraints"] == "负面约束"
 
 
@@ -331,6 +332,7 @@ def test_prompt_rule_table_declares_mode_boundaries():
     assert "hair_shape_lock" in rules["scene_only"].required_blocks
     assert "bangs_lock" in rules["scene_only"].required_blocks
     assert "hair_color_lock" in rules["scene_only"].required_blocks
+    assert "hair_motion_constraint" in rules["scene_only"].required_blocks
     assert "styling" in rules["scene_only"].required_blocks
     assert "subject_performance" in rules["scene_only"].required_blocks
     assert "hair_shape" in rules["hairstyle_only"].required_blocks
@@ -378,6 +380,7 @@ def test_build_scene_only_prompt_locks_existing_hairstyle_and_updates_scene():
     assert "发型锁定：" in prompt
     assert "刘海锁定：" in prompt
     assert "发色锁定：" in prompt
+    assert "风感约束：" in prompt
     assert "不要二次改色" in prompt
     assert "妆造系统：" in prompt
     assert "场景系统：" in prompt
@@ -426,11 +429,23 @@ def test_scene_only_prompt_assembly_exposes_hair_lock_blocks():
     )
 
     assert assembly.mode == "scene_only"
+    assert [block.key for block in assembly.blocks[:7]] == [
+        "identity_lock",
+        "output_spec",
+        "edit_scope",
+        "hair_shape_lock",
+        "bangs_lock",
+        "hair_color_lock",
+        "hair_motion_constraint",
+    ]
     hair_blocks = [block.text for block in assembly.blocks if block.key == "hair_shape_lock"]
     assert len(hair_blocks) == 1
-    assert "保持当前主发型结构不变" in hair_blocks[0]
+    assert "保持参考图中静态打理完成的当前主发型结构不变" in hair_blocks[0]
     bangs_blocks = [block.text for block in assembly.blocks if block.key == "bangs_lock"]
     assert len(bangs_blocks) == 1
+    motion_blocks = [block.text for block in assembly.blocks if block.key == "hair_motion_constraint"]
+    assert len(motion_blocks) == 1
+    assert "禁止风力、动作或镜头变化改变主发型结构" in motion_blocks[0]
     hair_color_blocks = [block.text for block in assembly.blocks if block.key == "hair_color_lock"]
     assert len(hair_color_blocks) == 1
     assert "不要二次改色" in hair_color_blocks[0]
@@ -471,11 +486,79 @@ def test_scene_only_prompt_filters_hair_touching_subject_actions():
     from app.services import templates
 
     compatible_actions = templates._filter_scene_actions_for_locked_hairstyle(
-        ["靠在窗台边", "抬手整理窗边发丝", "双手轻握杯子停顿"]
+        ["靠在窗台边", "抬手整理窗边发丝", "头部轻微转动让发丝被风掀起", "双手轻握杯子停顿"]
     )
 
     assert compatible_actions == ["靠在窗台边", "双手轻握杯子停顿"]
 
+
+
+
+def test_rooftop_wind_scene_only_prompt_sanitizes_hair_motion_conflicts():
+    from app.services import templates
+
+    scene = templates.get_scene("rooftop-wind")
+    hairstyle = templates.get_hairstyle("male-forward-spikes")
+
+    assert scene is not None
+    assert hairstyle is not None
+
+    prompt = templates.build_scene_only_prompt(
+        scene,
+        hairstyle=hairstyle,
+        preferred_gender="male",
+        seed_source="rooftop-wind-lock",
+    )
+
+    assert "发型动态是视觉关键" not in prompt
+    assert "突出风感发丝" not in prompt
+    assert "头部轻微转动让发丝被风掀起" not in prompt
+    assert "风感约束：" in prompt
+    assert "风主要作用于衣角与空气流动，只允许极少量边缘碎发轻微摆动" in prompt
+    assert "禁止风力、动作或镜头变化改变主发型结构" in prompt
+
+
+
+def test_scene_only_prompt_ignores_conflicting_subject_action_override():
+    from app.services import templates
+
+    scene = templates.get_scene("morning-window-softlight")
+    hairstyle = templates.get_hairstyle("male-forward-spikes")
+
+    assert scene is not None
+    assert hairstyle is not None
+
+    prompt = templates.build_scene_only_prompt(
+        scene,
+        hairstyle=hairstyle,
+        preferred_gender="male",
+        seed_source="scene-only-override-sanitize",
+        subject_action_override="抬手整理窗边发丝",
+    )
+
+    assert "抬手整理窗边发丝" not in prompt
+    assert "人物动作固定为" in prompt
+
+
+def test_scene_only_prompt_sanitizes_dynamic_scene_lighting_language():
+    from app.services import templates
+
+    scene = templates.get_scene("dramatic-side-light")
+    hairstyle = templates.get_hairstyle("male-forward-spikes")
+
+    assert scene is not None
+    assert hairstyle is not None
+
+    prompt = templates.build_scene_only_prompt(
+        scene,
+        hairstyle=hairstyle,
+        preferred_gender="male",
+        seed_source="dramatic-side-light-sanitize",
+    )
+
+    assert "单侧硬光切过脸部和发型" not in prompt
+    assert "发丝纹理被明显勾出" not in prompt
+    assert "单侧硬光切过脸部与肩颈轮廓" in prompt
 
 def test_build_prompt_uses_one_subject_action_and_one_compatible_detail_action():
     from app.services import templates
@@ -490,7 +573,6 @@ def test_build_prompt_uses_one_subject_action_and_one_compatible_detail_action()
 
     assert "靠在窗台边；抬手整理窗边发丝；双手轻握杯子停顿" not in prompt
     assert "人物表现系统：人物表情固定为" in prompt
-    assert "单手抓起头顶前区发束" not in prompt
     assert "双手抓起顶部卷度" not in prompt
 
 

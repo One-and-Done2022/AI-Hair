@@ -108,6 +108,7 @@ class CatalogTests(unittest.TestCase):
         self.assertEqual(labels["identity_lock"], "身份锁定")
         self.assertEqual(labels["scene"], "场景系统")
         self.assertEqual(labels["hair_shape_lock"], "发型锁定")
+        self.assertEqual(labels["hair_motion_constraint"], "风感约束")
         self.assertEqual(labels["negative_constraints"], "负面约束")
 
     def test_prompt_rule_table_declares_scene_only_and_hairstyle_only_boundaries(self) -> None:
@@ -119,6 +120,7 @@ class CatalogTests(unittest.TestCase):
         self.assertIn("hair_shape_lock", rules["scene_only"].required_blocks)
         self.assertIn("bangs_lock", rules["scene_only"].required_blocks)
         self.assertIn("hair_color_lock", rules["scene_only"].required_blocks)
+        self.assertIn("hair_motion_constraint", rules["scene_only"].required_blocks)
         self.assertIn("hair_shape", rules["hairstyle_only"].required_blocks)
         self.assertIn("bangs", rules["hairstyle_only"].required_blocks)
         self.assertIn("hair_color", rules["hairstyle_only"].required_blocks)
@@ -235,9 +237,10 @@ class CatalogTests(unittest.TestCase):
 
         self.assertIn("不改变人物的脸型、五官比例、眼距、鼻梁、嘴型、肤色、年龄感和整体气质和发型", prompt)
         self.assertIn("忽略原照片中的背景、原服饰、原有动作", prompt)
-        self.assertIn("发型锁定：保持参考图中已经生成完成的当前主发型结构不变", prompt)
-        self.assertIn("刘海锁定：保持当前刘海类型、厚薄、长度、开合方式和脸侧修饰不变", prompt)
-        self.assertIn("发色锁定：保持参考图中已经生成完成的当前发色与染发层次不变", prompt)
+        self.assertIn("发型锁定：保持参考图中静态打理完成的当前主发型结构不变", prompt)
+        self.assertIn("刘海锁定：保持参考图中静态完成的当前刘海状态不变", prompt)
+        self.assertIn("发色锁定：保持参考图中静态完成的当前发色、明度层级与染发层次不变", prompt)
+        self.assertIn("风感约束：", prompt)
         self.assertNotIn("抬手整理窗边发丝", prompt)
 
     def test_scene_only_assembly_uses_hair_lock_blocks(self) -> None:
@@ -248,11 +251,61 @@ class CatalogTests(unittest.TestCase):
         )
 
         self.assertEqual(assembly.mode, "scene_only")
+        self.assertEqual(
+            [block.key for block in assembly.blocks[:7]],
+            [
+                "identity_lock",
+                "output_spec",
+                "edit_scope",
+                "hair_shape_lock",
+                "bangs_lock",
+                "hair_color_lock",
+                "hair_motion_constraint",
+            ],
+        )
         hair_blocks = [block.text for block in assembly.blocks if block.key == "hair_shape_lock"]
         self.assertEqual(len(hair_blocks), 1)
-        self.assertIn("保持参考图中已经生成完成的当前主发型结构不变", hair_blocks[0])
+        self.assertIn("保持参考图中静态打理完成的当前主发型结构不变", hair_blocks[0])
         self.assertTrue(any(block.key == "bangs_lock" for block in assembly.blocks))
         self.assertTrue(any(block.key == "hair_color_lock" for block in assembly.blocks))
+        motion_blocks = [block.text for block in assembly.blocks if block.key == "hair_motion_constraint"]
+        self.assertEqual(len(motion_blocks), 1)
+        self.assertIn("禁止风力、动作或镜头变化改变主发型结构", motion_blocks[0])
+
+
+    def test_rooftop_wind_scene_only_prompt_sanitizes_hair_motion_conflicts(self) -> None:
+        prompt = render_scene_only_prompt(
+            "rooftop-wind",
+            seed_source="catalog-rooftop-wind",
+        )
+
+        self.assertNotIn("发型动态是视觉关键", prompt)
+        self.assertNotIn("突出风感发丝", prompt)
+        self.assertNotIn("头部轻微转动让发丝被风掀起", prompt)
+        self.assertIn("风感约束：", prompt)
+        self.assertIn("风主要作用于衣角与空气流动，只允许极少量边缘碎发轻微摆动", prompt)
+        self.assertIn("禁止风力、动作或镜头变化改变主发型结构", prompt)
+
+
+    def test_scene_only_prompt_ignores_conflicting_subject_action_override(self) -> None:
+        prompt = render_scene_only_prompt(
+            "morning-window-softlight",
+            subject_action_override="抬手整理窗边发丝",
+            seed_source="catalog-scene-only-override",
+        )
+
+        self.assertNotIn("抬手整理窗边发丝", prompt)
+        self.assertIn("人物动作固定为", prompt)
+
+    def test_scene_only_prompt_sanitizes_dynamic_scene_lighting_language(self) -> None:
+        prompt = render_scene_only_prompt(
+            "dramatic-side-light",
+            seed_source="catalog-dramatic-side-light",
+        )
+
+        self.assertNotIn("单侧硬光切过脸部和发型", prompt)
+        self.assertNotIn("发丝纹理被明显勾出", prompt)
+        self.assertIn("单侧硬光切过脸部与肩颈轮廓", prompt)
 
     def test_render_scene_only_command_prints_prompt(self) -> None:
         stdout = StringIO()
@@ -262,7 +315,7 @@ class CatalogTests(unittest.TestCase):
         output = stdout.getvalue()
         self.assertEqual(exit_code, 0)
         self.assertIn("主体必须始终是同一位单人肖像，仅对场景、动作、表情和服装进行艺术化创作", output)
-        self.assertIn("发型锁定：保持参考图中已经生成完成的当前主发型结构不变", output)
+        self.assertIn("发型锁定：保持参考图中静态打理完成的当前主发型结构不变", output)
 
     def test_blocks_command_prints_hairstyle_only_blocks(self) -> None:
         stdout = StringIO()

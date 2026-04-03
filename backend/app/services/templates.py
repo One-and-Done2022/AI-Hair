@@ -305,6 +305,33 @@ HAIR_TOUCH_ACTION_KEYWORDS = (
     "触碰耳侧发丝",
 )
 
+HAIR_MOTION_REDEFINITION_KEYWORDS = (
+    "发丝被风",
+    "风掀起",
+    "吹起发丝",
+    "吹散",
+    "吹乱",
+    "甩发",
+    "甩动头发",
+    "前落刘海",
+    "掀起刘海",
+)
+
+LOCKED_HAIR_TEXT_REPLACEMENTS = (
+    ("发型动态是视觉关键", "服装动态与空气流动感是视觉重点，主发型结构必须严格锁定为参考图中的静态完成状态"),
+    ("突出风感发丝", "突出空气流动感与人物轮廓"),
+    ("风吹起发丝和衣角", "风主要作用于衣角与空气流动，只允许极少量边缘碎发轻微摆动"),
+    ("风吹起发丝", "风主要作用于空气流动，只允许极少量边缘碎发轻微摆动"),
+    ("天台风感能让发型动态更强", "天台风感能强化服装动态与空气流动张力"),
+    ("发型不能被风吹散到失去结构", "主发型结构必须严格锁定，不允许被风力吹散或改写"),
+    ("局部发丝被边缘光勾亮", "人物轮廓边缘被柔和边缘光勾亮"),
+    ("头发边缘出现暖色轮廓光", "人物轮廓边缘出现暖色轮廓光"),
+    ("让头发和脸的分离清楚", "让人物轮廓和面部的分离清楚"),
+    ("单侧硬光切过脸部和发型，亮暗分区明确，鼻梁、颧骨和发丝纹理被明显勾出", "单侧硬光切过脸部与肩颈轮廓，亮暗分区明确，鼻梁、颧骨和服装纹理被明显勾出"),
+    ("强侧光最适合做结构型发型展示，尤其能放大发丝纹理", "强侧光最适合做结构型轮廓展示，尤其能强化面部与肩颈的立体感"),
+    ("强调发型定型后的精致状态和明星感", "强调妆造完成后的精致状态和明星感"),
+)
+
 LIGHT_DIRECTION_LABELS = {
     "front": "正面定向入光",
     "side": "侧向入光",
@@ -414,6 +441,7 @@ def get_prompt_block_labels() -> dict[str, str]:
         "hair_shape_lock": "发型锁定",
         "bangs_lock": "刘海锁定",
         "hair_color_lock": "发色锁定",
+        "hair_motion_constraint": "风感约束",
         "output_format": "输出规格",
         "hair_target": "主发型结构",
         "hair_color_target": "发色系统",
@@ -708,12 +736,13 @@ def get_prompt_rule_table() -> dict[str, PromptRule]:
             "identity_lock",
             "output_spec",
             "edit_scope",
-            "scene",
-            "styling",
-            "subject_performance",
             "hair_shape_lock",
             "bangs_lock",
             "hair_color_lock",
+            "hair_motion_constraint",
+            "scene",
+            "styling",
+            "subject_performance",
             "quality_control",
             "negative_constraints",
         ),
@@ -793,14 +822,28 @@ def _filter_compatible_hairstyle_actions(
     return [action for action in actions if not _action_uses_hands(action)]
 
 
+def _is_locked_hair_conflicting_action(action: str) -> bool:
+    cleaned = action.strip()
+    if not cleaned:
+        return False
+    return any(keyword in cleaned for keyword in HAIR_TOUCH_ACTION_KEYWORDS) or any(
+        keyword in cleaned for keyword in HAIR_MOTION_REDEFINITION_KEYWORDS
+    )
+
+
+def _normalize_locked_hair_action_override(action: str | None) -> str | None:
+    if not action:
+        return None
+    cleaned = action.strip()
+    if not cleaned or _is_locked_hair_conflicting_action(cleaned):
+        return None
+    return cleaned
+
+
 def _filter_scene_actions_for_locked_hairstyle(actions: Iterable[str]) -> list[str]:
     candidates = _dedupe_keep_order(actions)
-    filtered = [
-        action
-        for action in candidates
-        if not any(keyword in action for keyword in HAIR_TOUCH_ACTION_KEYWORDS)
-    ]
-    return filtered or candidates
+    filtered = [action for action in candidates if not _is_locked_hair_conflicting_action(action)]
+    return filtered
 
 
 def _styling_scope_matches(styling: dict, preferred_gender: str | None) -> bool:
@@ -1500,11 +1543,11 @@ def _build_hair_color_technique_text(selection: dict[str, str]) -> str:
 def _build_hair_color_lock_text(selection: dict[str, str] | None) -> str:
     if selection is None:
         return (
-            "发色锁定：保持参考图中已经生成完成的当前发色与染发层次不变，"
+            "发色锁定：保持参考图中静态完成的当前发色、明度层级与染发层次不变，"
             "不要二次改色，不要改变冷暖倾向、亮度层级、挑染位置和过渡关系。"
         )
     return (
-        "发色锁定：保持参考图中已经生成完成的"
+        "发色锁定：保持参考图中静态完成的"
         f"{selection['tone_label']}发色和{selection['technique_label']}层次不变，"
         "不要二次改色，不要改变冷暖倾向、亮度层级、挑染位置和过渡关系。"
     )
@@ -1527,6 +1570,15 @@ def _safe_value(raw: object) -> str:
         return ""
     text = str(raw).strip()
     return _normalize_sentence(text) if text else ""
+
+
+def _sanitize_scene_text_for_locked_hair(text: str) -> str:
+    cleaned = _normalize_sentence(text)
+    if not cleaned:
+        return ""
+    for source, target in LOCKED_HAIR_TEXT_REPLACEMENTS:
+        cleaned = cleaned.replace(source, target)
+    return cleaned
 
 
 def _build_output_spec_text(aspect_ratio: str | None = None) -> str:
@@ -1636,13 +1688,20 @@ def _build_hair_color_text(hairstyle: dict, selection: dict[str, str] | None) ->
 
 def _build_scene_text(scene: dict, scene_rule: dict | None = None) -> str:
     block = _preset_block(scene, "scene")
-    shot = _safe_value(block.get("shot") or scene.get("shot_advice"))
-    environment = _safe_value(block.get("scene_environment") or scene.get("environment"))
-    lighting = _safe_value(
-        block.get("scene_lighting") or _resolve_scene_lighting_text(scene, scene_rule)
+    shot = _sanitize_scene_text_for_locked_hair(_safe_value(block.get("shot") or scene.get("shot_advice")))
+    environment = _sanitize_scene_text_for_locked_hair(
+        _safe_value(block.get("scene_environment") or scene.get("environment"))
     )
-    mood = _safe_value(block.get("scene_mood") or scene.get("style_mood"))
-    constraint_items = block.get("scene_constraints") or scene.get("constraints") or []
+    lighting = _sanitize_scene_text_for_locked_hair(
+        _safe_value(block.get("scene_lighting") or _resolve_scene_lighting_text(scene, scene_rule))
+    )
+    mood = _sanitize_scene_text_for_locked_hair(
+        _safe_value(block.get("scene_mood") or scene.get("style_mood"))
+    )
+    constraint_items = [
+        _sanitize_scene_text_for_locked_hair(str(item))
+        for item in (block.get("scene_constraints") or scene.get("constraints") or [])
+    ]
     segments = []
     if shot:
         segments.append(f"构图：{shot}")
@@ -1703,14 +1762,19 @@ def _build_subject_performance_text(
     block = _preset_block(scene, "subject_performance")
     expressions = block.get("expression_options") or scene.get("expressions") or []
     actions = block.get("subject_action_options") or scene.get("actions") or []
-    if not allow_hair_touching_actions and not subject_action_override:
+    normalized_subject_action_override = (
+        subject_action_override
+        if allow_hair_touching_actions
+        else _normalize_locked_hair_action_override(subject_action_override)
+    )
+    if not allow_hair_touching_actions and not normalized_subject_action_override:
         actions = _filter_scene_actions_for_locked_hairstyle(actions)
     expression = expression_override or _select_one(
         expressions or GENERIC_EXPRESSIONS,
         seed_source=seed_source,
         label=f"{scene['id']}:expression",
     )
-    action = subject_action_override or _select_one(
+    action = normalized_subject_action_override or _select_one(
         actions or GENERIC_SCENE_ACTIONS,
         seed_source=seed_source,
         label=f"{scene['id']}:subject-action",
@@ -1733,11 +1797,11 @@ def _build_subject_performance_text(
 def _build_hair_shape_lock_text(hairstyle: dict | None) -> str:
     if hairstyle is None:
         return (
-            "发型锁定：保持参考图中已经生成完成的当前主发型结构不变，"
+            "发型锁定：保持参考图中静态打理完成的当前主发型结构不变，"
             "不要改变发长、外轮廓、卷度、顶部体积、分线、鬓角与后颈区。"
         )
     block = _preset_block(hairstyle, "hair_shape")
-    segments: list[str] = ["保持当前主发型结构不变"]
+    segments: list[str] = ["保持参考图中静态打理完成的当前主发型结构不变"]
     mapping = (
         ("hair_length", "发长"),
         ("hair_silhouette", "轮廓"),
@@ -1755,9 +1819,22 @@ def _build_hair_shape_lock_text(hairstyle: dict | None) -> str:
 
 def _build_bangs_lock_text(hairstyle: dict | None) -> str:
     if hairstyle is None:
-        return "刘海锁定：保持当前刘海类型、厚薄、长度、开合方式和脸侧修饰不变。"
+        return (
+            "刘海锁定：保持参考图中静态完成的当前刘海状态不变；"
+            "如果当前为无刘海，额前不要新增刘海或大片落额发。"
+        )
     block = _preset_block(hairstyle, "bangs")
-    segments: list[str] = ["保持当前刘海系统不变"]
+    values = {
+        "bangs_type": _safe_value(block.get("bangs_type")),
+        "bangs_density": _safe_value(block.get("bangs_density")),
+        "bangs_length": _safe_value(block.get("bangs_length")),
+        "bangs_split": _safe_value(block.get("bangs_split")),
+        "bangs_face_framing": _safe_value(block.get("bangs_face_framing")),
+    }
+    is_no_bangs = not any(value and value != "不适用" for value in values.values())
+    if is_no_bangs:
+        return "刘海锁定：保持参考图中静态完成的当前无刘海状态不变；额前不要生成新的刘海或大片落额发。"
+    segments: list[str] = ["保持参考图中静态完成的当前刘海系统不变"]
     mapping = (
         ("bangs_type", "刘海类型"),
         ("bangs_density", "厚薄"),
@@ -1769,7 +1846,24 @@ def _build_bangs_lock_text(hairstyle: dict | None) -> str:
         value = _safe_value(block.get(field))
         if value and value != "不适用":
             segments.append(f"{label}保持为{value}")
+    segments.append("不要新增第二套刘海分区或额前大面积垂落")
     return f"刘海锁定：{'；'.join(segments)}。"
+
+
+def _build_hair_motion_constraint_text(hairstyle: dict | None) -> str:
+    segments = [
+        "如当前场景存在风力或空气流动，只允许少量边缘碎发与极少数表层发丝轻微摆动，用于体现环境气流",
+        "禁止风力、动作或镜头变化改变主发型结构",
+        "禁止把当前发型吹散、吹塌或改写成另一种结构性新发型",
+    ]
+    bangs_block = _preset_block(hairstyle, "bangs") if hairstyle is not None else {}
+    bangs_type = _safe_value(bangs_block.get("bangs_type"))
+    has_structured_bangs = bool(bangs_type and bangs_type != "不适用")
+    if has_structured_bangs:
+        segments.append("刘海只允许极轻微非结构性位移，不得改变厚薄、长度、开合方式和脸侧修饰")
+    else:
+        segments.append("保持当前无刘海状态，额前不生成新的刘海或大片落额发")
+    return f"风感约束：{'；'.join(segments)}。"
 
 def build_prompt_assembly(
     *,
@@ -1834,13 +1928,14 @@ def build_prompt_assembly(
             seed_source=selection_seed,
             label=f"{scene['id']}:scene-only-expression",
         )
+        normalized_subject_action_override = _normalize_locked_hair_action_override(subject_action_override)
         available_actions = (
             _filter_scene_actions_for_locked_hairstyle(scene.get("actions", []))
-            if not subject_action_override
+            if not normalized_subject_action_override
             else _dedupe_keep_order(scene.get("actions", []))
         )
-        selected_subject_action = subject_action_override or _select_one(
-            available_actions,
+        selected_subject_action = normalized_subject_action_override or _select_one(
+            available_actions or GENERIC_SCENE_ACTIONS,
             seed_source=selection_seed,
             label=f"{scene['id']}:scene-only-subject-action",
         )
@@ -1869,6 +1964,10 @@ def build_prompt_assembly(
                 _make_prompt_block("identity_lock", SCENE_ONLY_IDENTITY_LOCK_SECTION),
                 _make_prompt_block("output_spec", _build_output_spec_text(aspect_ratio)),
                 _make_prompt_block("edit_scope", _build_edit_scope_text(normalized_mode)),
+                _make_prompt_block("hair_shape_lock", _build_hair_shape_lock_text(hairstyle)),
+                _make_prompt_block("bangs_lock", _build_bangs_lock_text(hairstyle)),
+                _make_prompt_block("hair_color_lock", _build_hair_color_lock_text(selected_hair_color)),
+                _make_prompt_block("hair_motion_constraint", _build_hair_motion_constraint_text(hairstyle)),
                 _make_prompt_block("scene", _build_scene_text(scene, scene_rule)),
                 _make_prompt_block(
                     "styling",
@@ -1890,9 +1989,6 @@ def build_prompt_assembly(
                         subject_action_override=selected_subject_action,
                     ),
                 ),
-                _make_prompt_block("hair_shape_lock", _build_hair_shape_lock_text(hairstyle)),
-                _make_prompt_block("bangs_lock", _build_bangs_lock_text(hairstyle)),
-                _make_prompt_block("hair_color_lock", _build_hair_color_lock_text(selected_hair_color)),
                 *_build_quality_blocks(),
                 *_build_negative_blocks(),
             ],
