@@ -72,7 +72,7 @@
         <view>
           <view class="section-title">专业色号</view>
           <view class="professional-summary" wx:if="{{selectedProfessionalHairColor}}">{{selectedProfessionalHairColor.series_name}} · {{selectedProfessionalHairColor.code}}</view>
-          <view class="professional-summary" wx:else>进阶筛选入口，选择后会自动同步发色基调与工艺</view>
+          <view class="professional-summary" wx:else>输入色号或中文关键词就能直接搜，支持跨系列检索。</view>
         </view>
         <view class="advanced-toggle">{{professionalExpanded ? '收起' : '展开'}}</view>
       </view>
@@ -87,13 +87,41 @@
       </view>
 
       <view wx:if="{{professionalExpanded}}" class="professional-body">
-        <input
-          class="professional-search-input"
-          type="text"
-          value="{{professionalSearchKeyword}}"
-          placeholder="搜索色号 / 关键词，例如 5/72、冷雾、奶茶"
-          bindinput="onProfessionalSearchInput"
-        />
+        <view class="professional-search-row">
+          <input
+            class="professional-search-input"
+            type="text"
+            value="{{professionalSearchKeyword}}"
+            placeholder="搜索色号或关键词，例如 5/72、572、冷雾、奶茶"
+            bindinput="onProfessionalSearchInput"
+          />
+          <view wx:if="{{professionalSearchKeyword}}" class="professional-search-clear" bindtap="clearProfessionalSearch">清空</view>
+        </view>
+
+        <view class="professional-search-meta">
+          <view class="professional-search-count">{{professionalSearchResultText}}</view>
+          <view class="professional-search-tip">{{professionalSearchUsesGlobal ? '搜索时已自动跨系列检索' : '支持搜 5/72、572、5-72、冷雾、奶茶'}}</view>
+        </view>
+
+        <view class="professional-reference-row">
+          <view class="professional-reference-copy">想先对照完整色号表，可以直接打开参考 PDF。</view>
+          <view class="professional-reference-button" bindtap="openProfessionalReference">下载色号参考</view>
+        </view>
+
+        <scroll-view class="professional-quick-scroll" scroll-x="true" enable-flex="true" show-scrollbar="false">
+          <view class="professional-quick-row">
+            <view
+              wx:for="{{professionalSearchQuickKeywords}}"
+              wx:key="*this"
+              class="professional-quick-chip"
+              data-value="{{item}}"
+              bindtap="applyProfessionalQuickKeyword"
+            >
+              {{item}}
+            </view>
+          </view>
+        </scroll-view>
+
         <scroll-view class="professional-series-scroll" scroll-x="true" enable-flex="true" show-scrollbar="false">
           <view class="professional-series-row">
             <view
@@ -112,20 +140,23 @@
           <view
             wx:for="{{filteredProfessionalColors}}"
             wx:key="id"
-            class="professional-card {{selectedProfessionalHairColor && selectedProfessionalHairColor.id === item.id ? 'active' : ''}}"
+            class="professional-card {{selectedProfessionalHairColor && selectedProfessionalHairColor.id === item.id ? 'active' : ''}} {{!item.is_recommended_for_generation ? 'disabled' : ''}}"
             data-value="{{item.id}}"
             bindtap="selectProfessionalHairColor"
           >
             <view class="professional-card-top">
-              <view class="professional-card-swatch" style="background: {{item.hex_estimate}};"></view>
-              <view class="professional-card-code">{{item.code}}</view>
+              <view class="professional-card-top-left">
+                <view class="professional-card-swatch" style="background: {{item.hex_estimate}};"></view>
+                <view class="professional-card-code">{{item.code}}</view>
+              </view>
+              <view wx:if="{{!item.is_recommended_for_generation}}" class="professional-card-badge">参考色</view>
             </view>
             <view class="professional-card-series">{{item.series_name}}</view>
             <view class="professional-card-note">{{item.visual_note}}</view>
             <view class="professional-card-meta">{{item.mapped_tone_label}}{{item.mapped_technique_text ? ' · ' + item.mapped_technique_text : ''}}</view>
           </view>
         </view>
-        <view wx:else class="professional-empty">没有找到匹配的专业色号，试试换个关键词。</view>
+        <view wx:else class="professional-empty">没有找到匹配的专业色号，试试 5/72、572、冷雾、奶茶。</view>
       </view>
     </view>
   </view>

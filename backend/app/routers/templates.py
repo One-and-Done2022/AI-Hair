@@ -3,6 +3,8 @@ from __future__ import annotations
 from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import Response
 
+from app.services import hair_color_reference
+
 from app.schemas import (
     GenerationBackendOption,
     HairColorOption,
@@ -142,6 +144,18 @@ def list_showcases(request: Request) -> ShowcaseResponse:
             )
         )
     return ShowcaseResponse(items=items)
+
+
+@router.get("/hair-color-reference.pdf")
+def professional_hair_color_reference_pdf() -> Response:
+    return Response(
+        content=hair_color_reference.build_professional_hair_color_reference_pdf(),
+        media_type="application/pdf",
+        headers={
+            "Content-Disposition": 'inline; filename="solutor-hair-color-reference.pdf"',
+            "Cache-Control": "public, max-age=86400",
+        },
+    )
 
 
 @router.get("/covers/{category}/{template_id}.svg", name="template_cover")

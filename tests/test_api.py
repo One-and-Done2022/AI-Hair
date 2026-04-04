@@ -2973,3 +2973,15 @@ def test_scene_understanding_endpoint_requires_owned_upload(tmp_path, monkeypatc
         )
 
         assert response.status_code == 404
+
+
+def test_templates_hair_color_reference_pdf_download(tmp_path, monkeypatch):
+    app = _build_app(tmp_path, monkeypatch)
+    client = TestClient(app)
+
+    response = client.get('/api/templates/hair-color-reference.pdf')
+
+    assert response.status_code == 200
+    assert response.headers['content-type'].startswith('application/pdf')
+    assert len(response.content) > 1024
+    assert response.content.startswith(b'%PDF')

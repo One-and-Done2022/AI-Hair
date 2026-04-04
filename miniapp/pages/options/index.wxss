@@ -264,6 +264,14 @@
 .professional-card-top {
   display: flex;
   align-items: center;
+  justify-content: space-between;
+  gap: 12rpx;
+}
+
+.professional-card-top-left {
+  min-width: 0;
+  display: flex;
+  align-items: center;
   gap: 12rpx;
 }
 
@@ -329,4 +337,129 @@
 
 .advanced-body {
   margin-top: 22rpx;
+}
+
+
+.professional-card-badge {
+  flex-shrink: 0;
+  padding: 6rpx 14rpx;
+  border-radius: 999rpx;
+  background: rgba(15, 23, 42, 0.07);
+  color: #6b7280;
+  font-size: 20rpx;
+  font-weight: 700;
+}
+
+.professional-card.disabled {
+  border-color: rgba(15, 23, 42, 0.05);
+  background: rgba(248, 250, 252, 0.96);
+}
+
+
+.professional-search-row {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+}
+
+.professional-search-row .professional-search-input {
+  flex: 1;
+  width: auto;
+  min-width: 0;
+}
+
+.professional-search-clear {
+  flex-shrink: 0;
+  min-width: 88rpx;
+  height: 82rpx;
+  padding: 0 22rpx;
+  border-radius: 24rpx;
+  background: rgba(15, 23, 42, 0.05);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22rpx;
+  font-weight: 700;
+  color: #4d5762;
+}
+
+.professional-search-meta {
+  margin-top: 12rpx;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16rpx;
+}
+
+.professional-search-count {
+  font-size: 22rpx;
+  font-weight: 700;
+  color: #20242a;
+}
+
+.professional-search-tip {
+  flex: 1;
+  font-size: 20rpx;
+  line-height: 1.45;
+  color: #7b8794;
+  text-align: right;
+}
+
+.professional-quick-scroll {
+  margin-top: 14rpx;
+  white-space: nowrap;
+}
+
+.professional-quick-row {
+  display: inline-flex;
+  gap: 12rpx;
+  padding-right: 16rpx;
+}
+
+.professional-quick-chip {
+  min-width: 108rpx;
+  height: 56rpx;
+  padding: 0 20rpx;
+  border-radius: 999rpx;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(244, 247, 252, 0.95);
+  color: #4d5762;
+  font-size: 22rpx;
+  font-weight: 600;
+}
+
+
+.professional-reference-row {
+  margin-top: 14rpx;
+  padding: 18rpx 20rpx;
+  border-radius: 24rpx;
+  background: rgba(244, 247, 252, 0.92);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18rpx;
+}
+
+.professional-reference-copy {
+  flex: 1;
+  font-size: 21rpx;
+  line-height: 1.45;
+  color: #5d6670;
+}
+
+.professional-reference-button {
+  flex-shrink: 0;
+  min-width: 164rpx;
+  height: 62rpx;
+  padding: 0 22rpx;
+  border-radius: 999rpx;
+  background: rgba(0, 88, 186, 0.1);
+  color: #0058ba;
+  font-size: 22rpx;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }

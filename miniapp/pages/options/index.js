@@ -1,15 +1,16 @@
 const { ensureLogin } = require("../../utils/auth");
 const { showError } = require("../../utils/errors");
 const {
+  PROFESSIONAL_HAIR_COLOR_QUICK_KEYWORDS,
   buildTechniqueOptions,
-  filterProfessionalHairColors,
   findHairColorById,
   findProfessionalHairColorById,
   resolveHairColorSelection,
   resolveProfessionalMappedSelection,
+  searchProfessionalHairColors,
   shouldClearProfessionalColor
 } = require("../../utils/hair-color");
-const { request } = require("../../utils/request");
+const { baseUrl, request } = require("../../utils/request");
 const {
   readCreationDraft,
   resetCreationDraft,
@@ -57,6 +58,43 @@ function buildProfessionalSeries(series = []) {
   );
 }
 
+function findProfessionalSeriesLabel(series = [], id = "all") {
+  if (!id || id === "all") {
+    return "全部";
+  }
+  const matched = (series || []).find((item) => item.id === id);
+  return matched ? matched.label : "当前系列";
+}
+
+function buildProfessionalSearchSummary({
+  keyword = "",
+  searchResult = null,
+  selectedSeries = "all",
+  series = []
+} = {}) {
+  const matchedCount = searchResult ? searchResult.matchedCount : 0;
+  const recommendedCount = searchResult ? searchResult.recommendedCount : 0;
+  const trimmedKeyword = String(keyword || "").trim();
+
+  if (trimmedKeyword) {
+    if (!matchedCount) {
+      return "没有找到匹配色号";
+    }
+    if (recommendedCount === matchedCount) {
+      return `找到 ${matchedCount} 个可生成色号`;
+    }
+    if (!recommendedCount) {
+      return `找到 ${matchedCount} 个结果，当前仅供参考`;
+    }
+    return `找到 ${matchedCount} 个结果，其中 ${recommendedCount} 个可生成`;
+  }
+
+  const prefix = selectedSeries === "all"
+    ? "全部可生成色号"
+    : `${findProfessionalSeriesLabel(series, selectedSeries)} 可生成色号`;
+  return `${prefix} ${matchedCount} 个`;
+}
+
 Page({
   data: {
     loading: true,
@@ -80,6 +118,9 @@ Page({
     professionalColors: [],
     professionalSelectedSeries: "all",
     professionalSearchKeyword: "",
+    professionalSearchQuickKeywords: PROFESSIONAL_HAIR_COLOR_QUICK_KEYWORDS,
+    professionalSearchResultText: "全部可生成色号 0 个",
+    professionalSearchUsesGlobal: false,
     filteredProfessionalColors: [],
     selectedProfessionalHairColor: null
   },
@@ -88,17 +129,33 @@ Page({
     await this.loadOptions();
   },
 
-  buildFilteredProfessionalColors(nextState = {}) {
-    return filterProfessionalHairColors({
-      professionalColors: nextState.professionalColors || this.data.professionalColors,
-      selectedSeries:
-        nextState.professionalSelectedSeries || this.data.professionalSelectedSeries || "all",
-      keyword:
-        Object.prototype.hasOwnProperty.call(nextState, "professionalSearchKeyword")
-          ? nextState.professionalSearchKeyword
-          : this.data.professionalSearchKeyword,
-      recommendedOnly: true
+  buildProfessionalSearchState(nextState = {}) {
+    const professionalColors = nextState.professionalColors || this.data.professionalColors;
+    const professionalSeries = nextState.professionalSeries || this.data.professionalSeries;
+    const professionalSelectedSeries =
+      nextState.professionalSelectedSeries || this.data.professionalSelectedSeries || "all";
+    const professionalSearchKeyword =
+      Object.prototype.hasOwnProperty.call(nextState, "professionalSearchKeyword")
+        ? nextState.professionalSearchKeyword
+        : this.data.professionalSearchKeyword;
+    const trimmedKeyword = String(professionalSearchKeyword || "").trim();
+    const searchResult = searchProfessionalHairColors({
+      professionalColors,
+      selectedSeries: professionalSelectedSeries,
+      keyword: professionalSearchKeyword,
+      recommendedOnly: !trimmedKeyword
     });
+
+    return {
+      filteredProfessionalColors: searchResult.items,
+      professionalSearchResultText: buildProfessionalSearchSummary({
+        keyword: professionalSearchKeyword,
+        searchResult,
+        selectedSeries: professionalSelectedSeries,
+        series: professionalSeries
+      }),
+      professionalSearchUsesGlobal: searchResult.usesGlobalSearch
+    };
   },
 
   persistDraft(patch = {}) {
@@ -202,11 +259,11 @@ Page({
           ? mappedSelection.techniqueOptions
           : techniqueOptions;
       }
-      const filteredProfessionalColors = filterProfessionalHairColors({
+      const professionalSearchState = this.buildProfessionalSearchState({
         professionalColors,
-        selectedSeries: draft.hair_color_professional_series || "all",
-        keyword: "",
-        recommendedOnly: true
+        professionalSeries,
+        professionalSelectedSeries: draft.hair_color_professional_series || "all",
+        professionalSearchKeyword: ""
       });
 
       updateCreationDraft({
@@ -243,8 +300,8 @@ Page({
         detectedHairColorHint: detectedHairColor
           ? `不选时默认沿用原图预估的 ${detectedHairColor.label}`
           : "未识别到原发色时会按模板默认色生成，可手动调整",
-        filteredProfessionalColors,
-        selectedProfessionalHairColor
+        selectedProfessionalHairColor,
+        ...professionalSearchState
       });
     } catch (error) {
       this.setData({ loading: false });
@@ -294,10 +351,65 @@ Page({
   onProfessionalSearchInput(event) {
     const professionalSearchKeyword = event.detail.value || "";
     this.setData({
+      professionalExpanded: true,
       professionalSearchKeyword,
-      filteredProfessionalColors: this.buildFilteredProfessionalColors({
+      ...this.buildProfessionalSearchState({
         professionalSearchKeyword
       })
+    });
+  },
+
+  applyProfessionalQuickKeyword(event) {
+    const professionalSearchKeyword = event.currentTarget.dataset.value || "";
+    if (!professionalSearchKeyword) {
+      return;
+    }
+    this.setData({
+      professionalExpanded: true,
+      professionalSearchKeyword,
+      ...this.buildProfessionalSearchState({
+        professionalSearchKeyword
+      })
+    });
+  },
+
+  clearProfessionalSearch() {
+    this.setData({
+      professionalSearchKeyword: "",
+      ...this.buildProfessionalSearchState({
+        professionalSearchKeyword: ""
+      })
+    });
+  },
+
+  openProfessionalReference() {
+    const referenceUrl = `${baseUrl}/api/templates/hair-color-reference.pdf`;
+    wx.showLoading({ title: "准备参考" });
+    wx.downloadFile({
+      url: referenceUrl,
+      success: (result) => {
+        if (!result || result.statusCode < 200 || result.statusCode >= 300 || !result.tempFilePath) {
+          wx.hideLoading();
+          wx.showToast({ title: "参考文件加载失败", icon: "none" });
+          return;
+        }
+        wx.openDocument({
+          filePath: result.tempFilePath,
+          fileType: "pdf",
+          showMenu: true,
+          success: () => {
+            wx.hideLoading();
+          },
+          fail: () => {
+            wx.hideLoading();
+            wx.showToast({ title: "当前环境暂时无法打开 PDF", icon: "none" });
+          }
+        });
+      },
+      fail: () => {
+        wx.hideLoading();
+        wx.showToast({ title: "参考文件下载失败", icon: "none" });
+      }
     });
   },
 
@@ -305,7 +417,7 @@ Page({
     const professionalSelectedSeries = event.currentTarget.dataset.value || "all";
     this.setData({
       professionalSelectedSeries,
-      filteredProfessionalColors: this.buildFilteredProfessionalColors({
+      ...this.buildProfessionalSearchState({
         professionalSelectedSeries
       })
     });
@@ -321,6 +433,13 @@ Page({
       professionalId
     );
     if (!professionalColor) {
+      return;
+    }
+    if (!professionalColor.is_recommended_for_generation) {
+      wx.showToast({
+        title: "这个色号当前只做参考，暂不支持直接生成",
+        icon: "none"
+      });
       return;
     }
     const mappedSelection = resolveProfessionalMappedSelection({
