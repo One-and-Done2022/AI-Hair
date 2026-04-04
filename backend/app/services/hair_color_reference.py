@@ -6,7 +6,7 @@ from pathlib import Path
 
 from PIL import Image, ImageDraw, ImageFont
 
-from app.services import templates
+from app.services import storage, templates
 
 PAGE_SIZE = (1240, 1754)
 PAGE_BACKGROUND = "#F7F4EE"
@@ -17,6 +17,7 @@ TEXT_SECONDARY = "#52606D"
 ACCENT = "#8B6F47"
 SWATCH_BORDER = "#E9E2D7"
 ITEMS_PER_PAGE = 6
+REFERENCE_PDF_FILENAME = "solutor-hair-color-reference.pdf"
 
 SERIES_LABELS = {
     "base_color": "基色 / 打底",
@@ -197,3 +198,25 @@ def build_professional_hair_color_reference_pdf() -> bytes:
     first_page, *rest_pages = pages
     first_page.save(output, format="PDF", resolution=150.0, save_all=True, append_images=rest_pages)
     return output.getvalue()
+
+
+
+def professional_hair_color_reference_object_key() -> str:
+    return storage.reference_document_object_key(REFERENCE_PDF_FILENAME)
+
+
+def ensure_professional_hair_color_reference_pdf_cached(*, force_refresh: bool = False) -> str:
+    object_key = professional_hair_color_reference_object_key()
+    if not force_refresh:
+        try:
+            if storage.read_file_bytes(object_key):
+                return object_key
+        except Exception:
+            pass
+    pdf_bytes = build_professional_hair_color_reference_pdf()
+    return storage.save_reference_document(REFERENCE_PDF_FILENAME, pdf_bytes)
+
+
+def get_professional_hair_color_reference_url(*, base_url: str | None = None) -> str | None:
+    object_key = ensure_professional_hair_color_reference_pdf_cached()
+    return storage.media_url(object_key, base_url=base_url)

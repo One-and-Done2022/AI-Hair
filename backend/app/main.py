@@ -22,7 +22,7 @@ from app.services.dispatch_queue import build_job_queue
 from app.services.generation import build_generator
 from app.services.job_queue import JobWorker
 from app.services.key_pool import ApiKeyPool
-from app.services import provider_connectivity, retention, storage
+from app.services import hair_color_reference, provider_connectivity, retention, storage
 
 
 def create_app() -> FastAPI:
@@ -32,6 +32,10 @@ def create_app() -> FastAPI:
     async def lifespan(app: FastAPI):
         current_settings = get_settings()
         current_settings.ensure_directories()
+        try:
+            hair_color_reference.ensure_professional_hair_color_reference_pdf_cached()
+        except Exception:
+            pass
         init_db()
         retention.purge_expired_media(force=True)
         generator = build_generator()

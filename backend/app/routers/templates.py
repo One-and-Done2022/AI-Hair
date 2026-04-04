@@ -148,14 +148,27 @@ def list_showcases(request: Request) -> ShowcaseResponse:
 
 @router.get("/hair-color-reference.pdf")
 def professional_hair_color_reference_pdf() -> Response:
+    object_key = hair_color_reference.ensure_professional_hair_color_reference_pdf_cached()
     return Response(
-        content=hair_color_reference.build_professional_hair_color_reference_pdf(),
+        content=storage.read_file_bytes(object_key),
         media_type="application/pdf",
         headers={
-            "Content-Disposition": 'inline; filename="solutor-hair-color-reference.pdf"',
+            "Content-Disposition": f'inline; filename="{hair_color_reference.REFERENCE_PDF_FILENAME}"',
             "Cache-Control": "public, max-age=86400",
         },
     )
+
+
+@router.get("/hair-color-reference-link")
+def professional_hair_color_reference_link(request: Request) -> dict[str, str]:
+    base_url = str(request.base_url).rstrip("/")
+    fallback_url = hair_color_reference.get_professional_hair_color_reference_url(
+        base_url=base_url,
+    )
+    return {
+        "filename": hair_color_reference.REFERENCE_PDF_FILENAME,
+        "url": fallback_url or str(request.url_for("professional_hair_color_reference_pdf")),
+    }
 
 
 @router.get("/covers/{category}/{template_id}.svg", name="template_cover")

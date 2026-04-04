@@ -725,6 +725,14 @@ def _object_key(*parts: str) -> str:
     return joined
 
 
+def reference_document_object_key(filename: str) -> str:
+    return _object_key("reference_docs", filename)
+
+
+def save_reference_document(filename: str, data: bytes) -> str:
+    return get_object_storage().write_bytes(reference_document_object_key(filename), data)
+
+
 def save_upload_file(image_bytes: bytes, extension: str) -> str:
     filename = f"{uuid.uuid4().hex}{extension}"
     object_key = _object_key("uploads", filename)

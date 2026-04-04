@@ -382,35 +382,70 @@ Page({
     });
   },
 
-  openProfessionalReference() {
+  async openProfessionalReference() {
     const referenceUrl = `${baseUrl}/api/templates/hair-color-reference.pdf`;
+    let fallbackUrl = "";
+    try {
+      const payload = await request({
+        url: "/api/templates/hair-color-reference-link"
+      });
+      fallbackUrl = payload && payload.url ? payload.url : "";
+    } catch (error) {
+      fallbackUrl = "";
+    }
+
     wx.showLoading({ title: "准备参考" });
-    wx.downloadFile({
-      url: referenceUrl,
-      success: (result) => {
-        if (!result || result.statusCode < 200 || result.statusCode >= 300 || !result.tempFilePath) {
+
+    const openDownloadedPdf = (result) => {
+      if (!result || result.statusCode < 200 || result.statusCode >= 300 || !result.tempFilePath) {
+        return false;
+      }
+      wx.openDocument({
+        filePath: result.tempFilePath,
+        fileType: "pdf",
+        showMenu: true,
+        success: () => {
           wx.hideLoading();
-          wx.showToast({ title: "参考文件加载失败", icon: "none" });
-          return;
+        },
+        fail: () => {
+          wx.hideLoading();
+          wx.showToast({ title: "当前环境暂时无法打开 PDF", icon: "none" });
         }
-        wx.openDocument({
-          filePath: result.tempFilePath,
-          fileType: "pdf",
-          showMenu: true,
-          success: () => {
-            wx.hideLoading();
-          },
-          fail: () => {
-            wx.hideLoading();
-            wx.showToast({ title: "当前环境暂时无法打开 PDF", icon: "none" });
-          }
-        });
-      },
-      fail: () => {
+      });
+      return true;
+    };
+
+    const downloadReference = (url, isFallback = false) => {
+      if (!url) {
         wx.hideLoading();
         wx.showToast({ title: "参考文件下载失败", icon: "none" });
+        return;
       }
-    });
+      wx.downloadFile({
+        url,
+        success: (result) => {
+          if (openDownloadedPdf(result)) {
+            return;
+          }
+          if (!isFallback && fallbackUrl && fallbackUrl !== url) {
+            downloadReference(fallbackUrl, true);
+            return;
+          }
+          wx.hideLoading();
+          wx.showToast({ title: "参考文件加载失败", icon: "none" });
+        },
+        fail: () => {
+          if (!isFallback && fallbackUrl && fallbackUrl !== url) {
+            downloadReference(fallbackUrl, true);
+            return;
+          }
+          wx.hideLoading();
+          wx.showToast({ title: "参考文件下载失败", icon: "none" });
+        }
+      });
+    };
+
+    downloadReference(referenceUrl);
   },
 
   selectProfessionalSeries(event) {

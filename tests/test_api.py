@@ -3007,3 +3007,18 @@ def test_templates_hair_color_reference_pdf_download(tmp_path, monkeypatch):
     assert response.headers['content-type'].startswith('application/pdf')
     assert len(response.content) > 1024
     assert response.content.startswith(b'%PDF')
+    cached_path = tmp_path / 'storage' / 'reference_docs' / 'solutor-hair-color-reference.pdf'
+    assert cached_path.exists()
+    assert cached_path.read_bytes().startswith(b'%PDF')
+
+
+def test_templates_hair_color_reference_link_returns_cached_media_url(tmp_path, monkeypatch):
+    app = _build_app(tmp_path, monkeypatch)
+    client = TestClient(app)
+
+    response = client.get('/api/templates/hair-color-reference-link')
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload['filename'] == 'solutor-hair-color-reference.pdf'
+    assert payload['url'] == 'http://testserver/media/reference_docs/solutor-hair-color-reference.pdf'
