@@ -4,9 +4,11 @@ from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import Response
 
 from app.schemas import (
+    GenerationBackendOption,
     HairColorOption,
     HairColorTechniqueOption,
-    GenerationBackendOption,
+    ProfessionalHairColorOption,
+    ProfessionalHairColorSeriesOption,
     ShowcaseItem,
     ShowcaseResponse,
     TemplateCatalogResponse,
@@ -76,13 +78,18 @@ def list_templates(request: Request) -> TemplateCatalogResponse:
         )
         for item in templates.SCENES
     ]
-    hair_colors = [
-        HairColorOption(**item)
-        for item in templates.get_hair_color_catalog()
-    ]
+    hair_colors = [HairColorOption(**item) for item in templates.get_hair_color_catalog()]
     hair_color_techniques = [
         HairColorTechniqueOption(**item)
         for item in templates.get_hair_color_technique_catalog()
+    ]
+    hair_color_professional_series = [
+        ProfessionalHairColorSeriesOption(**item)
+        for item in templates.get_professional_hair_color_series_catalog()
+    ]
+    hair_color_professional_options = [
+        ProfessionalHairColorOption(**item)
+        for item in templates.get_professional_hair_color_catalog()
     ]
     generation_backends = [
         GenerationBackendOption(**item)
@@ -93,6 +100,8 @@ def list_templates(request: Request) -> TemplateCatalogResponse:
         scenes=scenes,
         hair_colors=hair_colors,
         hair_color_techniques=hair_color_techniques,
+        hair_color_professional_series=hair_color_professional_series,
+        hair_color_professional_options=hair_color_professional_options,
         generation_backends=generation_backends,
     )
 

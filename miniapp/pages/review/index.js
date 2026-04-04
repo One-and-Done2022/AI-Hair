@@ -1,7 +1,9 @@
 const { ensureLogin } = require("../../utils/auth");
 const { showError } = require("../../utils/errors");
 const {
-  resolveHairColorSelection
+  findProfessionalHairColorById,
+  resolveHairColorSelection,
+  resolveProfessionalMappedSelection
 } = require("../../utils/hair-color");
 const { upsertPendingHistoryJob } = require("../../utils/pending-history");
 const { request } = require("../../utils/request");
@@ -20,6 +22,13 @@ const {
   formatGenerationBackends
 } = require("../../utils/generation");
 
+function buildProfessionalSummary(professionalColor) {
+  if (!professionalColor) {
+    return "";
+  }
+  return `${professionalColor.series_name} · ${professionalColor.code}`;
+}
+
 Page({
   data: {
     loading: true,
@@ -31,6 +40,7 @@ Page({
     selectedResolution: "",
     selectedHairColorToneLabel: "",
     selectedHairColorTechniqueLabel: "",
+    selectedHairColorProfessionalSummary: "",
     submitting: false
   },
 
@@ -72,13 +82,34 @@ Page({
       const selectedScene =
         findById(catalog.scenes, draft.scene.id) || draft.scene;
       const upload = await ensureCurrentUpload(selectedImage, { timeout: 15000 }).catch(() => null);
-      const hairColorSelection = resolveHairColorSelection({
+      const baseHairColorSelection = resolveHairColorSelection({
         hairColors: catalog.hair_colors || [],
         hairColorTechniques: catalog.hair_color_techniques || [],
         draft,
         hairstyle: selectedHairstyle,
         upload
       });
+      let selectedProfessionalHairColor = findProfessionalHairColorById(
+        catalog.hair_color_professional_options || [],
+        draft.hair_color_professional_id
+      );
+      let selectedHairColor = baseHairColorSelection.tone;
+      let selectedHairTechnique = baseHairColorSelection.technique;
+      if (
+        selectedProfessionalHairColor &&
+        selectedProfessionalHairColor.is_recommended_for_generation
+      ) {
+        const mappedSelection = resolveProfessionalMappedSelection({
+          professionalColor: selectedProfessionalHairColor,
+          hairColors: catalog.hair_colors || [],
+          hairColorTechniques: catalog.hair_color_techniques || [],
+          currentTechnique: selectedHairTechnique
+        });
+        selectedHairColor = mappedSelection.tone || selectedHairColor;
+        selectedHairTechnique = mappedSelection.technique || selectedHairTechnique;
+      } else {
+        selectedProfessionalHairColor = null;
+      }
 
       updateCreationDraft({
         hairstyle: selectedHairstyle,
@@ -86,10 +117,17 @@ Page({
         generator_backend: generationSelection.selectedGeneratorBackend,
         aspect_ratio: generationSelection.selectedAspectRatio,
         resolution: generationSelection.selectedResolution,
-        hair_color_tone: hairColorSelection.tone ? hairColorSelection.tone.id : "",
-        hair_color_tone_label: hairColorSelection.tone ? hairColorSelection.tone.label : "",
-        hair_color_technique: hairColorSelection.technique ? hairColorSelection.technique.id : "",
-        hair_color_technique_label: hairColorSelection.technique ? hairColorSelection.technique.label : ""
+        hair_color_tone: selectedHairColor ? selectedHairColor.id : "",
+        hair_color_tone_label: selectedHairColor ? selectedHairColor.label : "",
+        hair_color_technique: selectedHairTechnique ? selectedHairTechnique.id : "",
+        hair_color_technique_label: selectedHairTechnique ? selectedHairTechnique.label : "",
+        hair_color_professional_id: selectedProfessionalHairColor ? selectedProfessionalHairColor.id : "",
+        hair_color_professional_brand: selectedProfessionalHairColor ? selectedProfessionalHairColor.brand : "",
+        hair_color_professional_series: selectedProfessionalHairColor ? selectedProfessionalHairColor.series_type : "",
+        hair_color_professional_series_label: selectedProfessionalHairColor ? selectedProfessionalHairColor.series_name : "",
+        hair_color_professional_code: selectedProfessionalHairColor ? selectedProfessionalHairColor.code : "",
+        hair_color_professional_note: selectedProfessionalHairColor ? selectedProfessionalHairColor.visual_note : "",
+        hair_color_professional_hex_estimate: selectedProfessionalHairColor ? selectedProfessionalHairColor.hex_estimate : ""
       });
 
       this.setData({
@@ -100,8 +138,9 @@ Page({
         selectedGeneratorBackend: generationSelection.selectedGeneratorBackend,
         selectedAspectRatio: generationSelection.selectedAspectRatio,
         selectedResolution: generationSelection.selectedResolution,
-        selectedHairColorToneLabel: hairColorSelection.tone ? hairColorSelection.tone.label : "",
-        selectedHairColorTechniqueLabel: hairColorSelection.technique ? hairColorSelection.technique.label : ""
+        selectedHairColorToneLabel: selectedHairColor ? selectedHairColor.label : "",
+        selectedHairColorTechniqueLabel: selectedHairTechnique ? selectedHairTechnique.label : "",
+        selectedHairColorProfessionalSummary: buildProfessionalSummary(selectedProfessionalHairColor)
       });
     } catch (error) {
       this.setData({ loading: false });
@@ -157,6 +196,7 @@ Page({
     try {
       await ensureLogin();
       const upload = await ensureCurrentUpload(this.data.selectedImage);
+      const draft = readCreationDraft();
       const job = await request({
         url: "/api/jobs",
         method: "POST",
@@ -167,8 +207,9 @@ Page({
           generator_backend: this.data.selectedGeneratorBackend,
           aspect_ratio: this.data.selectedAspectRatio,
           resolution: this.data.selectedResolution || null,
-          hair_color_tone: readCreationDraft().hair_color_tone || null,
-          hair_color_technique: readCreationDraft().hair_color_technique || null
+          hair_color_tone: draft.hair_color_tone || null,
+          hair_color_technique: draft.hair_color_technique || null,
+          hair_color_professional_id: draft.hair_color_professional_id || null
         }
       });
       upsertPendingHistoryJob({
@@ -180,9 +221,9 @@ Page({
         scene_id: this.data.selectedScene.id,
         scene_name: job.scene_name || this.data.selectedScene.name || "",
         generator_backend: this.data.selectedGeneratorBackend,
-        hair_color_tone: job.hair_color_tone || readCreationDraft().hair_color_tone || "",
+        hair_color_tone: job.hair_color_tone || draft.hair_color_tone || "",
         hair_color_tone_label: job.hair_color_tone_label || this.data.selectedHairColorToneLabel || "",
-        hair_color_technique: job.hair_color_technique || readCreationDraft().hair_color_technique || "",
+        hair_color_technique: job.hair_color_technique || draft.hair_color_technique || "",
         hair_color_technique_label: job.hair_color_technique_label || this.data.selectedHairColorTechniqueLabel || "",
         created_at: job.created_at || new Date().toISOString(),
         updated_at: job.updated_at || job.created_at || new Date().toISOString()

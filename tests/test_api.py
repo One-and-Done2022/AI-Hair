@@ -231,6 +231,14 @@ def test_build_and_parse_job_prompt_payload_preserves_output_options():
         "technique_id": "solid",
         "technique_label": "统一染",
         "technique_description": "整体发色统一，只保留自然深浅层次。",
+        "professional_id": "",
+        "professional_brand": "",
+        "professional_series": "",
+        "professional_series_label": "",
+        "professional_code": "",
+        "professional_note": "",
+        "professional_hex_estimate": "",
+        "professional_prompt_alias": "",
     }
     assert parsed["styling_id"]
     assert "full_prompt" in parsed
@@ -268,7 +276,47 @@ def test_parse_job_prompt_payload_keeps_legacy_output_options_for_history():
         "technique_id": "",
         "technique_label": "",
         "technique_description": "",
+        "professional_id": "",
+        "professional_brand": "",
+        "professional_series": "",
+        "professional_series_label": "",
+        "professional_code": "",
+        "professional_note": "",
+        "professional_hex_estimate": "",
+        "professional_prompt_alias": "",
     }
+
+
+def test_build_and_parse_job_prompt_payload_supports_professional_hair_color_selection():
+    from app.services import templates
+
+    hairstyle = templates.get_hairstyle("female-korean-air-cushion-perm")
+    scene = templates.get_scene("morning-window-softlight")
+
+    assert hairstyle is not None
+    assert scene is not None
+
+    payload = templates.build_job_prompt_payload(
+        hairstyle,
+        scene,
+        generator_backend="premium",
+        aspect_ratio="3:4",
+        resolution="2K",
+        hair_color_professional_id="solutor-cool-mist-5-72",
+        seed_source="job-professional-hair-color",
+    )
+    parsed = templates.parse_job_prompt_payload(payload)
+
+    assert parsed["hair_color_selection"]["tone_id"] == "ash_brown"
+    assert parsed["hair_color_selection"]["technique_id"] == "solid"
+    assert parsed["hair_color_selection"]["professional_id"] == "solutor-cool-mist-5-72"
+    assert parsed["hair_color_selection"]["professional_series_label"] == "烟熏冷雾系列"
+    assert parsed["hair_color_selection"]["professional_code"] == "5/72"
+    assert parsed["hair_color_selection"]["professional_note"] == "偏灰棕、轻烟熏、低饱和冷雾感"
+    assert "5/72" not in parsed["full_prompt"]
+    assert "5/72" not in parsed["hairstyle_only_prompt"]
+    assert "5/72" not in parsed["scene_only_prompt"]
+    assert "偏灰棕、轻烟熏、低饱和冷雾感" in parsed["full_prompt"]
 
 
 def test_build_prompt_assembly_returns_structured_blocks():
@@ -682,6 +730,8 @@ def test_auth_upload_job_history_flow(tmp_path, monkeypatch):
         assert len(catalog["generation_backends"]) == 1
         assert len(catalog["hair_colors"]) >= 8
         assert len(catalog["hair_color_techniques"]) >= 5
+        assert len(catalog["hair_color_professional_series"]) >= 4
+        assert len(catalog["hair_color_professional_options"]) >= 10
         assert len([item for item in catalog["hairstyles"] if item["gender"] == "male"]) == 23
         assert len([item for item in catalog["hairstyles"] if item["gender"] == "female"]) == 33
         assert catalog["hairstyles"][0]["style_line_label"]
@@ -874,6 +924,45 @@ def test_job_accepts_extended_output_options(tmp_path, monkeypatch):
         assert payload["hair_color_tone_label"] == "摩卡棕"
         assert payload["hair_color_technique"] == "balayage"
         assert payload["hair_color_technique_label"] == "手扫染"
+        assert payload["hair_color_professional_id"] is None
+
+
+def test_job_accepts_professional_hair_color_mapping(tmp_path, monkeypatch):
+    app = _build_app(tmp_path, monkeypatch)
+
+    with TestClient(app) as client:
+        login = client.post("/api/auth/wechat/login", json={"code": "dev-test"})
+        token = login.json()["token"]
+        headers = {"Authorization": f"Bearer {token}"}
+
+        upload = client.post(
+            "/api/uploads",
+            headers=headers,
+            files={"file": ("portrait.png", _build_test_image(), "image/png")},
+        )
+        upload_id = upload.json()["upload_id"]
+
+        catalog = client.get("/api/templates").json()
+        job_create = client.post(
+            "/api/jobs",
+            headers=headers,
+            json={
+                "upload_id": upload_id,
+                "hairstyle_id": "female-korean-air-cushion-perm",
+                "scene_id": catalog["scenes"][0]["id"],
+                "generator_backend": "premium",
+                "hair_color_professional_id": "solutor-cool-mist-5-72",
+            },
+        )
+
+        assert job_create.status_code == 201
+        payload = job_create.json()
+        assert payload["hair_color_tone"] == "ash_brown"
+        assert payload["hair_color_technique"] == "solid"
+        assert payload["hair_color_professional_id"] == "solutor-cool-mist-5-72"
+        assert payload["hair_color_professional_series_label"] == "烟熏冷雾系列"
+        assert payload["hair_color_professional_code"] == "5/72"
+        assert payload["hair_color_professional_note"] == "偏灰棕、轻烟熏、低饱和冷雾感"
 
 
 def test_templates_catalog_exposes_plan_specific_output_capabilities(tmp_path, monkeypatch):
@@ -889,10 +978,14 @@ def test_templates_catalog_exposes_plan_specific_output_capabilities(tmp_path, m
         backends = {item["id"]: item for item in catalog.json()["generation_backends"]}
         hair_colors = catalog.json()["hair_colors"]
         hair_color_techniques = catalog.json()["hair_color_techniques"]
+        professional_series = catalog.json()["hair_color_professional_series"]
+        professional_options = catalog.json()["hair_color_professional_options"]
         assert list(backends.keys()) == ["premium"]
         assert hair_colors[0]["id"] == "natural_black"
         assert hair_colors[0]["allowed_techniques"] == ["solid", "highlight", "earloop"]
         assert hair_color_techniques[0]["id"] == "solid"
+        assert professional_series[0]["id"] == "classic_natural"
+        assert any(item["id"] == "solutor-cool-mist-5-72" for item in professional_options)
         assert backends["premium"]["aspect_ratios"] == [
             "1:1",
             "16:9",

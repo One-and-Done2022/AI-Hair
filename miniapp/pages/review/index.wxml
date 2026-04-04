@@ -56,6 +56,7 @@
     <view class="panel settings-card" bindtap="goEditOptions">
       <view class="section-title">参数设置</view>
       <view wx:if="{{selectedHairColorToneLabel}}" class="settings-copy">发色 {{selectedHairColorToneLabel}}{{selectedHairColorTechniqueLabel ? ' · ' + selectedHairColorTechniqueLabel : ''}}</view>
+      <view wx:if="{{selectedHairColorProfessionalSummary}}" class="settings-copy">专业色号 {{selectedHairColorProfessionalSummary}}</view>
       <view class="settings-meta">比例 {{selectedAspectRatio}}{{selectedResolution ? ' · 清晰度 ' + selectedResolution : ''}}</view>
       <view class="settings-link">修改参数</view>
     </view>

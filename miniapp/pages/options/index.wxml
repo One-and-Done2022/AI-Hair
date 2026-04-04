@@ -19,7 +19,7 @@
 
   <view class="editorial-head">
     <view class="title editorial-title">选择参数</view>
-    <view class="subtitle editorial-subtitle">先确定发色，再决定输出比例与高级设置。</view>
+    <view class="subtitle editorial-subtitle">先确定发色，再按需展开专业色号与高级设置。</view>
   </view>
 
   <view class="summary-grid">
@@ -64,6 +64,68 @@
           <view class="hair-color-name">{{item.label}}</view>
           <view class="hair-color-desc">{{item.description}}</view>
         </view>
+      </view>
+    </view>
+
+    <view class="professional-shell">
+      <view class="professional-head" bindtap="toggleProfessionalExpand">
+        <view>
+          <view class="section-title">专业色号</view>
+          <view class="professional-summary" wx:if="{{selectedProfessionalHairColor}}">{{selectedProfessionalHairColor.series_name}} · {{selectedProfessionalHairColor.code}}</view>
+          <view class="professional-summary" wx:else>进阶筛选入口，选择后会自动同步发色基调与工艺</view>
+        </view>
+        <view class="advanced-toggle">{{professionalExpanded ? '收起' : '展开'}}</view>
+      </view>
+
+      <view wx:if="{{selectedProfessionalHairColor}}" class="professional-selected-card">
+        <view class="professional-selected-swatch" style="background: {{selectedProfessionalHairColor.hex_estimate}};"></view>
+        <view class="professional-selected-copy">
+          <view class="professional-selected-title">{{selectedProfessionalHairColor.code}} · {{selectedProfessionalHairColor.series_name}}</view>
+          <view class="professional-selected-note">{{selectedProfessionalHairColor.visual_note}}</view>
+          <view class="professional-selected-meta">映射 {{selectedProfessionalHairColor.mapped_tone_label}}{{selectedProfessionalHairColor.mapped_technique_text ? ' · ' + selectedProfessionalHairColor.mapped_technique_text : ''}}</view>
+        </view>
+      </view>
+
+      <view wx:if="{{professionalExpanded}}" class="professional-body">
+        <input
+          class="professional-search-input"
+          type="text"
+          value="{{professionalSearchKeyword}}"
+          placeholder="搜索色号 / 关键词，例如 5/72、冷雾、奶茶"
+          bindinput="onProfessionalSearchInput"
+        />
+        <scroll-view class="professional-series-scroll" scroll-x="true" enable-flex="true" show-scrollbar="false">
+          <view class="professional-series-row">
+            <view
+              wx:for="{{professionalSeries}}"
+              wx:key="id"
+              class="option-chip {{professionalSelectedSeries === item.id ? 'active' : ''}}"
+              data-value="{{item.id}}"
+              bindtap="selectProfessionalSeries"
+            >
+              {{item.label}}
+            </view>
+          </view>
+        </scroll-view>
+
+        <view wx:if="{{filteredProfessionalColors.length}}" class="professional-grid">
+          <view
+            wx:for="{{filteredProfessionalColors}}"
+            wx:key="id"
+            class="professional-card {{selectedProfessionalHairColor && selectedProfessionalHairColor.id === item.id ? 'active' : ''}}"
+            data-value="{{item.id}}"
+            bindtap="selectProfessionalHairColor"
+          >
+            <view class="professional-card-top">
+              <view class="professional-card-swatch" style="background: {{item.hex_estimate}};"></view>
+              <view class="professional-card-code">{{item.code}}</view>
+            </view>
+            <view class="professional-card-series">{{item.series_name}}</view>
+            <view class="professional-card-note">{{item.visual_note}}</view>
+            <view class="professional-card-meta">{{item.mapped_tone_label}}{{item.mapped_technique_text ? ' · ' + item.mapped_technique_text : ''}}</view>
+          </view>
+        </view>
+        <view wx:else class="professional-empty">没有找到匹配的专业色号，试试换个关键词。</view>
       </view>
     </view>
   </view>

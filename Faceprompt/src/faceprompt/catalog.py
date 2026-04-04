@@ -1650,6 +1650,78 @@ def _load_hair_color_maps() -> dict[str, dict[str, str]]:
     }
 
 
+@lru_cache(maxsize=2)
+def load_professional_hair_color_catalog(recommended_only: bool = False) -> list[dict[str, Any]]:
+    maps = _load_hair_color_maps()
+    options: list[dict[str, Any]] = []
+    for raw in _load_json("hair_color_professional_solutor.json"):
+        mapped_technique_ids = [
+            str(item).strip()
+            for item in raw.get("mapped_technique_ids", [])
+            if str(item).strip()
+        ]
+        option = {
+            "id": str(raw.get("id") or "").strip(),
+            "brand": str(raw.get("brand") or "SOLUTOR").strip(),
+            "series_name": str(raw.get("series_name") or "").strip(),
+            "series_type": str(raw.get("series_type") or "").strip(),
+            "series_description": str(raw.get("series_description") or "").strip(),
+            "code": str(raw.get("code") or "").strip(),
+            "visual_note": str(raw.get("visual_note") or "").strip(),
+            "hex_estimate": str(raw.get("hex_estimate") or "").strip(),
+            "keywords": [
+                str(item).strip() for item in raw.get("keywords", []) if str(item).strip()
+            ],
+            "mapped_tone_id": str(raw.get("mapped_tone_id") or "").strip(),
+            "mapped_tone_label": maps["tones"].get(str(raw.get("mapped_tone_id") or "").strip(), ""),
+            "mapped_technique_ids": mapped_technique_ids,
+            "mapped_technique_labels": [
+                maps["techniques"].get(item, item) for item in mapped_technique_ids
+            ],
+            "prompt_alias": str(raw.get("prompt_alias") or "").strip(),
+            "is_recommended_for_generation": bool(raw.get("is_recommended_for_generation", True)),
+            "display_priority": int(raw.get("display_priority") or raw.get("displayPriority") or 999),
+        }
+        if recommended_only and not option["is_recommended_for_generation"]:
+            continue
+        options.append(option)
+    return sorted(options, key=lambda item: (item["display_priority"], item["series_name"], item["code"]))
+
+
+@lru_cache(maxsize=2)
+def load_professional_hair_color_series(recommended_only: bool = False) -> list[dict[str, Any]]:
+    series_map: dict[str, dict[str, Any]] = {}
+    for item in load_professional_hair_color_catalog(recommended_only=False):
+        series_id = item["series_type"]
+        current = series_map.setdefault(
+            series_id,
+            {
+                "id": series_id,
+                "label": item["series_name"],
+                "description": item["series_description"],
+                "brand": item["brand"],
+                "option_count": 0,
+                "recommended_option_count": 0,
+                "display_priority": item["display_priority"],
+            },
+        )
+        current["option_count"] += 1
+        if item["is_recommended_for_generation"]:
+            current["recommended_option_count"] += 1
+        current["display_priority"] = min(current["display_priority"], item["display_priority"])
+    series = sorted(series_map.values(), key=lambda item: (item["display_priority"], item["label"]))
+    if recommended_only:
+        series = [item for item in series if item["recommended_option_count"] > 0]
+    return series
+
+
+def get_professional_hair_color(color_id: str) -> dict[str, Any] | None:
+    for item in load_professional_hair_color_catalog(recommended_only=False):
+        if item["id"] == color_id:
+            return item
+    return None
+
+
 def _preset_block_from_record(record: CatalogRecord, key: str) -> dict[str, Any]:
     raw = (record.presetBlocks or {}).get(key)
     return raw if isinstance(raw, dict) else {}

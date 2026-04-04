@@ -46,6 +46,7 @@ DEFAULT_ASPECT_RATIO = "3:4"
 DEFAULT_RESOLUTION = "2K"
 DEFAULT_HAIR_COLOR_TONE = "natural_black"
 DEFAULT_HAIR_COLOR_TECHNIQUE = "solid"
+PROFESSIONAL_HAIR_COLOR_DATA_FILE = "hair_color_professional_solutor.json"
 
 GENERATOR_BACKEND_CAPABILITIES = {
     "premium": {
@@ -587,6 +588,107 @@ def get_hair_color_technique(technique_id: str | None) -> dict | None:
     return _find_template(HAIR_COLOR_TECHNIQUES, technique_id)
 
 
+def _build_professional_hair_color(raw: dict) -> dict:
+    hair_color_maps = {
+        "tones": {item["id"]: item["label"] for item in HAIR_COLOR_TONES},
+        "techniques": {item["id"]: item["label"] for item in HAIR_COLOR_TECHNIQUES},
+    }
+    keywords = list(
+        dict.fromkeys(str(item).strip() for item in raw.get("keywords", []) if str(item).strip())
+    )
+    mapped_technique_ids = list(
+        dict.fromkeys(str(item).strip() for item in raw.get("mapped_technique_ids", []) if str(item).strip())
+    )
+    mapped_tone_id = str(raw.get("mapped_tone_id") or "").strip()
+    series_name = str(raw.get("series_name") or "").strip()
+    code = str(raw.get("code") or "").strip()
+    visual_note = str(raw.get("visual_note") or "").strip()
+    return {
+        "id": str(raw.get("id") or "").strip(),
+        "brand": str(raw.get("brand") or "SOLUTOR").strip(),
+        "series_name": series_name,
+        "series_type": str(raw.get("series_type") or series_name).strip(),
+        "series_description": str(raw.get("series_description") or "").strip(),
+        "code": code,
+        "label": f"{code} · {series_name}" if code and series_name else code or series_name,
+        "depth_prefix": str(raw.get("depth_prefix") or "").strip(),
+        "depth_level": int(raw["depth_level"]) if raw.get("depth_level") not in (None, "") else None,
+        "tone_primary": str(raw.get("tone_primary") or "").strip() or None,
+        "tone_secondary": str(raw.get("tone_secondary") or "").strip() or None,
+        "visual_note": visual_note,
+        "hex_estimate": str(raw.get("hex_estimate") or "").strip(),
+        "rgb_estimate": str(raw.get("rgb_estimate") or "").strip() or None,
+        "keywords": keywords,
+        "mapped_tone_id": mapped_tone_id,
+        "mapped_tone_label": hair_color_maps["tones"].get(mapped_tone_id, mapped_tone_id or None),
+        "mapped_technique_ids": mapped_technique_ids,
+        "mapped_technique_labels": [
+            hair_color_maps["techniques"].get(item, item) for item in mapped_technique_ids
+        ],
+        "mapped_temperature": str(raw.get("mapped_temperature") or "").strip() or None,
+        "mapped_depth_bucket": str(raw.get("mapped_depth_bucket") or "").strip() or None,
+        "prompt_alias": str(raw.get("prompt_alias") or "").strip() or None,
+        "display_priority": int(raw.get("display_priority") or raw.get("displayPriority") or 999),
+        "is_recommended_for_generation": bool(raw.get("is_recommended_for_generation", True)),
+        "sort_key": str(raw.get("sort_key") or code or series_name).strip(),
+    }
+
+
+@lru_cache(maxsize=1)
+def _professional_hair_color_catalog() -> dict[str, list[dict]]:
+    options = sorted(
+        (_build_professional_hair_color(item) for item in _load_json(PROFESSIONAL_HAIR_COLOR_DATA_FILE)),
+        key=lambda item: (item["display_priority"], item["sort_key"], item["label"]),
+    )
+    series_map: dict[str, dict] = {}
+    for item in options:
+        series_id = item["series_type"]
+        current = series_map.setdefault(
+            series_id,
+            {
+                "id": series_id,
+                "label": item["series_name"],
+                "description": item["series_description"],
+                "brand": item["brand"],
+                "option_count": 0,
+                "recommended_option_count": 0,
+                "cover_hex": item["hex_estimate"] or None,
+                "display_priority": item["display_priority"],
+                "is_recommended_for_generation": False,
+            },
+        )
+        current["option_count"] += 1
+        if item["is_recommended_for_generation"]:
+            current["recommended_option_count"] += 1
+            current["is_recommended_for_generation"] = True
+        current["display_priority"] = min(current["display_priority"], item["display_priority"])
+        if not current["cover_hex"] and item["hex_estimate"]:
+            current["cover_hex"] = item["hex_estimate"]
+    series = sorted(
+        series_map.values(),
+        key=lambda item: (item["display_priority"], item["label"]),
+    )
+    return {"series": series, "options": options}
+
+
+PROFESSIONAL_HAIR_COLOR_OPTIONS = _professional_hair_color_catalog()["options"]
+PROFESSIONAL_HAIR_COLOR_SERIES = _professional_hair_color_catalog()["series"]
+
+
+def get_professional_hair_color(professional_id: str | None) -> dict | None:
+    if not professional_id:
+        return None
+    return _find_template(PROFESSIONAL_HAIR_COLOR_OPTIONS, professional_id)
+
+
+def get_professional_hair_color_catalog() -> list[dict]:
+    return [dict(item) for item in PROFESSIONAL_HAIR_COLOR_OPTIONS]
+
+
+def get_professional_hair_color_series_catalog() -> list[dict]:
+    return [dict(item) for item in PROFESSIONAL_HAIR_COLOR_SERIES]
+
+
 def _infer_default_hair_color_tone(prompt_text: str, gender: str | None = None) -> str:
     blob = prompt_text.lower()
     if any(keyword in blob for keyword in ("蓝黑",)):
@@ -608,20 +710,81 @@ def _infer_default_hair_color_tone(prompt_text: str, gender: str | None = None) 
     return "dark_brown" if gender == "female" else DEFAULT_HAIR_COLOR_TONE
 
 
+def _empty_hair_color_selection() -> dict[str, str]:
+    return {
+        "tone_id": "",
+        "tone_label": "",
+        "tone_hex": "",
+        "technique_id": "",
+        "technique_label": "",
+        "technique_description": "",
+        "professional_id": "",
+        "professional_brand": "",
+        "professional_series": "",
+        "professional_series_label": "",
+        "professional_code": "",
+        "professional_note": "",
+        "professional_hex_estimate": "",
+        "professional_prompt_alias": "",
+    }
+
+
+def _build_professional_selection_fields(professional: dict | None) -> dict[str, str]:
+    empty_fields = _empty_hair_color_selection()
+    if professional is None:
+        return {
+            key: empty_fields[key]
+            for key in (
+                "professional_id",
+                "professional_brand",
+                "professional_series",
+                "professional_series_label",
+                "professional_code",
+                "professional_note",
+                "professional_hex_estimate",
+                "professional_prompt_alias",
+            )
+        }
+    return {
+        "professional_id": professional["id"],
+        "professional_brand": professional["brand"],
+        "professional_series": professional["series_type"],
+        "professional_series_label": professional["series_name"],
+        "professional_code": professional["code"],
+        "professional_note": professional["visual_note"],
+        "professional_hex_estimate": professional["hex_estimate"],
+        "professional_prompt_alias": professional.get("prompt_alias") or "",
+    }
+
+
 def normalize_hair_color_selection(
     *,
     tone_id: str | None = None,
     technique_id: str | None = None,
+    professional_id: str | None = None,
     hairstyle: dict | None = None,
     detected_tone_id: str | None = None,
+    strict_professional: bool = True,
 ) -> dict[str, str]:
+    requested_professional = get_professional_hair_color(professional_id)
+    if professional_id and requested_professional is None and strict_professional:
+        raise ValueError(f"Unknown professional hair color: {professional_id}")
+    if requested_professional and not requested_professional.get("is_recommended_for_generation"):
+        if strict_professional:
+            raise ValueError("Selected professional hair color is not available for generation.")
+        requested_professional = None
+
     requested_tone = get_hair_color_tone(tone_id)
     detected_tone = get_hair_color_tone(detected_tone_id)
     hairstyle_default_tone = get_hair_color_tone(
         hairstyle.get("default_hair_color_tone") if hairstyle else None
     )
+    professional_tone = get_hair_color_tone(
+        requested_professional.get("mapped_tone_id") if requested_professional else None
+    )
     selected_tone = (
-        requested_tone
+        professional_tone
+        or requested_tone
         or detected_tone
         or hairstyle_default_tone
         or get_hair_color_tone(DEFAULT_HAIR_COLOR_TONE)
@@ -631,25 +794,45 @@ def normalize_hair_color_selection(
     allowed_techniques = selected_tone.get("allowed_techniques", [])
     requested_technique = get_hair_color_technique(technique_id)
     selected_technique = None
-    if requested_technique and requested_technique["id"] in allowed_techniques:
-        selected_technique = requested_technique
-    if selected_technique is None:
-        selected_technique = get_hair_color_technique(selected_tone.get("default_technique"))
-    if selected_technique is None or selected_technique["id"] not in allowed_techniques:
-        selected_technique = get_hair_color_technique(
-            allowed_techniques[0] if allowed_techniques else DEFAULT_HAIR_COLOR_TECHNIQUE
-        )
+    if requested_professional is not None:
+        professional_candidates = []
+        if requested_technique is not None:
+            professional_candidates.append(requested_technique["id"])
+        professional_candidates.extend(requested_professional.get("mapped_technique_ids", []))
+        professional_candidates.append(selected_tone.get("default_technique"))
+        professional_candidates.extend(allowed_techniques)
+        for candidate_id in professional_candidates:
+            if candidate_id not in allowed_techniques:
+                continue
+            candidate = get_hair_color_technique(candidate_id)
+            if candidate is not None:
+                selected_technique = candidate
+                break
+    else:
+        if requested_technique and requested_technique["id"] in allowed_techniques:
+            selected_technique = requested_technique
+        if selected_technique is None:
+            selected_technique = get_hair_color_technique(selected_tone.get("default_technique"))
+        if selected_technique is None or selected_technique["id"] not in allowed_techniques:
+            selected_technique = get_hair_color_technique(
+                allowed_techniques[0] if allowed_techniques else DEFAULT_HAIR_COLOR_TECHNIQUE
+            )
     if selected_technique is None:
         selected_technique = HAIR_COLOR_TECHNIQUES[0]
 
-    return {
-        "tone_id": selected_tone["id"],
-        "tone_label": selected_tone["label"],
-        "tone_hex": selected_tone["hex"],
-        "technique_id": selected_technique["id"],
-        "technique_label": selected_technique["label"],
-        "technique_description": selected_technique["description"],
-    }
+    selection = _empty_hair_color_selection()
+    selection.update(
+        {
+            "tone_id": selected_tone["id"],
+            "tone_label": selected_tone["label"],
+            "tone_hex": selected_tone["hex"],
+            "technique_id": selected_technique["id"],
+            "technique_label": selected_technique["label"],
+            "technique_description": selected_technique["description"],
+        }
+    )
+    selection.update(_build_professional_selection_fields(requested_professional))
+    return selection
 
 
 def _normalize_sentence(text: str) -> str:
@@ -1427,6 +1610,14 @@ def get_hair_color_technique_catalog() -> list[dict]:
     return [dict(item) for item in HAIR_COLOR_TECHNIQUES]
 
 
+def get_professional_hair_color_catalog() -> list[dict]:
+    return [dict(item) for item in PROFESSIONAL_HAIR_COLOR_OPTIONS]
+
+
+def get_professional_hair_color_series_catalog() -> list[dict]:
+    return [dict(item) for item in PROFESSIONAL_HAIR_COLOR_SERIES]
+
+
 def get_styling(template_id: str) -> dict | None:
     return _find_template(STYLINGS, template_id)
 
@@ -1546,10 +1737,13 @@ def _build_hair_color_lock_text(selection: dict[str, str] | None) -> str:
             "发色锁定：保持参考图中静态完成的当前发色、明度层级与染发层次不变，"
             "不要二次改色，不要改变冷暖倾向、亮度层级、挑染位置和过渡关系。"
         )
+    note = _normalize_sentence(str(selection.get("professional_note") or ""))
+    suffix = f"同时保留当前{note}的专业色感表达。" if note else ""
     return (
         "发色锁定：保持参考图中静态完成的"
         f"{selection['tone_label']}发色和{selection['technique_label']}层次不变，"
         "不要二次改色，不要改变冷暖倾向、亮度层级、挑染位置和过渡关系。"
+        f"{suffix}"
     )
 
 
@@ -1681,6 +1875,9 @@ def _build_hair_color_text(hairstyle: dict, selection: dict[str, str] | None) ->
     distribution = _safe_value(block.get("hair_color_distribution"))
     if distribution:
         segments.append(f"色彩分布为{distribution}")
+    professional_note = _normalize_sentence(str(selection.get("professional_note") or "")) if selection else ""
+    if professional_note:
+        segments.append(f"补充色感为{professional_note}")
     if not segments and selection:
         segments.append(f"发色调整为{selection['tone_label']}，染发方式采用{selection['technique_label']}")
     return f"发色系统：{'；'.join(segments)}。"
@@ -2181,6 +2378,7 @@ def build_job_prompt_payload(
     resolution: str | None = None,
     hair_color_tone_id: str | None = None,
     hair_color_technique_id: str | None = None,
+    hair_color_professional_id: str | None = None,
     detected_hair_color_tone_id: str | None = None,
     seed_source: str | None = None,
 ) -> str:
@@ -2200,11 +2398,12 @@ def build_job_prompt_payload(
     selected_hair_color = normalize_hair_color_selection(
         tone_id=hair_color_tone_id,
         technique_id=hair_color_technique_id,
+        professional_id=hair_color_professional_id,
         hairstyle=hairstyle,
         detected_tone_id=detected_hair_color_tone_id,
     )
     payload = {
-        "version": 3,
+        "version": 4,
         "full_prompt": build_prompt(
             hairstyle,
             scene,
@@ -2236,14 +2435,7 @@ def build_job_prompt_payload(
 
 def parse_job_prompt_payload(raw_prompt: str) -> dict:
     normalized_options = normalize_generation_options()
-    empty_hair_color_selection = {
-        "tone_id": "",
-        "tone_label": "",
-        "tone_hex": "",
-        "technique_id": "",
-        "technique_label": "",
-        "technique_description": "",
-    }
+    empty_hair_color_selection = _empty_hair_color_selection()
     if not raw_prompt.strip():
         return {
             "version": 0,
@@ -2313,6 +2505,8 @@ def parse_job_prompt_payload(raw_prompt: str) -> dict:
         hair_color_selection = normalize_hair_color_selection(
             tone_id=str(raw_hair_color_selection.get("tone_id") or "").strip() or None,
             technique_id=str(raw_hair_color_selection.get("technique_id") or "").strip() or None,
+            professional_id=str(raw_hair_color_selection.get("professional_id") or "").strip() or None,
+            strict_professional=False,
         )
     else:
         hair_color_selection = empty_hair_color_selection

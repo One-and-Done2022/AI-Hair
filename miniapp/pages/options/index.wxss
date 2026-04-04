@@ -114,18 +114,24 @@
   gap: 18rpx;
 }
 
-.hair-color-chip.active {
+.hair-color-chip.active,
+.professional-card.active {
   border-color: rgba(0, 88, 186, 0.28);
   box-shadow: 0 14rpx 30rpx rgba(0, 88, 186, 0.08);
+}
+
+.hair-color-swatch,
+.professional-selected-swatch,
+.professional-card-swatch {
+  border-radius: 50%;
+  border: 2rpx solid rgba(255, 255, 255, 0.82);
+  box-shadow: 0 0 0 1rpx rgba(15, 23, 42, 0.08);
+  flex-shrink: 0;
 }
 
 .hair-color-swatch {
   width: 56rpx;
   height: 56rpx;
-  border-radius: 50%;
-  border: 2rpx solid rgba(255, 255, 255, 0.82);
-  box-shadow: 0 0 0 1rpx rgba(15, 23, 42, 0.08);
-  flex-shrink: 0;
 }
 
 .hair-color-copy {
@@ -146,10 +152,13 @@
   color: #5d6670;
 }
 
-.technique-row {
-  margin-top: 18rpx;
+.professional-shell {
+  margin-top: 24rpx;
+  padding-top: 20rpx;
+  border-top: 1rpx solid rgba(15, 23, 42, 0.06);
 }
 
+.professional-head,
 .advanced-head {
   display: flex;
   align-items: center;
@@ -157,27 +166,121 @@
   gap: 16rpx;
 }
 
+.professional-summary,
 .advanced-summary {
   margin-top: 8rpx;
   font-size: 22rpx;
   color: #5d6670;
+  line-height: 1.45;
 }
 
-.option-fixed {
-  margin-top: 14rpx;
-  font-size: 24rpx;
-  line-height: 1.5;
-  color: #4d5762;
+.professional-selected-card {
+  margin-top: 18rpx;
+  padding: 18rpx;
+  border-radius: 24rpx;
+  background: rgba(244, 247, 252, 0.92);
+  display: flex;
+  align-items: flex-start;
+  gap: 18rpx;
 }
 
-.advanced-toggle {
-  color: #0b5ecf;
+.professional-selected-swatch {
+  width: 60rpx;
+  height: 60rpx;
+}
+
+.professional-selected-copy {
+  flex: 1;
+  min-width: 0;
+}
+
+.professional-selected-title,
+.professional-card-code {
   font-size: 24rpx;
   font-weight: 700;
+  color: #20242a;
 }
 
-.advanced-body {
-  margin-top: 22rpx;
+.professional-selected-note,
+.professional-card-note,
+.professional-card-meta,
+.professional-selected-meta,
+.professional-card-series,
+.professional-empty,
+.option-fixed {
+  font-size: 22rpx;
+  line-height: 1.5;
+  color: #5d6670;
+}
+
+.professional-selected-note,
+.professional-selected-meta,
+.professional-card-note,
+.professional-card-meta,
+.professional-card-series {
+  margin-top: 8rpx;
+}
+
+.professional-body {
+  margin-top: 20rpx;
+}
+
+.professional-search-input {
+  width: 100%;
+  height: 82rpx;
+  padding: 0 24rpx;
+  border-radius: 24rpx;
+  background: rgba(244, 247, 252, 0.92);
+  font-size: 24rpx;
+  color: #20242a;
+  box-sizing: border-box;
+}
+
+.professional-series-scroll {
+  margin-top: 16rpx;
+  white-space: nowrap;
+}
+
+.professional-series-row {
+  display: inline-flex;
+  gap: 14rpx;
+  padding-right: 16rpx;
+}
+
+.professional-grid {
+  margin-top: 18rpx;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16rpx;
+}
+
+.professional-card {
+  padding: 18rpx;
+  border-radius: 24rpx;
+  border: 1rpx solid rgba(15, 23, 42, 0.06);
+  background: rgba(255, 255, 255, 0.96);
+}
+
+.professional-card-top {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+}
+
+.professional-card-swatch {
+  width: 42rpx;
+  height: 42rpx;
+}
+
+.professional-empty {
+  margin-top: 18rpx;
+  padding: 22rpx;
+  border-radius: 22rpx;
+  background: rgba(244, 247, 252, 0.92);
+}
+
+.technique-row {
+  margin-top: 18rpx;
 }
 
 .option-group + .option-group {
@@ -216,4 +319,14 @@
   border-color: rgba(0, 88, 186, 0.34);
   background: rgba(0, 88, 186, 0.1);
   color: #0058ba;
+}
+
+.advanced-toggle {
+  color: #0b5ecf;
+  font-size: 24rpx;
+  font-weight: 700;
+}
+
+.advanced-body {
+  margin-top: 22rpx;
 }

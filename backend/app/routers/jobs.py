@@ -44,6 +44,17 @@ def _job_response(request: Request, job: dict) -> JobResponse:
     hair_color_technique_label = (
         str(hair_color_selection.get("technique_label") or "").strip() or None
     )
+    hair_color_professional_id = str(hair_color_selection.get("professional_id") or "").strip() or None
+    hair_color_professional_brand = str(hair_color_selection.get("professional_brand") or "").strip() or None
+    hair_color_professional_series = str(hair_color_selection.get("professional_series") or "").strip() or None
+    hair_color_professional_series_label = (
+        str(hair_color_selection.get("professional_series_label") or "").strip() or None
+    )
+    hair_color_professional_code = str(hair_color_selection.get("professional_code") or "").strip() or None
+    hair_color_professional_note = str(hair_color_selection.get("professional_note") or "").strip() or None
+    hair_color_professional_hex_estimate = (
+        str(hair_color_selection.get("professional_hex_estimate") or "").strip() or None
+    )
     return JobResponse(
         job_id=job["id"],
         status=job["status"],
@@ -65,6 +76,13 @@ def _job_response(request: Request, job: dict) -> JobResponse:
         hair_color_tone_label=hair_color_tone_label,
         hair_color_technique=hair_color_technique,
         hair_color_technique_label=hair_color_technique_label,
+        hair_color_professional_id=hair_color_professional_id,
+        hair_color_professional_brand=hair_color_professional_brand,
+        hair_color_professional_series=hair_color_professional_series,
+        hair_color_professional_series_label=hair_color_professional_series_label,
+        hair_color_professional_code=hair_color_professional_code,
+        hair_color_professional_note=hair_color_professional_note,
+        hair_color_professional_hex_estimate=hair_color_professional_hex_estimate,
         error_code=job.get("error_code"),
         error_message=job.get("error_message"),
         created_at=job["created_at"],
@@ -113,6 +131,7 @@ def create_job(
             resolution=payload.resolution,
             hair_color_tone_id=payload.hair_color_tone,
             hair_color_technique_id=payload.hair_color_technique,
+            hair_color_professional_id=payload.hair_color_professional_id,
             detected_hair_color_tone_id=detected_hair_color_tone_id,
             seed_source=f"{payload.upload_id}:{payload.hairstyle_id}:{payload.scene_id}",
         )

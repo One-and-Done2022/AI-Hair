@@ -12,9 +12,12 @@ from faceprompt.cli import main
 from faceprompt.catalog import (
     build_prompt_assembly,
     catalog_summary,
+    get_professional_hair_color,
     get_prompt_block_labels,
     get_prompt_rule_table,
     list_records,
+    load_professional_hair_color_catalog,
+    load_professional_hair_color_series,
     recommend_pairings,
     render_hairstyle_only_prompt,
     render_prompt,
@@ -128,6 +131,23 @@ class CatalogTests(unittest.TestCase):
         self.assertIn("scene", rules["hairstyle_only"].forbidden_blocks)
         self.assertIn("styling", rules["hairstyle_only"].forbidden_blocks)
         self.assertIn("subject_performance", rules["hairstyle_only"].forbidden_blocks)
+
+    def test_professional_hair_color_catalog_exposes_recommended_series(self) -> None:
+        options = load_professional_hair_color_catalog(recommended_only=True)
+        series = load_professional_hair_color_series(recommended_only=True)
+
+        self.assertGreaterEqual(len(options), 10)
+        self.assertTrue(all(item["is_recommended_for_generation"] for item in options))
+        self.assertGreaterEqual(len(series), 4)
+        self.assertTrue(any(item["id"] == "cool_mist" for item in series))
+
+    def test_professional_hair_color_lookup_preserves_mapping(self) -> None:
+        color = get_professional_hair_color("solutor-cool-mist-5-72")
+
+        self.assertIsNotNone(color)
+        self.assertEqual(color["series_name"], "烟熏冷雾系列")
+        self.assertEqual(color["mapped_tone_id"], "ash_brown")
+        self.assertIn("balayage", color["mapped_technique_ids"])
 
     def test_render_hairstyle_only_prompt_contains_identity_and_preserve_rules(self) -> None:
         prompt = render_hairstyle_only_prompt("male-forward-spikes")
