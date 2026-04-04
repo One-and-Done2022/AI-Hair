@@ -436,6 +436,28 @@ def test_build_scene_only_prompt_locks_existing_hairstyle_and_updates_scene():
     assert "抬手整理窗边发丝" not in prompt
 
 
+
+
+def test_scene_only_prompt_strengthens_face_and_hair_detail_constraints():
+    from app.services import templates
+
+    scene = templates.get_scene("morning-window-softlight")
+    hairstyle = templates.get_hairstyle("female-collarbone-xinzhilei")
+
+    assert scene is not None
+    assert hairstyle is not None
+
+    prompt = templates.build_scene_only_prompt(
+        scene,
+        hairstyle=hairstyle,
+        preferred_gender="female",
+        seed_source="scene-only-quality-detail",
+    )
+
+    assert "脸部解析度优先于背景氛围" in prompt
+    assert "不要出现低清糊脸、压缩涂抹感、脏噪点或蜡感磨皮" in prompt
+    assert "发丝边缘与额头、耳侧、颈侧、衣领的遮挡关系必须准确自然" in prompt
+
 def test_scene_only_prompt_prefers_gendered_scene_styling_rules():
     from app.services import templates
 

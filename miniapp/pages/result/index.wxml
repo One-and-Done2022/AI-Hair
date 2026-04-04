@@ -43,7 +43,7 @@
             wx:if="{{resultImageUrl}}"
             class="result-image {{resultImageLoaded ? 'loaded' : 'hidden'}}"
             src="{{resultImageUrl}}"
-            mode="aspectFill"
+            mode="{{resultImageDisplayMode}}"
             bindload="handleResultImageLoad"
             bindtap="previewResult"
             data-url="{{resultImageUrl}}"
@@ -85,6 +85,26 @@
           </view>
           <view class="state-title">正在生成</view>
         </view>
+      </view>
+    </view>
+
+    <view wx:if="{{resultImageUrl && !mediaExpired}}" class="hero-view-panel">
+      <view class="hero-view-top">
+        <view class="hero-view-copy">当前页为展示视图，点击图片可看高清大图</view>
+        <view wx:if="{{resultImageSizeText}}" class="hero-view-size">原图 {{resultImageSizeText}}</view>
+      </view>
+      <view class="hero-view-actions">
+        <view
+          class="hero-view-chip {{resultImageDisplayMode === 'aspectFit' ? 'active' : ''}}"
+          bindtap="setResultImageDisplayMode"
+          data-mode="aspectFit"
+        >完整显示</view>
+        <view
+          class="hero-view-chip {{resultImageDisplayMode === 'aspectFill' ? 'active' : ''}}"
+          bindtap="setResultImageDisplayMode"
+          data-mode="aspectFill"
+        >铺满显示</view>
+        <view class="hero-view-chip hero-view-chip-primary" bindtap="previewHeroResult">高清预览</view>
       </view>
     </view>
 

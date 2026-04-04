@@ -154,6 +154,22 @@ function buildSaveChoices(hairPreviewUrl, sceneImageUrls) {
   return choices;
 }
 
+function formatImageSizeText(width, height) {
+  if (!width || !height) {
+    return "";
+  }
+  return `${width} × ${height}`;
+}
+
+function buildPreviewUrls(current, sceneImageUrls) {
+  if (!current) {
+    return [];
+  }
+  return Array.isArray(sceneImageUrls) && sceneImageUrls.includes(current)
+    ? sceneImageUrls
+    : [current];
+}
+
 function buildStageSteps(status, hasHairPreview, completedSceneCount) {
   const steps = STAGE_LABELS.map((label) => ({
     label,
@@ -284,6 +300,8 @@ Page({
     mediaExpired: false,
     mediaExpiresAt: "",
     resultImageLoaded: false,
+    resultImageDisplayMode: "aspectFit",
+    resultImageSizeText: "",
     imageLoadingText: getImageLoadingText("pending", false, 0),
     progressPercent: MIN_VISIBLE_PROGRESS,
     elapsedSeconds: 0,
@@ -430,6 +448,7 @@ Page({
     const nextHeroImageUrl = job.result_image_url || nextHairPreviewUrl || "";
     const nextCompletedSceneCount = Number(job.completed_scene_count || nextSceneUrls.length || 0);
     const nextState = {};
+    let nextHeroImageInfoUrl = "";
 
     if (this.data.status !== job.status || this.data.completedSceneCount !== nextCompletedSceneCount) {
       nextState.status = job.status;
@@ -477,10 +496,20 @@ Page({
     if (this.data.resultImageUrl !== nextHeroImageUrl) {
       nextState.resultImageUrl = nextHeroImageUrl;
       nextState.resultImageLoaded = false;
+      nextState.resultImageSizeText = "";
+      nextHeroImageInfoUrl = nextHeroImageUrl;
+    } else if (!nextHeroImageUrl && this.data.resultImageSizeText) {
+      nextState.resultImageSizeText = "";
     }
 
     if (Object.keys(nextState).length > 0) {
-      this.setData(nextState);
+      this.setData(nextState, () => {
+        if (nextHeroImageInfoUrl) {
+          this.loadResultImageInfo(nextHeroImageInfoUrl);
+        }
+      });
+    } else if (nextHeroImageUrl && !this.data.resultImageSizeText) {
+      this.loadResultImageInfo(nextHeroImageUrl);
     }
 
     this.syncPendingHistory(job, nextHairPreviewUrl, nextSceneUrls, nextCompletedSceneCount);
@@ -529,20 +558,59 @@ Page({
     }
   },
 
-  previewResult(event) {
-    const current = event.currentTarget.dataset.url;
-    if (!current) {
+  loadResultImageInfo(imageUrl) {
+    if (!imageUrl) {
       return;
     }
 
-    const urls = this.data.resultImageUrls.includes(current)
-      ? this.data.resultImageUrls
-      : [current];
+    this.resultImageInfoUrl = imageUrl;
+    wx.getImageInfo({
+      src: imageUrl,
+      success: (result) => {
+        if (this.resultImageInfoUrl !== imageUrl) {
+          return;
+        }
+        const sizeText = formatImageSizeText(result.width, result.height);
+        if (sizeText && this.data.resultImageSizeText !== sizeText) {
+          this.setData({ resultImageSizeText: sizeText });
+        }
+      },
+      fail: () => {
+        if (this.resultImageInfoUrl === imageUrl && this.data.resultImageSizeText) {
+          this.setData({ resultImageSizeText: "" });
+        }
+      }
+    });
+  },
 
+  openImagePreview(current) {
+    if (!current) {
+      return;
+    }
     wx.previewImage({
       current,
-      urls
+      urls: buildPreviewUrls(current, this.data.resultImageUrls)
     });
+  },
+
+  setResultImageDisplayMode(event) {
+    const mode = event.currentTarget.dataset.mode;
+    if (mode !== "aspectFit" && mode !== "aspectFill") {
+      return;
+    }
+    if (this.data.resultImageDisplayMode === mode) {
+      return;
+    }
+    this.setData({ resultImageDisplayMode: mode });
+  },
+
+  previewHeroResult() {
+    this.openImagePreview(this.data.resultImageUrl || this.data.hairPreviewUrl);
+  },
+
+  previewResult(event) {
+    const current = event.currentTarget.dataset.url;
+    this.openImagePreview(current);
   },
 
   previewOriginal() {

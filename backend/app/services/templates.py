@@ -869,14 +869,22 @@ def _assemble_prompt(mode: str, blocks: list[PromptBlock | None]) -> PromptAssem
     return assembly
 
 
-def _build_quality_blocks() -> list[PromptBlock | None]:
+def _build_quality_blocks(*, mode: str = "full_stylize") -> list[PromptBlock | None]:
+    detail_text = "同时保持发丝清晰分明、边缘自然贴合头皮、光影过渡真实可读。"
+    if mode == "scene_only":
+        detail_text += (
+            "主体人物必须始终作为清晰近景主体，脸部解析度优先于背景氛围。"
+            "五官边界、眉毛、睫毛、瞳孔边缘、鼻梁线、唇线与发际线要自然清晰可辨。"
+            "皮肤保留细腻真实纹理与干净明暗层次，不要出现低清糊脸、压缩涂抹感、脏噪点或蜡感磨皮。"
+            "发丝边缘与额头、耳侧、颈侧、衣领的遮挡关系必须准确自然，不要出现发块粘连、边缘断裂、局部漂浮或假发感。"
+        )
     return [
         _make_prompt_block(
             "quality_control",
             "质量控制："
             f"{QUALITY_SKIN_TEXTURE_SECTION}"
             f"{QUALITY_IMAGE_FINISH_SECTION}"
-            "同时保持发丝清晰分明、边缘自然贴合头皮、光影过渡真实可读。",
+            f"{detail_text}",
         ),
     ]
 
@@ -2099,7 +2107,7 @@ def build_prompt_assembly(
                 _make_prompt_block("hair_shape", _build_hair_shape_text(hairstyle)),
                 _make_prompt_block("bangs", _build_bangs_text(hairstyle)),
                 _make_prompt_block("hair_color", _build_hair_color_text(hairstyle, selected_hair_color)),
-                *_build_quality_blocks(),
+                *_build_quality_blocks(mode=normalized_mode),
                 *_build_negative_blocks(),
             ],
         )
@@ -2186,7 +2194,7 @@ def build_prompt_assembly(
                         subject_action_override=selected_subject_action,
                     ),
                 ),
-                *_build_quality_blocks(),
+                *_build_quality_blocks(mode=normalized_mode),
                 *_build_negative_blocks(),
             ],
         )
@@ -2259,7 +2267,7 @@ def build_prompt_assembly(
                     else "不额外叠加发型手部细节动作，避免与主体动作叠加成不合理肢体效果。"
                 ),
             ),
-            *_build_quality_blocks(),
+            *_build_quality_blocks(mode=normalized_mode),
             *_build_negative_blocks(),
         ],
     )
