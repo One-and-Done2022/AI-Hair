@@ -1,0 +1,514 @@
+[
+  {
+    "id": "male-texture-perm",
+    "label": "纹理烫",
+    "styleLine": "realistic_editorial",
+    "summary": "通过柔和弯曲提升发丝走向和层次，属于最容易与日常拍摄兼容的男士烫发之一。",
+    "promptAddition": "发型改为纹理烫，整体烫出柔和、自然的弯曲纹理，重点增强头顶与前区的走向感和层次感，不强调明显卷束；发根有适度支撑，发尾自然回落，两侧和后区收短但不过度贴头皮，颜色为黑色或深棕，整体蓬松、干净、自然。",
+    "detailTags": [
+      "纹理烫",
+      "柔和弯曲",
+      "层次",
+      "自然"
+    ],
+    "constraints": [
+      "弯曲纹理必须柔和自然",
+      "发丝走向要清楚但不能卷得过头",
+      "不能做成钢夹烫或锡纸烫的条束感"
+    ],
+    "pairingAdvice": [
+      "室内生活感胶片写真",
+      "胡桃木书房静物人像",
+      "清晨窗边软光人像"
+    ],
+    "shotAdvice": "适合平视近景和生活化抓拍，突出头顶层次和自然走向。",
+    "expressionAction": [
+      "温和看镜头",
+      "抬手从前额拨开纹理",
+      "轻微低头后抬眼"
+    ],
+    "referenceNotes": "纹理烫的关键是看起来像天生有层次的头发，而不是刻意卷出来的强造型。",
+    "referenceSourceIds": [
+      "gq-best-short-haircuts",
+      "gq-barber-language",
+      "gq-short-back-sides"
+    ],
+    "coverImagePath": "template_assets/hairstyles/male-texture-perm.jpg",
+    "coverImageUpdatedAt": "2026-03-27T06:59:27+00:00",
+    "coverImageSource": "template_image_pipeline:review_male.jpg",
+    "presetBlocks": {
+      "hair_shape": {
+        "hair_length": "中短到中长发",
+        "hair_silhouette": "以纹理烫轮廓为主体，通过柔和弯曲提升发丝走向和层次，属于最容易与日常拍摄兼容的男士烫发之一",
+        "hair_texture": "自然纹理",
+        "hair_volume": "顶部有明显蓬松和空气感",
+        "hair_parting": "根据头型自然分线",
+        "sideburn_nape": "鬓角和后颈区域保持自然贴合",
+        "hair_tail_finish": "发根有适度支撑，发尾自然回落，两侧和后区收短但不过度贴头皮，颜色为黑色或深棕，整体蓬松、干净、自然"
+      },
+      "bangs": {
+        "bangs_type": "无刘海或自然碎刘海",
+        "bangs_density": "不适用",
+        "bangs_length": "不适用",
+        "bangs_split": "不适用",
+        "bangs_face_framing": "脸侧保留自然修饰关系"
+      },
+      "recommended_hair_color": {
+        "hair_color_tone": "dark_brown",
+        "hair_color_depth": "偏深",
+        "hair_color_temperature": "中性",
+        "hair_color_technique": "solid",
+        "hair_color_distribution": "整体统一染发层次"
+      }
+    },
+    "legacy": false
+  },
+  {
+    "id": "male-air-cushion-perm",
+    "label": "气垫烫",
+    "styleLine": "realistic_editorial",
+    "summary": "重点提升发根支撑和头顶蓬松度，适合需要显发量、修头型的韩系男生模板。",
+    "promptAddition": "发型改为气垫烫，重点提升发根支撑和顶部蓬松度，形成自然高颅顶和轻微头包脸轮廓，前区与顶部带柔和弯曲纹理，但不出现明显小卷束感；两侧和后区保持整洁收短，整体发丝走向轻盈自然，发色为自然黑色或深棕色，气质韩系、精致、清爽、显发量。",
+    "detailTags": [
+      "气垫烫",
+      "高颅顶",
+      "发根支撑",
+      "韩系蓬松"
+    ],
+    "constraints": [
+      "发根必须有明显支撑感和顶部蓬松度",
+      "纹理必须柔和，不能卷成细密小卷",
+      "不能塌成普通直发或短碎发"
+    ],
+    "pairingAdvice": [
+      "清晨窗边软光人像",
+      "咖啡馆抓拍座位人像",
+      "室内生活感胶片写真"
+    ],
+    "shotAdvice": "适合平视近景和柔和侧光，突出高颅顶、额前轮廓和整体蓬松结构。",
+    "expressionAction": [
+      "温和看镜头",
+      "抬手轻碰头顶发根",
+      "半侧脸停在抓拍瞬间"
+    ],
+    "referenceNotes": "重点是发根支撑和头包脸效果，不要做成锡纸烫、钢夹烫那种明显束感烫发。",
+    "referenceSourceIds": [
+      "gq-barber-language",
+      "gq-best-short-haircuts",
+      "gq-short-back-sides"
+    ],
+    "coverImagePath": "template_assets/hairstyles/male-air-cushion-perm.jpg",
+    "coverImageUpdatedAt": "2026-03-28T05:47:21+00:00",
+    "coverImageSource": "template_image_pipeline:review_male.jpg",
+    "presetBlocks": {
+      "hair_shape": {
+        "hair_length": "中短到中长发",
+        "hair_silhouette": "以气垫烫轮廓为主体，重点提升发根支撑和头顶蓬松度，适合需要显发量、修头型的韩系男生模板",
+        "hair_texture": "自然纹理",
+        "hair_volume": "顶部有明显蓬松和空气感",
+        "hair_parting": "根据头型自然分线",
+        "sideburn_nape": "鬓角和后颈区域保持自然贴合",
+        "hair_tail_finish": "发尾收口与整体轮廓保持一致"
+      },
+      "bangs": {
+        "bangs_type": "无刘海或自然碎刘海",
+        "bangs_density": "不适用",
+        "bangs_length": "不适用",
+        "bangs_split": "不适用",
+        "bangs_face_framing": "脸侧保留自然修饰关系"
+      },
+      "recommended_hair_color": {
+        "hair_color_tone": "dark_brown",
+        "hair_color_depth": "偏深",
+        "hair_color_temperature": "中性",
+        "hair_color_technique": "solid",
+        "hair_color_distribution": "整体统一染发层次"
+      }
+    },
+    "legacy": false
+  },
+  {
+    "id": "male-root-lift-perm",
+    "label": "定位烫",
+    "styleLine": "realistic_editorial",
+    "summary": "以发根支撑和轮廓定型为主，卷感不强，适合做自然显发量的男生日常模板。",
+    "promptAddition": "发型改为定位烫，整体重点放在发根支撑和头顶轮廓定型，顶部与前区建立自然蓬松弧度，但不做明显卷束，发尾保持轻微弯曲后自然回落；两侧和后区整洁收短，整体线条自然服帖又不塌，发色保持自然黑色或深棕色，气质干净、耐看、日常、显发量。",
+    "detailTags": [
+      "定位烫",
+      "发根支撑",
+      "自然蓬松",
+      "日常耐看"
+    ],
+    "constraints": [
+      "重点必须是发根支撑而不是明显卷度",
+      "整体轮廓要自然立起来但不过分夸张",
+      "不能做成纹理烫以外的小卷烫发"
+    ],
+    "pairingAdvice": [
+      "室内生活感胶片写真",
+      "清晨窗边软光人像",
+      "酒店房间松弛感人像"
+    ],
+    "shotAdvice": "适合平视胸口以上近景和柔和自然光，突出顶部轮廓和自然发量感。",
+    "expressionAction": [
+      "自然看镜头",
+      "抬手压住一侧发根",
+      "轻侧脸露出顶部轮廓"
+    ],
+    "referenceNotes": "重点是自然定型和显发量，不要误做成明显卷束的韩式纹理烫或钢夹烫。",
+    "referenceSourceIds": [
+      "gq-barber-language",
+      "gq-best-short-haircuts",
+      "gq-short-back-sides"
+    ],
+    "coverImagePath": "template_assets/hairstyles/male-root-lift-perm.jpg",
+    "coverImageUpdatedAt": "2026-03-28T05:47:46+00:00",
+    "coverImageSource": "template_image_pipeline:review_male.jpg",
+    "presetBlocks": {
+      "hair_shape": {
+        "hair_length": "中短到中长发",
+        "hair_silhouette": "以定位烫轮廓为主体，以发根支撑和轮廓定型为主，卷感不强，适合做自然显发量的男生日常模板",
+        "hair_texture": "自然纹理",
+        "hair_volume": "顶部有明显蓬松和空气感",
+        "hair_parting": "根据头型自然分线",
+        "sideburn_nape": "鬓角和后颈区域保持自然贴合",
+        "hair_tail_finish": "发型改为定位烫，整体重点放在发根支撑和头顶轮廓定型，顶部与前区建立自然蓬松弧度，但不做明显卷束，发尾保持轻微弯曲后自然回落"
+      },
+      "bangs": {
+        "bangs_type": "无刘海或自然碎刘海",
+        "bangs_density": "不适用",
+        "bangs_length": "不适用",
+        "bangs_split": "不适用",
+        "bangs_face_framing": "脸侧保留自然修饰关系"
+      },
+      "recommended_hair_color": {
+        "hair_color_tone": "dark_brown",
+        "hair_color_depth": "偏深",
+        "hair_color_temperature": "中性",
+        "hair_color_technique": "solid",
+        "hair_color_distribution": "整体统一染发层次"
+      }
+    },
+    "legacy": false
+  },
+  {
+    "id": "male-clip-perm",
+    "label": "钢夹烫",
+    "styleLine": "realistic_editorial",
+    "summary": "蓬松纹理比锡纸烫更自然、更日常，适合想要增加层次但不想太炸的男生。",
+    "promptAddition": "发型改为钢夹烫，整体通过钢夹形成清楚但更自然的纹理弯曲，发根被撑起，头顶有层次感和空气感，卷束之间保持一定松散距离，不做过密条束；两侧和后区可以适度收短，整体颜色为黑色或深棕，日常、自然、蓬松。",
+    "detailTags": [
+      "钢夹烫",
+      "自然纹理",
+      "蓬松",
+      "日常"
+    ],
+    "constraints": [
+      "纹理必须自然松散而不是细密条束",
+      "发根要被撑起但不能炸开",
+      "整体不能过于夸张街头化"
+    ],
+    "pairingAdvice": [
+      "室内生活感胶片写真",
+      "咖啡馆抓拍座位人像",
+      "酒店房间松弛感人像"
+    ],
+    "shotAdvice": "适合平视近景和柔和侧光，突出顶部层次和自然蓬松度。",
+    "expressionAction": [
+      "自然看镜头",
+      "抬手拨开头顶纹理",
+      "侧头停在抓拍瞬间"
+    ],
+    "referenceNotes": "钢夹烫的视觉效果要比锡纸烫更自然，重点是日常可用的纹理和发根支撑。",
+    "referenceSourceIds": [
+      "gq-barber-language",
+      "gq-best-short-haircuts",
+      "gq-short-back-sides"
+    ],
+    "coverImagePath": "template_assets/hairstyles/male-clip-perm.jpg",
+    "coverImageUpdatedAt": "2026-03-27T06:59:23+00:00",
+    "coverImageSource": "template_image_pipeline:review_male.jpg",
+    "presetBlocks": {
+      "hair_shape": {
+        "hair_length": "中短到中长发",
+        "hair_silhouette": "以钢夹烫轮廓为主体，蓬松纹理比锡纸烫更自然、更日常，适合想要增加层次但不想太炸的男生",
+        "hair_texture": "自然纹理",
+        "hair_volume": "顶部有明显蓬松和空气感",
+        "hair_parting": "根据头型自然分线",
+        "sideburn_nape": "鬓角和后颈区域保持自然贴合",
+        "hair_tail_finish": "发尾收口与整体轮廓保持一致"
+      },
+      "bangs": {
+        "bangs_type": "无刘海或自然碎刘海",
+        "bangs_density": "不适用",
+        "bangs_length": "不适用",
+        "bangs_split": "不适用",
+        "bangs_face_framing": "脸侧保留自然修饰关系"
+      },
+      "recommended_hair_color": {
+        "hair_color_tone": "dark_brown",
+        "hair_color_depth": "偏深",
+        "hair_color_temperature": "中性",
+        "hair_color_technique": "solid",
+        "hair_color_distribution": "整体统一染发层次"
+      }
+    },
+    "legacy": false
+  },
+  {
+    "id": "male-tin-foil-perm",
+    "label": "锡纸烫",
+    "styleLine": "fashion_editorial",
+    "summary": "细密条状卷束带来强发量和明显街头感，视觉辨识度很高。",
+    "promptAddition": "发型改为锡纸烫，整头头发呈现细密、分明的条状螺旋卷束，卷束从发根开始立起并向外扩散，整体发量感非常强；两侧可适度收短以控制轮廓，颜色保持自然黑或深棕，质感偏街头、年轻、有冲击力。",
+    "detailTags": [
+      "锡纸烫",
+      "细密卷束",
+      "发量感",
+      "街头感"
+    ],
+    "constraints": [
+      "卷束必须细密清楚",
+      "整体发量感要明显抬升",
+      "不能做成柔和自然的大弯纹理烫"
+    ],
+    "pairingAdvice": [
+      "都市夜色霓虹人像",
+      "天台风场人像",
+      "极简纯色棚拍"
+    ],
+    "shotAdvice": "适合正面或半侧面近景，突出卷束密度和整体体积。",
+    "expressionAction": [
+      "自信看镜头",
+      "抬手抓起一缕卷束",
+      "转头展示侧面轮廓"
+    ],
+    "referenceNotes": "锡纸烫强调细密条束和强发量感，画面上要读得出明显的街头纹理。",
+    "referenceSourceIds": [
+      "gq-barber-language",
+      "gq-best-short-haircuts",
+      "gq-fade-guide"
+    ],
+    "coverImagePath": "template_assets/hairstyles/male-tin-foil-perm.jpg",
+    "coverImageUpdatedAt": "2026-03-27T06:59:27+00:00",
+    "coverImageSource": "template_image_pipeline:review_male.jpg",
+    "presetBlocks": {
+      "hair_shape": {
+        "hair_length": "中短到中长发",
+        "hair_silhouette": "以锡纸烫轮廓为主体，细密条状卷束带来强发量和明显街头感，视觉辨识度很高",
+        "hair_texture": "明显卷度或烫发纹理",
+        "hair_volume": "自然体积",
+        "hair_parting": "根据头型自然分线",
+        "sideburn_nape": "鬓角和后颈区域保持自然贴合",
+        "hair_tail_finish": "发尾收口与整体轮廓保持一致"
+      },
+      "bangs": {
+        "bangs_type": "无刘海或自然碎刘海",
+        "bangs_density": "不适用",
+        "bangs_length": "不适用",
+        "bangs_split": "不适用",
+        "bangs_face_framing": "脸侧保留自然修饰关系"
+      },
+      "recommended_hair_color": {
+        "hair_color_tone": "dark_brown",
+        "hair_color_depth": "偏深",
+        "hair_color_temperature": "中性",
+        "hair_color_technique": "solid",
+        "hair_color_distribution": "整体统一染发层次"
+      }
+    },
+    "legacy": false
+  },
+  {
+    "id": "male-wool-perm",
+    "label": "男士羊毛卷",
+    "styleLine": "fashion_editorial",
+    "summary": "细小卷度布满全头，复古艺术气质明显，适合文艺感或复古时装感画面。",
+    "promptAddition": "发型改为男士羊毛卷，从发根开始布满细小而均匀的卷度，整体发量感提升明显，头顶与两侧都带有松软蓬起的复古卷束，轮廓圆润但有空气感；颜色以黑色、深棕色为主，气质慵懒、文艺、复古。",
+    "detailTags": [
+      "男士羊毛卷",
+      "细小卷度",
+      "复古",
+      "文艺"
+    ],
+    "constraints": [
+      "卷度必须从发根开始且均匀分布",
+      "整体轮廓要圆润蓬松",
+      "不能做成极端炸开的烟花烫"
+    ],
+    "pairingAdvice": [
+      "复古电影包厢人像",
+      "天台风场人像",
+      "极简纯色棚拍"
+    ],
+    "shotAdvice": "适合胸口以上近景和略低机位，强化卷束体积与脸部比例。",
+    "expressionAction": [
+      "慵懒看镜头",
+      "抬手抓起一缕卷束",
+      "侧头展示轮廓弧线"
+    ],
+    "referenceNotes": "男士羊毛卷要有复古艺术感，重点是细密但柔软的整体卷度，不是爆炸式张扬。",
+    "referenceSourceIds": [
+      "gq-barber-language",
+      "gq-best-short-haircuts",
+      "gq-relaxed-pompadour"
+    ],
+    "coverImagePath": "template_assets/hairstyles/male-wool-perm.jpg",
+    "coverImageUpdatedAt": "2026-03-27T06:59:28+00:00",
+    "coverImageSource": "template_image_pipeline:review_male.jpg",
+    "presetBlocks": {
+      "hair_shape": {
+        "hair_length": "中短到中长发",
+        "hair_silhouette": "以男士羊毛卷轮廓为主体，细小卷度布满全头，复古艺术气质明显，适合文艺感或复古时装感画面",
+        "hair_texture": "明显卷度或烫发纹理",
+        "hair_volume": "顶部有明显蓬松和空气感",
+        "hair_parting": "根据头型自然分线",
+        "sideburn_nape": "鬓角和后颈区域保持自然贴合",
+        "hair_tail_finish": "发尾收口与整体轮廓保持一致"
+      },
+      "bangs": {
+        "bangs_type": "无刘海或自然碎刘海",
+        "bangs_density": "不适用",
+        "bangs_length": "不适用",
+        "bangs_split": "不适用",
+        "bangs_face_framing": "脸侧保留自然修饰关系"
+      },
+      "recommended_hair_color": {
+        "hair_color_tone": "dark_brown",
+        "hair_color_depth": "偏深",
+        "hair_color_temperature": "中性",
+        "hair_color_technique": "solid",
+        "hair_color_distribution": "整体统一染发层次"
+      }
+    },
+    "legacy": false
+  },
+  {
+    "id": "male-french-lazy-perm",
+    "label": "法式慵懒卷",
+    "styleLine": "realistic_editorial",
+    "summary": "卷度自然松散、没有太强造型痕迹，适合偏文艺、松弛、轻法式的男生人像。",
+    "promptAddition": "发型改为法式慵懒卷，整体长度保持中短到中等，顶部与两侧带自然松散的弧度和轻微卷感，不追求整齐卷束，发丝之间保留空隙和自然凌乱感，前区可有几缕轻垂的碎发修饰额头；发色为自然黑色或深棕色，整体松弛、文艺、带轻法式氛围和温柔质感。",
+    "detailTags": [
+      "法式慵懒卷",
+      "松散卷度",
+      "文艺感",
+      "轻法式"
+    ],
+    "constraints": [
+      "卷度必须松散自然，不能卷得工整密集",
+      "整体要有空气感和微凌乱感",
+      "不能做成羊毛卷或烟花烫那种密卷结构"
+    ],
+    "pairingAdvice": [
+      "咖啡馆抓拍座位人像",
+      "室内生活感胶片写真",
+      "雨天窗边情绪人像"
+    ],
+    "shotAdvice": "适合平视近景和轻抓拍构图，保留额前碎发和整体松散卷度轮廓。",
+    "expressionAction": [
+      "慵懒看镜头",
+      "抬手拨开额前卷发",
+      "微侧身停在抓拍瞬间"
+    ],
+    "referenceNotes": "重点是自然松散和轻文艺感，不要做成夸张蓬松、强造型感或细密卷发。",
+    "referenceSourceIds": [
+      "gq-barber-language",
+      "gq-best-short-haircuts",
+      "gq-short-back-sides"
+    ],
+    "coverImagePath": "template_assets/hairstyles/male-french-lazy-perm.jpg",
+    "coverImageUpdatedAt": "2026-03-28T05:48:10+00:00",
+    "coverImageSource": "template_image_pipeline:review_male.jpg",
+    "presetBlocks": {
+      "hair_shape": {
+        "hair_length": "中短到中长发",
+        "hair_silhouette": "以法式慵懒卷轮廓为主体，卷度自然松散、没有太强造型痕迹，适合偏文艺、松弛、轻法式的男生人像",
+        "hair_texture": "轻微弯曲纹理",
+        "hair_volume": "自然体积",
+        "hair_parting": "根据头型自然分线",
+        "sideburn_nape": "鬓角和后颈区域保持自然贴合",
+        "hair_tail_finish": "发尾收口与整体轮廓保持一致"
+      },
+      "bangs": {
+        "bangs_type": "无刘海或自然碎刘海",
+        "bangs_density": "不适用",
+        "bangs_length": "不适用",
+        "bangs_split": "不适用",
+        "bangs_face_framing": "脸侧保留自然修饰关系"
+      },
+      "recommended_hair_color": {
+        "hair_color_tone": "dark_brown",
+        "hair_color_depth": "偏深",
+        "hair_color_temperature": "中性",
+        "hair_color_technique": "solid",
+        "hair_color_distribution": "整体统一染发层次"
+      }
+    },
+    "legacy": false
+  },
+  {
+    "id": "male-firework-perm",
+    "label": "烟花烫",
+    "styleLine": "fashion_editorial",
+    "summary": "卷度极小且高度蓬松，个性非常强，适合态度型、视觉冲击力高的造型画面。",
+    "promptAddition": "发型改为烟花烫，整头发丝从发根开始形成极小、极密、极蓬松的炸裂卷度，顶部和两侧都被明显撑开，整体轮廓像向外绽放的烟花，发量感极强；颜色保持自然黑或深棕，画面气质偏个性、张扬、强烈。",
+    "detailTags": [
+      "烟花烫",
+      "极蓬松",
+      "个性",
+      "视觉冲击"
+    ],
+    "constraints": [
+      "卷度必须非常小且蓬松度很高",
+      "整体轮廓要有炸开的张力",
+      "不能做成轻量版羊毛卷或钢夹烫"
+    ],
+    "pairingAdvice": [
+      "都市夜色霓虹人像",
+      "冷调金属空间人像",
+      "天台风场人像"
+    ],
+    "shotAdvice": "适合略低机位近景和高反差布光，强化整体体积和个性感。",
+    "expressionAction": [
+      "带一点挑衅感地看镜头",
+      "双手抓起顶部卷度",
+      "转头展示夸张轮廓"
+    ],
+    "referenceNotes": "烟花烫的重点是极端蓬松和外放态度，不适合做成平顺克制的生活感发型。",
+    "referenceSourceIds": [
+      "gq-barber-language",
+      "gq-best-short-haircuts",
+      "gq-high-fade"
+    ],
+    "coverImagePath": "template_assets/hairstyles/male-firework-perm.jpg",
+    "coverImageUpdatedAt": "2026-03-27T06:59:24+00:00",
+    "coverImageSource": "template_image_pipeline:review_male.jpg",
+    "presetBlocks": {
+      "hair_shape": {
+        "hair_length": "中短到中长发",
+        "hair_silhouette": "以烟花烫轮廓为主体，卷度极小且高度蓬松，个性非常强，适合态度型、视觉冲击力高的造型画面",
+        "hair_texture": "明显卷度或烫发纹理",
+        "hair_volume": "顶部有明显蓬松和空气感",
+        "hair_parting": "根据头型自然分线",
+        "sideburn_nape": "鬓角和后颈区域保持自然贴合",
+        "hair_tail_finish": "发尾收口与整体轮廓保持一致"
+      },
+      "bangs": {
+        "bangs_type": "无刘海或自然碎刘海",
+        "bangs_density": "不适用",
+        "bangs_length": "不适用",
+        "bangs_split": "不适用",
+        "bangs_face_framing": "脸侧保留自然修饰关系"
+      },
+      "recommended_hair_color": {
+        "hair_color_tone": "dark_brown",
+        "hair_color_depth": "偏深",
+        "hair_color_temperature": "中性",
+        "hair_color_technique": "solid",
+        "hair_color_distribution": "整体统一染发层次"
+      }
+    },
+    "legacy": true
+  }
+]

@@ -36,6 +36,16 @@ class TemplateItem(BaseModel):
     tags: list[str] = Field(default_factory=list)
 
 
+class MaleHairstylePresetItem(TemplateItem):
+    preset_id: str
+    display_group: str | None = None
+    display_group_key: str | None = None
+    structure_id: str | None = None
+    modifier_ids: list[str] = Field(default_factory=list)
+    technique_ids: list[str] = Field(default_factory=list)
+    source_hairstyle_id: str | None = None
+
+
 class HairColorTechniqueOption(BaseModel):
     id: str
     label: str
@@ -90,6 +100,7 @@ class ProfessionalHairColorOption(BaseModel):
 
 class TemplateCatalogResponse(BaseModel):
     hairstyles: list[TemplateItem]
+    hairstyle_presets_male: list[MaleHairstylePresetItem] = Field(default_factory=list)
     scenes: list[TemplateItem]
     hair_colors: list[HairColorOption] = Field(default_factory=list)
     hair_color_techniques: list[HairColorTechniqueOption] = Field(default_factory=list)
@@ -246,7 +257,8 @@ class SceneUnderstandingResponse(BaseModel):
 
 class JobCreateRequest(BaseModel):
     upload_id: str = Field(min_length=1)
-    hairstyle_id: str = Field(min_length=1)
+    hairstyle_id: str | None = Field(default=None, min_length=1)
+    preset_id: str | None = Field(default=None, min_length=1)
     scene_id: str = Field(min_length=1)
     generator_backend: Literal["basic", "premium"] = "premium"
     aspect_ratio: str | None = None
@@ -276,6 +288,8 @@ class JobResponse(BaseModel):
     media_expires_at: str
     hairstyle_id: str
     hairstyle_name: str
+    preset_id: str | None = None
+    preset_name: str | None = None
     scene_id: str
     scene_name: str
     generator_backend: str | None = None

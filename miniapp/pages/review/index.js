@@ -17,6 +17,10 @@ const {
   updateCreationDraft
 } = require("../../utils/creation-draft");
 const {
+  buildJobCreatePayload,
+  findCatalogHairstyle
+} = require("../../utils/template-selection");
+const {
   buildGenerationSelection,
   findById,
   formatGenerationBackends
@@ -78,7 +82,7 @@ Page({
       const generationBackends = formatGenerationBackends(catalog.generation_backends || []);
       const generationSelection = buildGenerationSelection(generationBackends, draft);
       const selectedHairstyle =
-        findById(catalog.hairstyles, draft.hairstyle.id) || draft.hairstyle;
+        findCatalogHairstyle(catalog, draft.hairstyle) || draft.hairstyle;
       const selectedScene =
         findById(catalog.scenes, draft.scene.id) || draft.scene;
       const upload = await ensureCurrentUpload(selectedImage, { timeout: 15000 }).catch(() => null);
@@ -200,24 +204,26 @@ Page({
       const job = await request({
         url: "/api/jobs",
         method: "POST",
-        data: {
-          upload_id: upload.upload_id,
-          hairstyle_id: this.data.selectedHairstyle.id,
-          scene_id: this.data.selectedScene.id,
-          generator_backend: this.data.selectedGeneratorBackend,
-          aspect_ratio: this.data.selectedAspectRatio,
-          resolution: this.data.selectedResolution || null,
-          hair_color_tone: draft.hair_color_tone || null,
-          hair_color_technique: draft.hair_color_technique || null,
-          hair_color_professional_id: draft.hair_color_professional_id || null
-        }
+        data: buildJobCreatePayload({
+          uploadId: upload.upload_id,
+          hairstyle: this.data.selectedHairstyle,
+          scene: this.data.selectedScene,
+          generatorBackend: this.data.selectedGeneratorBackend,
+          aspectRatio: this.data.selectedAspectRatio,
+          resolution: this.data.selectedResolution,
+          hairColorTone: draft.hair_color_tone,
+          hairColorTechnique: draft.hair_color_technique,
+          hairColorProfessionalId: draft.hair_color_professional_id
+        })
       });
       upsertPendingHistoryJob({
         job_id: job.job_id,
         status: job.status,
         upload_url: upload.upload_url || "",
-        hairstyle_id: this.data.selectedHairstyle.id,
+        hairstyle_id: job.hairstyle_id || this.data.selectedHairstyle.id,
+        preset_id: job.preset_id || this.data.selectedHairstyle.preset_id || "",
         hairstyle_name: job.hairstyle_name || this.data.selectedHairstyle.name || "",
+        preset_name: job.preset_name || this.data.selectedHairstyle.name || "",
         scene_id: this.data.selectedScene.id,
         scene_name: job.scene_name || this.data.selectedScene.name || "",
         generator_backend: this.data.selectedGeneratorBackend,

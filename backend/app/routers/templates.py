@@ -9,6 +9,7 @@ from app.schemas import (
     GenerationBackendOption,
     HairColorOption,
     HairColorTechniqueOption,
+    MaleHairstylePresetItem,
     ProfessionalHairColorOption,
     ProfessionalHairColorSeriesOption,
     ShowcaseItem,
@@ -65,6 +66,30 @@ def list_templates(request: Request) -> TemplateCatalogResponse:
         )
         for item in templates.HAIRSTYLES
     ]
+    hairstyle_presets_male = [
+        MaleHairstylePresetItem(
+            id=item["id"],
+            preset_id=item.get("preset_id") or item["id"],
+            name=item["name"],
+            description=item["description"],
+            cover_url=_real_cover_url(request, item)
+            or _absolute_cover_url(request, "male-hairstyle-presets", item["id"]),
+            gender=item.get("gender"),
+            gender_label=item.get("gender_label"),
+            category_key=item.get("category_key"),
+            category_label=item.get("category_label"),
+            style_line=item.get("style_line"),
+            style_line_label=item.get("style_line_label"),
+            tags=item.get("tags", []),
+            display_group=item.get("display_group"),
+            display_group_key=item.get("display_group_key"),
+            structure_id=item.get("structure_id"),
+            modifier_ids=item.get("modifier_ids", []),
+            technique_ids=item.get("technique_ids", []),
+            source_hairstyle_id=item.get("source_hairstyle_id") or None,
+        )
+        for item in templates.get_male_hairstyle_presets()
+    ]
     scenes = [
         TemplateItem(
             id=item["id"],
@@ -99,6 +124,7 @@ def list_templates(request: Request) -> TemplateCatalogResponse:
     ]
     return TemplateCatalogResponse(
         hairstyles=hairstyles,
+        hairstyle_presets_male=hairstyle_presets_male,
         scenes=scenes,
         hair_colors=hair_colors,
         hair_color_techniques=hair_color_techniques,
@@ -178,6 +204,8 @@ def professional_hair_color_reference_link(request: Request) -> dict[str, str]:
 def template_cover(category: str, template_id: str) -> Response:
     if category == "hairstyles":
         template = templates.get_hairstyle(template_id)
+    elif category == "male-hairstyle-presets":
+        template = templates.get_male_hairstyle_preset(template_id)
     elif category == "scenes":
         template = templates.get_scene(template_id)
     else:

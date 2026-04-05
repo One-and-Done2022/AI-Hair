@@ -3,11 +3,13 @@ from __future__ import annotations
 import hashlib
 import json
 from collections.abc import Iterable
+from copy import deepcopy
 from dataclasses import dataclass
 from functools import lru_cache
 from pathlib import Path
 
 from app.config import get_settings
+from app.services import male_hairstyle_presets
 
 DATA_DIR = Path(__file__).resolve().parents[1] / "data" / "faceprompt"
 TEMPLATE_COVER_VERSION = "visual-v2"
@@ -1566,12 +1568,142 @@ def _build_scene_styling_rule(raw: dict) -> dict:
     }
 
 
+def _build_male_hairstyle_structure_template(raw: dict) -> dict:
+    base = _build_hairstyle_template(raw)
+    base.update(
+        {
+            "family_key": raw.get("familyKey"),
+            "family_label": raw.get("familyLabel"),
+            "subtype_key": raw.get("subtypeKey"),
+            "raw_aliases": raw.get("rawAliases", []),
+            "default_modifier_ids": raw.get("defaultModifierIds", []),
+            "backend_bridge_ids": list(
+                dict.fromkeys(
+                    str(item).strip()
+                    for item in (raw.get("backendBridge") or {}).get("backend_ids", [])
+                    if str(item).strip()
+                )
+            ),
+        }
+    )
+    return base
+
+
+def _build_male_hairstyle_modifier_template(raw: dict) -> dict:
+    return {
+        "id": raw["id"],
+        "name": raw.get("label") or raw["id"],
+        "description": raw.get("description") or raw.get("usage_notes") or "",
+        "modifier_type": raw.get("modifier_type") or "style",
+        "prompt_addition": raw.get("prompt_addition_cn") or "",
+        "usage_notes": raw.get("usage_notes") or "",
+        "tags": [str(raw.get("label") or raw["id"])],
+    }
+
+
+def _build_male_hairstyle_technique_template(raw: dict) -> dict:
+    return {
+        "id": raw["id"],
+        "name": raw.get("label") or raw["id"],
+        "description": raw.get("summary") or "",
+        "style_line": raw.get("styleLine") or "",
+        "prompt_addition": raw.get("promptAddition") or "",
+        "constraints": raw.get("constraints", []),
+        "pairing_advice": raw.get("pairingAdvice", []),
+        "expression_action": raw.get("expressionAction", []),
+        "preset_blocks": raw.get("presetBlocks") or {},
+        "cover_image_path": raw.get("coverImagePath", ""),
+        "cover_image_updated_at": raw.get("coverImageUpdatedAt", ""),
+        "cover_image_source": raw.get("coverImageSource", ""),
+        "legacy": bool(raw.get("legacy")),
+        "tags": raw.get("detailTags", []),
+    }
+
+
+def _build_male_hairstyle_preset_template(raw: dict) -> dict:
+    gender = raw.get("gender", "male")
+    style_line = raw["styleLine"]
+    preset_blocks = deepcopy(raw.get("presetBlocks") or {})
+    recommended_hair_color = preset_blocks.get("recommended_hair_color") or {}
+    default_hair_color_tone = str(
+        recommended_hair_color.get("hair_color_tone")
+        or _infer_default_hair_color_tone(raw.get("promptCore") or "", gender)
+    ).strip()
+    return {
+        "id": raw["id"],
+        "preset_id": raw["id"],
+        "selection_source": "male_preset",
+        "name": raw["displayName"],
+        "preset_name": raw["displayName"],
+        "description": raw.get("summary") or raw.get("notes") or raw["displayName"],
+        "gender": gender,
+        "gender_label": GENDER_LABELS.get(gender, gender),
+        "category_key": raw.get("displayGroupKey"),
+        "category_label": raw.get("displayGroup"),
+        "source_category_key": raw.get("categoryKey"),
+        "source_category_label": raw.get("categoryLabel"),
+        "display_group": raw.get("displayGroup"),
+        "display_group_key": raw.get("displayGroupKey"),
+        "style_line": style_line,
+        "style_line_label": STYLE_LINE_LABELS.get(style_line, style_line),
+        "tags": raw.get("detailTags", []),
+        "prompt_core": raw.get("promptCore") or raw["displayName"],
+        "default_hair_color_tone": default_hair_color_tone,
+        "preset_blocks": preset_blocks,
+        "constraints": raw.get("constraints", []),
+        "pairing_advice": raw.get("pairingAdvice", []),
+        "shot_advice": raw.get("shotAdvice") or "",
+        "expression_action": raw.get("expressionAction", []),
+        "control_profile": raw.get("controlProfile"),
+        "cover_image_path": raw.get("coverImagePath", ""),
+        "cover_image_updated_at": raw.get("coverImageUpdatedAt", ""),
+        "cover_image_source": raw.get("coverImageSource", ""),
+        "palette": _pick_palette("hairstyle", gender, style_line),
+        "structure_id": raw.get("structureId") or "",
+        "modifier_ids": raw.get("modifierIds", []),
+        "technique_ids": raw.get("techniqueIds", []),
+        "source_hairstyle_id": raw.get("sourceHairstyleId") or "",
+        "resolved_hairstyle_id": raw.get("sourceHairstyleId") or raw.get("structureId") or raw["id"],
+        "resolved_hairstyle_name": raw.get("resolvedHairstyleName") or raw["displayName"],
+    }
+
+
+@lru_cache(maxsize=1)
+def _male_hairstyle_catalog() -> dict[str, list[dict]]:
+    legacy_male_raw = _load_json("hairstyles_male.json")
+    legacy_male_templates = [
+        _build_hairstyle_template(item) for item in legacy_male_raw
+    ]
+    raw_catalog = male_hairstyle_presets.load_catalog(DATA_DIR, legacy_male_raw)
+    structures = [
+        _build_male_hairstyle_structure_template(item)
+        for item in raw_catalog["structures"]
+    ]
+    modifiers = [
+        _build_male_hairstyle_modifier_template(item)
+        for item in raw_catalog["modifiers"]
+    ]
+    techniques = [
+        _build_male_hairstyle_technique_template(item)
+        for item in raw_catalog["techniques"]
+    ]
+    presets = [
+        _build_male_hairstyle_preset_template(item)
+        for item in raw_catalog["presets"]
+    ]
+    return {
+        "legacy_hairstyles": legacy_male_templates,
+        "structures": structures,
+        "modifiers": modifiers,
+        "techniques": techniques,
+        "presets": presets,
+    }
+
+
 @lru_cache(maxsize=1)
 def _catalog() -> dict[str, list[dict]]:
     scenes = [_build_scene_template(item) for item in _load_json("scenes.json")]
-    male_hairstyles = [
-        _build_hairstyle_template(item) for item in _load_json("hairstyles_male.json")
-    ]
+    male_catalog = _male_hairstyle_catalog()
     female_hairstyles = [
         _build_hairstyle_template(item) for item in _load_json("hairstyles_female.json")
     ]
@@ -1581,7 +1713,11 @@ def _catalog() -> dict[str, list[dict]]:
     ]
     return {
         "scenes": scenes,
-        "hairstyles": [*male_hairstyles, *female_hairstyles],
+        "hairstyles": [*male_catalog["legacy_hairstyles"], *female_hairstyles],
+        "male_hairstyle_structures": male_catalog["structures"],
+        "male_hairstyle_modifiers": male_catalog["modifiers"],
+        "male_hairstyle_techniques": male_catalog["techniques"],
+        "male_hairstyle_presets": male_catalog["presets"],
         "stylings": stylings,
         "scene_styling_rules": scene_styling_rules,
     }
@@ -1589,6 +1725,10 @@ def _catalog() -> dict[str, list[dict]]:
 
 SCENES = _catalog()["scenes"]
 HAIRSTYLES = _catalog()["hairstyles"]
+MALE_HAIRSTYLE_STRUCTURES = _catalog()["male_hairstyle_structures"]
+MALE_HAIRSTYLE_MODIFIERS = _catalog()["male_hairstyle_modifiers"]
+MALE_HAIRSTYLE_TECHNIQUES = _catalog()["male_hairstyle_techniques"]
+MALE_HAIRSTYLE_PRESETS = _catalog()["male_hairstyle_presets"]
 STYLINGS = _catalog()["stylings"]
 SCENE_STYLING_RULES = _catalog()["scene_styling_rules"]
 
@@ -1603,6 +1743,19 @@ def _find_template(items: Iterable[dict], template_id: str) -> dict | None:
 def get_hairstyle(template_id: str) -> dict | None:
     resolved_id = _resolve_alias("hairstyle", template_id)
     return _find_template(HAIRSTYLES, resolved_id)
+
+
+def get_male_hairstyle_preset(template_id: str) -> dict | None:
+    return _find_template(MALE_HAIRSTYLE_PRESETS, template_id)
+
+
+def get_male_hairstyle_presets() -> list[dict]:
+    return [dict(item) for item in MALE_HAIRSTYLE_PRESETS]
+
+
+def resolve_male_hairstyle_preset(template_id: str) -> dict | None:
+    preset = get_male_hairstyle_preset(template_id)
+    return dict(preset) if preset is not None else None
 
 
 def get_scene(template_id: str) -> dict | None:
@@ -2002,11 +2155,15 @@ def _build_subject_performance_text(
 def _build_hair_shape_lock_text(hairstyle: dict | None) -> str:
     if hairstyle is None:
         return (
-            "发型锁定：保持参考图中静态打理完成的当前主发型结构不变，"
+            "发型锁定：保持参考图中已经生成完成的当前主发型结构不变；"
+            "同时保持参考图中静态打理完成的当前主发型结构不变，"
             "不要改变发长、外轮廓、卷度、顶部体积、分线、鬓角与后颈区。"
         )
     block = _preset_block(hairstyle, "hair_shape")
-    segments: list[str] = ["保持参考图中静态打理完成的当前主发型结构不变"]
+    segments: list[str] = [
+        "保持参考图中已经生成完成的当前主发型结构不变",
+        "同时保持参考图中静态打理完成的当前主发型结构不变",
+    ]
     mapping = (
         ("hair_length", "发长"),
         ("hair_silhouette", "轮廓"),
@@ -2377,6 +2534,20 @@ def normalize_generation_options(
     }
 
 
+def _empty_template_selection() -> dict[str, object]:
+    return {
+        "source": "legacy_hairstyle",
+        "preset_id": "",
+        "preset_name": "",
+        "resolved_hairstyle_id": "",
+        "resolved_hairstyle_name": "",
+        "display_group": "",
+        "structure_id": "",
+        "modifier_ids": [],
+        "technique_ids": [],
+    }
+
+
 def build_job_prompt_payload(
     hairstyle: dict,
     scene: dict,
@@ -2395,7 +2566,8 @@ def build_job_prompt_payload(
         aspect_ratio=aspect_ratio,
         resolution=resolution,
     )
-    selection_seed = seed_source or f"{hairstyle['id']}:{scene['id']}"
+    selection_key = hairstyle.get("preset_id") or hairstyle["id"]
+    selection_seed = seed_source or f"{selection_key}:{scene['id']}"
     selected_styling = _resolve_styling(
         style_line=scene["style_line"],
         preferred_gender=hairstyle.get("gender"),
@@ -2411,7 +2583,7 @@ def build_job_prompt_payload(
         detected_tone_id=detected_hair_color_tone_id,
     )
     payload = {
-        "version": 4,
+        "version": 5,
         "full_prompt": build_prompt(
             hairstyle,
             scene,
@@ -2436,6 +2608,17 @@ def build_job_prompt_payload(
         ),
         "styling_id": selected_styling["id"],
         "hair_color_selection": selected_hair_color,
+        "template_selection": {
+            "source": hairstyle.get("selection_source") or "legacy_hairstyle",
+            "preset_id": hairstyle.get("preset_id") or "",
+            "preset_name": hairstyle.get("preset_name") or "",
+            "resolved_hairstyle_id": hairstyle.get("resolved_hairstyle_id") or hairstyle["id"],
+            "resolved_hairstyle_name": hairstyle.get("resolved_hairstyle_name") or hairstyle["name"],
+            "display_group": hairstyle.get("display_group") or hairstyle.get("category_label") or "",
+            "structure_id": hairstyle.get("structure_id") or "",
+            "modifier_ids": hairstyle.get("modifier_ids", []),
+            "technique_ids": hairstyle.get("technique_ids", []),
+        },
         "output_options": generation_options,
     }
     return json.dumps(payload, ensure_ascii=False)
@@ -2444,6 +2627,7 @@ def build_job_prompt_payload(
 def parse_job_prompt_payload(raw_prompt: str) -> dict:
     normalized_options = normalize_generation_options()
     empty_hair_color_selection = _empty_hair_color_selection()
+    empty_template_selection = _empty_template_selection()
     if not raw_prompt.strip():
         return {
             "version": 0,
@@ -2452,6 +2636,7 @@ def parse_job_prompt_payload(raw_prompt: str) -> dict:
             "scene_only_prompt": "",
             "styling_id": "",
             "hair_color_selection": empty_hair_color_selection,
+            "template_selection": empty_template_selection,
             "output_options": normalized_options,
         }
 
@@ -2465,6 +2650,7 @@ def parse_job_prompt_payload(raw_prompt: str) -> dict:
             "scene_only_prompt": "",
             "styling_id": "",
             "hair_color_selection": empty_hair_color_selection,
+            "template_selection": empty_template_selection,
             "output_options": normalized_options,
         }
 
@@ -2476,6 +2662,7 @@ def parse_job_prompt_payload(raw_prompt: str) -> dict:
             "scene_only_prompt": "",
             "styling_id": "",
             "hair_color_selection": empty_hair_color_selection,
+            "template_selection": empty_template_selection,
             "output_options": normalized_options,
         }
 
@@ -2514,17 +2701,43 @@ def parse_job_prompt_payload(raw_prompt: str) -> dict:
             tone_id=str(raw_hair_color_selection.get("tone_id") or "").strip() or None,
             technique_id=str(raw_hair_color_selection.get("technique_id") or "").strip() or None,
             professional_id=str(raw_hair_color_selection.get("professional_id") or "").strip() or None,
-            strict_professional=False,
         )
     else:
         hair_color_selection = empty_hair_color_selection
+
+    raw_template_selection = (
+        payload.get("template_selection")
+        if isinstance(payload.get("template_selection"), dict)
+        else {}
+    )
+    template_selection = {
+        "source": str(raw_template_selection.get("source") or "legacy_hairstyle").strip() or "legacy_hairstyle",
+        "preset_id": str(raw_template_selection.get("preset_id") or "").strip(),
+        "preset_name": str(raw_template_selection.get("preset_name") or "").strip(),
+        "resolved_hairstyle_id": str(raw_template_selection.get("resolved_hairstyle_id") or "").strip(),
+        "resolved_hairstyle_name": str(raw_template_selection.get("resolved_hairstyle_name") or "").strip(),
+        "display_group": str(raw_template_selection.get("display_group") or "").strip(),
+        "structure_id": str(raw_template_selection.get("structure_id") or "").strip(),
+        "modifier_ids": [
+            str(item).strip()
+            for item in raw_template_selection.get("modifier_ids", [])
+            if str(item).strip()
+        ],
+        "technique_ids": [
+            str(item).strip()
+            for item in raw_template_selection.get("technique_ids", [])
+            if str(item).strip()
+        ],
+    }
+
     return {
-        "version": payload.get("version", 1),
+        "version": int(payload.get("version") or 0),
         "full_prompt": str(payload.get("full_prompt") or ""),
         "hairstyle_only_prompt": str(payload.get("hairstyle_only_prompt") or ""),
         "scene_only_prompt": str(payload.get("scene_only_prompt") or ""),
         "styling_id": str(payload.get("styling_id") or ""),
         "hair_color_selection": hair_color_selection,
+        "template_selection": template_selection,
         "output_options": output_options,
     }
 
@@ -2944,7 +3157,7 @@ def _scene_background_svg(variant: str, color_a: str, color_b: str) -> str:
 
 def template_cover_svg(category: str, template: dict) -> str:
     color_a, color_b = template["palette"]
-    if category == "hairstyles":
+    if category in {"hairstyles", "male-hairstyle-presets"}:
         body = _portrait_svg(
             hair_variant=_hairstyle_cover_variant(template),
             accent=color_b,

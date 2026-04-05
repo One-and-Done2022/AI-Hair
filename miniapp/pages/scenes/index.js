@@ -6,6 +6,7 @@ const {
   resetCreationDraft,
   updateCreationDraft
 } = require("../../utils/creation-draft");
+const { findCatalogHairstyle } = require("../../utils/template-selection");
 
 const STYLE_LINE_OPTIONS = [
   { id: "all", label: "全部场景" },
@@ -98,7 +99,7 @@ Page({
       this.catalog = catalog;
 
       const selectedHairstyle =
-        findById(catalog.hairstyles, draft.hairstyle.id) || draft.hairstyle;
+        findCatalogHairstyle(catalog, draft.hairstyle) || draft.hairstyle;
       const decoratedScenes = (catalog.scenes || []).map(decorateScene);
       const selectedScene =
         findById(decoratedScenes, draft.scene && draft.scene.id) || null;

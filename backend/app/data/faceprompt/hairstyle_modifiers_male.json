@@ -1,0 +1,65 @@
+[
+  {
+    "id": "modifier_bracket_fringe",
+    "label": "括号刘海",
+    "modifier_type": "fringe",
+    "prompt_addition_cn": "在不改变主结构的前提下，前区增加“括号刘海”效果：前区两侧内扣，形成括号形包裹额头。",
+    "description": "额前留出弧形内扣的括号形刘海，增强修脸和韩系感。",
+    "usage_notes": "不要作为独立主发型，需绑定分线或微分底座。",
+    "video_count": 2
+  },
+  {
+    "id": "modifier_comma_fringe",
+    "label": "逗号刘海",
+    "modifier_type": "fringe",
+    "prompt_addition_cn": "在不改变主结构的前提下，前区增加“逗号刘海”效果：前区发尾内卷形成逗号弧度。",
+    "description": "一侧或两侧前区形成逗号形弯钩，提升韩系和精致感。",
+    "usage_notes": "优先绑定韩式三七分或基础侧分。",
+    "video_count": 2
+  },
+  {
+    "id": "modifier_long_fringe",
+    "label": "长刘海",
+    "modifier_type": "fringe",
+    "prompt_addition_cn": "在不改变主结构的前提下，前区增加“长刘海”效果：延长前区长度，让刘海参与轮廓塑形。",
+    "description": "保留较长前区刘海，用于修饰额角和增强氛围感。",
+    "usage_notes": "长刘海不应脱离主结构单独存在。",
+    "video_count": 3
+  },
+  {
+    "id": "modifier_side_fringe",
+    "label": "侧刘海",
+    "modifier_type": "fringe",
+    "prompt_addition_cn": "在不改变主结构的前提下，前区增加“侧刘海”效果：额角保留侧向修饰发丝。",
+    "description": "保留侧向垂落的修饰刘海，适合侧分和纹理侧分。",
+    "usage_notes": "建议搭配侧分类。",
+    "video_count": 2
+  },
+  {
+    "id": "modifier_hk_vibe",
+    "label": "港风风格",
+    "modifier_type": "style",
+    "prompt_addition_cn": "整体风格叠加“港风风格”：降低现代感，提高松弛感和复古纹理。",
+    "description": "把结构转成更复古、更松弛、更有年代感的港风气质。",
+    "usage_notes": "应始终叠加在确定结构之上。",
+    "video_count": 8
+  },
+  {
+    "id": "modifier_messy_texture",
+    "label": "凌乱纹理",
+    "modifier_type": "finish",
+    "prompt_addition_cn": "在发丝收尾阶段叠加“凌乱纹理”：增加不规则束感与轻微散乱发尾。",
+    "description": "让结构更随意、更松散，强化自然感和少年感。",
+    "usage_notes": "不能把凌乱写成炸毛，仍要服从主结构。",
+    "video_count": 8
+  },
+  {
+    "id": "modifier_commute_clean",
+    "label": "通勤清爽",
+    "modifier_type": "style",
+    "prompt_addition_cn": "整体风格叠加“通勤清爽”：减少夸张纹理和高光泽，保持整洁。",
+    "description": "强调低风险、干净、容易打理的通勤导向。",
+    "usage_notes": "适合推荐算法排序，不一定写入强 Prompt。",
+    "video_count": 2
+  }
+]

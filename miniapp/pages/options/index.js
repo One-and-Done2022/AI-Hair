@@ -16,6 +16,7 @@ const {
   resetCreationDraft,
   updateCreationDraft
 } = require("../../utils/creation-draft");
+const { findCatalogHairstyle } = require("../../utils/template-selection");
 const {
   buildGenerationSelection,
   findById,
@@ -205,7 +206,7 @@ Page({
         draft
       );
       const selectedHairstyle =
-        findById(catalog.hairstyles, draft.hairstyle.id) || draft.hairstyle;
+        findCatalogHairstyle(catalog, draft.hairstyle) || draft.hairstyle;
       const selectedScene =
         findById(catalog.scenes, draft.scene.id) || draft.scene;
       const hairColors = catalog.hair_colors || [];

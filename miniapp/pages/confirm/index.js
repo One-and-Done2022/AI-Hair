@@ -6,6 +6,10 @@ const {
   ensureCurrentUpload,
   getCurrentImagePath
 } = require("../../utils/recommendation");
+const {
+  buildJobCreatePayload,
+  findCatalogHairstyle
+} = require("../../utils/template-selection");
 
 function findById(items, id) {
   if (!id) {
@@ -143,7 +147,7 @@ Page({
         wx.getStorageSync("generationOptions") || {}
       );
       const selectedHairstyle =
-        findById(catalog.hairstyles, cachedHairstyle.id) || cachedHairstyle;
+        findCatalogHairstyle(catalog, cachedHairstyle) || cachedHairstyle;
       const selectedScene =
         findById(catalog.scenes, cachedScene.id) || cachedScene;
 
@@ -246,21 +250,23 @@ Page({
       const job = await request({
         url: "/api/jobs",
         method: "POST",
-        data: {
-          upload_id: upload.upload_id,
-          hairstyle_id: this.data.selectedHairstyle.id,
-          scene_id: this.data.selectedScene.id,
-          generator_backend: this.data.selectedGeneratorBackend,
-          aspect_ratio: this.data.selectedAspectRatio,
-          resolution: this.data.selectedResolution || null
-        }
+        data: buildJobCreatePayload({
+          uploadId: upload.upload_id,
+          hairstyle: this.data.selectedHairstyle,
+          scene: this.data.selectedScene,
+          generatorBackend: this.data.selectedGeneratorBackend,
+          aspectRatio: this.data.selectedAspectRatio,
+          resolution: this.data.selectedResolution
+        })
       });
       upsertPendingHistoryJob({
         job_id: job.job_id,
         status: job.status,
         upload_url: upload.upload_url || "",
-        hairstyle_id: this.data.selectedHairstyle.id,
+        hairstyle_id: job.hairstyle_id || this.data.selectedHairstyle.id,
+        preset_id: job.preset_id || this.data.selectedHairstyle.preset_id || "",
         hairstyle_name: job.hairstyle_name || this.data.selectedHairstyle.name || "",
+        preset_name: job.preset_name || this.data.selectedHairstyle.name || "",
         scene_id: this.data.selectedScene.id,
         scene_name: job.scene_name || this.data.selectedScene.name || "",
         generator_backend: this.data.selectedGeneratorBackend,

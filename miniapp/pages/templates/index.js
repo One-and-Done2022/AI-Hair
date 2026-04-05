@@ -6,6 +6,10 @@ const {
   resetCreationDraft,
   updateCreationDraft
 } = require("../../utils/creation-draft");
+const {
+  findCatalogHairstyle,
+  getSelectableHairstyles
+} = require("../../utils/template-selection");
 
 function findById(items, id) {
   if (!id) {
@@ -65,8 +69,8 @@ function getDefaultGender(hairstyles, draft) {
 }
 
 function resolveSelectionState(catalog, draft) {
-  const allHairstyles = catalog.hairstyles || [];
-  const cachedHairstyle = findById(allHairstyles, draft.hairstyle && draft.hairstyle.id);
+  const allHairstyles = getSelectableHairstyles(catalog);
+  const cachedHairstyle = findCatalogHairstyle(catalog, draft.hairstyle);
   const selectedGender = getDefaultGender(allHairstyles, draft);
   const categoryOptions = buildCategoryOptions(allHairstyles, selectedGender);
   const selectedCategoryKey =

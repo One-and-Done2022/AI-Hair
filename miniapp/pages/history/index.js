@@ -5,6 +5,7 @@ const {
   removePendingHistoryJob
 } = require("../../utils/pending-history");
 const { request } = require("../../utils/request");
+const { findCatalogHairstyle } = require("../../utils/template-selection");
 
 const FAVORITES_STORAGE_KEY = "favoriteJobIds";
 
@@ -276,7 +277,10 @@ Page({
   async reuseTemplate(item) {
     try {
       const catalog = await request({ url: "/api/templates" });
-      const hairstyle = (catalog.hairstyles || []).find((entry) => entry.id === item.hairstyle_id) || null;
+      const hairstyle = findCatalogHairstyle(catalog, {
+        preset_id: item.preset_id,
+        hairstyle_id: item.hairstyle_id
+      }) || null;
       const scene = (catalog.scenes || []).find((entry) => entry.id === item.scene_id) || null;
       wx.setStorageSync("templateSelection", {
         hairstyle,

@@ -651,9 +651,15 @@ def test_faceprompt_catalog_counts_and_legacy_aliases():
 
     assert len(templates.SCENES) >= 20
     assert len(templates.HAIRSTYLES) == 56
+    assert len(templates.MALE_HAIRSTYLE_PRESETS) == 48
     assert len(templates.STYLINGS) == 7
     assert len([item for item in templates.HAIRSTYLES if item["gender"] == "male"]) == 23
     assert len([item for item in templates.HAIRSTYLES if item["gender"] == "female"]) == 33
+
+    preset = templates.get_male_hairstyle_preset("male-preset-male-american-forward-spike")
+    assert preset is not None
+    assert preset["name"] == "美式前刺"
+    assert preset["structure_id"] == "male-american_forward_spike"
 
     assert templates.get_hairstyle("american-spiky")["id"] == "male-forward-spikes"
     assert templates.get_scene("lifestyle-interior")["id"] == "indoor-film-lifestyle"
@@ -750,6 +756,7 @@ def test_auth_upload_job_history_flow(tmp_path, monkeypatch):
         assert len(catalog["hairstyles"]) == 56
         assert len(catalog["scenes"]) == len(template_service.SCENES)
         assert len(catalog["generation_backends"]) == 1
+        assert len(catalog["hairstyle_presets_male"]) == 48
         assert len(catalog["hair_colors"]) >= 8
         assert len(catalog["hair_color_techniques"]) >= 5
         assert len(catalog["hair_color_professional_series"]) >= 4
@@ -985,6 +992,44 @@ def test_job_accepts_professional_hair_color_mapping(tmp_path, monkeypatch):
         assert payload["hair_color_professional_series_label"] == "烟熏冷雾系列"
         assert payload["hair_color_professional_code"] == "5/72"
         assert payload["hair_color_professional_note"] == "偏灰棕、轻烟熏、低饱和冷雾感"
+
+
+def test_job_accepts_male_hairstyle_preset_id(tmp_path, monkeypatch):
+    app = _build_app(tmp_path, monkeypatch)
+
+    with TestClient(app) as client:
+        login = client.post("/api/auth/wechat/login", json={"code": "dev-test"})
+        token = login.json()["token"]
+        headers = {"Authorization": f"Bearer {token}"}
+
+        upload = client.post(
+            "/api/uploads",
+            headers=headers,
+            files={"file": ("portrait.png", _build_test_image(), "image/png")},
+        )
+        upload_id = upload.json()["upload_id"]
+
+        catalog = client.get("/api/templates").json()
+        preset = catalog["hairstyle_presets_male"][0]
+        legacy_male = next(item for item in catalog["hairstyles"] if item["gender"] == "male")
+        job_create = client.post(
+            "/api/jobs",
+            headers=headers,
+            json={
+                "upload_id": upload_id,
+                "hairstyle_id": legacy_male["id"],
+                "preset_id": preset["id"],
+                "scene_id": catalog["scenes"][0]["id"],
+                "generator_backend": "premium",
+            },
+        )
+
+        assert job_create.status_code == 201
+        payload = job_create.json()
+        assert payload["preset_id"] == preset["id"]
+        assert payload["preset_name"] == preset["name"]
+        assert payload["hairstyle_name"] == preset["name"]
+        assert payload["hairstyle_id"]
 
 
 def test_templates_catalog_exposes_plan_specific_output_capabilities(tmp_path, monkeypatch):

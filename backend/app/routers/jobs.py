@@ -15,6 +15,10 @@ def _job_response(request: Request, job: dict) -> JobResponse:
     hairstyle = templates.get_hairstyle(job["hairstyle_id"])
     scene = templates.get_scene(job["scene_id"])
     prompt_payload = templates.parse_job_prompt_payload(job.get("prompt") or "")
+    template_selection = prompt_payload.get("template_selection") or {}
+    preset_id = str(template_selection.get("preset_id") or "").strip() or None
+    preset_name = str(template_selection.get("preset_name") or "").strip() or None
+    resolved_hairstyle_name = str(template_selection.get("resolved_hairstyle_name") or "").strip() or None
     upload = repository.get_upload(job["upload_id"])
     base_url = str(request.base_url).rstrip("/")
     upload_url = (
@@ -66,7 +70,9 @@ def _job_response(request: Request, job: dict) -> JobResponse:
         media_expired=media_expired,
         media_expires_at=media_expires_at,
         hairstyle_id=job["hairstyle_id"],
-        hairstyle_name=hairstyle["name"] if hairstyle else job["hairstyle_id"],
+        hairstyle_name=preset_name or (hairstyle["name"] if hairstyle else (resolved_hairstyle_name or job["hairstyle_id"])),
+        preset_id=preset_id,
+        preset_name=preset_name,
         scene_id=job["scene_id"],
         scene_name=scene["name"] if scene else job["scene_id"],
         generator_backend=prompt_payload["output_options"]["generator_backend"],
@@ -100,10 +106,23 @@ def create_job(
     if upload is None or upload["user_id"] != current_user["id"]:
         raise HTTPException(status_code=404, detail="Upload not found.")
 
-    hairstyle = templates.get_hairstyle(payload.hairstyle_id)
+    selected_hairstyle_id = payload.preset_id or payload.hairstyle_id
+    if not selected_hairstyle_id:
+        raise HTTPException(status_code=400, detail="Missing hairstyle_id or preset_id.")
+
+    if payload.preset_id:
+        hairstyle = templates.resolve_male_hairstyle_preset(payload.preset_id)
+    else:
+        hairstyle = templates.get_hairstyle(payload.hairstyle_id or "")
     scene = templates.get_scene(payload.scene_id)
     if hairstyle is None or scene is None:
         raise HTTPException(status_code=400, detail="Invalid hairstyle or scene template.")
+
+    stored_hairstyle_id = (
+        str(hairstyle.get("source_hairstyle_id") or "").strip()
+        or str(hairstyle.get("resolved_hairstyle_id") or "").strip()
+        or str(hairstyle.get("id") or "").strip()
+    )
 
     try:
         generation_plan = templates.get_generation_plan(payload.generator_backend)
@@ -133,7 +152,7 @@ def create_job(
             hair_color_technique_id=payload.hair_color_technique,
             hair_color_professional_id=payload.hair_color_professional_id,
             detected_hair_color_tone_id=detected_hair_color_tone_id,
-            seed_source=f"{payload.upload_id}:{payload.hairstyle_id}:{payload.scene_id}",
+            seed_source=f"{payload.upload_id}:{selected_hairstyle_id}:{payload.scene_id}",
         )
     except (ValueError, ImageGenerationError) as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
@@ -141,7 +160,7 @@ def create_job(
     job = repository.create_job(
         user_id=current_user["id"],
         upload_id=payload.upload_id,
-        hairstyle_id=payload.hairstyle_id,
+        hairstyle_id=stored_hairstyle_id,
         scene_id=payload.scene_id,
         prompt=prompt,
         model_name=f"{generation_plan['hair_backend']}+{generation_plan['scene_model_name']}",
