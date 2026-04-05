@@ -383,15 +383,17 @@ Page({
   },
 
   async openProfessionalReference() {
-    const referenceUrl = `${baseUrl}/api/templates/hair-color-reference.pdf`;
-    let fallbackUrl = "";
+    const staticReferenceUrl = `${baseUrl}/static/reference_docs/solutor-hair-color-reference.pdf`;
+    let fallbackUrl = `${baseUrl}/api/templates/hair-color-reference.pdf`;
     try {
       const payload = await request({
         url: "/api/templates/hair-color-reference-link"
       });
-      fallbackUrl = payload && payload.url ? payload.url : "";
+      if (payload && payload.api_url) {
+        fallbackUrl = payload.api_url;
+      }
     } catch (error) {
-      fallbackUrl = "";
+      fallbackUrl = `${baseUrl}/api/templates/hair-color-reference.pdf`;
     }
 
     wx.showLoading({ title: "准备参考" });
@@ -445,7 +447,7 @@ Page({
       });
     };
 
-    downloadReference(referenceUrl);
+    downloadReference(staticReferenceUrl);
   },
 
   selectProfessionalSeries(event) {

@@ -6,6 +6,7 @@ from pathlib import Path
 
 from PIL import Image, ImageDraw, ImageFont
 
+from app.config import get_settings
 from app.services import storage, templates
 
 PAGE_SIZE = (1240, 1754)
@@ -18,6 +19,7 @@ ACCENT = "#8B6F47"
 SWATCH_BORDER = "#E9E2D7"
 ITEMS_PER_PAGE = 6
 REFERENCE_PDF_FILENAME = "solutor-hair-color-reference.pdf"
+STATIC_REFERENCE_SUBDIR = "reference_docs"
 
 SERIES_LABELS = {
     "base_color": "基色 / 打底",
@@ -205,18 +207,44 @@ def professional_hair_color_reference_object_key() -> str:
     return storage.reference_document_object_key(REFERENCE_PDF_FILENAME)
 
 
+def professional_hair_color_reference_static_relative_path() -> str:
+    return f"{STATIC_REFERENCE_SUBDIR}/{REFERENCE_PDF_FILENAME}"
+
+
+def professional_hair_color_reference_static_file_path() -> Path:
+    settings = get_settings()
+    public_dir = settings.storage_dir / "public" / STATIC_REFERENCE_SUBDIR
+    public_dir.mkdir(parents=True, exist_ok=True)
+    return public_dir / REFERENCE_PDF_FILENAME
+
+
+def ensure_professional_hair_color_reference_static_file(*, force_refresh: bool = False) -> Path:
+    destination = professional_hair_color_reference_static_file_path()
+    if destination.exists() and not force_refresh:
+        return destination
+    destination.write_bytes(build_professional_hair_color_reference_pdf())
+    return destination
+
+
 def ensure_professional_hair_color_reference_pdf_cached(*, force_refresh: bool = False) -> str:
     object_key = professional_hair_color_reference_object_key()
     if not force_refresh:
         try:
             if storage.read_file_bytes(object_key):
+                ensure_professional_hair_color_reference_static_file()
                 return object_key
         except Exception:
             pass
     pdf_bytes = build_professional_hair_color_reference_pdf()
+    ensure_professional_hair_color_reference_static_file(force_refresh=True)
     return storage.save_reference_document(REFERENCE_PDF_FILENAME, pdf_bytes)
 
 
 def get_professional_hair_color_reference_url(*, base_url: str | None = None) -> str | None:
     object_key = ensure_professional_hair_color_reference_pdf_cached()
     return storage.media_url(object_key, base_url=base_url)
+
+
+def get_professional_hair_color_reference_static_url(*, base_url: str) -> str:
+    ensure_professional_hair_color_reference_static_file()
+    return f"{base_url.rstrip('/')}/static/{professional_hair_color_reference_static_relative_path()}"

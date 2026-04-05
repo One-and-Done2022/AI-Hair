@@ -34,6 +34,7 @@ def create_app() -> FastAPI:
         current_settings.ensure_directories()
         try:
             hair_color_reference.ensure_professional_hair_color_reference_pdf_cached()
+            hair_color_reference.ensure_professional_hair_color_reference_static_file()
         except Exception:
             pass
         init_db()
@@ -84,6 +85,13 @@ def create_app() -> FastAPI:
         allow_headers=["*"],
     )
     settings.ensure_directories()
+    try:
+        hair_color_reference.ensure_professional_hair_color_reference_static_file()
+    except Exception:
+        pass
+    public_static_dir = settings.storage_dir / "public"
+    public_static_dir.mkdir(parents=True, exist_ok=True)
+    app.mount("/static", StaticFiles(directory=public_static_dir, check_dir=False), name="static")
     if storage.is_local_media_backend():
         app.mount("/media", StaticFiles(directory=settings.storage_dir, check_dir=False), name="media")
 

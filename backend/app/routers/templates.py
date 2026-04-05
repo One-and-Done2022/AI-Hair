@@ -162,12 +162,15 @@ def professional_hair_color_reference_pdf() -> Response:
 @router.get("/hair-color-reference-link")
 def professional_hair_color_reference_link(request: Request) -> dict[str, str]:
     base_url = str(request.base_url).rstrip("/")
-    fallback_url = hair_color_reference.get_professional_hair_color_reference_url(
+    static_url = hair_color_reference.get_professional_hair_color_reference_static_url(
         base_url=base_url,
     )
+    api_url = str(request.url_for("professional_hair_color_reference_pdf"))
     return {
         "filename": hair_color_reference.REFERENCE_PDF_FILENAME,
-        "url": fallback_url or str(request.url_for("professional_hair_color_reference_pdf")),
+        "url": static_url,
+        "static_url": static_url,
+        "api_url": api_url,
     }
 
 
