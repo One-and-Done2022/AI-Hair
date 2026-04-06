@@ -5,7 +5,10 @@ import json
 from dataclasses import dataclass
 from functools import lru_cache
 from importlib.resources import files
+from pathlib import Path
 from typing import Any
+
+from . import male_hairstyle_presets
 
 BASE_IDENTITY_PROMPT = (
     "请基于上传参考图中的同一人物生成 1 张高相似度、写实风格的人像写真。"
@@ -21,7 +24,7 @@ HAIRSTYLE_ONLY_IDENTITY_PROMPT = (
     "第一优先级是严格保留参考人物的真实身份特征，保证一眼看出是同一个人。"
     "以上传照片中的人物为原型，不改变人物的脸型、五官比例、眼距、鼻梁、嘴型、肤色、年龄感和整体气质，"
     "不改变性别表达，不换脸，不生成第二个人。"
-    "只更换图中人物的发型，除头发、刘海、鬓角、后颈发区和发际线相关区域外，"
+    "只更换图中人物的发型和发色，除头发、刘海、鬓角、后颈发区和发际线相关区域外，"
     "尽量保持原图中的背景、服饰、姿态、表情、构图、镜头距离、光线和氛围不变。"
 )
 
@@ -49,7 +52,7 @@ QUALITY_IMAGE_FINISH_PROMPT = (
 QUALITY_PROMPT = QUALITY_SKIN_TEXTURE_PROMPT + QUALITY_IMAGE_FINISH_PROMPT
 
 HAIRSTYLE_ONLY_CONSTRAINTS_PROMPT = (
-    "仅允许修改头发、刘海、鬓角、后颈发区和发际线相关视觉效果，不要改动背景、服饰、表情、动作和构图；"
+    "仅允许修改头发、刘海、鬓角、后颈发区和发际线相关视觉效果，以及这些区域内的发色、明暗层次与染发细节，不要改动背景、服饰、表情、动作和构图；"
     "发型必须贴合原人物头骨结构、头部朝向、耳位位置、肩颈遮挡关系与镜头透视；"
     "不能把新发型做成悬浮假发、错位发片或不贴合头皮的假发套效果。"
 )
@@ -329,6 +332,8 @@ class CatalogRecord:
     hairstyleControl: HairstyleControlProfile | None = None
     sceneControl: SceneControlProfile | None = None
     presetBlocks: dict[str, Any] | None = None
+    selectionSource: str = "catalog"
+    isPrimary: bool = True
 
 
 @dataclass(frozen=True)
@@ -1512,7 +1517,12 @@ def _scene_to_record(raw: dict[str, Any]) -> CatalogRecord:
     )
 
 
-def _hairstyle_to_record(raw: dict[str, Any]) -> CatalogRecord:
+def _hairstyle_to_record(
+    raw: dict[str, Any],
+    *,
+    selection_source: str = "catalog",
+    is_primary: bool = True,
+) -> CatalogRecord:
     record_id = _ensure_text(raw.get("id"), "id", "hairstyle")
     style_line = _ensure_text(raw.get("styleLine"), "styleLine", record_id)
     if style_line not in VALID_STYLE_LINES:
@@ -1558,7 +1568,86 @@ def _hairstyle_to_record(raw: dict[str, Any]) -> CatalogRecord:
         exampleFinalPrompt=example_final_prompt,
         hairstyleControl=hairstyle_control,
         presetBlocks=raw.get("presetBlocks") or {},
+        selectionSource=selection_source,
+        isPrimary=is_primary,
     )
+
+
+def _male_preset_to_record(raw: dict[str, Any]) -> CatalogRecord:
+    record_id = _ensure_text(raw.get("id"), "id", "hairstyle_preset")
+    style_line = _ensure_text(raw.get("styleLine"), "styleLine", record_id)
+    if style_line not in VALID_STYLE_LINES:
+        raise ValueError(f"{record_id}: invalid style line '{style_line}'")
+
+    constraints = _ensure_optional_non_empty_list(raw.get("constraints"), "constraints", record_id)
+    if not constraints:
+        constraints = ["主结构必须稳定，不得偏离当前发型组合定义"]
+    detail_tags = _ensure_optional_non_empty_list(raw.get("detailTags"), "detailTags", record_id)
+    if not detail_tags:
+        detail_tags = [str(raw.get("displayName") or record_id)]
+    pairing_advice = _ensure_optional_non_empty_list(raw.get("pairingAdvice"), "pairingAdvice", record_id)
+    if not pairing_advice:
+        pairing_advice = ["室内生活感胶片写真"]
+    expression_action = _ensure_optional_non_empty_list(raw.get("expressionAction"), "expressionAction", record_id)
+    if not expression_action:
+        expression_action = ["自然看向镜头", "自然站立或静止停顿"]
+    source_ids = _ensure_optional_non_empty_list(raw.get("referenceSourceIds"), "referenceSourceIds", record_id)
+    if not source_ids:
+        source_ids = [f"male-preset:{record_id}"]
+
+    hairstyle_control = _parse_hairstyle_control_profile(raw.get("controlProfile"), record_id)
+    prompt_core = _ensure_text(raw.get("promptCore"), "promptCore", record_id)
+    title = _ensure_text(raw.get("displayName"), "displayName", record_id)
+    summary = _ensure_optional_text(raw.get("summary"), "summary", record_id) or _ensure_optional_text(raw.get("notes"), "notes", record_id) or title
+    shot_advice = _ensure_optional_text(raw.get("shotAdvice"), "shotAdvice", record_id) or "3:4 竖构图，胸口以上近景。"
+
+    example_final_prompt = _build_example_prompt(
+        style_line=style_line,
+        hairstyle_prompt=prompt_core,
+        expressions=expression_action,
+        hairstyle_actions=expression_action,
+        hairstyle_constraints=constraints,
+        seed_source=record_id,
+    )
+
+    return CatalogRecord(
+        id=record_id,
+        title=title,
+        categoryType="hairstyle",
+        gender="male",
+        styleLine=style_line,
+        summary=summary,
+        promptCore=prompt_core,
+        detailTags=tuple(detail_tags),
+        constraints=tuple(constraints),
+        negativePrompt=BASE_NEGATIVE_PROMPT,
+        pairingAdvice=tuple(pairing_advice),
+        shotAdvice=shot_advice,
+        expressionAction=tuple(expression_action),
+        referenceNotes=_ensure_optional_text(raw.get("referenceNotes"), "referenceNotes", record_id) or title,
+        referenceSources=_resolve_sources(source_ids, record_id),
+        exampleFinalPrompt=example_final_prompt,
+        hairstyleControl=hairstyle_control,
+        presetBlocks=raw.get("presetBlocks") or {},
+        selectionSource="male_preset",
+        isPrimary=True,
+    )
+
+
+@lru_cache(maxsize=1)
+def _male_hairstyle_catalog() -> dict[str, list[CatalogRecord]]:
+    data_dir = Path(str(_data_file("hairstyles_male.json"))).parent
+    legacy_male_raw = _load_json("hairstyles_male.json")
+    raw_catalog = male_hairstyle_presets.load_catalog(data_dir, legacy_male_raw)
+    legacy_records = [
+        _hairstyle_to_record(item, selection_source="legacy_male", is_primary=False)
+        for item in legacy_male_raw
+    ]
+    preset_records = [_male_preset_to_record(item) for item in raw_catalog["presets"]]
+    return {
+        "legacy": legacy_records,
+        "presets": preset_records,
+    }
 
 
 @lru_cache(maxsize=1)
@@ -1567,10 +1656,14 @@ def _catalog() -> dict[str, CatalogRecord]:
     for raw_scene in _load_json("scenes.json"):
         record = _scene_to_record(raw_scene)
         catalog[record.id] = record
-    for data_file in ("hairstyles_male.json", "hairstyles_female.json"):
-        for raw_hairstyle in _load_json(data_file):
-            record = _hairstyle_to_record(raw_hairstyle)
-            catalog[record.id] = record
+
+    male_catalog = _male_hairstyle_catalog()
+    for record in [*male_catalog["legacy"], *male_catalog["presets"]]:
+        catalog[record.id] = record
+
+    for raw_hairstyle in _load_json("hairstyles_female.json"):
+        record = _hairstyle_to_record(raw_hairstyle)
+        catalog[record.id] = record
     return catalog
 
 
@@ -1579,6 +1672,7 @@ def list_records(
     category: str | None = None,
     gender: str | None = None,
     style_line: str | None = None,
+    include_hidden: bool = False,
 ) -> list[CatalogRecord]:
     if category and category not in VALID_CATEGORIES:
         raise ValueError(f"Unsupported category: {category}")
@@ -1588,6 +1682,8 @@ def list_records(
         raise ValueError(f"Unsupported style line: {style_line}")
 
     records = list(_catalog().values())
+    if not include_hidden:
+        records = [record for record in records if record.isPrimary]
     if category:
         records = [record for record in records if record.categoryType == category]
     if gender:
@@ -1605,15 +1701,19 @@ def get_record(record_id: str) -> CatalogRecord:
 
 
 def catalog_summary() -> dict[str, int]:
-    records = list(_catalog().values())
+    records = list_records(include_hidden=False)
+    all_records = list(_catalog().values())
     hairstyles = [record for record in records if record.categoryType == "hairstyle"]
     scenes = [record for record in records if record.categoryType == "scene"]
     return {
         "total_records": len(records),
+        "all_catalog_records": len(all_records),
         "scene_count": len(scenes),
         "hairstyle_count": len(hairstyles),
         "male_hairstyles": len([record for record in hairstyles if record.gender == "male"]),
         "female_hairstyles": len([record for record in hairstyles if record.gender == "female"]),
+        "male_preset_hairstyles": len([record for record in hairstyles if record.selectionSource == "male_preset"]),
+        "legacy_male_hairstyles": len([record for record in all_records if record.selectionSource == "legacy_male"]),
         "realistic_records": len(
             [record for record in records if record.styleLine == "realistic_editorial"]
         ),
@@ -1935,9 +2035,16 @@ def _build_subject_performance_block(
 
 def _build_hair_shape_lock_block(hairstyle: CatalogRecord | None) -> str:
     if hairstyle is None:
-        return "发型锁定：保持参考图中静态打理完成的当前主发型结构不变，不要改变发长、轮廓、卷度、体积、分线和鬓角后颈区。"
+        return (
+            "发型锁定：保持参考图中已经生成完成的当前主发型结构不变；"
+            "同时保持参考图中静态打理完成的当前主发型结构不变，"
+            "不要改变发长、轮廓、卷度、体积、分线和鬓角后颈区。"
+        )
     block = _preset_block_from_record(hairstyle, "hair_shape")
-    segments = ["保持参考图中静态打理完成的当前主发型结构不变"]
+    segments = [
+        "保持参考图中已经生成完成的当前主发型结构不变",
+        "同时保持参考图中静态打理完成的当前主发型结构不变",
+    ]
     for field, label in (
         ("hair_length", "发长"),
         ("hair_silhouette", "轮廓"),
@@ -2295,10 +2402,10 @@ def validate_catalog() -> list[str]:
     summary = catalog_summary()
     if summary["scene_count"] != 22:
         errors.append(f"Expected 22 scenes, found {summary['scene_count']}")
-    if summary["hairstyle_count"] != 56:
-        errors.append(f"Expected 56 hairstyles, found {summary['hairstyle_count']}")
-    if summary["male_hairstyles"] != 23:
-        errors.append(f"Expected 23 male hairstyles, found {summary['male_hairstyles']}")
+    if summary["hairstyle_count"] != 81:
+        errors.append(f"Expected 81 hairstyles, found {summary['hairstyle_count']}")
+    if summary["male_hairstyles"] != 48:
+        errors.append(f"Expected 48 male hairstyles, found {summary['male_hairstyles']}")
     if summary["female_hairstyles"] != 33:
         errors.append(f"Expected 33 female hairstyles, found {summary['female_hairstyles']}")
     if summary["structured_hairstyle_controls"] < 5:

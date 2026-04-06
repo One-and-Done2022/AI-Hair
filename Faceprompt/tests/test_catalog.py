@@ -30,10 +30,12 @@ class CatalogTests(unittest.TestCase):
     def test_summary_counts_match_plan(self) -> None:
         summary = catalog_summary()
         self.assertEqual(summary["scene_count"], 22)
-        self.assertEqual(summary["hairstyle_count"], 56)
-        self.assertEqual(summary["male_hairstyles"], 23)
+        self.assertEqual(summary["hairstyle_count"], 81)
+        self.assertEqual(summary["male_hairstyles"], 48)
         self.assertEqual(summary["female_hairstyles"], 33)
-        self.assertEqual(summary["total_records"], 78)
+        self.assertEqual(summary["male_preset_hairstyles"], 48)
+        self.assertEqual(summary["legacy_male_hairstyles"], 23)
+        self.assertEqual(summary["total_records"], 103)
         self.assertGreaterEqual(summary["structured_hairstyle_controls"], 5)
         self.assertGreaterEqual(summary["structured_scene_controls"], 10)
 
@@ -257,7 +259,7 @@ class CatalogTests(unittest.TestCase):
 
         self.assertIn("不改变人物的脸型、五官比例、眼距、鼻梁、嘴型、肤色、年龄感和整体气质和发型", prompt)
         self.assertIn("忽略原照片中的背景、原服饰、原有动作", prompt)
-        self.assertIn("发型锁定：保持参考图中静态打理完成的当前主发型结构不变", prompt)
+        self.assertIn("发型锁定：保持参考图中已经生成完成的当前主发型结构不变", prompt)
         self.assertIn("刘海锁定：保持参考图中静态完成的当前刘海状态不变", prompt)
         self.assertIn("发色锁定：保持参考图中静态完成的当前发色、明度层级与染发层次不变", prompt)
         self.assertIn("风感约束：", prompt)
@@ -335,7 +337,7 @@ class CatalogTests(unittest.TestCase):
         output = stdout.getvalue()
         self.assertEqual(exit_code, 0)
         self.assertIn("主体必须始终是同一位单人肖像，仅对场景、动作、表情和服装进行艺术化创作", output)
-        self.assertIn("发型锁定：保持参考图中静态打理完成的当前主发型结构不变", output)
+        self.assertIn("发型锁定：保持参考图中已经生成完成的当前主发型结构不变", output)
 
     def test_blocks_command_prints_hairstyle_only_blocks(self) -> None:
         stdout = StringIO()
