@@ -9,12 +9,28 @@ function getMalePresetHairstyles(catalog = {}) {
 }
 
 function getSelectableHairstyles(catalog = {}) {
-  const femaleAndLegacy = getLegacyHairstyles(catalog).filter((item) => item.gender !== "male");
-  return getMalePresetHairstyles(catalog).concat(femaleAndLegacy);
+  const legacy = getLegacyHairstyles(catalog);
+  const malePresets = getMalePresetHairstyles(catalog);
+  const femaleLegacy = legacy.filter((item) => item.gender !== "male");
+  const maleFallback = malePresets.length
+    ? malePresets
+    : legacy.filter((item) => item.gender === "male");
+  return maleFallback.concat(femaleLegacy);
 }
 
 function getAllHairstyles(catalog = {}) {
-  return getMalePresetHairstyles(catalog).concat(getLegacyHairstyles(catalog));
+  const legacy = getLegacyHairstyles(catalog);
+  const malePresets = getMalePresetHairstyles(catalog);
+  const items = malePresets.length ? malePresets.concat(legacy) : legacy;
+  const seen = new Set();
+  return items.filter((item) => {
+    const id = item && item.id;
+    if (!id || seen.has(id)) {
+      return false;
+    }
+    seen.add(id);
+    return true;
+  });
 }
 
 function buildCandidateIds(selection) {
