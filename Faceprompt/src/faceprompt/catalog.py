@@ -421,6 +421,7 @@ def get_prompt_block_labels() -> dict[str, str]:
         "hair_shape": "主发型结构",
         "bangs": "刘海系统",
         "hair_color": "发色系统",
+        "hair_constraints": "发型关键约束",
         "scene": "场景系统",
         "styling": "妆造系统",
         "subject_performance": "人物表现系统",
@@ -1947,6 +1948,17 @@ def _build_hair_color_block(record: CatalogRecord) -> str:
     return f"发色系统：{'；'.join(segment for segment in segments if segment)}。"
 
 
+def _build_hair_constraints_block(record: CatalogRecord) -> str:
+    constraints = [
+        _normalize_sentence(str(item))
+        for item in record.constraints
+        if str(item).strip()
+    ][:4]
+    if not constraints:
+        return ""
+    return f"发型关键约束：{_format_prompt_items(tuple(constraints))}。"
+
+
 def _build_scene_block(record: CatalogRecord) -> str:
     block = _preset_block_from_record(record, "scene")
     shot = _sanitize_scene_text_for_locked_hair(_safe_text(block.get("shot") or record.shotAdvice))
@@ -2183,6 +2195,7 @@ def build_prompt_assembly(
                 _make_prompt_block("hair_shape", _build_hair_shape_block(hairstyle)),
                 _make_prompt_block("bangs", _build_bangs_block(hairstyle)),
                 _make_prompt_block("hair_color", _build_hair_color_block(hairstyle)),
+                _make_prompt_block("hair_constraints", _build_hair_constraints_block(hairstyle)),
                 *_build_quality_blocks(),
                 *_build_negative_blocks(),
             ],
@@ -2239,6 +2252,7 @@ def build_prompt_assembly(
             _make_prompt_block("hair_shape", _build_hair_shape_block(hairstyle)),
             _make_prompt_block("bangs", _build_bangs_block(hairstyle)),
             _make_prompt_block("hair_color", _build_hair_color_block(hairstyle)),
+            _make_prompt_block("hair_constraints", _build_hair_constraints_block(hairstyle)),
             _make_prompt_block("scene", _build_scene_block(scene)),
             _make_prompt_block("styling", _build_styling_block(scene.styleLine, hairstyle.gender)),
             _make_prompt_block(

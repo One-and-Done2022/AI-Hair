@@ -138,7 +138,7 @@ def _merge_preset_blocks(structure: dict, modifiers: list[dict], techniques: lis
     merged = deepcopy(structure.get("presetBlocks") or {})
     hair_shape = merged.setdefault("hair_shape", {})
     bangs = merged.setdefault("bangs", {})
-    recommended_hair_color = merged.setdefault("recommended_hair_color", {})
+    merged.setdefault("recommended_hair_color", {})
 
     for modifier in modifiers:
         override = MODIFIER_STRUCTURED_OVERRIDES.get(modifier["id"], {})
@@ -154,9 +154,6 @@ def _merge_preset_blocks(structure: dict, modifiers: list[dict], techniques: lis
         for key, value in (technique_blocks.get("hair_shape") or {}).items():
             if key in SAFE_TECHNIQUE_HAIR_SHAPE_FIELDS and str(value or "").strip():
                 hair_shape[key] = value
-        for key, value in (technique_blocks.get("recommended_hair_color") or {}).items():
-            if str(value or "").strip():
-                recommended_hair_color[key] = value
 
     return merged
 

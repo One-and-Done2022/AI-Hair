@@ -9,6 +9,9 @@ The repository now contains two main surfaces:
 
 Keep product code inside `backend/app/` and page-specific logic inside `miniapp/pages/`. Do not add generated media, local secrets, or sample user photos to tracked paths.
 
+## Prompt Flow
+当前发型生成链路统一按这条流程理解：前端用户选择发型、场景、发色和输出参数，提交 `preset_id`、`scene_id` 与发色参数到后端；后端解析 preset，合并 `structure`、`modifier`、`technique`，生成 `hair_shape`、`bangs`、`hair_color` block，再结合 `scene` 与 `styling` 组装 prompt，最后调用模型出图。
+
 ## Build, Test, and Development Commands
 Use the local virtual environment and run from the repository root:
 

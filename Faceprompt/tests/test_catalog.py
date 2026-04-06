@@ -96,6 +96,7 @@ class CatalogTests(unittest.TestCase):
                 "hair_shape",
                 "bangs",
                 "hair_color",
+                "hair_constraints",
                 "scene",
                 "styling",
                 "subject_performance",
@@ -346,7 +347,7 @@ class CatalogTests(unittest.TestCase):
 
         output = stdout.getvalue()
         self.assertEqual(exit_code, 0)
-        self.assertIn("共 8 个 block：", output)
+        self.assertIn("共 9 个 block：", output)
         self.assertIn("编辑范围 [edit_scope]", output)
         self.assertIn("主发型结构 [hair_shape]", output)
         self.assertIn("主发型结构：发型改为云朵烫", output)

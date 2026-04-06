@@ -436,6 +436,7 @@ def get_prompt_block_labels() -> dict[str, str]:
         "hair_shape": "主发型结构",
         "bangs": "刘海系统",
         "hair_color": "发色系统",
+        "hair_constraints": "发型关键约束",
         "scene": "场景系统",
         "styling": "妆造系统",
         "subject_performance": "人物表现系统",
@@ -2044,6 +2045,20 @@ def _build_hair_color_text(hairstyle: dict, selection: dict[str, str] | None) ->
     return f"发色系统：{'；'.join(segments)}。"
 
 
+def _build_hair_constraints_text(hairstyle: dict | None) -> str:
+    if hairstyle is None:
+        return ""
+    constraints = [
+        _normalize_sentence(str(item))
+        for item in (hairstyle.get("constraints") or [])
+        if str(item).strip()
+    ]
+    selected = constraints[:4]
+    if not selected:
+        return ""
+    return f"发型关键约束：{_format_items(selected)}。"
+
+
 def _build_scene_text(scene: dict, scene_rule: dict | None = None) -> str:
     block = _preset_block(scene, "scene")
     shot = _sanitize_scene_text_for_locked_hair(_safe_value(block.get("shot") or scene.get("shot_advice")))
@@ -2264,6 +2279,7 @@ def build_prompt_assembly(
                 _make_prompt_block("hair_shape", _build_hair_shape_text(hairstyle)),
                 _make_prompt_block("bangs", _build_bangs_text(hairstyle)),
                 _make_prompt_block("hair_color", _build_hair_color_text(hairstyle, selected_hair_color)),
+                _make_prompt_block("hair_constraints", _build_hair_constraints_text(hairstyle)),
                 *_build_quality_blocks(mode=normalized_mode),
                 *_build_negative_blocks(),
             ],
@@ -2400,6 +2416,7 @@ def build_prompt_assembly(
             _make_prompt_block("hair_shape", _build_hair_shape_text(hairstyle)),
             _make_prompt_block("bangs", _build_bangs_text(hairstyle)),
             _make_prompt_block("hair_color", _build_hair_color_text(hairstyle, selected_hair_color)),
+            _make_prompt_block("hair_constraints", _build_hair_constraints_text(hairstyle)),
             _make_prompt_block("scene", _build_scene_text(scene, scene_rule)),
             _make_prompt_block(
                 "styling",
