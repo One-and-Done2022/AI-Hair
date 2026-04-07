@@ -793,16 +793,31 @@ def save_result_bundle(job_id: str, candidate_images: list[bytes]) -> SavedResul
     )
 
 
+def _delete_exact_template_asset_variants(prefix: str) -> None:
+    storage = get_object_storage()
+    prefix_path = Path(prefix)
+    parent_prefix = prefix_path.parent.as_posix()
+    basename = prefix_path.name
+    candidate_keys = storage.list_keys(parent_prefix)
+    for key in candidate_keys:
+        key_path = Path(key)
+        if key_path.parent.as_posix() != parent_prefix:
+            continue
+        name = key_path.name
+        if name == basename or name.startswith(f"{basename}."):
+            storage.delete_prefix(key)
+
+
 def save_template_asset(category: str, template_id: str, image_bytes: bytes) -> str:
     extension = _detect_result_extension(image_bytes)
     prefix = _object_key("template_assets", category, template_id)
-    get_object_storage().delete_prefix(prefix)
+    _delete_exact_template_asset_variants(prefix)
     object_key = _object_key("template_assets", category, f"{template_id}{extension}")
     return get_object_storage().write_bytes(object_key, image_bytes)
 
 
 def delete_template_asset(category: str, template_id: str) -> None:
-    get_object_storage().delete_prefix(_object_key("template_assets", category, template_id))
+    _delete_exact_template_asset_variants(_object_key("template_assets", category, template_id))
 
 
 def list_result_candidates(job_id: str, primary_path: str | None = None) -> list[str]:

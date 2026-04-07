@@ -20,13 +20,14 @@ FACEPROMPT_DATA_DIR = ROOT_DIR / "Faceprompt" / "src" / "faceprompt" / "data"
 SCENES_CATALOG_PATH = FACEPROMPT_DATA_DIR / "scenes.json"
 HAIRSTYLES_MALE_CATALOG_PATH = FACEPROMPT_DATA_DIR / "hairstyles_male.json"
 HAIRSTYLES_FEMALE_CATALOG_PATH = FACEPROMPT_DATA_DIR / "hairstyles_female.json"
+HAIRSTYLE_PRESETS_MALE_CATALOG_PATH = FACEPROMPT_DATA_DIR / "hairstyle_presets_male.json"
 SYNC_SCRIPT_PATH = ROOT_DIR / "scripts" / "sync_faceprompt.sh"
 
 REVIEW_ROOT = ROOT_DIR / "storage" / "template_image_pipeline" / "review"
 APPROVED_ROOT = ROOT_DIR / "storage" / "template_image_pipeline" / "approved"
 REJECTED_ROOT = ROOT_DIR / "storage" / "template_image_pipeline" / "rejected"
 
-SUPPORTED_CATEGORIES = {"hairstyles", "scenes"}
+SUPPORTED_CATEGORIES = {"hairstyles", "male-hairstyle-presets", "scenes"}
 SUPPORTED_COVER_GENDERS = {"auto", "female", "male"}
 
 storage = None
@@ -115,6 +116,8 @@ def _pick_cover_filename(package_dir: Path, metadata: dict[str, Any], cover_gend
 def _catalog_path_for_template(category: str, template_snapshot: dict[str, Any]) -> Path:
     if category == "scenes":
         return SCENES_CATALOG_PATH
+    if category == "male-hairstyle-presets":
+        return HAIRSTYLE_PRESETS_MALE_CATALOG_PATH
     if category != "hairstyles":
         raise ValueError(f"不支持的模板类型：{category}")
 

@@ -12,6 +12,7 @@ FILES=(
   "scene_styling_rules.json"
   "hairstyles_male.json"
   "hairstyles_female.json"
+  "hairstyle_presets_male.json"
   "stylings.json"
   "hair_colors.json"
   "hair_color_techniques.json"
@@ -99,7 +100,7 @@ watch_loop() {
 
   inotifywait -m -e close_write,create,move,delete "$SOURCE_DIR" | while read -r _dir _event file; do
     case "$file" in
-      scenes.json|scene_styling_rules.json|hairstyles_male.json|hairstyles_female.json|stylings.json|hair_colors.json|hair_color_techniques.json)
+      scenes.json|scene_styling_rules.json|hairstyles_male.json|hairstyles_female.json|hairstyle_presets_male.json|stylings.json|hair_colors.json|hair_color_techniques.json)
         log "检测到变更：$file"
         sync_once
         ;;

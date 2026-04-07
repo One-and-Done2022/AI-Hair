@@ -28,9 +28,10 @@ DEFAULT_ASPECT_RATIO = "3:4"
 DEFAULT_RESOLUTION = "4K"
 DEFAULT_BACKENDS = {
     "hairstyles": "nano_banana_2",
+    "male-hairstyle-presets": "nano_banana_pro",
     "scenes": "seedream_basic",
 }
-SUPPORTED_CATEGORIES = {"hairstyles", "scenes"}
+SUPPORTED_CATEGORIES = {"hairstyles", "male-hairstyle-presets", "scenes"}
 HAIRSTYLE_COVER_WHITE_BG_SUFFIX = (
     "用于官方发型模板封面图。"
     "背景必须保持纯白或接近纯白的干净影棚白底，不要加入任何场景元素、道具、文字、水印或装饰。"
@@ -50,6 +51,10 @@ build_generator = None
 ApiKeyPool = None
 templates = None
 _SEEDREAM_KEY_POOL = None
+
+
+def _is_hairstyle_category(category: str) -> bool:
+    return category in {"hairstyles", "male-hairstyle-presets"}
 
 
 def utc_now() -> str:
@@ -149,11 +154,11 @@ def _generate_review_image(
     _load_backend_dependencies()
     generator = build_generator(generator_backend)
     context = GenerationContext(
-        hairstyle_name=template_name if category == "hairstyles" else f"官方示例{sample_label}",
+        hairstyle_name=template_name if _is_hairstyle_category(category) else f"官方示例{sample_label}",
         scene_name=template_name if category == "scenes" else f"官方示例{sample_label}",
         aspect_ratio=aspect_ratio,
         resolution=resolution,
-        hairstyle_only_prompt=prompt if category == "hairstyles" else "",
+        hairstyle_only_prompt=prompt if _is_hairstyle_category(category) else "",
         scene_only_prompt=prompt if category == "scenes" else "",
     )
 
@@ -253,6 +258,8 @@ def _resolve_templates(category: str, selected_ids: set[str]) -> list[dict]:
     _load_backend_dependencies()
     if category == "hairstyles":
         items = templates.HAIRSTYLES
+    elif category == "male-hairstyle-presets":
+        items = templates.get_male_hairstyle_presets()
     elif category == "scenes":
         items = templates.SCENES
     else:  # pragma: no cover
@@ -318,7 +325,7 @@ def _selected_samples_for_template(
 
 
 def _build_template_prompt(category: str, template: dict[str, Any]) -> tuple[str, str]:
-    if category == "hairstyles":
+    if _is_hairstyle_category(category):
         base_prompt = templates.build_hairstyle_only_prompt(template)
         prompt = f"{base_prompt}\n{HAIRSTYLE_COVER_WHITE_BG_SUFFIX}"
         return "hairstyle_only", prompt

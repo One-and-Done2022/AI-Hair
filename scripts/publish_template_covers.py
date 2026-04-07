@@ -29,9 +29,10 @@ DEFAULT_ASPECT_RATIO = "3:4"
 DEFAULT_RESOLUTION = "2K"
 DEFAULT_BACKENDS = {
     "hairstyles": "nano_banana_2",
+    "male-hairstyle-presets": "nano_banana_pro",
     "scenes": "seedream_basic",
 }
-SUPPORTED_CATEGORIES = {"hairstyles", "scenes"}
+SUPPORTED_CATEGORIES = {"hairstyles", "male-hairstyle-presets", "scenes"}
 DEFAULT_HAIRSTYLE_SAMPLE_IDS = {
     "female": "female3",
     "male": "male2",
@@ -60,6 +61,10 @@ SCENE_COVER_GENDER_MAP = {
 
 template_pipeline = None
 review_pipeline = None
+
+
+def _is_hairstyle_category(category: str) -> bool:
+    return category in {"hairstyles", "male-hairstyle-presets"}
 
 
 def _load_module(module_path: Path, module_name: str):
@@ -92,6 +97,8 @@ def _catalog_templates(category: str) -> list[dict[str, Any]]:
     template_pipeline._load_backend_dependencies()
     if category == "hairstyles":
         return list(template_pipeline.templates.HAIRSTYLES)
+    if category == "male-hairstyle-presets":
+        return list(template_pipeline.templates.get_male_hairstyle_presets())
     if category == "scenes":
         return list(template_pipeline.templates.SCENES)
     raise ValueError(f"不支持的模板类型：{category}")
@@ -112,7 +119,7 @@ def _resolve_templates(
 
 
 def _cover_gender_for_template(category: str, template: dict[str, Any]) -> str:
-    if category == "hairstyles":
+    if _is_hairstyle_category(category):
         gender = str(template.get("gender") or "").strip()
         if gender not in {"male", "female"}:
             raise ValueError(f"发型模板缺少合法 gender：{template.get('id')}")

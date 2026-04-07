@@ -190,7 +190,6 @@ def _resolve_preset(
 
     source_hairstyle_id = _resolve_source_hairstyle_id(structure, legacy_index)
     source_hairstyle = legacy_index.get(source_hairstyle_id)
-    fallback_cover_source = source_hairstyle or (techniques[0] if techniques else None)
     modifier_labels = [str(item.get("label") or item["id"]).strip() for item in modifiers]
     technique_labels = [str(item.get("label") or item["id"]).strip() for item in techniques]
     preset_blocks = _merge_preset_blocks(structure, modifiers, techniques)
@@ -270,12 +269,9 @@ def _resolve_preset(
         "presetBlocks": preset_blocks,
         "modifierLabels": modifier_labels,
         "techniqueLabels": technique_labels,
-        "coverImagePath": str(structure.get("coverImagePath") or "").strip()
-        or (str(fallback_cover_source.get("coverImagePath") or "").strip() if fallback_cover_source else ""),
-        "coverImageUpdatedAt": str(structure.get("coverImageUpdatedAt") or "").strip()
-        or (str(fallback_cover_source.get("coverImageUpdatedAt") or "").strip() if fallback_cover_source else ""),
-        "coverImageSource": str(structure.get("coverImageSource") or "").strip()
-        or (str(fallback_cover_source.get("coverImageSource") or "").strip() if fallback_cover_source else ""),
+        "coverImagePath": str(raw_preset.get("coverImagePath") or "").strip(),
+        "coverImageUpdatedAt": str(raw_preset.get("coverImageUpdatedAt") or "").strip(),
+        "coverImageSource": str(raw_preset.get("coverImageSource") or "").strip(),
         "notes": str(raw_preset.get("notes") or "").strip(),
     }
 

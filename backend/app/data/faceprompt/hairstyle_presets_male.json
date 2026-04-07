@@ -10,7 +10,10 @@
     "structureId": "male-american_forward_spike",
     "modifierIds": [],
     "techniqueIds": [],
-    "notes": "前刺体系标准款，适合做默认推荐"
+    "notes": "前刺体系标准款，适合做默认推荐",
+    "coverImagePath": "template_assets/male-hairstyle-presets/male-preset-male-american-forward-spike.jpg",
+    "coverImageUpdatedAt": "2026-04-07T12:36:27+00:00",
+    "coverImageSource": "template_image_pipeline:review_male.jpg"
   },
   {
     "id": "male-preset-male-dimensional-forward-spike",
@@ -23,7 +26,10 @@
     "structureId": "male-dimensional_forward_spike",
     "modifierIds": [],
     "techniqueIds": [],
-    "notes": "强调颅顶和立体支撑"
+    "notes": "强调颅顶和立体支撑",
+    "coverImagePath": "template_assets/male-hairstyle-presets/male-preset-male-dimensional-forward-spike.jpg",
+    "coverImageUpdatedAt": "2026-04-07T12:37:28+00:00",
+    "coverImageSource": "template_image_pipeline:review_male.jpg"
   },
   {
     "id": "male-preset-male-textured-forward-spike-tech-texture-perm",
@@ -38,7 +44,10 @@
     "techniqueIds": [
       "male-texture-perm"
     ],
-    "notes": "纹理比基础前刺更强"
+    "notes": "纹理比基础前刺更强",
+    "coverImagePath": "template_assets/male-hairstyle-presets/male-preset-male-textured-forward-spike-tech-texture-perm.jpg",
+    "coverImageUpdatedAt": "2026-04-07T12:38:16+00:00",
+    "coverImageSource": "template_image_pipeline:review_male.jpg"
   },
   {
     "id": "male-preset-male-messy-forward-spike-mod-messy-texture",
@@ -53,7 +62,10 @@
       "modifier_messy_texture"
     ],
     "techniqueIds": [],
-    "notes": "少年感和街头感更强"
+    "notes": "少年感和街头感更强",
+    "coverImagePath": "template_assets/male-hairstyle-presets/male-preset-male-messy-forward-spike-mod-messy-texture.jpg",
+    "coverImageUpdatedAt": "2026-04-07T12:39:30+00:00",
+    "coverImageSource": "template_image_pipeline:review_male.jpg"
   },
   {
     "id": "male-preset-male-micro-part-forward-spike",
@@ -66,7 +78,10 @@
     "structureId": "male-micro_part_forward_spike",
     "modifierIds": [],
     "techniqueIds": [],
-    "notes": "前刺里偏修脸路线"
+    "notes": "前刺里偏修脸路线",
+    "coverImagePath": "template_assets/male-hairstyle-presets/male-preset-male-micro-part-forward-spike.jpg",
+    "coverImageUpdatedAt": "2026-04-07T12:40:14+00:00",
+    "coverImageSource": "template_image_pipeline:review_male.jpg"
   },
   {
     "id": "male-preset-male-tiger-head-spike",
@@ -79,7 +94,10 @@
     "structureId": "male-tiger_head_spike",
     "modifierIds": [],
     "techniqueIds": [],
-    "notes": "顶部更高更圆"
+    "notes": "顶部更高更圆",
+    "coverImagePath": "template_assets/male-hairstyle-presets/male-preset-male-tiger-head-spike.jpg",
+    "coverImageUpdatedAt": "2026-04-07T12:41:24+00:00",
+    "coverImageSource": "template_image_pipeline:review_male.jpg"
   },
   {
     "id": "male-preset-male-textured-cover",
@@ -92,7 +110,10 @@
     "structureId": "male-textured_cover",
     "modifierIds": [],
     "techniqueIds": [],
-    "notes": "碎盖里更强调顶部立体"
+    "notes": "碎盖里更强调顶部立体",
+    "coverImagePath": "template_assets/male-hairstyle-presets/male-preset-male-textured-cover.jpg",
+    "coverImageUpdatedAt": "2026-04-07T12:42:41+00:00",
+    "coverImageSource": "template_image_pipeline:review_male.jpg"
   },
   {
     "id": "male-preset-male-micro-part-cover",
@@ -105,7 +126,10 @@
     "structureId": "male-micro_part_cover",
     "modifierIds": [],
     "techniqueIds": [],
-    "notes": "当前最稳的少年感款"
+    "notes": "当前最稳的少年感款",
+    "coverImagePath": "template_assets/male-hairstyle-presets/male-preset-male-micro-part-cover.jpg",
+    "coverImageUpdatedAt": "2026-04-07T12:43:18+00:00",
+    "coverImageSource": "template_image_pipeline:review_male.jpg"
   },
   {
     "id": "male-preset-male-chestnut-crop",
@@ -118,7 +142,10 @@
     "structureId": "male-chestnut_crop",
     "modifierIds": [],
     "techniqueIds": [],
-    "notes": "低门槛、圆润、减龄"
+    "notes": "低门槛、圆润、减龄",
+    "coverImagePath": "template_assets/male-hairstyle-presets/male-preset-male-chestnut-crop.jpg",
+    "coverImageUpdatedAt": "2026-04-07T12:44:30+00:00",
+    "coverImageSource": "template_image_pipeline:review_male.jpg"
   },
   {
     "id": "male-preset-male-textured-short-foundation",
@@ -131,7 +158,10 @@
     "structureId": "male-textured_short_foundation",
     "modifierIds": [],
     "techniqueIds": [],
-    "notes": "兜底短发预设"
+    "notes": "兜底短发预设",
+    "coverImagePath": "template_assets/male-hairstyle-presets/male-preset-male-textured-short-foundation.jpg",
+    "coverImageUpdatedAt": "2026-04-07T12:45:21+00:00",
+    "coverImageSource": "template_image_pipeline:review_male.jpg"
   },
   {
     "id": "male-preset-male-korean-flat-crop",
@@ -144,7 +174,10 @@
     "structureId": "male-korean_flat_crop",
     "modifierIds": [],
     "techniqueIds": [],
-    "notes": "更韩系的小平头版本"
+    "notes": "更韩系的小平头版本",
+    "coverImagePath": "template_assets/male-hairstyle-presets/male-preset-male-korean-flat-crop.jpg",
+    "coverImageUpdatedAt": "2026-04-07T12:45:56+00:00",
+    "coverImageSource": "template_image_pipeline:review_male.jpg"
   },
   {
     "id": "male-preset-male-american-buzz",
@@ -157,7 +190,10 @@
     "structureId": "male-american-buzz",
     "modifierIds": [],
     "techniqueIds": [],
-    "notes": "沿用当前后端结构 ID"
+    "notes": "沿用当前后端结构 ID",
+    "coverImagePath": "template_assets/male-hairstyle-presets/male-preset-male-american-buzz.jpg",
+    "coverImageUpdatedAt": "2026-04-07T12:46:50+00:00",
+    "coverImageSource": "template_image_pipeline:review_male.jpg"
   },
   {
     "id": "male-preset-male-fade-buzz",
@@ -170,7 +206,10 @@
     "structureId": "male-fade-buzz",
     "modifierIds": [],
     "techniqueIds": [],
-    "notes": "沿用当前后端结构 ID"
+    "notes": "沿用当前后端结构 ID",
+    "coverImagePath": "template_assets/male-hairstyle-presets/male-preset-male-fade-buzz.jpg",
+    "coverImageUpdatedAt": "2026-04-07T12:48:00+00:00",
+    "coverImageSource": "template_image_pipeline:review_male.jpg"
   },
   {
     "id": "male-preset-male-flat-short-cut",
@@ -183,7 +222,10 @@
     "structureId": "male-flat-short-cut",
     "modifierIds": [],
     "techniqueIds": [],
-    "notes": "沿用当前后端结构 ID"
+    "notes": "沿用当前后端结构 ID",
+    "coverImagePath": "template_assets/male-hairstyle-presets/male-preset-male-flat-short-cut.jpg",
+    "coverImageUpdatedAt": "2026-04-07T12:49:17+00:00",
+    "coverImageSource": "template_image_pipeline:review_male.jpg"
   },
   {
     "id": "male-preset-male-korean-37-part",
@@ -196,7 +238,10 @@
     "structureId": "male-korean_37_part",
     "modifierIds": [],
     "techniqueIds": [],
-    "notes": "分线体系主干款"
+    "notes": "分线体系主干款",
+    "coverImagePath": "template_assets/male-hairstyle-presets/male-preset-male-korean-37-part.jpg",
+    "coverImageUpdatedAt": "2026-04-07T12:34:47+00:00",
+    "coverImageSource": "template_image_pipeline:review_male.jpg"
   },
   {
     "id": "male-preset-male-korean-37-part-mod-bracket-fringe",
@@ -211,7 +256,10 @@
       "modifier_bracket_fringe"
     ],
     "techniqueIds": [],
-    "notes": "用三七主结构叠括号前区"
+    "notes": "用三七主结构叠括号前区",
+    "coverImagePath": "template_assets/male-hairstyle-presets/male-preset-male-korean-37-part-mod-bracket-fringe.jpg",
+    "coverImageUpdatedAt": "2026-04-07T12:51:30+00:00",
+    "coverImageSource": "template_image_pipeline:review_male.jpg"
   },
   {
     "id": "male-preset-male-clean-side-part-mod-comma-fringe",
@@ -226,7 +274,10 @@
       "modifier_comma_fringe"
     ],
     "techniqueIds": [],
-    "notes": "日常好理解的展示词"
+    "notes": "日常好理解的展示词",
+    "coverImagePath": "template_assets/male-hairstyle-presets/male-preset-male-clean-side-part-mod-comma-fringe.jpg",
+    "coverImageUpdatedAt": "2026-04-07T13:27:48+00:00",
+    "coverImageSource": "template_image_pipeline:review_male.jpg"
   },
   {
     "id": "male-preset-male-clean-37-part",
@@ -239,7 +290,10 @@
     "structureId": "male-clean_37_part",
     "modifierIds": [],
     "techniqueIds": [],
-    "notes": "比韩式三七更干净"
+    "notes": "比韩式三七更干净",
+    "coverImagePath": "template_assets/male-hairstyle-presets/male-preset-male-clean-37-part.jpg",
+    "coverImageUpdatedAt": "2026-04-07T12:53:44+00:00",
+    "coverImageSource": "template_image_pipeline:review_male.jpg"
   },
   {
     "id": "male-preset-male-textured-37-part",
@@ -252,7 +306,10 @@
     "structureId": "male-textured_37_part",
     "modifierIds": [],
     "techniqueIds": [],
-    "notes": "更强调束感和层次"
+    "notes": "更强调束感和层次",
+    "coverImagePath": "template_assets/male-hairstyle-presets/male-preset-male-textured-37-part.jpg",
+    "coverImageUpdatedAt": "2026-04-07T12:54:57+00:00",
+    "coverImageSource": "template_image_pipeline:review_male.jpg"
   },
   {
     "id": "male-preset-male-soft-37-part",
@@ -265,7 +322,10 @@
     "structureId": "male-soft_37_part",
     "modifierIds": [],
     "techniqueIds": [],
-    "notes": "前区更柔和修脸"
+    "notes": "前区更柔和修脸",
+    "coverImagePath": "template_assets/male-hairstyle-presets/male-preset-male-soft-37-part.jpg",
+    "coverImageUpdatedAt": "2026-04-07T12:55:47+00:00",
+    "coverImageSource": "template_image_pipeline:review_male.jpg"
   },
   {
     "id": "male-preset-male-clean-side-part",
@@ -278,7 +338,10 @@
     "structureId": "male-clean_side_part",
     "modifierIds": [],
     "techniqueIds": [],
-    "notes": "通勤基础款"
+    "notes": "通勤基础款",
+    "coverImagePath": "template_assets/male-hairstyle-presets/male-preset-male-clean-side-part.jpg",
+    "coverImageUpdatedAt": "2026-04-07T12:57:47+00:00",
+    "coverImageSource": "template_image_pipeline:review_male.jpg"
   },
   {
     "id": "male-preset-male-two-eight-part-mod-commute-clean",
@@ -293,7 +356,10 @@
       "modifier_commute_clean"
     ],
     "techniqueIds": [],
-    "notes": "更成熟、更正式"
+    "notes": "更成熟、更正式",
+    "coverImagePath": "template_assets/male-hairstyle-presets/male-preset-male-two-eight-part-mod-commute-clean.jpg",
+    "coverImageUpdatedAt": "2026-04-07T12:58:56+00:00",
+    "coverImageSource": "template_image_pipeline:review_male.jpg"
   },
   {
     "id": "male-preset-male-textured-side-part-mod-side-fringe",
@@ -308,7 +374,10 @@
       "modifier_side_fringe"
     ],
     "techniqueIds": [],
-    "notes": "轻熟氛围感路线"
+    "notes": "轻熟氛围感路线",
+    "coverImagePath": "template_assets/male-hairstyle-presets/male-preset-male-textured-side-part-mod-side-fringe.jpg",
+    "coverImageUpdatedAt": "2026-04-07T13:00:04+00:00",
+    "coverImageSource": "template_image_pipeline:review_male.jpg"
   },
   {
     "id": "male-preset-male-micro-middle-part",
@@ -321,7 +390,10 @@
     "structureId": "male-micro_middle_part",
     "modifierIds": [],
     "techniqueIds": [],
-    "notes": "中分/微分主干款"
+    "notes": "中分/微分主干款",
+    "coverImagePath": "template_assets/male-hairstyle-presets/male-preset-male-micro-middle-part.jpg",
+    "coverImageUpdatedAt": "2026-04-07T13:00:46+00:00",
+    "coverImageSource": "template_image_pipeline:review_male.jpg"
   },
   {
     "id": "male-preset-male-textured-slick-back",
@@ -334,7 +406,10 @@
     "structureId": "male-textured_slick_back",
     "modifierIds": [],
     "techniqueIds": [],
-    "notes": "轻熟硬朗，不做强油头"
+    "notes": "轻熟硬朗，不做强油头",
+    "coverImagePath": "template_assets/male-hairstyle-presets/male-preset-male-textured-slick-back.jpg",
+    "coverImageUpdatedAt": "2026-04-07T13:02:02+00:00",
+    "coverImageSource": "template_image_pipeline:review_male.jpg"
   },
   {
     "id": "male-preset-male-three-seven-side-back",
@@ -347,7 +422,10 @@
     "structureId": "male-three_seven_side_back",
     "modifierIds": [],
     "techniqueIds": [],
-    "notes": "修脸和成熟感兼顾"
+    "notes": "修脸和成熟感兼顾",
+    "coverImagePath": "template_assets/male-hairstyle-presets/male-preset-male-three-seven-side-back.jpg",
+    "coverImageUpdatedAt": "2026-04-07T13:03:07+00:00",
+    "coverImageSource": "template_image_pipeline:review_male.jpg"
   },
   {
     "id": "male-preset-male-short-side-back",
@@ -360,7 +438,10 @@
     "structureId": "male-short_side_back",
     "modifierIds": [],
     "techniqueIds": [],
-    "notes": "造型感入门款"
+    "notes": "造型感入门款",
+    "coverImagePath": "template_assets/male-hairstyle-presets/male-preset-male-short-side-back.jpg",
+    "coverImageUpdatedAt": "2026-04-07T13:04:17+00:00",
+    "coverImageSource": "template_image_pipeline:review_male.jpg"
   },
   {
     "id": "male-preset-male-long-textured-side-back",
@@ -373,7 +454,10 @@
     "structureId": "male-long_textured_side_back",
     "modifierIds": [],
     "techniqueIds": [],
-    "notes": "顶区和前区更长"
+    "notes": "顶区和前区更长",
+    "coverImagePath": "template_assets/male-hairstyle-presets/male-preset-male-long-textured-side-back.jpg",
+    "coverImageUpdatedAt": "2026-04-07T13:05:34+00:00",
+    "coverImageSource": "template_image_pipeline:review_male.jpg"
   },
   {
     "id": "male-preset-male-fluffy-side-back",
@@ -386,7 +470,10 @@
     "structureId": "male-fluffy_side_back",
     "modifierIds": [],
     "techniqueIds": [],
-    "notes": "空气感更强"
+    "notes": "空气感更强",
+    "coverImagePath": "template_assets/male-hairstyle-presets/male-preset-male-fluffy-side-back.jpg",
+    "coverImageUpdatedAt": "2026-04-07T13:06:18+00:00",
+    "coverImageSource": "template_image_pipeline:review_male.jpg"
   },
   {
     "id": "male-preset-male-six-four-side-back",
@@ -399,7 +486,10 @@
     "structureId": "male-six_four_side_back",
     "modifierIds": [],
     "techniqueIds": [],
-    "notes": "偏成熟偏正式"
+    "notes": "偏成熟偏正式",
+    "coverImagePath": "template_assets/male-hairstyle-presets/male-preset-male-six-four-side-back.jpg",
+    "coverImageUpdatedAt": "2026-04-07T13:07:12+00:00",
+    "coverImageSource": "template_image_pipeline:review_male.jpg"
   },
   {
     "id": "male-preset-male-vintage-pomade",
@@ -412,7 +502,10 @@
     "structureId": "male-vintage_pomade",
     "modifierIds": [],
     "techniqueIds": [],
-    "notes": "已做成独立结构预设"
+    "notes": "已做成独立结构预设",
+    "coverImagePath": "template_assets/male-hairstyle-presets/male-preset-male-vintage-pomade.jpg",
+    "coverImageUpdatedAt": "2026-04-07T13:07:51+00:00",
+    "coverImageSource": "template_image_pipeline:review_male.jpg"
   },
   {
     "id": "male-preset-male-wet-side-back",
@@ -425,7 +518,10 @@
     "structureId": "male-wet_side_back",
     "modifierIds": [],
     "techniqueIds": [],
-    "notes": "已做成独立结构预设"
+    "notes": "已做成独立结构预设",
+    "coverImagePath": "template_assets/male-hairstyle-presets/male-preset-male-wet-side-back.jpg",
+    "coverImageUpdatedAt": "2026-04-07T13:08:56+00:00",
+    "coverImageSource": "template_image_pipeline:review_male.jpg"
   },
   {
     "id": "male-preset-male-dragon-whisker-back",
@@ -438,7 +534,10 @@
     "structureId": "male-dragon_whisker_back",
     "modifierIds": [],
     "techniqueIds": [],
-    "notes": "已做成独立结构预设"
+    "notes": "已做成独立结构预设",
+    "coverImagePath": "template_assets/male-hairstyle-presets/male-preset-male-dragon-whisker-back.jpg",
+    "coverImageUpdatedAt": "2026-04-07T13:09:41+00:00",
+    "coverImageSource": "template_image_pipeline:review_male.jpg"
   },
   {
     "id": "male-preset-male-long-fringe-side-back-mod-long-fringe",
@@ -453,7 +552,10 @@
       "modifier_long_fringe"
     ],
     "techniqueIds": [],
-    "notes": "长前区修饰更明显"
+    "notes": "长前区修饰更明显",
+    "coverImagePath": "template_assets/male-hairstyle-presets/male-preset-male-long-fringe-side-back-mod-long-fringe.jpg",
+    "coverImageUpdatedAt": "2026-04-07T13:10:51+00:00",
+    "coverImageSource": "template_image_pipeline:review_male.jpg"
   },
   {
     "id": "male-preset-male-hongkong-parted-style-mod-hk-vibe",
@@ -468,7 +570,10 @@
       "modifier_hk_vibe"
     ],
     "techniqueIds": [],
-    "notes": "港风建议作为风格修饰叠加"
+    "notes": "港风建议作为风格修饰叠加",
+    "coverImagePath": "template_assets/male-hairstyle-presets/male-preset-male-hongkong-parted-style-mod-hk-vibe.jpg",
+    "coverImageUpdatedAt": "2026-04-07T13:11:57+00:00",
+    "coverImageSource": "template_image_pipeline:review_male.jpg"
   },
   {
     "id": "male-preset-male-hongkong-texture-mod-hk-vibe-mod-messy-texture",
@@ -484,7 +589,10 @@
       "modifier_messy_texture"
     ],
     "techniqueIds": [],
-    "notes": "更松弛、更复古"
+    "notes": "更松弛、更复古",
+    "coverImagePath": "template_assets/male-hairstyle-presets/male-preset-male-hongkong-texture-mod-hk-vibe-mod-messy-texture.jpg",
+    "coverImageUpdatedAt": "2026-04-07T13:12:31+00:00",
+    "coverImageSource": "template_image_pipeline:review_male.jpg"
   },
   {
     "id": "male-preset-male-hongkong-medium-long-mod-hk-vibe",
@@ -499,7 +607,10 @@
       "modifier_hk_vibe"
     ],
     "techniqueIds": [],
-    "notes": "中长发港风主展示词"
+    "notes": "中长发港风主展示词",
+    "coverImagePath": "template_assets/male-hairstyle-presets/male-preset-male-hongkong-medium-long-mod-hk-vibe.jpg",
+    "coverImageUpdatedAt": "2026-04-07T13:13:18+00:00",
+    "coverImageSource": "template_image_pipeline:review_male.jpg"
   },
   {
     "id": "male-preset-male-mullet",
@@ -512,7 +623,10 @@
     "structureId": "male-mullet",
     "modifierIds": [],
     "techniqueIds": [],
-    "notes": "沿用当前后端结构 ID"
+    "notes": "沿用当前后端结构 ID",
+    "coverImagePath": "template_assets/male-hairstyle-presets/male-preset-male-mullet.jpg",
+    "coverImageUpdatedAt": "2026-04-07T13:13:53+00:00",
+    "coverImageSource": "template_image_pipeline:review_male.jpg"
   },
   {
     "id": "male-preset-male-wolf-tail",
@@ -525,7 +639,10 @@
     "structureId": "male-wolf-tail",
     "modifierIds": [],
     "techniqueIds": [],
-    "notes": "沿用当前后端结构 ID"
+    "notes": "沿用当前后端结构 ID",
+    "coverImagePath": "template_assets/male-hairstyle-presets/male-preset-male-wolf-tail.jpg",
+    "coverImageUpdatedAt": "2026-04-07T13:15:13+00:00",
+    "coverImageSource": "template_image_pipeline:review_male.jpg"
   },
   {
     "id": "male-preset-male-japanese-wavy-long",
@@ -538,7 +655,10 @@
     "structureId": "male-japanese-wavy-long",
     "modifierIds": [],
     "techniqueIds": [],
-    "notes": "沿用当前后端结构 ID"
+    "notes": "沿用当前后端结构 ID",
+    "coverImagePath": "template_assets/male-hairstyle-presets/male-preset-male-japanese-wavy-long.jpg",
+    "coverImageUpdatedAt": "2026-04-07T13:15:46+00:00",
+    "coverImageSource": "template_image_pipeline:review_male.jpg"
   },
   {
     "id": "male-preset-male-samurai-half-bun",
@@ -551,7 +671,10 @@
     "structureId": "male-samurai-half-bun",
     "modifierIds": [],
     "techniqueIds": [],
-    "notes": "沿用当前后端结构 ID"
+    "notes": "沿用当前后端结构 ID",
+    "coverImagePath": "template_assets/male-hairstyle-presets/male-preset-male-samurai-half-bun.jpg",
+    "coverImageUpdatedAt": "2026-04-07T13:16:26+00:00",
+    "coverImageSource": "template_image_pipeline:review_male.jpg"
   },
   {
     "id": "male-preset-male-textured-side-part-tech-texture-perm",
@@ -566,7 +689,10 @@
     "techniqueIds": [
       "male-texture-perm"
     ],
-    "notes": "工艺驱动预设，默认挂长纹理侧分骨架"
+    "notes": "工艺驱动预设，默认挂长纹理侧分骨架",
+    "coverImagePath": "template_assets/male-hairstyle-presets/male-preset-male-textured-side-part-tech-texture-perm.jpg",
+    "coverImageUpdatedAt": "2026-04-07T13:17:15+00:00",
+    "coverImageSource": "template_image_pipeline:review_male.jpg"
   },
   {
     "id": "male-preset-male-micro-middle-part-tech-air-cushion-perm",
@@ -581,7 +707,10 @@
     "techniqueIds": [
       "male-air-cushion-perm"
     ],
-    "notes": "默认挂微分纹理骨架"
+    "notes": "默认挂微分纹理骨架",
+    "coverImagePath": "template_assets/male-hairstyle-presets/male-preset-male-micro-middle-part-tech-air-cushion-perm.jpg",
+    "coverImageUpdatedAt": "2026-04-07T13:17:51+00:00",
+    "coverImageSource": "template_image_pipeline:review_male.jpg"
   },
   {
     "id": "male-preset-male-textured-short-foundation-tech-root-lift-perm",
@@ -596,7 +725,10 @@
     "techniqueIds": [
       "male-root-lift-perm"
     ],
-    "notes": "适合作为短发蓬松工艺入口"
+    "notes": "适合作为短发蓬松工艺入口",
+    "coverImagePath": "template_assets/male-hairstyle-presets/male-preset-male-textured-short-foundation-tech-root-lift-perm.jpg",
+    "coverImageUpdatedAt": "2026-04-07T13:18:49+00:00",
+    "coverImageSource": "template_image_pipeline:review_male.jpg"
   },
   {
     "id": "male-preset-male-textured-forward-spike-tech-clip-perm",
@@ -611,7 +743,10 @@
     "techniqueIds": [
       "male-clip-perm"
     ],
-    "notes": "明确绑定前刺骨架"
+    "notes": "明确绑定前刺骨架",
+    "coverImagePath": "template_assets/male-hairstyle-presets/male-preset-male-textured-forward-spike-tech-clip-perm.jpg",
+    "coverImageUpdatedAt": "2026-04-07T13:19:40+00:00",
+    "coverImageSource": "template_image_pipeline:review_male.jpg"
   },
   {
     "id": "male-preset-male-middle-micro-part-tech-wool-perm",
@@ -626,7 +761,10 @@
     "techniqueIds": [
       "male-wool-perm"
     ],
-    "notes": "当前先沿用旧结构骨架"
+    "notes": "当前先沿用旧结构骨架",
+    "coverImagePath": "template_assets/male-hairstyle-presets/male-preset-male-middle-micro-part-tech-wool-perm.jpg",
+    "coverImageUpdatedAt": "2026-04-07T13:21:10+00:00",
+    "coverImageSource": "template_image_pipeline:review_male.jpg"
   },
   {
     "id": "male-preset-male-textured-side-part-tech-french-lazy-perm",
@@ -641,7 +779,10 @@
     "techniqueIds": [
       "male-french-lazy-perm"
     ],
-    "notes": "默认走轻熟长纹理侧分"
+    "notes": "默认走轻熟长纹理侧分",
+    "coverImagePath": "template_assets/male-hairstyle-presets/male-preset-male-textured-side-part-tech-french-lazy-perm.jpg",
+    "coverImageUpdatedAt": "2026-04-07T13:22:37+00:00",
+    "coverImageSource": "template_image_pipeline:review_male.jpg"
   },
   {
     "id": "male-preset-male-textured-short-foundation-tech-tin-foil-perm",
@@ -656,6 +797,9 @@
     "techniqueIds": [
       "male-tin-foil-perm"
     ],
-    "notes": "默认挂基础短发骨架"
+    "notes": "默认挂基础短发骨架",
+    "coverImagePath": "template_assets/male-hairstyle-presets/male-preset-male-textured-short-foundation-tech-tin-foil-perm.jpg",
+    "coverImageUpdatedAt": "2026-04-07T13:23:50+00:00",
+    "coverImageSource": "template_image_pipeline:review_male.jpg"
   }
 ]
