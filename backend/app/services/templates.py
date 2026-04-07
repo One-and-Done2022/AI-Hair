@@ -2045,6 +2045,23 @@ def _build_hair_color_text(hairstyle: dict, selection: dict[str, str] | None) ->
     return f"发色系统：{'；'.join(segments)}。"
 
 
+def _is_anti_confusion_constraint(text: str) -> bool:
+    return any(keyword in text for keyword in ("不得变成", "不得偏成", "不要变成", "禁止变成"))
+
+
+def _select_hair_constraints(constraints: list[str]) -> list[str]:
+    anti_confusion = next((item for item in constraints if _is_anti_confusion_constraint(item)), "")
+    selected = [item for item in constraints if item != anti_confusion][:3]
+    if anti_confusion and anti_confusion not in selected:
+        selected.append(anti_confusion)
+    for item in constraints:
+        if len(selected) >= 4:
+            break
+        if item not in selected:
+            selected.append(item)
+    return selected[:4]
+
+
 def _build_hair_constraints_text(hairstyle: dict | None) -> str:
     if hairstyle is None:
         return ""
@@ -2053,7 +2070,7 @@ def _build_hair_constraints_text(hairstyle: dict | None) -> str:
         for item in (hairstyle.get("constraints") or [])
         if str(item).strip()
     ]
-    selected = constraints[:4]
+    selected = _select_hair_constraints(constraints)
     if not selected:
         return ""
     return f"发型关键约束：{_format_items(selected)}。"

@@ -1948,12 +1948,31 @@ def _build_hair_color_block(record: CatalogRecord) -> str:
     return f"发色系统：{'；'.join(segment for segment in segments if segment)}。"
 
 
+def _is_anti_confusion_constraint(text: str) -> bool:
+    return any(keyword in text for keyword in ("不得变成", "不得偏成", "不要变成", "禁止变成"))
+
+
+def _select_hair_constraints(constraints: list[str] | tuple[str, ...]) -> list[str]:
+    anti_confusion = next((item for item in constraints if _is_anti_confusion_constraint(item)), "")
+    selected = [item for item in constraints if item != anti_confusion][:3]
+    if anti_confusion and anti_confusion not in selected:
+        selected.append(anti_confusion)
+    for item in constraints:
+        if len(selected) >= 4:
+            break
+        if item not in selected:
+            selected.append(item)
+    return selected[:4]
+
+
 def _build_hair_constraints_block(record: CatalogRecord) -> str:
-    constraints = [
-        _normalize_sentence(str(item))
-        for item in record.constraints
-        if str(item).strip()
-    ][:4]
+    constraints = _select_hair_constraints(
+        [
+            _normalize_sentence(str(item))
+            for item in record.constraints
+            if str(item).strip()
+        ]
+    )
     if not constraints:
         return ""
     return f"发型关键约束：{_format_prompt_items(tuple(constraints))}。"

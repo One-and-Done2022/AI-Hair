@@ -50,6 +50,42 @@ REFINED_TECHNIQUES = {
 
 GENERIC_TECHNIQUE_CONSTRAINT = '只允许改变纹理、支撑、卷度、湿感或尾部质感，不得改写主结构长度、主轮廓、分线和两侧后颈基础处理。'
 
+STRUCTURE_ANTI_CONFUSION = {
+    'male-dimensional_forward_spike': '不得变成纹理前刺、美式前刺、凌乱抓刺这类相邻款式；必须保持更竖直的顶部支撑和干净短碎前区，不要增加明显分线或过度凌乱纹理。',
+    'male-textured_forward_spike': '不得变成立体前刺、美式前刺、凌乱抓刺这类相邻款式；必须保持更密的纹理束感和上扬短束，不要做成大块厚束或无纹理直立刺。',
+    'male-american_forward_spike': '不得变成纹理前刺、立体前刺、前刺老虎头这类相邻款式；必须保持低渐变贴紧两侧、前高后低和哑光 clean 轮廓，不要增加厚重顶区或过密纹理。',
+    'male-messy_forward_spike': '不得变成美式前刺、立体前刺、前刺老虎头这类相邻款式；必须保持不规则松散短刺和轻遮发际线感，不要做成工整露额或顶部厚束聚拢结构。',
+    'male-micro_part_forward_spike': '不得变成立体前刺、纹理前刺、韩式三七分这类相邻款式；必须保留轻微微分和两束向前上扬的前区，不要改成完全无分线前刺或标准三七分。',
+    'male-tiger_head_spike': '不得变成美式前刺、凌乱抓刺、纹理前刺这类相邻款式；必须保持顶部更高更圆、前区聚拢厚束的老虎头轮廓，不要做成松散碎刺或贴头清爽前刺。',
+    'male-three_seven_back_spike': '不得变成三七侧背、纹理三七分、微分前刺这类相邻款式；必须保留一侧后带、一侧上刺的混合走向，不要改成纯侧分或纯背头。',
+    'male-textured_cover': '不得变成短碎栗子头、微分碎盖、基础短发这类相邻款式；必须保持轻盖额头但顶区更饱满立体，不要塌成圆短盖或普通短碎发。',
+    'male-chestnut_crop': '不得变成立体碎盖、微分碎盖、基础短发这类相邻款式；必须保持圆润柔和、短碎贴额的栗子头轮廓，不要做出明显分线和过高顶区。',
+    'male-micro_part_cover': '不得变成立体碎盖、短碎栗子头、微分纹理这类相邻款式；必须保留轻微分缝的碎盖前区，不要改成无分线圆盖或中分侧分结构。',
+    'male-textured_side_part': '不得变成基础侧分、长纹理侧背、港风分线这类相邻款式；必须保持更长顶区、明显流向和层次，不要做成规整贴顺通勤侧分或直接后梳侧背。',
+    'male-micro_middle_part': '不得变成韩式三七分、港风中长发、长纹理侧分这类相邻款式；必须保持中分或微中分打开前区、两侧自然垂落，不要改成明显侧分或真正长发披散。',
+    'male-clean_side_part': '不得变成长纹理侧分、偏分三七、纹理三七分这类相邻款式；必须保持简洁干净、轻侧分、不过度纹理，不要做成氛围感长侧分或明显韩系三七。',
+    'male-textured_37_part': '不得变成韩式三七分、偏分三七、三七侧分这类相邻款式；必须保持三七分线上的纹理束感和更松更立体的顶区，不要做成平顺贴服的通勤三七。',
+    'male-two_eight_part': '不得变成偏分三七、基础侧分、复古油头这类相邻款式；必须保持偏分更明显、露额更多的一侧重分配，不要改成均衡三七或整齐油头。',
+    'male-clean_37_part': '不得变成韩式三七分、二八侧分、基础侧分这类相邻款式；必须保持更简单、更清爽的偏三七结构，不要做成蓬松纹理韩系三七或成熟二八分。',
+    'male-korean_37_part': '不得变成偏分三七、纹理三七分、三七侧分这类相邻款式；必须保持韩系三七分的自然量感和轻露额，不要做成过硬朗偏分或明显纹理束感。',
+    'male-soft_37_part': '不得变成韩式三七分、长刘海侧背、微分纹理这类相邻款式；必须保持三七分后向侧前自然垂落和更柔和的修脸前区，不要变成后梳侧背或中分垂落。',
+    'male-hongkong_parted_style': '不得变成长纹理侧分、港风中长发、复古油头这类相邻款式；必须保持复古松弛、不太服帖的分线轮廓，不要做成现代通勤侧分或真正中长发披落。',
+    'male-textured_slick_back': '不得变成复古油头、蓬松侧背、龙须背头这类相邻款式；必须保持后梳但保留空气纹理，不要变成高光整齐油头或前区保留明显碎发。',
+    'male-three_seven_side_back': '不得变成纹理三七分、四六分侧背、龙须背头这类相邻款式；必须保持沿三七分线向侧后梳理的成熟结构，不要让前区回落成侧分刘海或保留龙须碎发。',
+    'male-short_side_back': '不得变成三七侧背、基础短发、纹理背头这类相邻款式；必须保持紧凑短侧背和短前区不遮眼，不要做成普通短发或更长的侧背。',
+    'male-vintage_pomade': '不得变成纹理背头、湿发侧背、港风分线这类相邻款式；必须保持规整分线、完整露额和轻光泽油头质感，不要做成蓬松纹理背头或松弛港风分线。',
+    'male-long_textured_side_back': '不得变成长刘海侧背、纹理背头、港风分线这类相邻款式；必须保持更长顶区和明显流动侧后梳理，不要让前区垂落成刘海或整体收得过短。',
+    'male-dragon_whisker_back': '不得变成纹理背头、三七侧背、长刘海侧背这类相邻款式；必须保留额前两三缕龙须碎发和后带主体，不要做成纯露额背头或大片长刘海。',
+    'male-wet_side_back': '不得变成复古油头、纹理背头、三七侧背这类相邻款式；必须保持湿发收束和侧后梳理的湿润完成感，不要做成干爽蓬松背头或规整分线油头。',
+    'male-fluffy_side_back': '不得变成纹理背头、三七侧背、龙须背头这类相邻款式；必须保持侧背方向下的高顶区空气感，不要让前区保留龙须碎发或把整体压成规整背头。',
+    'male-six_four_side_back': '不得变成三七侧背、二八侧分、复古油头这类相邻款式；必须保持四六分比例和更规整成熟的侧背，不要改成强偏分侧分或高光整齐油头。',
+    'male-long_fringe_side_back': '不得变成长纹理侧背、龙须背头、三七侧分这类相邻款式；必须保持侧后梳理主体下的长刘海修饰，不要变成纯背头或普通侧分。',
+    'male-textured_short_foundation': '不得变成韩式小平头、短碎栗子头、立体前刺这类相邻款式；必须保持普通短发底层的轻纹理和低风险轮廓，不要做出明确前刺、盖额或平头结构。',
+    'male-korean_flat_crop': '不得变成基础短发、短碎栗子头、立体碎盖这类相邻款式；必须保持极简平整短轮廓和后区整齐推短，不要做出前区碎盖或明显纹理。',
+    'male-hongkong_texture': '不得变成港风中长发、港风分线、长纹理侧分这类相邻款式；必须保持港风纹理的松弛复古感，但长度仍然服从中短到中长发，不要披落成长发。',
+    'male-hongkong_medium_long': '不得变成港风分线、微分纹理、长纹理侧分这类相邻款式；必须保持中长长度和松弛下垂量感，不要收短成侧分或只保留顶部长度。',
+}
+
 
 def _load_json(path: Path):
     return json.loads(path.read_text(encoding='utf-8'))
@@ -75,21 +111,30 @@ def _family_peers(structures: list[dict]) -> dict[str, list[str]]:
 
 
 def refine_structures(structures: list[dict]) -> int:
-    peer_map = _family_peers(structures)
     changed = 0
     for item in structures:
-        constraints = [str(value).strip() for value in item.get('constraints', []) if str(value).strip()]
-        if any('不得变成' in value for value in constraints):
+        structure_id = str(item.get('id') or '').strip()
+        anti_confusion = STRUCTURE_ANTI_CONFUSION.get(structure_id)
+        if anti_confusion is None:
             continue
-        peers = peer_map.get(str(item.get('id') or '').strip(), [])
-        if peers:
-            peer_text = '、'.join(peers)
-            anti_confusion = f'不得变成{peer_text}这类相邻款式，当前{item["title"]}的主结构辨识度必须保持清楚。'
-        else:
-            anti_confusion = f'不得偏成其他相邻发型，当前{item["title"]}的主结构辨识度必须保持清楚。'
-        constraints.append(anti_confusion)
-        item['constraints'] = constraints
-        changed += 1
+        constraints = [str(value).strip() for value in item.get('constraints', []) if str(value).strip()]
+        existing_index = next(
+            (
+                index
+                for index, value in enumerate(constraints)
+                if '不得变成' in value or '不得偏成' in value
+            ),
+            None,
+        )
+        if existing_index is None:
+            constraints.append(anti_confusion)
+            item['constraints'] = constraints
+            changed += 1
+            continue
+        if constraints[existing_index] != anti_confusion:
+            constraints[existing_index] = anti_confusion
+            item['constraints'] = constraints
+            changed += 1
     return changed
 
 

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import sys
 import unittest
+from types import SimpleNamespace
 from io import StringIO
 from pathlib import Path
 from unittest.mock import patch
@@ -10,6 +11,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
 from faceprompt.cli import main
 from faceprompt.catalog import (
+    _build_hair_constraints_block,
     build_prompt_assembly,
     catalog_summary,
     get_professional_hair_color,
@@ -161,6 +163,28 @@ class CatalogTests(unittest.TestCase):
         self.assertIn("刘海系统：", prompt)
         self.assertIn("发色系统：发色调整为深棕", prompt)
         self.assertIn("负面约束：不要换脸、不要改变性别表达、不要生成第二个人", prompt)
+
+    def test_hair_constraints_keep_anti_confusion_rule_when_extra_constraints_exist(self) -> None:
+        block = _build_hair_constraints_block(
+            SimpleNamespace(
+                constraints=[
+                    "必须保留向后梳理主走向。",
+                    "两侧顺贴不能丢。",
+                    "前区保留龙须碎发。",
+                    "顶部不要塌掉。",
+                    "不得变成纹理背头、三七侧背、长刘海侧背这类相邻款式；必须保留额前两三缕龙须碎发和后带主体，不要做成纯露额背头或大片长刘海。",
+                ]
+            )
+        )
+
+        self.assertIn("不得变成纹理背头、三七侧背、长刘海侧背", block)
+        self.assertNotIn("顶部不要塌掉", block)
+
+    def test_render_hairstyle_only_prompt_uses_refined_male_anti_confusion_rule(self) -> None:
+        prompt = render_hairstyle_only_prompt("male-preset-male-dragon-whisker-back")
+
+        self.assertIn("不得变成纹理背头、三七侧背、长刘海侧背这类相邻款式", prompt)
+        self.assertIn("额前两三缕龙须碎发和后带主体", prompt)
 
     def test_render_prompt_uses_structured_blocks_for_preset_output(self) -> None:
         prompt = render_prompt(
