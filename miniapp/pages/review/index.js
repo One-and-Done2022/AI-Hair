@@ -42,6 +42,7 @@ Page({
     selectedGeneratorBackend: "",
     selectedAspectRatio: "3:4",
     selectedResolution: "",
+    selectedHairColorMode: "basic",
     selectedHairColorToneLabel: "",
     selectedHairColorTechniqueLabel: "",
     selectedHairColorProfessionalSummary: "",
@@ -99,10 +100,7 @@ Page({
       );
       let selectedHairColor = baseHairColorSelection.tone;
       let selectedHairTechnique = baseHairColorSelection.technique;
-      if (
-        selectedProfessionalHairColor &&
-        selectedProfessionalHairColor.is_recommended_for_generation
-      ) {
+      if (selectedProfessionalHairColor) {
         const mappedSelection = resolveProfessionalMappedSelection({
           professionalColor: selectedProfessionalHairColor,
           hairColors: catalog.hair_colors || [],
@@ -111,9 +109,10 @@ Page({
         });
         selectedHairColor = mappedSelection.tone || selectedHairColor;
         selectedHairTechnique = mappedSelection.technique || selectedHairTechnique;
-      } else {
-        selectedProfessionalHairColor = null;
       }
+      const selectedHairColorMode = selectedProfessionalHairColor
+        ? "professional"
+        : (draft.hair_color_selection_mode || "basic");
 
       updateCreationDraft({
         hairstyle: selectedHairstyle,
@@ -142,6 +141,7 @@ Page({
         selectedGeneratorBackend: generationSelection.selectedGeneratorBackend,
         selectedAspectRatio: generationSelection.selectedAspectRatio,
         selectedResolution: generationSelection.selectedResolution,
+        selectedHairColorMode,
         selectedHairColorToneLabel: selectedHairColor ? selectedHairColor.label : "",
         selectedHairColorTechniqueLabel: selectedHairTechnique ? selectedHairTechnique.label : "",
         selectedHairColorProfessionalSummary: buildProfessionalSummary(selectedProfessionalHairColor)
@@ -227,10 +227,18 @@ Page({
         scene_id: this.data.selectedScene.id,
         scene_name: job.scene_name || this.data.selectedScene.name || "",
         generator_backend: this.data.selectedGeneratorBackend,
+        hair_color_selection_mode: draft.hair_color_professional_id ? "professional" : "basic",
         hair_color_tone: job.hair_color_tone || draft.hair_color_tone || "",
         hair_color_tone_label: job.hair_color_tone_label || this.data.selectedHairColorToneLabel || "",
         hair_color_technique: job.hair_color_technique || draft.hair_color_technique || "",
         hair_color_technique_label: job.hair_color_technique_label || this.data.selectedHairColorTechniqueLabel || "",
+        hair_color_professional_id: job.hair_color_professional_id || draft.hair_color_professional_id || "",
+        hair_color_professional_brand: job.hair_color_professional_brand || draft.hair_color_professional_brand || "",
+        hair_color_professional_series: job.hair_color_professional_series || draft.hair_color_professional_series || "",
+        hair_color_professional_series_label: job.hair_color_professional_series_label || draft.hair_color_professional_series_label || "",
+        hair_color_professional_code: job.hair_color_professional_code || draft.hair_color_professional_code || "",
+        hair_color_professional_note: job.hair_color_professional_note || draft.hair_color_professional_note || "",
+        hair_color_professional_hex_estimate: job.hair_color_professional_hex_estimate || draft.hair_color_professional_hex_estimate || "",
         created_at: job.created_at || new Date().toISOString(),
         updated_at: job.updated_at || job.created_at || new Date().toISOString()
       });

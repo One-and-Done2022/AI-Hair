@@ -195,6 +195,38 @@
   text-overflow: ellipsis;
 }
 
+.work-tag-row {
+  margin-top: 14rpx;
+  display: flex;
+  gap: 10rpx;
+  flex-wrap: wrap;
+}
+
+.work-tag {
+  min-height: 42rpx;
+  padding: 0 14rpx;
+  border-radius: 999rpx;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(77, 87, 98, 0.08);
+  color: #4d5762;
+  font-size: 20rpx;
+  font-weight: 700;
+}
+
+.work-tag-accent {
+  background: #edf3ff;
+  color: #0b5ecf;
+}
+
+.work-color-note {
+  margin-top: 12rpx;
+  font-size: 21rpx;
+  line-height: 1.45;
+  color: #5d6670;
+}
+
 .work-time {
   flex-shrink: 0;
   font-size: 21rpx;

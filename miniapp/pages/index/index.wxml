@@ -36,7 +36,11 @@
         <image class="showcase-cover" src="{{item.cover_url}}" mode="aspectFill" lazy-load="true"></image>
         <view class="showcase-body">
           <view class="showcase-name">{{item.title}}</view>
-          <view class="showcase-summary">{{item.summary}}</view>
+          <view class="showcase-tag-row">
+            <view wx:if="{{item.hair_color_mode_label}}" class="showcase-tag showcase-tag-accent">{{item.hair_color_mode_label}}</view>
+            <view wx:if="{{item.hair_color_primary_label}}" class="showcase-tag">{{item.hair_color_primary_label}}</view>
+          </view>
+          <view wx:if="{{item.summary}}" class="showcase-summary">{{item.summary}}</view>
         </view>
       </view>
     </view>

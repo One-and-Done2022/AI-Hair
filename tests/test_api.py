@@ -225,9 +225,9 @@ def test_build_and_parse_job_prompt_payload_preserves_output_options():
         "resolution": "2K",
     }
     assert parsed["hair_color_selection"] == {
-        "tone_id": "dark_brown",
-        "tone_label": "深棕",
-        "tone_hex": "#3B2A24",
+        "tone_id": "natural_black",
+        "tone_label": "自然黑",
+        "tone_hex": "#1F1A18",
         "technique_id": "solid",
         "technique_label": "统一染",
         "technique_description": "整体发色统一，只保留自然深浅层次。",
@@ -335,10 +335,14 @@ def test_build_and_parse_job_prompt_payload_supports_professional_hair_color_sel
     assert parsed["hair_color_selection"]["professional_series_label"] == "烟熏冷雾系列"
     assert parsed["hair_color_selection"]["professional_code"] == "5/72"
     assert parsed["hair_color_selection"]["professional_note"] == "偏灰棕、轻烟熏、低饱和冷雾感"
-    assert "5/72" not in parsed["full_prompt"]
-    assert "5/72" not in parsed["hairstyle_only_prompt"]
-    assert "5/72" not in parsed["scene_only_prompt"]
-    assert "偏灰棕、轻烟熏、低饱和冷雾感" in parsed["full_prompt"]
+    assert "发色以烟熏冷雾系列 5/72为唯一目标色号" in parsed["full_prompt"]
+    assert "发色以烟熏冷雾系列 5/72为唯一目标色号" in parsed["hairstyle_only_prompt"]
+    assert "保持参考图中静态完成的烟熏冷雾系列 5/72这一专业色号效果不变" in parsed["scene_only_prompt"]
+    assert "色感表现为偏灰棕、轻烟熏、低饱和冷雾感" in parsed["full_prompt"]
+    assert "综合色相可辅助参考接近 HEX #5F5F4F的雾灰棕区间" in parsed["full_prompt"]
+    assert "综合色相继续辅助参考接近 HEX #5F5F4F的雾灰棕区间" in parsed["scene_only_prompt"]
+    assert "发色调整为雾灰棕；" not in parsed["full_prompt"]
+    assert "补充色感为偏灰棕、轻烟熏、低饱和冷雾感" not in parsed["full_prompt"]
 
 
 def test_build_prompt_assembly_returns_structured_blocks():
@@ -452,7 +456,7 @@ def test_build_hairstyle_only_prompt_uses_identity_lock_and_hair_swap_structure(
     assert "轻中度写真级肤质优化与肤色均匀化" in prompt
     assert "主发型结构：发型改为前刺头" in prompt
     assert "刘海系统：" in prompt
-    assert "发色系统：发色调整为深棕" in prompt
+    assert "发色系统：发色调整为自然黑" in prompt
     assert "尽量保持原图中的背景、服饰、姿态、表情、构图、镜头距离、光线和氛围不变" in prompt
     assert "负面约束：不要换脸、不要改变性别表达、不要生成第二个人" in prompt
 
@@ -1039,6 +1043,39 @@ def test_job_accepts_professional_hair_color_mapping(tmp_path, monkeypatch):
         assert payload["hair_color_professional_series_label"] == "烟熏冷雾系列"
         assert payload["hair_color_professional_code"] == "5/72"
         assert payload["hair_color_professional_note"] == "偏灰棕、轻烟熏、低饱和冷雾感"
+
+
+def test_normalize_hair_color_selection_allows_non_recommended_professional_color(monkeypatch):
+    from app.services import templates
+
+    monkeypatch.setattr(
+        templates,
+        "get_professional_hair_color",
+        lambda _professional_id: {
+            "id": "solutor-reference-demo",
+            "brand": "SOLUTOR",
+            "series_type": "base_reference",
+            "series_name": "参考基准系列",
+            "code": "REF-01",
+            "visual_note": "冷调参考棕",
+            "hex_estimate": "#6B5446",
+            "prompt_alias": "冷调参考棕",
+            "mapped_tone_id": "ash_brown",
+            "mapped_technique_ids": ["solid"],
+            "is_recommended_for_generation": False,
+        },
+    )
+
+    selection = templates.normalize_hair_color_selection(
+        professional_id="solutor-reference-demo",
+        strict_professional=True,
+    )
+
+    assert selection["professional_id"] == "solutor-reference-demo"
+    assert selection["professional_series_label"] == "参考基准系列"
+    assert selection["professional_code"] == "REF-01"
+    assert selection["tone_id"] == "ash_brown"
+    assert selection["technique_id"] == "solid"
 
 
 def test_job_accepts_male_hairstyle_preset_id(tmp_path, monkeypatch):
@@ -2432,6 +2469,28 @@ def test_map_seedream_http_error_disables_key_for_set_limit_exceeded():
     assert mapped.retryable is True
     assert mapped.disable_key is True
     assert mapped.retry_after_seconds == 3600
+
+
+def test_map_nano_http_error_marks_no_available_channel_as_provider_unavailable():
+    import httpx
+
+    from app.services.generation import _map_nano_http_error
+
+    response = httpx.Response(
+        503,
+        request=httpx.Request("POST", "https://example.com/v1beta/models/test:generateContent"),
+        json={
+            "error": {
+                "message": "当前分组 NBPro 下对于模型 gemini-3-pro-image-preview 计费模式 [按次计费] 无可用渠道",
+            }
+        },
+    )
+
+    mapped = _map_nano_http_error(response)
+
+    assert mapped.code == "provider_unavailable"
+    assert mapped.retryable is True
+    assert mapped.retry_after_seconds == 300
 
 
 def test_settings_parse_multi_ark_api_keys_and_default_worker_concurrency(

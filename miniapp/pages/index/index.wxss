@@ -111,6 +111,31 @@
   overflow: hidden;
 }
 
+.showcase-tag-row {
+  margin-top: 12rpx;
+  display: flex;
+  gap: 10rpx;
+  flex-wrap: wrap;
+}
+
+.showcase-tag {
+  min-height: 42rpx;
+  padding: 0 14rpx;
+  border-radius: 999rpx;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(77, 87, 98, 0.08);
+  color: #4d5762;
+  font-size: 20rpx;
+  font-weight: 700;
+}
+
+.showcase-tag-accent {
+  background: #edf3ff;
+  color: #0b5ecf;
+}
+
 .upload-panel,
 .analysis-panel {
   margin-top: 24rpx;

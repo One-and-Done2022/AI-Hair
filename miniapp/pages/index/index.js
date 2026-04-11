@@ -1,5 +1,6 @@
 const { ensureLogin } = require("../../utils/auth");
 const { getFriendlyUploadError, showError } = require("../../utils/errors");
+const { buildHairColorDisplay } = require("../../utils/hair-color");
 const { request } = require("../../utils/request");
 const {
   clearRecommendationCache,
@@ -65,17 +66,20 @@ function buildHistoryShowcases(items) {
     .filter((item) => item && item.status === "succeeded" && (item.result_image_url || item.hair_preview_url))
     .sort((left, right) => parseTimestamp(right.created_at) - parseTimestamp(left.created_at))
     .slice(0, 6)
-    .map((item) => ({
+    .map((item) => {
+      const hairColorDisplay = buildHairColorDisplay(item);
+      return {
       id: item.job_id,
       job_id: item.job_id,
       title: `${item.hairstyle_name || "发型"} · ${item.scene_name || "场景"}`,
-      summary: item.hair_color_tone_label
-        ? `${item.hair_color_tone_label}${item.hair_color_technique_label ? " · " + item.hair_color_technique_label : ""}`
-        : "完整历史生成记录",
+      hair_color_mode_label: hairColorDisplay.mode_label,
+      hair_color_primary_label: hairColorDisplay.primary_label,
+      summary: hairColorDisplay.secondary_label || "",
       cover_url: item.result_image_url || item.hair_preview_url || "",
       created_at: item.created_at || "",
       status: item.status || ""
-    }));
+    };
+    });
 }
 
 function buildRecommendationCard(recommendation, loading, draft, selectedImage) {

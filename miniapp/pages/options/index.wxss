@@ -82,6 +82,79 @@
   margin-top: 24rpx;
 }
 
+.hair-color-mode-row {
+  display: flex;
+  gap: 14rpx;
+}
+
+.hair-color-mode-chip {
+  flex: 1;
+  height: 76rpx;
+  border-radius: 999rpx;
+  background: rgba(244, 247, 252, 0.92);
+  border: 1rpx solid rgba(15, 23, 42, 0.06);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24rpx;
+  font-weight: 700;
+  color: #5d6670;
+}
+
+.hair-color-mode-chip.active {
+  background: rgba(11, 94, 207, 0.1);
+  color: #0b5ecf;
+  border-color: rgba(11, 94, 207, 0.22);
+}
+
+.hair-color-head {
+  margin-top: 20rpx;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16rpx;
+}
+
+.hair-color-guide-card {
+  margin-top: 18rpx;
+  padding: 22rpx;
+  border-radius: 24rpx;
+  background: linear-gradient(135deg, rgba(243, 247, 255, 0.98), rgba(249, 251, 255, 0.96));
+  border: 1rpx solid rgba(11, 94, 207, 0.08);
+}
+
+.hair-color-guide-title {
+  font-size: 24rpx;
+  font-weight: 700;
+  color: #20242a;
+}
+
+.hair-color-guide-desc {
+  margin-top: 10rpx;
+  font-size: 22rpx;
+  line-height: 1.5;
+  color: #5d6670;
+}
+
+.hair-color-guide-action {
+  margin-top: 16rpx;
+  color: #0b5ecf;
+  font-size: 22rpx;
+  font-weight: 700;
+}
+
+.professional-shell-standalone {
+  margin-top: 20rpx;
+  padding-top: 0;
+  border-top: none;
+}
+
+.professional-mode-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 8rpx;
+}
+
 .hair-color-head {
   display: flex;
   align-items: flex-start;

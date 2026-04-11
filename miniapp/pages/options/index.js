@@ -77,6 +77,7 @@ Page({
     advancedOpen: false,
     hairColors: [],
     hairColorTechniques: [],
+    hairColorMode: "basic",
     selectedHairColor: null,
     selectedHairTechnique: null,
     techniqueOptions: [],
@@ -135,10 +136,12 @@ Page({
       Object.prototype.hasOwnProperty.call(patch, "selectedProfessionalHairColor")
         ? patch.selectedProfessionalHairColor
         : this.data.selectedProfessionalHairColor;
+    const hairColorMode = patch.hairColorMode || this.data.hairColorMode || "basic";
     updateCreationDraft({
       generator_backend: this.data.selectedGeneratorBackend,
       aspect_ratio: patch.selectedAspectRatio || this.data.selectedAspectRatio,
       resolution: this.data.selectedResolution,
+      hair_color_selection_mode: hairColorMode,
       ...buildHairColorDraftPatch(tone, technique),
       ...buildProfessionalDraftPatch(professionalColor)
     });
@@ -210,12 +213,6 @@ Page({
         professionalColors,
         draft.hair_color_professional_id
       );
-      if (
-        selectedProfessionalHairColor &&
-        !selectedProfessionalHairColor.is_recommended_for_generation
-      ) {
-        selectedProfessionalHairColor = null;
-      }
       if (selectedProfessionalHairColor) {
         const mappedSelection = resolveProfessionalMappedSelection({
           professionalColor: selectedProfessionalHairColor,
@@ -229,6 +226,9 @@ Page({
           ? mappedSelection.techniqueOptions
           : techniqueOptions;
       }
+      const hairColorMode = selectedProfessionalHairColor
+        ? "professional"
+        : (draft.hair_color_selection_mode || "basic");
       const professionalPaletteState = this.buildProfessionalPaletteState({
         professionalColors,
         professionalSeries,
@@ -242,6 +242,7 @@ Page({
         generator_backend: generationSelection.selectedGeneratorBackend,
         aspect_ratio: generationSelection.selectedAspectRatio,
         resolution: generationSelection.selectedResolution,
+        hair_color_selection_mode: hairColorMode,
         ...buildHairColorDraftPatch(
           selectedHairColor,
           selectedHairTechnique
@@ -260,6 +261,7 @@ Page({
         aspectRatioOptions: generationSelection.aspectRatioOptions,
         hairColors,
         hairColorTechniques,
+        hairColorMode,
         professionalSeries,
         professionalColors,
         selectedHairColor,
@@ -267,8 +269,8 @@ Page({
         techniqueOptions,
         detectedHairColorLabel: detectedHairColor ? detectedHairColor.label : "",
         detectedHairColorHint: detectedHairColor
-          ? `不选时默认沿用原图预估的 ${detectedHairColor.label}`
-          : "未识别到原发色时会按模板默认色生成，可手动调整",
+          ? `默认发色为自然黑，也可参考原图预估的 ${detectedHairColor.label} 手动调整`
+          : "默认发色为自然黑，可手动调整或直接选择专业色号",
         selectedProfessionalHairColor,
         ...professionalPaletteState
       });
@@ -314,6 +316,28 @@ Page({
   toggleProfessionalExpand() {
     this.setData({
       professionalExpanded: !this.data.professionalExpanded
+    });
+  },
+
+  switchToBasicHairColor() {
+    this.setData({
+      hairColorMode: "basic",
+      professionalExpanded: false,
+      selectedProfessionalHairColor: null
+    });
+    this.persistDraft({
+      hairColorMode: "basic",
+      selectedProfessionalHairColor: null
+    });
+  },
+
+  switchToProfessionalHairColor() {
+    this.setData({
+      hairColorMode: "professional",
+      professionalExpanded: true
+    });
+    this.persistDraft({
+      hairColorMode: "professional"
     });
   },
 
@@ -406,13 +430,6 @@ Page({
     if (!professionalColor) {
       return;
     }
-    if (!professionalColor.is_recommended_for_generation) {
-      wx.showToast({
-        title: "这个色号当前只做参考，暂不支持直接生成",
-        icon: "none"
-      });
-      return;
-    }
     const mappedSelection = resolveProfessionalMappedSelection({
       professionalColor,
       hairColors: this.data.hairColors,
@@ -420,6 +437,7 @@ Page({
       currentTechnique: this.data.selectedHairTechnique
     });
     this.setData({
+      hairColorMode: "professional",
       selectedProfessionalHairColor: professionalColor,
       selectedHairColor: mappedSelection.tone,
       selectedHairTechnique: mappedSelection.technique,
@@ -431,6 +449,7 @@ Page({
       })
     });
     this.persistDraft({
+      hairColorMode: "professional",
       selectedProfessionalHairColor: professionalColor,
       selectedHairColor: mappedSelection.tone,
       selectedHairTechnique: mappedSelection.technique
@@ -467,12 +486,14 @@ Page({
       : this.data.selectedProfessionalHairColor;
 
     this.setData({
+      hairColorMode: "basic",
       selectedHairColor: nextTone,
       selectedHairTechnique: nextTechnique,
       techniqueOptions: nextTechniqueOptions,
       selectedProfessionalHairColor: nextProfessionalHairColor
     });
     this.persistDraft({
+      hairColorMode: "basic",
       selectedHairColor: nextTone,
       selectedHairTechnique: nextTechnique,
       selectedProfessionalHairColor: nextProfessionalHairColor
@@ -497,10 +518,12 @@ Page({
       : this.data.selectedProfessionalHairColor;
 
     this.setData({
+      hairColorMode: "basic",
       selectedHairTechnique: nextTechnique,
       selectedProfessionalHairColor: nextProfessionalHairColor
     });
     this.persistDraft({
+      hairColorMode: "basic",
       selectedHairTechnique: nextTechnique,
       selectedProfessionalHairColor: nextProfessionalHairColor
     });
@@ -524,6 +547,13 @@ Page({
   },
 
   goNext() {
+    if (this.data.hairColorMode === "professional" && !this.data.selectedProfessionalHairColor) {
+      wx.showToast({
+        title: "请先选择专业色号，或切换回基础发色",
+        icon: "none"
+      });
+      return;
+    }
     this.persistDraft();
     wx.navigateTo({
       url: "/pages/review/index"

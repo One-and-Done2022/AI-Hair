@@ -794,10 +794,6 @@ def normalize_hair_color_selection(
     requested_professional = get_professional_hair_color(professional_id)
     if professional_id and requested_professional is None and strict_professional:
         raise ValueError(f"Unknown professional hair color: {professional_id}")
-    if requested_professional and not requested_professional.get("is_recommended_for_generation"):
-        if strict_professional:
-            raise ValueError("Selected professional hair color is not available for generation.")
-        requested_professional = None
 
     requested_tone = get_hair_color_tone(tone_id)
     detected_tone = get_hair_color_tone(detected_tone_id)
@@ -810,9 +806,9 @@ def normalize_hair_color_selection(
     selected_tone = (
         professional_tone
         or requested_tone
+        or get_hair_color_tone(DEFAULT_HAIR_COLOR_TONE)
         or detected_tone
         or hairstyle_default_tone
-        or get_hair_color_tone(DEFAULT_HAIR_COLOR_TONE)
         or HAIR_COLOR_TONES[0]
     )
 
@@ -2245,13 +2241,29 @@ def _build_hair_color_lock_text(selection: dict[str, str] | None) -> str:
             "发色锁定：保持参考图中静态完成的当前发色、明度层级与染发层次不变，"
             "不要二次改色，不要改变冷暖倾向、亮度层级、挑染位置和过渡关系。"
         )
+    professional_id = str(selection.get("professional_id") or "").strip()
     note = _normalize_sentence(str(selection.get("professional_note") or ""))
-    suffix = f"同时保留当前{note}的专业色感表达。" if note else ""
+    if professional_id:
+        professional_label = _build_professional_hair_color_prompt_label(selection)
+        hex_reference = _build_professional_hair_color_hex_reference_text(selection, lock_mode=True)
+        segments = []
+        if professional_label:
+            segments.append(f"保持参考图中静态完成的{professional_label}这一专业色号效果不变")
+        if selection["tone_label"]:
+            segments.append(f"整体仍保持{selection['tone_label']}方向")
+        if selection["technique_label"]:
+            segments.append(f"保持{selection['technique_label']}层次不变")
+        if note:
+            segments.append(f"持续保留{note}的专业色感表达")
+        if hex_reference:
+            segments.append(hex_reference)
+        segments.append("不要二次改色，不要改变冷暖倾向、亮度层级、挑染位置和过渡关系")
+        return f"发色锁定：{'；'.join(segments)}。"
+
     return (
         "发色锁定：保持参考图中静态完成的"
         f"{selection['tone_label']}发色和{selection['technique_label']}层次不变，"
         "不要二次改色，不要改变冷暖倾向、亮度层级、挑染位置和过渡关系。"
-        f"{suffix}"
     )
 
 
@@ -2364,12 +2376,65 @@ def _build_bangs_text(hairstyle: dict) -> str:
     return f"刘海系统：{'；'.join(segments)}。"
 
 
+def _build_professional_hair_color_prompt_label(selection: dict[str, str] | None) -> str:
+    if not selection:
+        return ""
+    series_label = _normalize_sentence(str(selection.get("professional_series_label") or ""))
+    code = _normalize_sentence(str(selection.get("professional_code") or ""))
+    if series_label and code:
+        return f"{series_label} {code}"
+    return series_label or code
+
+
+def _build_professional_hair_color_hex_reference_text(
+    selection: dict[str, str] | None,
+    *,
+    lock_mode: bool = False,
+) -> str:
+    if not selection:
+        return ""
+    hex_estimate = _normalize_sentence(str(selection.get("professional_hex_estimate") or ""))
+    if not hex_estimate:
+        return ""
+    tone_label = _normalize_sentence(str(selection.get("tone_label") or ""))
+    tone_suffix = f"的{tone_label}区间" if tone_label else "的综合色相区间"
+    if lock_mode:
+        return (
+            f"综合色相继续辅助参考接近 HEX {hex_estimate}{tone_suffix}"
+            "，仅作为综合色相范围参考，不要锁成单一纯色块"
+        )
+    return (
+        f"综合色相可辅助参考接近 HEX {hex_estimate}{tone_suffix}"
+        "，仅作为综合色相范围参考，不要做成僵硬的单一平涂色块"
+    )
+
+
 def _build_hair_color_text(hairstyle: dict, selection: dict[str, str] | None) -> str:
     block = _preset_block(hairstyle, "recommended_hair_color")
     tone_label = selection["tone_label"] if selection else _tone_label_from_block(str(block.get("hair_color_tone") or ""))
     technique_label = selection["technique_label"] if selection else _technique_label_from_block(
         str(block.get("hair_color_technique") or "")
     )
+    professional_id = _normalize_sentence(str(selection.get("professional_id") or "")) if selection else ""
+    if professional_id:
+        professional_label = _build_professional_hair_color_prompt_label(selection)
+        professional_note = _normalize_sentence(str(selection.get("professional_note") or ""))
+        hex_reference = _build_professional_hair_color_hex_reference_text(selection)
+        segments: list[str] = []
+        if professional_label:
+            segments.append(f"发色以{professional_label}为唯一目标色号")
+        if tone_label:
+            segments.append(f"整体呈现{tone_label}方向")
+        if professional_note:
+            segments.append(f"色感表现为{professional_note}")
+        if hex_reference:
+            segments.append(hex_reference)
+        if technique_label:
+            segments.append(f"染发方式采用{technique_label}")
+        if not segments:
+            segments.append("保持当前专业染发效果自然稳定")
+        return f"发色系统：{'；'.join(segments)}。"
+
     segments: list[str] = []
     if tone_label:
         segments.append(f"发色调整为{tone_label}")
@@ -2384,9 +2449,6 @@ def _build_hair_color_text(hairstyle: dict, selection: dict[str, str] | None) ->
     distribution = _safe_value(block.get("hair_color_distribution"))
     if distribution:
         segments.append(f"色彩分布为{distribution}")
-    professional_note = _normalize_sentence(str(selection.get("professional_note") or "")) if selection else ""
-    if professional_note:
-        segments.append(f"补充色感为{professional_note}")
     if not segments and selection:
         segments.append(f"发色调整为{selection['tone_label']}，染发方式采用{selection['technique_label']}")
     return f"发色系统：{'；'.join(segments)}。"

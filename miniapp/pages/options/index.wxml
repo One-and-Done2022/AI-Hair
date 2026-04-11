@@ -19,7 +19,7 @@
 
   <view class="editorial-head">
     <view class="title editorial-title">选择参数</view>
-    <view class="subtitle editorial-subtitle">先确定发色，再按需展开专业色号与高级设置。</view>
+    <view class="subtitle editorial-subtitle">选择基础发色或专业色号其一，再确认高级设置。</view>
   </view>
 
   <view class="summary-grid">
@@ -47,34 +47,53 @@
   </view>
 
   <view class="panel hair-color-panel">
-    <view class="hair-color-head">
-      <view class="section-title">发色基调</view>
-      <view class="hair-color-hint">{{detectedHairColorHint}}</view>
-    </view>
-    <view class="hair-color-grid">
+    <view class="hair-color-mode-row">
       <view
-        wx:for="{{hairColors}}"
-        wx:key="id"
-        class="hair-color-chip {{selectedHairColor && selectedHairColor.id === item.id ? 'active' : ''}}"
-        data-value="{{item.id}}"
-        bindtap="selectHairColorTone"
+        class="hair-color-mode-chip {{hairColorMode === 'basic' ? 'active' : ''}}"
+        bindtap="switchToBasicHairColor"
       >
-        <view class="hair-color-swatch" style="background: {{item.hex}};"></view>
-        <view class="hair-color-copy">
-          <view class="hair-color-name">{{item.label}}</view>
-          <view class="hair-color-desc">{{item.description}}</view>
-        </view>
+        基础发色
+      </view>
+      <view
+        class="hair-color-mode-chip {{hairColorMode === 'professional' ? 'active' : ''}}"
+        bindtap="switchToProfessionalHairColor"
+      >
+        专业色号
       </view>
     </view>
 
-    <view class="professional-shell">
-      <view class="professional-head" bindtap="toggleProfessionalExpand">
-        <view>
-          <view class="section-title">专业色号</view>
-          <view class="professional-summary" wx:if="{{selectedProfessionalHairColor}}">{{selectedProfessionalHairColor.series_name}} · {{selectedProfessionalHairColor.code}}</view>
-          <view class="professional-summary" wx:else>按系列查看完整色号，直接点选即可应用。</view>
+    <view wx:if="{{hairColorMode === 'basic'}}">
+      <view class="hair-color-head">
+        <view class="section-title">发色基调</view>
+        <view class="hair-color-hint">{{detectedHairColorHint}}</view>
+      </view>
+      <view class="hair-color-grid">
+        <view
+          wx:for="{{hairColors}}"
+          wx:key="id"
+          class="hair-color-chip {{selectedHairColor && selectedHairColor.id === item.id ? 'active' : ''}}"
+          data-value="{{item.id}}"
+          bindtap="selectHairColorTone"
+        >
+          <view class="hair-color-swatch" style="background: {{item.hex}};"></view>
+          <view class="hair-color-copy">
+            <view class="hair-color-name">{{item.label}}</view>
+            <view class="hair-color-desc">{{item.description}}</view>
+          </view>
         </view>
-        <view class="advanced-toggle">{{professionalExpanded ? '收起' : '展开'}}</view>
+      </view>
+
+      <view class="hair-color-guide-card">
+        <view class="hair-color-guide-title">想用更专业的色号，就切换到专业色号</view>
+        <view class="hair-color-guide-desc">专业色号会提供更细的品牌级颜色表达，适合你要更具体、更讲究的染发目标。</view>
+        <view class="hair-color-guide-action" bindtap="switchToProfessionalHairColor">去选专业色号</view>
+      </view>
+    </view>
+
+    <view wx:if="{{hairColorMode === 'professional'}}" class="professional-shell professional-shell-standalone">
+      <view class="professional-mode-copy">
+        <view class="section-title">专业色号</view>
+        <view class="professional-summary">如果你要更专业、更细的品牌级色号，请直接在这里选择；系统会自动映射基础发色和染发工艺，不需要重复选择。</view>
       </view>
 
       <view wx:if="{{selectedProfessionalHairColor}}" class="professional-selected-card">
@@ -82,58 +101,56 @@
         <view class="professional-selected-copy">
           <view class="professional-selected-title">{{selectedProfessionalHairColor.code}} · {{selectedProfessionalHairColor.series_name}}</view>
           <view class="professional-selected-note">{{selectedProfessionalHairColor.visual_note}}</view>
-          <view class="professional-selected-meta">映射 {{selectedProfessionalHairColor.mapped_tone_label}}{{selectedProfessionalHairColor.mapped_technique_text ? ' · ' + selectedProfessionalHairColor.mapped_technique_text : ''}}</view>
+          <view class="professional-selected-meta">自动映射 {{selectedProfessionalHairColor.mapped_tone_label}}{{selectedProfessionalHairColor.mapped_technique_text ? ' · ' + selectedProfessionalHairColor.mapped_technique_text : ''}}</view>
         </view>
       </view>
 
-      <view wx:if="{{professionalExpanded}}" class="professional-body">
-        <view class="professional-reference-row">
-          <view class="professional-reference-copy">完整 RGB 色号表已经整理成固定 PDF，可直接打开对照。</view>
-          <view class="professional-reference-button" bindtap="openProfessionalReference">打开参考表</view>
-        </view>
+      <view class="professional-reference-row">
+        <view class="professional-reference-copy">完整 RGB 色号表已经整理成固定 PDF，可直接打开对照。</view>
+        <view class="professional-reference-button" bindtap="openProfessionalReference">打开参考表</view>
+      </view>
 
-        <scroll-view class="professional-series-scroll" scroll-x="true" enable-flex="true" show-scrollbar="false">
-          <view class="professional-series-row">
-            <view
-              wx:for="{{professionalSeries}}"
-              wx:key="id"
-              class="option-chip {{professionalSelectedSeries === item.id ? 'active' : ''}}"
-              data-value="{{item.id}}"
-              bindtap="selectProfessionalSeries"
-            >
-              {{item.label}}
-            </view>
-          </view>
-        </scroll-view>
-
-        <view class="professional-series-meta">{{professionalSeriesResultText}}</view>
-
-        <view wx:if="{{filteredProfessionalColors.length}}" class="professional-grid">
+      <scroll-view class="professional-series-scroll" scroll-x="true" enable-flex="true" show-scrollbar="false">
+        <view class="professional-series-row">
           <view
-            wx:for="{{filteredProfessionalColors}}"
+            wx:for="{{professionalSeries}}"
             wx:key="id"
-            class="professional-card {{selectedProfessionalHairColor && selectedProfessionalHairColor.id === item.id ? 'active' : ''}} {{!item.is_recommended_for_generation ? 'disabled' : ''}}"
+            class="option-chip {{professionalSelectedSeries === item.id ? 'active' : ''}}"
             data-value="{{item.id}}"
-            bindtap="selectProfessionalHairColor"
+            bindtap="selectProfessionalSeries"
           >
-            <view class="professional-card-top">
-              <view class="professional-card-top-left">
-                <view class="professional-card-swatch" style="background: {{item.hex_estimate}};"></view>
-                <view class="professional-card-code">{{item.code}}</view>
-              </view>
-              <view wx:if="{{!item.is_recommended_for_generation}}" class="professional-card-badge">参考色</view>
-            </view>
-            <view class="professional-card-series">{{item.series_name}}</view>
-            <view class="professional-card-note">{{item.visual_note}}</view>
-            <view class="professional-card-meta">{{item.hex_estimate}} · {{item.mapped_tone_label}}{{item.mapped_technique_text ? ' · ' + item.mapped_technique_text : ''}}</view>
+            {{item.label}}
           </view>
         </view>
-        <view wx:else class="professional-empty">当前系列暂无可选色号。</view>
+      </scroll-view>
+
+      <view class="professional-series-meta">{{professionalSeriesResultText}}</view>
+
+      <view wx:if="{{filteredProfessionalColors.length}}" class="professional-grid">
+        <view
+          wx:for="{{filteredProfessionalColors}}"
+          wx:key="id"
+          class="professional-card {{selectedProfessionalHairColor && selectedProfessionalHairColor.id === item.id ? 'active' : ''}}"
+          data-value="{{item.id}}"
+          bindtap="selectProfessionalHairColor"
+        >
+          <view class="professional-card-top">
+            <view class="professional-card-top-left">
+              <view class="professional-card-swatch" style="background: {{item.hex_estimate}};"></view>
+              <view class="professional-card-code">{{item.code}}</view>
+            </view>
+            <view wx:if="{{!item.is_recommended_for_generation}}" class="professional-card-badge">参考色</view>
+          </view>
+          <view class="professional-card-series">{{item.series_name}}</view>
+          <view class="professional-card-note">{{item.visual_note}}</view>
+          <view class="professional-card-meta">{{item.hex_estimate}} · {{item.mapped_tone_label}}{{item.mapped_technique_text ? ' · ' + item.mapped_technique_text : ''}}</view>
+        </view>
       </view>
+      <view wx:else class="professional-empty">当前系列暂无可选色号。</view>
     </view>
   </view>
 
-  <view class="panel hair-technique-panel">
+  <view wx:if="{{hairColorMode === 'basic'}}" class="panel hair-technique-panel">
     <view class="section-title">染发工艺</view>
     <view class="option-row technique-row">
       <view

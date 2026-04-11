@@ -1,5 +1,6 @@
 const { ensureLogin } = require("../../utils/auth");
 const { showError } = require("../../utils/errors");
+const { buildHairColorDisplay } = require("../../utils/hair-color");
 const {
   mergePendingHistoryJobs,
   removePendingHistoryJob
@@ -76,15 +77,21 @@ function saveFavoriteIds(ids) {
 }
 
 function decorateHistoryItems(items, favoriteIds) {
-  return (items || []).map((item) => ({
-    ...item,
-    cover_url: item.result_image_url || item.upload_url || "",
-    media_expired: !!item.media_expired,
-    status_label: getStatusLabel(item.status),
-    placeholder_label: item.media_expired ? "图片已过期" : getStatusLabel(item.status),
-    created_at_label: formatCreatedAt(item.created_at),
-    isFavorite: favoriteIds.includes(item.job_id)
-  }));
+  return (items || []).map((item) => {
+    const hairColorDisplay = buildHairColorDisplay(item);
+    return {
+      ...item,
+      cover_url: item.result_image_url || item.upload_url || "",
+      media_expired: !!item.media_expired,
+      status_label: getStatusLabel(item.status),
+      placeholder_label: item.media_expired ? "图片已过期" : getStatusLabel(item.status),
+      created_at_label: formatCreatedAt(item.created_at),
+      hair_color_mode_label: hairColorDisplay.mode_label,
+      hair_color_primary_label: hairColorDisplay.primary_label,
+      hair_color_secondary_label: hairColorDisplay.secondary_label,
+      isFavorite: favoriteIds.includes(item.job_id)
+    };
+  });
 }
 
 function pickVisibleItems(items, activeTab) {

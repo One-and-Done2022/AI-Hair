@@ -22,6 +22,7 @@ function resolveHairColorSelection({
   const detectedHairColor = resolveDetectedHairColor(upload);
   const tone =
     findById(hairColors, draft.hair_color_tone) ||
+    findById(hairColors, "natural_black") ||
     findById(hairColors, detectedHairColor && detectedHairColor.tone_id) ||
     findById(hairColors, hairstyle && hairstyle.default_hair_color_tone) ||
     hairColors[0] ||
@@ -266,7 +267,7 @@ function searchProfessionalHairColors({
   professionalColors = [],
   selectedSeries = "all",
   keyword = "",
-  recommendedOnly = true
+  recommendedOnly = false
 } = {}) {
   const normalizedKeyword = normalizeKeyword(keyword);
   const usesGlobalSearch = !!normalizedKeyword;
@@ -319,7 +320,7 @@ function filterProfessionalHairColors({
   professionalColors = [],
   selectedSeries = "all",
   keyword = "",
-  recommendedOnly = true
+  recommendedOnly = false
 } = {}) {
   return searchProfessionalHairColors({
     professionalColors,
@@ -405,12 +406,76 @@ function shouldClearProfessionalColor(professionalColor, tone, technique) {
   return false;
 }
 
+function inferHairColorSelectionMode(item = {}) {
+  if (item.hair_color_selection_mode === "professional") {
+    return "professional";
+  }
+  if (item.hair_color_selection_mode === "basic") {
+    return "basic";
+  }
+  return item.hair_color_professional_id ? "professional" : "basic";
+}
+
+function buildBasicHairColorLabel(item = {}) {
+  const parts = [];
+  if (item.hair_color_tone_label) {
+    parts.push(item.hair_color_tone_label);
+  }
+  if (item.hair_color_technique_label) {
+    parts.push(item.hair_color_technique_label);
+  }
+  return parts.join(" · ");
+}
+
+function buildProfessionalHairColorLabel(item = {}) {
+  const parts = [];
+  if (item.hair_color_professional_series_label) {
+    parts.push(item.hair_color_professional_series_label);
+  }
+  if (item.hair_color_professional_code) {
+    parts.push(item.hair_color_professional_code);
+  }
+  if (!parts.length && item.hair_color_professional_id) {
+    parts.push(item.hair_color_professional_id);
+  }
+  return parts.join(" · ");
+}
+
+function buildHairColorDisplay(item = {}) {
+  const mode = inferHairColorSelectionMode(item);
+  const basicLabel = buildBasicHairColorLabel(item);
+  const professionalLabel = buildProfessionalHairColorLabel(item);
+  const hasExplicitMode =
+    item.hair_color_selection_mode === "professional" ||
+    item.hair_color_selection_mode === "basic";
+  const hasColorData = !!(basicLabel || professionalLabel || hasExplicitMode);
+  const primaryLabel =
+    mode === "professional"
+      ? (professionalLabel || basicLabel)
+      : basicLabel;
+  const secondaryLabel =
+    mode === "professional" && professionalLabel && basicLabel
+      ? `自动映射 · ${basicLabel}`
+      : "";
+
+  return {
+    mode,
+    mode_label: hasColorData ? (mode === "professional" ? "专业色号" : "基础发色") : "",
+    primary_label: primaryLabel,
+    secondary_label: secondaryLabel,
+    basic_label: basicLabel,
+    professional_label: professionalLabel
+  };
+}
+
 module.exports = {
   PROFESSIONAL_HAIR_COLOR_QUICK_KEYWORDS,
   buildTechniqueOptions,
+  buildHairColorDisplay,
   filterProfessionalHairColors,
   findHairColorById: findById,
   findProfessionalHairColorById: findById,
+  inferHairColorSelectionMode,
   resolveDetectedHairColor,
   resolveHairColorSelection,
   resolveProfessionalHairColor,
