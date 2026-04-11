@@ -247,6 +247,12 @@
   padding-right: 16rpx;
 }
 
+.professional-series-meta {
+  margin-top: 14rpx;
+  font-size: 22rpx;
+  color: #5d6670;
+}
+
 .professional-grid {
   margin-top: 18rpx;
   display: grid;

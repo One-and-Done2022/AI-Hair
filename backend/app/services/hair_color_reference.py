@@ -18,16 +18,21 @@ TEXT_SECONDARY = "#52606D"
 ACCENT = "#8B6F47"
 SWATCH_BORDER = "#E9E2D7"
 ITEMS_PER_PAGE = 6
-REFERENCE_PDF_FILENAME = "solutor-hair-color-reference.pdf"
+REFERENCE_PDF_FILENAME = "solugtor-hair-color-with-rgb-reference-latest.pdf"
 STATIC_REFERENCE_SUBDIR = "reference_docs"
+REPO_ROOT = Path(__file__).resolve().parents[3]
+ASSET_REFERENCE_PDF_PATH = REPO_ROOT / "assets" / REFERENCE_PDF_FILENAME
 
 SERIES_LABELS = {
-    "base_color": "基色 / 打底",
-    "classic_cover": "覆盖色系",
-    "classic_natural": "常规自然色系",
+    "base_color": "基色",
+    "base_reference": "底色对照卡",
+    "classic_cover": "经典盖白",
+    "classic_green": "经典青系列",
+    "classic_natural": "常规色系",
     "cool_mist": "烟熏冷雾系列",
-    "icy_gloss": "冰感光泽系列",
-    "mist_clear": "清透雾感系列",
+    "icy_gloss": "冷雾莹彩系列",
+    "is_multi_uniform": "IS多段统一",
+    "mist_clear": "迷雾清透系列",
     "tool_color": "工具色系",
 }
 
@@ -203,12 +208,21 @@ def build_professional_hair_color_reference_pdf() -> bytes:
 
 
 
+def _load_reference_pdf_source_bytes() -> bytes:
+    if ASSET_REFERENCE_PDF_PATH.exists():
+        return ASSET_REFERENCE_PDF_PATH.read_bytes()
+    return build_professional_hair_color_reference_pdf()
+
+
+
 def professional_hair_color_reference_object_key() -> str:
     return storage.reference_document_object_key(REFERENCE_PDF_FILENAME)
 
 
+
 def professional_hair_color_reference_static_relative_path() -> str:
     return f"{STATIC_REFERENCE_SUBDIR}/{REFERENCE_PDF_FILENAME}"
+
 
 
 def professional_hair_color_reference_static_file_path() -> Path:
@@ -218,31 +232,40 @@ def professional_hair_color_reference_static_file_path() -> Path:
     return public_dir / REFERENCE_PDF_FILENAME
 
 
+
 def ensure_professional_hair_color_reference_static_file(*, force_refresh: bool = False) -> Path:
     destination = professional_hair_color_reference_static_file_path()
-    if destination.exists() and not force_refresh:
-        return destination
-    destination.write_bytes(build_professional_hair_color_reference_pdf())
+    pdf_bytes = _load_reference_pdf_source_bytes()
+    if not force_refresh and destination.exists():
+        try:
+            if destination.read_bytes() == pdf_bytes:
+                return destination
+        except Exception:
+            pass
+    destination.write_bytes(pdf_bytes)
     return destination
+
 
 
 def ensure_professional_hair_color_reference_pdf_cached(*, force_refresh: bool = False) -> str:
     object_key = professional_hair_color_reference_object_key()
+    pdf_bytes = _load_reference_pdf_source_bytes()
     if not force_refresh:
         try:
-            if storage.read_file_bytes(object_key):
+            if storage.read_file_bytes(object_key) == pdf_bytes:
                 ensure_professional_hair_color_reference_static_file()
                 return object_key
         except Exception:
             pass
-    pdf_bytes = build_professional_hair_color_reference_pdf()
     ensure_professional_hair_color_reference_static_file(force_refresh=True)
     return storage.save_reference_document(REFERENCE_PDF_FILENAME, pdf_bytes)
+
 
 
 def get_professional_hair_color_reference_url(*, base_url: str | None = None) -> str | None:
     object_key = ensure_professional_hair_color_reference_pdf_cached()
     return storage.media_url(object_key, base_url=base_url)
+
 
 
 def get_professional_hair_color_reference_static_url(*, base_url: str) -> str:

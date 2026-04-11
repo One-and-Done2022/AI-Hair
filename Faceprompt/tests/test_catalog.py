@@ -141,10 +141,11 @@ class CatalogTests(unittest.TestCase):
         options = load_professional_hair_color_catalog(recommended_only=True)
         series = load_professional_hair_color_series(recommended_only=True)
 
-        self.assertGreaterEqual(len(options), 10)
+        self.assertGreaterEqual(len(options), 80)
         self.assertTrue(all(item["is_recommended_for_generation"] for item in options))
-        self.assertGreaterEqual(len(series), 4)
+        self.assertGreaterEqual(len(series), 9)
         self.assertTrue(any(item["id"] == "cool_mist" for item in series))
+        self.assertTrue(any(item["id"] == "is_multi_uniform" for item in series))
 
     def test_professional_hair_color_lookup_preserves_mapping(self) -> None:
         color = get_professional_hair_color("solutor-cool-mist-5-72")

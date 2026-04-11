@@ -1,13 +1,11 @@
 const { ensureLogin } = require("../../utils/auth");
 const { showError } = require("../../utils/errors");
 const {
-  PROFESSIONAL_HAIR_COLOR_QUICK_KEYWORDS,
   buildTechniqueOptions,
   findHairColorById,
   findProfessionalHairColorById,
   resolveHairColorSelection,
   resolveProfessionalMappedSelection,
-  searchProfessionalHairColors,
   shouldClearProfessionalColor
 } = require("../../utils/hair-color");
 const { baseUrl, request } = require("../../utils/request");
@@ -48,52 +46,22 @@ function buildProfessionalDraftPatch(professionalColor) {
 }
 
 function buildProfessionalSeries(series = []) {
-  return [
-    {
-      id: "all",
-      label: "全部",
-      description: "全部可生成色号"
-    }
-  ].concat(
-    (series || []).filter((item) => item.recommended_option_count > 0)
-  );
+  return (series || []).filter((item) => item.option_count > 0);
 }
 
-function findProfessionalSeriesLabel(series = [], id = "all") {
-  if (!id || id === "all") {
-    return "全部";
-  }
-  const matched = (series || []).find((item) => item.id === id);
-  return matched ? matched.label : "当前系列";
-}
-
-function buildProfessionalSearchSummary({
-  keyword = "",
-  searchResult = null,
-  selectedSeries = "all",
-  series = []
+function resolveProfessionalSeriesId({
+  series = [],
+  draftSeries = "",
+  selectedProfessionalHairColor = null
 } = {}) {
-  const matchedCount = searchResult ? searchResult.matchedCount : 0;
-  const recommendedCount = searchResult ? searchResult.recommendedCount : 0;
-  const trimmedKeyword = String(keyword || "").trim();
-
-  if (trimmedKeyword) {
-    if (!matchedCount) {
-      return "没有找到匹配色号";
-    }
-    if (recommendedCount === matchedCount) {
-      return `找到 ${matchedCount} 个可生成色号`;
-    }
-    if (!recommendedCount) {
-      return `找到 ${matchedCount} 个结果，当前仅供参考`;
-    }
-    return `找到 ${matchedCount} 个结果，其中 ${recommendedCount} 个可生成`;
+  const preferredId =
+    (selectedProfessionalHairColor && selectedProfessionalHairColor.series_type) ||
+    draftSeries ||
+    "";
+  if (preferredId && (series || []).some((item) => item.id === preferredId)) {
+    return preferredId;
   }
-
-  const prefix = selectedSeries === "all"
-    ? "全部可生成色号"
-    : `${findProfessionalSeriesLabel(series, selectedSeries)} 可生成色号`;
-  return `${prefix} ${matchedCount} 个`;
+  return series.length ? series[0].id : "";
 }
 
 Page({
@@ -117,11 +85,9 @@ Page({
     professionalExpanded: false,
     professionalSeries: [],
     professionalColors: [],
-    professionalSelectedSeries: "all",
-    professionalSearchKeyword: "",
-    professionalSearchQuickKeywords: PROFESSIONAL_HAIR_COLOR_QUICK_KEYWORDS,
-    professionalSearchResultText: "全部可生成色号 0 个",
-    professionalSearchUsesGlobal: false,
+    professionalSelectedSeries: "",
+    professionalSelectedSeriesLabel: "",
+    professionalSeriesResultText: "",
     filteredProfessionalColors: [],
     selectedProfessionalHairColor: null
   },
@@ -130,32 +96,35 @@ Page({
     await this.loadOptions();
   },
 
-  buildProfessionalSearchState(nextState = {}) {
+  buildProfessionalPaletteState(nextState = {}) {
     const professionalColors = nextState.professionalColors || this.data.professionalColors;
     const professionalSeries = nextState.professionalSeries || this.data.professionalSeries;
-    const professionalSelectedSeries =
-      nextState.professionalSelectedSeries || this.data.professionalSelectedSeries || "all";
-    const professionalSearchKeyword =
-      Object.prototype.hasOwnProperty.call(nextState, "professionalSearchKeyword")
-        ? nextState.professionalSearchKeyword
-        : this.data.professionalSearchKeyword;
-    const trimmedKeyword = String(professionalSearchKeyword || "").trim();
-    const searchResult = searchProfessionalHairColors({
-      professionalColors,
-      selectedSeries: professionalSelectedSeries,
-      keyword: professionalSearchKeyword,
-      recommendedOnly: !trimmedKeyword
+    const selectedProfessionalHairColor = Object.prototype.hasOwnProperty.call(
+      nextState,
+      "selectedProfessionalHairColor"
+    )
+      ? nextState.selectedProfessionalHairColor
+      : this.data.selectedProfessionalHairColor;
+    const draftSeries = Object.prototype.hasOwnProperty.call(nextState, "professionalSelectedSeries")
+      ? nextState.professionalSelectedSeries
+      : this.data.professionalSelectedSeries;
+    const professionalSelectedSeries = resolveProfessionalSeriesId({
+      series: professionalSeries,
+      draftSeries,
+      selectedProfessionalHairColor
     });
+    const filteredProfessionalColors = professionalSelectedSeries
+      ? (professionalColors || []).filter((item) => item.series_type === professionalSelectedSeries)
+      : professionalColors;
+    const selectedSeries = (professionalSeries || []).find((item) => item.id === professionalSelectedSeries) || null;
 
     return {
-      filteredProfessionalColors: searchResult.items,
-      professionalSearchResultText: buildProfessionalSearchSummary({
-        keyword: professionalSearchKeyword,
-        searchResult,
-        selectedSeries: professionalSelectedSeries,
-        series: professionalSeries
-      }),
-      professionalSearchUsesGlobal: searchResult.usesGlobalSearch
+      professionalSelectedSeries,
+      professionalSelectedSeriesLabel: selectedSeries ? selectedSeries.label : "",
+      professionalSeriesResultText: selectedSeries
+        ? `${selectedSeries.label} · ${filteredProfessionalColors.length} 个色号`
+        : `共 ${filteredProfessionalColors.length} 个色号`,
+      filteredProfessionalColors
     };
   },
 
@@ -260,11 +229,11 @@ Page({
           ? mappedSelection.techniqueOptions
           : techniqueOptions;
       }
-      const professionalSearchState = this.buildProfessionalSearchState({
+      const professionalPaletteState = this.buildProfessionalPaletteState({
         professionalColors,
         professionalSeries,
-        professionalSelectedSeries: draft.hair_color_professional_series || "all",
-        professionalSearchKeyword: ""
+        professionalSelectedSeries: draft.hair_color_professional_series || "",
+        selectedProfessionalHairColor
       });
 
       updateCreationDraft({
@@ -293,7 +262,6 @@ Page({
         hairColorTechniques,
         professionalSeries,
         professionalColors,
-        professionalSelectedSeries: draft.hair_color_professional_series || "all",
         selectedHairColor,
         selectedHairTechnique,
         techniqueOptions,
@@ -302,7 +270,7 @@ Page({
           ? `不选时默认沿用原图预估的 ${detectedHairColor.label}`
           : "未识别到原发色时会按模板默认色生成，可手动调整",
         selectedProfessionalHairColor,
-        ...professionalSearchState
+        ...professionalPaletteState
       });
     } catch (error) {
       this.setData({ loading: false });
@@ -349,42 +317,8 @@ Page({
     });
   },
 
-  onProfessionalSearchInput(event) {
-    const professionalSearchKeyword = event.detail.value || "";
-    this.setData({
-      professionalExpanded: true,
-      professionalSearchKeyword,
-      ...this.buildProfessionalSearchState({
-        professionalSearchKeyword
-      })
-    });
-  },
-
-  applyProfessionalQuickKeyword(event) {
-    const professionalSearchKeyword = event.currentTarget.dataset.value || "";
-    if (!professionalSearchKeyword) {
-      return;
-    }
-    this.setData({
-      professionalExpanded: true,
-      professionalSearchKeyword,
-      ...this.buildProfessionalSearchState({
-        professionalSearchKeyword
-      })
-    });
-  },
-
-  clearProfessionalSearch() {
-    this.setData({
-      professionalSearchKeyword: "",
-      ...this.buildProfessionalSearchState({
-        professionalSearchKeyword: ""
-      })
-    });
-  },
-
   async openProfessionalReference() {
-    const staticReferenceUrl = `${baseUrl}/static/reference_docs/solutor-hair-color-reference.pdf`;
+    const staticReferenceUrl = `${baseUrl}/static/reference_docs/solugtor-hair-color-with-rgb-reference-latest.pdf`;
     let fallbackUrl = `${baseUrl}/api/templates/hair-color-reference.pdf`;
     try {
       const payload = await request({
@@ -452,10 +386,9 @@ Page({
   },
 
   selectProfessionalSeries(event) {
-    const professionalSelectedSeries = event.currentTarget.dataset.value || "all";
+    const professionalSelectedSeries = event.currentTarget.dataset.value || "";
     this.setData({
-      professionalSelectedSeries,
-      ...this.buildProfessionalSearchState({
+      ...this.buildProfessionalPaletteState({
         professionalSelectedSeries
       })
     });
@@ -491,7 +424,11 @@ Page({
       selectedHairColor: mappedSelection.tone,
       selectedHairTechnique: mappedSelection.technique,
       techniqueOptions: mappedSelection.techniqueOptions,
-      professionalExpanded: true
+      professionalExpanded: true,
+      ...this.buildProfessionalPaletteState({
+        selectedProfessionalHairColor: professionalColor,
+        professionalSelectedSeries: professionalColor.series_type
+      })
     });
     this.persistDraft({
       selectedProfessionalHairColor: professionalColor,

@@ -343,6 +343,7 @@ def test_build_prompt_assembly_returns_structured_blocks():
         "hair_shape",
         "bangs",
         "hair_color",
+        "hair_constraints",
         "scene",
         "styling",
         "subject_performance",
@@ -402,7 +403,8 @@ def test_build_hairstyle_only_prompt_uses_identity_lock_and_hair_swap_structure(
     prompt = templates.build_hairstyle_only_prompt(hairstyle)
 
     assert "只更换图中人物的发型和发色" in prompt
-    assert "编辑范围：本次仅允许修改头发系统" in prompt
+    assert "编辑范围：本次以头发系统编辑为主" in prompt
+    assert "轻中度写真级肤质优化与肤色均匀化" in prompt
     assert "主发型结构：发型改为前刺头" in prompt
     assert "刘海系统：" in prompt
     assert "发色系统：发色调整为深棕" in prompt
@@ -1052,7 +1054,10 @@ def test_templates_catalog_exposes_plan_specific_output_capabilities(tmp_path, m
         assert hair_colors[0]["allowed_techniques"] == ["solid", "highlight", "earloop"]
         assert hair_color_techniques[0]["id"] == "solid"
         assert professional_series[0]["id"] == "classic_natural"
+        assert len(professional_series) >= 9
+        assert len(professional_options) >= 80
         assert any(item["id"] == "solutor-cool-mist-5-72" for item in professional_options)
+        assert any(item["id"] == "solutor-is-multi-uniform-is-77" for item in professional_options)
         assert backends["premium"]["aspect_ratios"] == [
             "1:1",
             "16:9",
@@ -3052,7 +3057,7 @@ def test_templates_hair_color_reference_pdf_download(tmp_path, monkeypatch):
     assert response.headers['content-type'].startswith('application/pdf')
     assert len(response.content) > 1024
     assert response.content.startswith(b'%PDF')
-    cached_path = tmp_path / 'storage' / 'reference_docs' / 'solutor-hair-color-reference.pdf'
+    cached_path = tmp_path / 'storage' / 'reference_docs' / 'solugtor-hair-color-with-rgb-reference-latest.pdf'
     assert cached_path.exists()
     assert cached_path.read_bytes().startswith(b'%PDF')
 
@@ -3065,9 +3070,9 @@ def test_templates_hair_color_reference_link_returns_fixed_static_url(tmp_path, 
 
     assert response.status_code == 200
     payload = response.json()
-    assert payload['filename'] == 'solutor-hair-color-reference.pdf'
-    assert payload['url'] == 'http://testserver/static/reference_docs/solutor-hair-color-reference.pdf'
-    assert payload['static_url'] == 'http://testserver/static/reference_docs/solutor-hair-color-reference.pdf'
+    assert payload['filename'] == 'solugtor-hair-color-with-rgb-reference-latest.pdf'
+    assert payload['url'] == 'http://testserver/static/reference_docs/solugtor-hair-color-with-rgb-reference-latest.pdf'
+    assert payload['static_url'] == 'http://testserver/static/reference_docs/solugtor-hair-color-with-rgb-reference-latest.pdf'
     assert payload['api_url'] == 'http://testserver/api/templates/hair-color-reference.pdf'
 
 
@@ -3075,7 +3080,7 @@ def test_templates_hair_color_reference_static_url_download(tmp_path, monkeypatc
     app = _build_app(tmp_path, monkeypatch)
     client = TestClient(app)
 
-    response = client.get('/static/reference_docs/solutor-hair-color-reference.pdf')
+    response = client.get('/static/reference_docs/solugtor-hair-color-with-rgb-reference-latest.pdf')
 
     assert response.status_code == 200
     assert response.headers['content-type'].startswith('application/pdf')
