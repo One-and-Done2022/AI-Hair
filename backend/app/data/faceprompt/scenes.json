@@ -132,7 +132,29 @@
           "手部必须符合真实解剖结构，十指分明，禁止手指融合"
         ]
       }
-    }
+    },
+    "sceneFamily": "modern_interior",
+    "themeTags": [
+      "modern"
+    ],
+    "settingTags": [
+      "indoor"
+    ],
+    "seasonTags": [
+      "all_season"
+    ],
+    "riskLevel": "low",
+    "shot": "3:4 竖构图，胸口以上近景，平视或轻微俯拍，允许少量门框前景遮挡",
+    "mood": "整体安静克制、抓拍感明显、真实皮肤、生活气息高级不过度摆拍",
+    "sceneConstraints": [
+      "背景元素保持精简且有呼吸感",
+      "窗光必须自然柔和",
+      "人物与木质环境基调保持统一"
+    ],
+    "performanceProfileIds": [
+      "modern-candid-pause",
+      "modern-lean-seat"
+    ]
   },
   {
     "id": "morning-window-softlight",
@@ -268,7 +290,30 @@
           "手部必须符合真实解剖结构，十指分明，禁止手指融合"
         ]
       }
-    }
+    },
+    "sceneFamily": "modern_window",
+    "themeTags": [
+      "modern"
+    ],
+    "settingTags": [
+      "window",
+      "indoor"
+    ],
+    "seasonTags": [
+      "all_season"
+    ],
+    "riskLevel": "low",
+    "shot": "3:4 竖构图，胸口以上近景，平视或略微偏侧，保留窗框线条",
+    "mood": "晨间安静、轻松呼吸感、真实肤色、柔和但不发灰",
+    "sceneConstraints": [
+      "窗边留白区域要足够干净",
+      "清晨光不应过黄",
+      "发丝边缘高光要柔和"
+    ],
+    "performanceProfileIds": [
+      "modern-still-front",
+      "modern-hold-cup"
+    ]
   },
   {
     "id": "walnut-study-portrait",
@@ -386,7 +431,30 @@
           "手部必须符合真实解剖结构，十指分明，禁止手指融合"
         ]
       }
-    }
+    },
+    "sceneFamily": "modern_study",
+    "themeTags": [
+      "modern"
+    ],
+    "settingTags": [
+      "study",
+      "indoor"
+    ],
+    "seasonTags": [
+      "all_season"
+    ],
+    "riskLevel": "low",
+    "shot": "3:4 竖构图，胸口以上近景，平视为主，背景书脊轻微虚化",
+    "mood": "沉静、克制、微电影感、带轻度胶片暖调",
+    "sceneConstraints": [
+      "木色不能发红过重",
+      "书房细节要清楚但不抢人脸",
+      "画面必须保留呼吸空间"
+    ],
+    "performanceProfileIds": [
+      "modern-study-pause",
+      "modern-still-front"
+    ]
   },
   {
     "id": "cafe-candid-seat",
@@ -521,7 +589,30 @@
           "手部必须符合真实解剖结构，十指分明，禁止手指融合"
         ]
       }
-    }
+    },
+    "sceneFamily": "modern_cafe",
+    "themeTags": [
+      "modern"
+    ],
+    "settingTags": [
+      "cafe",
+      "indoor"
+    ],
+    "seasonTags": [
+      "all_season"
+    ],
+    "riskLevel": "low",
+    "shot": "3:4 竖构图，胸口以上近景，桌面元素位于画面下沿，背景轻虚化",
+    "mood": "都市感、自然抓拍、轻松时髦但不过分表演",
+    "sceneConstraints": [
+      "混合光不能导致肤色脏灰",
+      "桌面道具只保留少量高质感物件",
+      "人物始终是画面核心"
+    ],
+    "performanceProfileIds": [
+      "modern-candid-pause",
+      "modern-hold-cup"
+    ]
   },
   {
     "id": "bathroom-mirror-morning",
@@ -639,7 +730,30 @@
           "手部必须符合真实解剖结构，十指分明，禁止手指融合"
         ]
       }
-    }
+    },
+    "sceneFamily": "modern_bathroom",
+    "themeTags": [
+      "modern"
+    ],
+    "settingTags": [
+      "bathroom",
+      "mirror",
+      "indoor"
+    ],
+    "seasonTags": [
+      "all_season"
+    ],
+    "riskLevel": "medium",
+    "shot": "3:4 竖构图，胸口以上近景，以镜中画面为主，保留少量台面反射",
+    "mood": "亲密、干净、略带刚起床的松弛感，真实皮肤与微湿空气并存",
+    "sceneConstraints": [
+      "镜面反射不能出现多重错位",
+      "灯光不要太硬",
+      "浴室道具数量必须克制"
+    ],
+    "performanceProfileIds": [
+      "modern-still-front"
+    ]
   },
   {
     "id": "hotel-room-loose",
@@ -758,7 +872,30 @@
           "手部必须符合真实解剖结构，十指分明，禁止手指融合"
         ]
       }
-    }
+    },
+    "sceneFamily": "modern_hotel",
+    "themeTags": [
+      "modern"
+    ],
+    "settingTags": [
+      "hotel",
+      "indoor"
+    ],
+    "seasonTags": [
+      "all_season"
+    ],
+    "riskLevel": "medium",
+    "shot": "3:4 竖构图，胸口以上近景，略微偏侧视角，保留床头和落地灯轮廓",
+    "mood": "慵懒、放松、略带微醺与旅行中的安静感",
+    "sceneConstraints": [
+      "酒店空间不做复杂摆件堆砌",
+      "暖光不能过黄",
+      "肤色与床品色温需协调"
+    ],
+    "performanceProfileIds": [
+      "modern-lean-seat",
+      "modern-candid-pause"
+    ]
   },
   {
     "id": "sunset-home-backlight",
@@ -877,7 +1014,30 @@
           "手部必须符合真实解剖结构，十指分明，禁止手指融合"
         ]
       }
-    }
+    },
+    "sceneFamily": "modern_home",
+    "themeTags": [
+      "modern"
+    ],
+    "settingTags": [
+      "indoor",
+      "window"
+    ],
+    "seasonTags": [
+      "all_season"
+    ],
+    "riskLevel": "medium",
+    "shot": "3:4 竖构图，胸口以上近景，可略微欠曝以保留暖色氛围",
+    "mood": "傍晚松弛、柔软、情绪化、略有记忆感",
+    "sceneConstraints": [
+      "逆光必须保留脸部细节",
+      "边缘光不应烧白",
+      "背景植物只作轮廓点缀"
+    ],
+    "performanceProfileIds": [
+      "modern-still-front",
+      "modern-turn-back"
+    ]
   },
   {
     "id": "hallway-quiet-frame",
@@ -995,7 +1155,29 @@
           "不要让手势破坏既有发型和脸部遮挡关系"
         ]
       }
-    }
+    },
+    "sceneFamily": "modern_corridor",
+    "themeTags": [
+      "modern"
+    ],
+    "settingTags": [
+      "corridor",
+      "indoor"
+    ],
+    "seasonTags": [
+      "all_season"
+    ],
+    "riskLevel": "medium",
+    "shot": "3:4 竖构图，胸口以上近景，用门框形成画面边界",
+    "mood": "安静、克制、轻微距离感，像偶然经过时的定格",
+    "sceneConstraints": [
+      "楼道空间要保持简洁",
+      "框景线条需端正",
+      "色彩控制在低饱和范围"
+    ],
+    "performanceProfileIds": [
+      "modern-still-front"
+    ]
   },
   {
     "id": "rainy-window-mood",
@@ -1113,7 +1295,32 @@
           "手部必须符合真实解剖结构，十指分明，禁止手指融合"
         ]
       }
-    }
+    },
+    "sceneFamily": "modern_window",
+    "themeTags": [
+      "modern",
+      "seasonal"
+    ],
+    "settingTags": [
+      "window",
+      "indoor",
+      "rain"
+    ],
+    "seasonTags": [
+      "all_season"
+    ],
+    "riskLevel": "medium",
+    "shot": "3:4 竖构图，胸口以上近景，保留少量玻璃反射和雨痕前景",
+    "mood": "安静、忧郁、克制，像被雨声包围的独处时刻",
+    "sceneConstraints": [
+      "冷调不能让肤色发青",
+      "雨痕只能作为前景点缀",
+      "背景必须保持极简"
+    ],
+    "performanceProfileIds": [
+      "modern-still-front",
+      "modern-turn-back"
+    ]
   },
   {
     "id": "studio-solid-backdrop",
@@ -1247,7 +1454,28 @@
           "手部必须符合真实解剖结构，十指分明，禁止手指融合"
         ]
       }
-    }
+    },
+    "sceneFamily": "modern_studio",
+    "themeTags": [
+      "modern"
+    ],
+    "settingTags": [
+      "studio"
+    ],
+    "seasonTags": [
+      "all_season"
+    ],
+    "riskLevel": "low",
+    "shot": "3:4 竖构图，胸口以上近景，平视或略低机位，背景纯净无杂物",
+    "mood": "高级、干净、时尚、强调造型和五官结构",
+    "sceneConstraints": [
+      "背景必须绝对干净",
+      "光线层次要利落",
+      "服装和发型不能互相抢主次"
+    ],
+    "performanceProfileIds": [
+      "modern-editorial-strong"
+    ]
   },
   {
     "id": "retro-cinema-box",
@@ -1365,7 +1593,29 @@
           "手部必须符合真实解剖结构，十指分明，禁止手指融合"
         ]
       }
-    }
+    },
+    "sceneFamily": "modern_stage",
+    "themeTags": [
+      "modern"
+    ],
+    "settingTags": [
+      "stage",
+      "indoor"
+    ],
+    "seasonTags": [
+      "all_season"
+    ],
+    "riskLevel": "medium",
+    "shot": "3:4 竖构图，胸口以上近景，机位略低，保留少量酒红背景",
+    "mood": "复古、戏剧化、电影感、带一点神秘与距离感",
+    "sceneConstraints": [
+      "暗调必须保留面部识别度",
+      "酒红与肤色不能冲突",
+      "背景亮点不宜过多"
+    ],
+    "performanceProfileIds": [
+      "modern-editorial-seat"
+    ]
   },
   {
     "id": "city-neon-night",
@@ -1499,7 +1749,29 @@
           "手部必须符合真实解剖结构，十指分明，禁止手指融合"
         ]
       }
-    }
+    },
+    "sceneFamily": "modern_city",
+    "themeTags": [
+      "modern"
+    ],
+    "settingTags": [
+      "night",
+      "city"
+    ],
+    "seasonTags": [
+      "all_season"
+    ],
+    "riskLevel": "high",
+    "shot": "3:4 竖构图，胸口以上近景，背景车灯和霓虹做散景",
+    "mood": "都市、时髦、轻微危险感，视觉重心集中在脸和发型轮廓",
+    "sceneConstraints": [
+      "霓虹色不能污染肤色",
+      "背景必须虚化到不喧宾夺主",
+      "主光优先保证五官清晰"
+    ],
+    "performanceProfileIds": [
+      "modern-editorial-strong"
+    ]
   },
   {
     "id": "gallery-white-cube",
@@ -1617,7 +1889,29 @@
           "手部必须符合真实解剖结构，十指分明，禁止手指融合"
         ]
       }
-    }
+    },
+    "sceneFamily": "modern_gallery",
+    "themeTags": [
+      "modern"
+    ],
+    "settingTags": [
+      "studio",
+      "indoor"
+    ],
+    "seasonTags": [
+      "all_season"
+    ],
+    "riskLevel": "medium",
+    "shot": "3:4 竖构图，胸口以上近景，几何线条保持垂直干净",
+    "mood": "极简、高级、理性、带展览空间的距离感",
+    "sceneConstraints": [
+      "白墙不能曝光过度",
+      "空间里最多只留一个艺术点缀",
+      "服装与背景需形成层次差"
+    ],
+    "performanceProfileIds": [
+      "modern-editorial-strong"
+    ]
   },
   {
     "id": "dramatic-side-light",
@@ -1735,7 +2029,28 @@
           "手部必须符合真实解剖结构，十指分明，禁止手指融合"
         ]
       }
-    }
+    },
+    "sceneFamily": "modern_studio",
+    "themeTags": [
+      "modern"
+    ],
+    "settingTags": [
+      "studio"
+    ],
+    "seasonTags": [
+      "all_season"
+    ],
+    "riskLevel": "medium",
+    "shot": "3:4 竖构图，胸口以上近景，半侧脸构图更突出侧光层次",
+    "mood": "戏剧化、紧绷、电影海报感，强调骨相和结构",
+    "sceneConstraints": [
+      "暗部不能死黑",
+      "光切线必须落在五官关键结构上",
+      "发型纹理要清晰可辨"
+    ],
+    "performanceProfileIds": [
+      "modern-editorial-strong"
+    ]
   },
   {
     "id": "rooftop-wind",
@@ -1853,7 +2168,29 @@
           "手部必须符合真实解剖结构，十指分明，禁止手指融合"
         ]
       }
-    }
+    },
+    "sceneFamily": "modern_rooftop",
+    "themeTags": [
+      "modern"
+    ],
+    "settingTags": [
+      "rooftop"
+    ],
+    "seasonTags": [
+      "all_season"
+    ],
+    "riskLevel": "high",
+    "shot": "3:4 竖构图，胸口以上近景，背景楼群轻虚化，突出空气流动感与人物轮廓",
+    "mood": "自由、锋利、都市大片感，服装动态与空气流动感是视觉重点",
+    "sceneConstraints": [
+      "风感必须自然不乱成一团",
+      "天空不过曝",
+      "人物轮廓要从背景中清楚分离"
+    ],
+    "performanceProfileIds": [
+      "modern-editorial-strong",
+      "modern-turn-back"
+    ]
   },
   {
     "id": "moody-bar-counter",
@@ -1971,7 +2308,29 @@
           "手部必须符合真实解剖结构，十指分明，禁止手指融合"
         ]
       }
-    }
+    },
+    "sceneFamily": "modern_bar",
+    "themeTags": [
+      "modern"
+    ],
+    "settingTags": [
+      "bar",
+      "indoor"
+    ],
+    "seasonTags": [
+      "all_season"
+    ],
+    "riskLevel": "high",
+    "shot": "3:4 竖构图，胸口以上近景，吧台位于下沿，背景酒瓶和灯点虚化",
+    "mood": "成熟、微醺、神秘、夜色浓郁",
+    "sceneConstraints": [
+      "暗部不能丢失五官",
+      "暖光要控制在高级金棕色范围",
+      "背景玻璃反射不能杂乱"
+    ],
+    "performanceProfileIds": [
+      "modern-editorial-seat"
+    ]
   },
   {
     "id": "backstage-vanity-mirror",
@@ -2089,11 +2448,34 @@
           "手部必须符合真实解剖结构，十指分明，禁止手指融合"
         ]
       }
-    }
+    },
+    "sceneFamily": "modern_backstage",
+    "themeTags": [
+      "modern"
+    ],
+    "settingTags": [
+      "mirror",
+      "stage",
+      "indoor"
+    ],
+    "seasonTags": [
+      "all_season"
+    ],
+    "riskLevel": "high",
+    "shot": "3:4 竖构图，胸口以上近景，保留镜灯和少量台面物件",
+    "mood": "准备上场前的专注、自持与高级张力",
+    "sceneConstraints": [
+      "镜灯不能过曝",
+      "桌面只放少量高质感化妆工具",
+      "镜面构图必须避免重复人脸"
+    ],
+    "performanceProfileIds": [
+      "modern-editorial-seat"
+    ]
   },
   {
-    "id": "scene-35aef68d",
-    "title": "绿植花园清透人像",
+    "id": "modern-garden-backlight",
+    "title": "绿植花园逆光人像",
     "styleLine": "realistic_editorial",
     "summary": "绿植花园、自然逆光与轻甜配色构成清新明快的户外人像场景。",
     "environment": "户外绿植，自然花园",
@@ -2200,11 +2582,31 @@
           "不要让手势破坏既有发型和脸部遮挡关系"
         ]
       }
-    }
+    },
+    "sceneFamily": "modern_garden",
+    "themeTags": [
+      "modern"
+    ],
+    "settingTags": [
+      "garden"
+    ],
+    "seasonTags": [
+      "spring",
+      "summer"
+    ],
+    "riskLevel": "low",
+    "shot": "3:4 竖构图，胸口以上近景，正面或轻微偏正面，背景做大面积柔化虚化",
+    "mood": "清新，明快",
+    "sceneConstraints": [
+      "背景虚化，光线明亮"
+    ],
+    "performanceProfileIds": [
+      "modern-outdoor-natural"
+    ]
   },
   {
-    "id": "scene-98033eb1",
-    "title": "暗调酒馆闪光人像",
+    "id": "modern-bar-flash",
+    "title": "暗调酒馆直闪人像",
     "styleLine": "fashion_editorial",
     "summary": "暗调餐吧、直闪强光与黑色针织造型构成冷感微醺的时尚人像场景。",
     "environment": "室内酒吧或餐厅，深色背景，木质墙板与桌面，桌上有玻璃酒具",
@@ -2310,11 +2712,31 @@
           "手部必须符合真实解剖结构，十指分明，禁止手指融合"
         ]
       }
-    }
+    },
+    "sceneFamily": "modern_bar",
+    "themeTags": [
+      "modern"
+    ],
+    "settingTags": [
+      "bar",
+      "indoor"
+    ],
+    "seasonTags": [
+      "all_season"
+    ],
+    "riskLevel": "high",
+    "shot": "3:4 竖构图，胸口以上近景，平视镜头，保留暗背景与桌面高脚杯轮廓",
+    "mood": "现代，优雅，微醺氛围",
+    "sceneConstraints": [
+      "背景保持暗调，不可杂乱，保留闪光灯强光阴影效果"
+    ],
+    "performanceProfileIds": [
+      "modern-editorial-seat"
+    ]
   },
   {
-    "id": "scene-41e220d6",
-    "title": "生活感人像",
+    "id": "modern-wheatfield-goldenhour",
+    "title": "麦田黄金时刻人像",
     "styleLine": "realistic_editorial",
     "summary": "金色的麦田，前景和背景有模糊的麦穗，纯净的蓝色天空背景，温暖的自然光，夕阳时分的黄金时刻光线，柔和的侧顺光，构成稳定可复用的场景化人像环境。",
     "environment": "金色的麦田，前景和背景有模糊的麦穗，纯净的蓝色天空背景",
@@ -2419,11 +2841,33 @@
           "不要让手势破坏既有发型和脸部遮挡关系"
         ]
       }
-    }
+    },
+    "sceneFamily": "modern_field",
+    "themeTags": [
+      "modern",
+      "seasonal"
+    ],
+    "settingTags": [
+      "field",
+      "outdoor"
+    ],
+    "seasonTags": [
+      "summer",
+      "autumn"
+    ],
+    "riskLevel": "low",
+    "shot": "中景，半身像，正面居中构图",
+    "mood": "宁静，清新，温柔，治愈，充满自然气息",
+    "sceneConstraints": [
+      "必须是户外自然场景，保持温暖的金色光影氛围，背景天空需保持干净无杂物"
+    ],
+    "performanceProfileIds": [
+      "modern-outdoor-natural"
+    ]
   },
   {
-    "id": "green-outdoor-b9edbc24",
-    "title": "绿意清新人像",
+    "id": "modern-greenery-bokeh",
+    "title": "绿意光斑清新人像",
     "styleLine": "realistic_editorial",
     "summary": "户外自然环境，背景为模糊的绿色树叶和圆形光斑，明亮的自然光，带有逆光效果，人物轮廓有柔和的高光，背景有明显的光斑，构成稳定可复用的场景化人像环境。",
     "environment": "户外自然环境，背景为模糊的绿色树叶和圆形光斑",
@@ -2528,11 +2972,33 @@
           "手部必须符合真实解剖结构，十指分明，禁止手指融合"
         ]
       }
-    }
+    },
+    "sceneFamily": "modern_garden",
+    "themeTags": [
+      "modern",
+      "seasonal"
+    ],
+    "settingTags": [
+      "garden",
+      "outdoor"
+    ],
+    "seasonTags": [
+      "spring",
+      "summer"
+    ],
+    "riskLevel": "medium",
+    "shot": "半身特写，人物居中，背景虚化",
+    "mood": "清新，自然，甜美，充满生机",
+    "sceneConstraints": [
+      "保持背景的绿色植物和光斑效果，突出人物与花朵的互动，保持逆光带来的柔和氛围"
+    ],
+    "performanceProfileIds": [
+      "modern-outdoor-natural"
+    ]
   },
   {
-    "id": "scene-473e9e49",
-    "title": "生活感人像",
+    "id": "modern-cherry-blossom-spring",
+    "title": "春日樱花回眸人像",
     "styleLine": "realistic_editorial",
     "summary": "户外春日场景，背景是盛开的白色樱花树，花朵密集，枝条交错，明亮的自然光，阳光透过树枝在人物肩背上形成斑驳的光斑，光线柔和，构成稳定可复用的场景化人像环境。",
     "environment": "户外春日场景，背景是盛开的白色樱花树，花朵密集，枝条交错",
@@ -2643,6 +3109,30 @@
           "手部必须符合真实解剖结构，十指分明，禁止手指融合"
         ]
       }
-    }
+    },
+    "sceneFamily": "modern_garden",
+    "themeTags": [
+      "modern",
+      "seasonal"
+    ],
+    "settingTags": [
+      "garden",
+      "outdoor"
+    ],
+    "seasonTags": [
+      "spring"
+    ],
+    "riskLevel": "medium",
+    "shot": "近景特写，侧身回眸，视线直视镜头",
+    "mood": "清新，唯美，浪漫，温柔的春日氛围",
+    "sceneConstraints": [
+      "背景需保持花海的密集感，必须保留打在皮肤上的树影光斑，确保回眸动作的自然流畅",
+      "脖颈线条与领口必须干净流畅，衣领和针织领口自然平顺，不要在脖子根部形成明显堆积褶皱、勒痕或厚重阴影",
+      "靠近镜头一侧的脖颈必须清晰露出，头发不要贴在脖子上，不要有零散发丝垂落或缠绕在脖颈和锁骨处",
+      "脖颈皮肤必须光滑干净，不允许出现任何明显颈纹、折线、褶皱、堆积阴影或被衣物挤压出的纹理"
+    ],
+    "performanceProfileIds": [
+      "modern-turn-back"
+    ]
   }
 ]

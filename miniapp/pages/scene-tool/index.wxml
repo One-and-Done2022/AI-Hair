@@ -2,7 +2,7 @@
   <view class="scene-tool-head">
     <view class="title scene-tool-title">场景草案工具</view>
     <view class="subtitle scene-tool-subtitle">
-      上传参考场景图，自动拆出 scene_only block，并生成可追加到 scenes.json 的 scene_draft。
+      上传参考场景图，自动拆出 identity-locked scene render 所需 block，当前继续输出兼容 scene_only 的 scene_draft。
     </view>
   </view>
 

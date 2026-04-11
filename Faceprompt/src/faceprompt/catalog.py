@@ -96,6 +96,7 @@ PROMPT_MODE_ALIASES = {
     "hair_only": "hair_only",
     "hairstyle_only": "hair_only",
     "scene_only": "scene_only",
+    "identity_locked_scene_render": "scene_only",
     "full_stylize": "full_stylize",
 }
 VALID_PROMPT_MODES = set(PROMPT_MODE_ALIASES)
@@ -652,6 +653,7 @@ def get_prompt_rule_table() -> dict[str, PromptRule]:
         "hair_only": hair_only_rule,
         "hairstyle_only": hair_only_rule,
         "scene_only": scene_only_rule,
+        "identity_locked_scene_render": scene_only_rule,
         "full_stylize": full_stylize_rule,
     }
 

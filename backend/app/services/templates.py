@@ -172,11 +172,17 @@ LEGACY_SCENE_ALIASES = {
     "cafe": "cafe-candid-seat",
     "studio": "studio-solid-backdrop",
     "city-night": "city-neon-night",
+    "scene-35aef68d": "modern-garden-backlight",
+    "scene-98033eb1": "modern-bar-flash",
+    "scene-41e220d6": "modern-wheatfield-goldenhour",
+    "green-outdoor-b9edbc24": "modern-greenery-bokeh",
+    "scene-473e9e49": "modern-cherry-blossom-spring",
 }
 PROMPT_MODE_ALIASES = {
     "hair_only": "hair_only",
     "hairstyle_only": "hair_only",
     "scene_only": "scene_only",
+    "identity_locked_scene_render": "scene_only",
     "full_stylize": "full_stylize",
 }
 VALID_PROMPT_MODES = set(PROMPT_MODE_ALIASES)
@@ -338,6 +344,18 @@ LOCKED_HAIR_TEXT_REPLACEMENTS = (
     ("强侧光最适合做结构型发型展示，尤其能放大发丝纹理", "强侧光最适合做结构型轮廓展示，尤其能强化面部与肩颈的立体感"),
     ("强调发型定型后的精致状态和明星感", "强调妆造完成后的精致状态和明星感"),
 )
+
+VALID_HAIR_POLICIES = {
+    "strict_lock",
+    "soft_lock",
+    "ornament_only",
+}
+
+JEWELRY_LEVEL_LABELS = {
+    "minimal": "首饰控制在极简范围内，不要喧宾夺主",
+    "controlled": "首饰只保留少量精致点缀，整体必须受控",
+    "statement": "首饰可以作为少量视觉点睛，但不能压过人物脸部和发型",
+}
 
 LIGHT_DIRECTION_LABELS = {
     "front": "正面定向入光",
@@ -969,6 +987,7 @@ def get_prompt_rule_table() -> dict[str, PromptRule]:
         "hair_only": hair_only_rule,
         "hairstyle_only": hair_only_rule,
         "scene_only": scene_only_rule,
+        "identity_locked_scene_render": scene_only_rule,
         "full_stylize": full_stylize_rule,
     }
 
@@ -1082,6 +1101,12 @@ def _styling_supports_scene(styling: dict, scene: dict | None) -> bool:
     if scene is None:
         return True
     scene_id = str(scene.get("id") or "").strip()
+    scene_family = str(scene.get("scene_family") or "").strip()
+    scene_theme_tags = {
+        str(item).strip()
+        for item in scene.get("theme_tags", [])
+        if str(item).strip()
+    }
     reference_source_ids = {
         str(item).strip()
         for item in scene.get("reference_source_ids", [])
@@ -1109,6 +1134,22 @@ def _styling_supports_scene(styling: dict, scene: dict | None) -> bool:
     ):
         return False
 
+    compatible_scene_families = {
+        str(item).strip()
+        for item in styling.get("compatible_scene_families", [])
+        if str(item).strip()
+    }
+    if compatible_scene_families and scene_family and scene_family not in compatible_scene_families:
+        return False
+
+    styling_theme_tags = {
+        str(item).strip()
+        for item in styling.get("theme_tags", [])
+        if str(item).strip()
+    }
+    if styling_theme_tags and scene_theme_tags and not (styling_theme_tags & scene_theme_tags):
+        return False
+
     lighting_tags = set(_scene_lighting_tags(scene))
     compatible_lighting_tags = {
         str(item).strip()
@@ -1116,6 +1157,42 @@ def _styling_supports_scene(styling: dict, scene: dict | None) -> bool:
         if str(item).strip()
     }
     if compatible_lighting_tags and lighting_tags and not (lighting_tags & compatible_lighting_tags):
+        return False
+    return True
+
+
+def _performance_supports_scene(profile: dict, scene: dict | None) -> bool:
+    if scene is None:
+        return True
+
+    scene_style_line = str(scene.get("style_line") or "").strip()
+    scene_family = str(scene.get("scene_family") or "").strip()
+    scene_theme_tags = {
+        str(item).strip()
+        for item in scene.get("theme_tags", [])
+        if str(item).strip()
+    }
+    profile_style_lines = {
+        str(item).strip()
+        for item in profile.get("style_lines", [])
+        if str(item).strip()
+    }
+    profile_scene_families = {
+        str(item).strip()
+        for item in profile.get("compatible_scene_families", [])
+        if str(item).strip()
+    }
+    profile_theme_tags = {
+        str(item).strip()
+        for item in profile.get("theme_tags", [])
+        if str(item).strip()
+    }
+
+    if profile_style_lines and scene_style_line and scene_style_line not in profile_style_lines:
+        return False
+    if profile_scene_families and scene_family and scene_family not in profile_scene_families:
+        return False
+    if profile_theme_tags and scene_theme_tags and not (profile_theme_tags & scene_theme_tags):
         return False
     return True
 
@@ -1219,6 +1296,69 @@ def _resolve_styling(
     return _default_styling(style_line, preferred_gender, seed_source, scene)
 
 
+def _resolve_performance_profile(
+    *,
+    scene: dict,
+    seed_source: str,
+    scene_rule: dict | None = None,
+    performance_profile: dict | None = None,
+) -> dict | None:
+    if performance_profile is not None and _performance_supports_scene(performance_profile, scene):
+        return performance_profile
+
+    forbidden_ids = {
+        str(item).strip()
+        for item in (scene_rule or {}).get("forbidden_performance_ids", [])
+        if str(item).strip()
+    }
+    explicit_ids = _dedupe_keep_order(
+        [
+            *[str(item).strip() for item in (scene_rule or {}).get("default_performance_ids", [])],
+            *[str(item).strip() for item in (scene_rule or {}).get("recommended_performance_ids", [])],
+            *[str(item).strip() for item in scene.get("performance_profile_ids", [])],
+        ]
+    )
+
+    for profile_id in explicit_ids:
+        if not profile_id or profile_id in forbidden_ids:
+            continue
+        selected = get_performance_profile(profile_id)
+        if selected is not None and _performance_supports_scene(selected, scene):
+            return selected
+
+    candidates = [
+        item
+        for item in PERFORMANCE_PROFILES
+        if item["id"] not in forbidden_ids and _performance_supports_scene(item, scene)
+    ]
+    if not candidates:
+        return None
+
+    recommended_ids = {
+        *[
+            str(item).strip()
+            for item in (scene_rule or {}).get("recommended_performance_ids", [])
+            if str(item).strip()
+        ],
+        *[
+            str(item).strip()
+            for item in scene.get("performance_profile_ids", [])
+            if str(item).strip()
+        ],
+    }
+    if recommended_ids:
+        preferred = [item for item in candidates if item["id"] in recommended_ids]
+        if preferred:
+            candidates = preferred
+
+    selected_id = _select_one(
+        [item["id"] for item in candidates],
+        seed_source=seed_source,
+        label=f"performance:{scene['id']}",
+    )
+    return get_performance_profile(selected_id)
+
+
 def _resolve_scene_lighting_text(scene: dict, scene_rule: dict | None = None) -> str:
     profile = scene.get("lighting_profile") or {}
     if not profile or not any(str(value).strip() for value in profile.values()):
@@ -1269,6 +1409,125 @@ def _resolve_scene_outfit_guidance(scene: dict) -> str:
     if avoids:
         segments.append(f"避免{_format_option_list(avoids)}")
     return "，".join(segments)
+
+
+def _normalize_hair_policy(policy: str | None) -> str:
+    cleaned = str(policy or "").strip()
+    return cleaned if cleaned in VALID_HAIR_POLICIES else ""
+
+
+def _resolve_hair_policy(*, scene: dict, styling: dict | None, scene_rule: dict | None) -> str:
+    for candidate in (
+        (scene_rule or {}).get("hair_policy_override"),
+        (styling or {}).get("hair_policy"),
+        ((scene.get("control_profile") or {}).get("hair_policy") if scene else ""),
+    ):
+        normalized = _normalize_hair_policy(candidate)
+        if normalized:
+            return normalized
+
+    scene_theme_tags = {
+        str(item).strip()
+        for item in scene.get("theme_tags", [])
+        if str(item).strip()
+    }
+    if {"guofeng", "modern_chinese"} & scene_theme_tags:
+        return "ornament_only"
+    return "strict_lock"
+
+
+def _build_structured_makeup_text(styling: dict, makeup_override: str | None = None) -> str:
+    segments: list[str] = []
+    override = _normalize_sentence(makeup_override or "")
+    if override:
+        segments.append(override)
+
+    base_makeup = _safe_value(styling.get("base_makeup"))
+    eye_makeup = _safe_value(styling.get("eye_makeup"))
+    lip_color = _safe_value(styling.get("lip_color"))
+    skin_finish = _safe_value(styling.get("skin_finish"))
+    if base_makeup:
+        segments.append(base_makeup)
+    if eye_makeup:
+        segments.append(eye_makeup)
+    if lip_color:
+        segments.append(f"唇部控制为{lip_color}")
+    if skin_finish:
+        segments.append(f"肤面质感为{skin_finish}")
+
+    if len(segments) == 1 and override:
+        fallback = _normalize_sentence(styling.get("makeup_prompt", ""))
+        if fallback:
+            segments.append(fallback)
+    elif not segments:
+        fallback = _normalize_sentence(styling.get("makeup_prompt", ""))
+        if fallback:
+            segments.append(fallback)
+    return "；".join(_dedupe_keep_order(segments))
+
+
+def _build_structured_outfit_text(
+    *,
+    scene: dict,
+    styling: dict,
+    outfit_override: str | None = None,
+) -> str:
+    segments: list[str] = []
+    override = _normalize_sentence(outfit_override or "")
+    if override:
+        segments.append(override)
+
+    structured_segments: list[str] = []
+    outfit_core = _safe_value(styling.get("outfit_core"))
+    outfit_material = _safe_value(styling.get("outfit_material"))
+    outfit_palette = _dedupe_keep_order(
+        [
+            str(item).strip()
+            for item in styling.get("outfit_palette_structured", [])
+            if str(item).strip()
+        ]
+    )
+    if outfit_core:
+        structured_segments.append(outfit_core)
+    if outfit_material:
+        structured_segments.append(f"材质以{outfit_material}为主")
+    if outfit_palette:
+        structured_segments.append(f"颜色优先{_format_option_list(outfit_palette)}")
+    if structured_segments:
+        segments.append("；".join(structured_segments))
+    else:
+        fallback = _normalize_sentence(styling.get("outfit_prompt", ""))
+        if fallback:
+            segments.append(fallback)
+
+    scene_guidance = _normalize_sentence(_resolve_scene_outfit_guidance(scene))
+    if scene_guidance:
+        segments.append(scene_guidance)
+    return "；".join(_dedupe_keep_order(segments))
+
+
+def _build_structured_accessory_text(styling: dict) -> str:
+    segments: list[str] = []
+    hair_ornament = _safe_value(styling.get("hair_ornament"))
+    if hair_ornament:
+        segments.append(f"发饰为{hair_ornament}")
+
+    accessories = _dedupe_keep_order(
+        [
+            str(item).strip()
+            for item in styling.get("accessories", [])
+            if str(item).strip()
+        ]
+    )
+    if accessories:
+        segments.append(f"配饰使用{_format_option_list(accessories)}")
+
+    jewelry_level = str(styling.get("jewelry_level") or "").strip()
+    jewelry_text = JEWELRY_LEVEL_LABELS.get(jewelry_level, "")
+    if jewelry_text and (jewelry_level != "minimal" or accessories or hair_ornament):
+        segments.append(jewelry_text)
+
+    return "；".join(_dedupe_keep_order(segments))
 
 
 def _resolve_styling_constraints_text(
@@ -1358,39 +1617,41 @@ def _build_styling_prompt_values(
     makeup_override: str | None = None,
     outfit_override: str | None = None,
 ) -> dict[str, str]:
-    makeup_text = _normalize_sentence(makeup_override or styling.get("makeup_prompt", ""))
-    structured_outfit_text = _resolve_scene_outfit_guidance(scene)
-    outfit_segments = _dedupe_keep_order(
-        [
-            _normalize_sentence(outfit_override or ""),
-            _normalize_sentence(styling.get("outfit_prompt", "")),
-            _normalize_sentence(structured_outfit_text),
-        ]
+    makeup_text = _build_structured_makeup_text(styling, makeup_override)
+    outfit_text = _build_structured_outfit_text(
+        scene=scene,
+        styling=styling,
+        outfit_override=outfit_override,
     )
-    outfit_text = "；".join(segment for segment in outfit_segments if segment)
     styling_constraints = _resolve_styling_constraints_text(
         scene=scene,
         styling=styling,
         scene_rule=scene_rule,
         preferred_gender=preferred_gender,
     )
+    accessory_text = _build_structured_accessory_text(styling)
     return {
         "makeup_text": makeup_text,
         "outfit_text": outfit_text,
+        "accessory_text": accessory_text,
         "styling_constraints": styling_constraints,
     }
 
 
 def _select_prompt_details(
-    hairstyle: dict, scene: dict, *, seed_source: str
+    hairstyle: dict,
+    scene: dict,
+    *,
+    seed_source: str,
+    performance_profile: dict | None = None,
 ) -> dict[str, str]:
     selected_expression = _select_one(
-        scene.get("expressions", []),
+        performance_profile.get("expression_options", []) if performance_profile else scene.get("expressions", []),
         seed_source=seed_source,
         label=f"{scene['id']}:expression",
     )
     selected_scene_action = _select_one(
-        scene.get("actions", []),
+        performance_profile.get("action_options", []) if performance_profile else scene.get("actions", []),
         seed_source=seed_source,
         label=f"{scene['id']}:subject-action",
     )
@@ -1430,6 +1691,7 @@ def _build_scene_template(raw: dict) -> dict:
     style_line = raw["styleLine"]
     lighting_profile_raw = raw.get("lightingProfile") or {}
     sample_image_ids_raw = raw.get("sampleImageIds") or {}
+    control_profile_raw = raw.get("controlProfile") or {}
     return {
         "id": raw["id"],
         "name": raw["title"],
@@ -1438,7 +1700,13 @@ def _build_scene_template(raw: dict) -> dict:
         "gender_label": GENDER_LABELS["unisex"],
         "style_line": style_line,
         "style_line_label": STYLE_LINE_LABELS.get(style_line, style_line),
+        "scene_family": raw.get("sceneFamily", ""),
+        "theme_tags": raw.get("themeTags", []),
+        "setting_tags": raw.get("settingTags", []),
+        "season_tags": raw.get("seasonTags", []),
+        "risk_level": raw.get("riskLevel", ""),
         "tags": raw.get("detailTags", []),
+        "shot": raw.get("shot") or raw.get("shotAdvice") or "",
         "environment": raw["environment"],
         "lighting": raw["lighting"],
         "lighting_profile": {
@@ -1452,7 +1720,17 @@ def _build_scene_template(raw: dict) -> dict:
             "exposure_bias": str(lighting_profile_raw.get("exposureBias") or "").strip(),
             "practical_lights_allowed": bool(lighting_profile_raw.get("practicalLightsAllowed")),
         },
+        "control_profile": {
+            "wind_level": str(control_profile_raw.get("windLevel") or "").strip(),
+            "humidity_look": str(control_profile_raw.get("humidityLook") or "").strip(),
+            "background_complexity": str(control_profile_raw.get("backgroundComplexity") or "").strip(),
+            "lighting_hardness": str(control_profile_raw.get("lightingHardness") or "").strip(),
+            "mirror_risk": str(control_profile_raw.get("mirrorRisk") or "").strip(),
+            "compatible_hairstyle_tags": _dedupe_keep_order(control_profile_raw.get("compatibleHairstyleTags", [])),
+            "recommended_hairstyle_ids": _dedupe_keep_order(control_profile_raw.get("recommendedHairstyleIds", [])),
+        },
         "style_mood": raw["styleMood"],
+        "mood": raw.get("mood") or raw.get("styleMood") or "",
         "expressions": raw.get("expressions", []),
         "actions": raw.get("actions", []),
         "outfit_hints": raw.get("outfitHints", []),
@@ -1461,13 +1739,16 @@ def _build_scene_template(raw: dict) -> dict:
         "outfit_shapes": raw.get("outfitShapes", []),
         "outfit_avoids": raw.get("outfitAvoids", []),
         "constraints": raw.get("constraints", []),
+        "scene_constraints": raw.get("sceneConstraints") or raw.get("constraints", []),
         "pairing_advice": raw.get("pairingAdvice", []),
-        "shot_advice": raw["shotAdvice"],
+        "shot_advice": raw.get("shotAdvice") or raw.get("shot") or "",
+        "performance_profile_ids": raw.get("performanceProfileIds", []),
         "sample_image_ids": {
             "female": _dedupe_keep_order(sample_image_ids_raw.get("female", [])),
             "male": _dedupe_keep_order(sample_image_ids_raw.get("male", [])),
         },
         "preset_blocks": raw.get("presetBlocks") or {},
+        "reference_notes": raw.get("referenceNotes", ""),
         "reference_source_ids": _dedupe_keep_order(raw.get("referenceSourceIds", [])),
         "cover_image_path": raw.get("coverImagePath", ""),
         "cover_image_updated_at": raw.get("coverImageUpdatedAt", ""),
@@ -1535,6 +1816,10 @@ def _build_styling_template(raw: dict) -> dict:
         "style_line": style_line,
         "style_line_label": STYLE_LINE_LABELS.get(style_line, style_line),
         "tags": raw.get("detailTags", []),
+        "theme_tags": raw.get("themeTags", []),
+        "tone_tags": raw.get("toneTags", []),
+        "profile_id": raw.get("profileId", ""),
+        "profile_label": raw.get("profileLabel", ""),
         "makeup_prompt": raw["makeupPrompt"],
         "outfit_prompt": raw["outfitPrompt"],
         "preset_blocks": raw.get("presetBlocks") or {},
@@ -1545,8 +1830,21 @@ def _build_styling_template(raw: dict) -> dict:
         "outfit_structure": raw.get("outfitStructure", ""),
         "palette_tags": raw.get("paletteTags", []),
         "compatible_scene_ids": raw.get("compatibleSceneIds", []),
+        "compatible_scene_families": raw.get("supportedSceneFamilies", []),
         "incompatible_scene_ids": raw.get("incompatibleSceneIds", []),
         "compatible_lighting_tags": raw.get("compatibleLightingTags", []),
+        "base_makeup": raw.get("baseMakeup", ""),
+        "lip_color": raw.get("lipColor", ""),
+        "eye_makeup": raw.get("eyeMakeup", ""),
+        "skin_finish": raw.get("skinFinish", ""),
+        "hair_policy": raw.get("hairPolicy", "strict_lock"),
+        "hair_ornament": raw.get("hairOrnament", ""),
+        "outfit_core": raw.get("outfitCore", ""),
+        "outfit_material": raw.get("outfitMaterial", ""),
+        "outfit_palette_structured": raw.get("outfitPaletteStructured", []),
+        "jewelry_level": raw.get("jewelryLevel", ""),
+        "accessories": raw.get("accessories", []),
+        "styling_constraints_structured": raw.get("stylingConstraints", []),
         "palette": _pick_palette("scene", gender, style_line),
     }
 
@@ -1557,6 +1855,7 @@ def _build_scene_styling_rule(raw: dict) -> dict:
         "scene_family": raw.get("sceneFamily", ""),
         "default_styling_id": raw.get("defaultStylingId", ""),
         "default_styling_ids": raw.get("defaultStylingIds", []),
+        "recommended_styling_ids": raw.get("recommendedStylingIds", []),
         "fallback_styling_ids": raw.get("fallbackStylingIds", []),
         "forbidden_styling_ids": raw.get("forbiddenStylingIds", []),
         "gender_styling_ids": raw.get("genderStylingIds", {}),
@@ -1570,6 +1869,28 @@ def _build_scene_styling_rule(raw: dict) -> dict:
         "required_outfit_tags": raw.get("requiredOutfitTags", []),
         "forbidden_outfit_tags": raw.get("forbiddenOutfitTags", []),
         "recommended_hairstyle_category_keys": raw.get("recommendedHairstyleCategoryKeys", {}),
+        "default_performance_ids": raw.get("defaultPerformanceIds", []),
+        "recommended_performance_ids": raw.get("recommendedPerformanceIds", []),
+        "forbidden_performance_ids": raw.get("forbiddenPerformanceIds", []),
+        "hair_policy_override": raw.get("hairPolicyOverride", ""),
+        "theme_compatibility": raw.get("themeCompatibility", []),
+        "setting_compatibility": raw.get("settingCompatibility", []),
+    }
+
+
+def _build_performance_profile_template(raw: dict) -> dict:
+    return {
+        "id": raw["id"],
+        "name": raw.get("title") or raw["id"],
+        "description": raw.get("summary") or "",
+        "theme_tags": raw.get("themeTags", []),
+        "style_lines": raw.get("styleLines", []),
+        "compatible_scene_families": raw.get("compatibleSceneFamilies", []),
+        "expression_options": raw.get("expressionOptions", []),
+        "action_options": raw.get("actionOptions", []),
+        "gesture_constraints": raw.get("gestureConstraints", []),
+        "body_pose_hints": raw.get("bodyPoseHints", []),
+        "hand_prop_policy": raw.get("handPropPolicy", ""),
     }
 
 
@@ -1716,6 +2037,9 @@ def _catalog() -> dict[str, list[dict]]:
     scene_styling_rules = [
         _build_scene_styling_rule(item) for item in _load_json("scene_styling_rules.json")
     ]
+    performance_profiles = [
+        _build_performance_profile_template(item) for item in _load_json("performance_profiles.json")
+    ]
     return {
         "scenes": scenes,
         "hairstyles": [*male_catalog["legacy_hairstyles"], *female_hairstyles],
@@ -1725,6 +2049,7 @@ def _catalog() -> dict[str, list[dict]]:
         "male_hairstyle_presets": male_catalog["presets"],
         "stylings": stylings,
         "scene_styling_rules": scene_styling_rules,
+        "performance_profiles": performance_profiles,
     }
 
 
@@ -1736,6 +2061,7 @@ MALE_HAIRSTYLE_TECHNIQUES = _catalog()["male_hairstyle_techniques"]
 MALE_HAIRSTYLE_PRESETS = _catalog()["male_hairstyle_presets"]
 STYLINGS = _catalog()["stylings"]
 SCENE_STYLING_RULES = _catalog()["scene_styling_rules"]
+PERFORMANCE_PROFILES = _catalog()["performance_profiles"]
 
 
 def _find_template(items: Iterable[dict], template_id: str) -> dict | None:
@@ -1789,7 +2115,12 @@ def get_styling(template_id: str) -> dict | None:
 
 
 def get_scene_styling_rule(scene_id: str) -> dict | None:
-    return _find_template(SCENE_STYLING_RULES, scene_id)
+    resolved_id = _resolve_alias("scene", scene_id)
+    return _find_template(SCENE_STYLING_RULES, resolved_id)
+
+
+def get_performance_profile(profile_id: str) -> dict | None:
+    return _find_template(PERFORMANCE_PROFILES, profile_id)
 
 
 def _normalize_rule_value_to_list(raw: object) -> list[str]:
@@ -1847,6 +2178,7 @@ def _scene_rule_styling_candidates(
         [
             str(scene_rule.get("default_styling_id") or "").strip(),
             *[str(item).strip() for item in scene_rule.get("default_styling_ids", [])],
+            *[str(item).strip() for item in scene_rule.get("recommended_styling_ids", [])],
             *[str(item).strip() for item in scene_rule.get("fallback_styling_ids", [])],
         ]
     )
@@ -1871,6 +2203,16 @@ def _scene_rule_styling_candidates(
         filtered = [item for item in candidates if item["id"] in allowed_ids]
         if filtered:
             candidates = filtered
+
+    recommended_ids = {
+        str(item).strip()
+        for item in scene_rule.get("recommended_styling_ids", [])
+        if str(item).strip()
+    }
+    if recommended_ids:
+        preferred = [item for item in candidates if item["id"] in recommended_ids]
+        if preferred:
+            candidates = preferred
 
     if not candidates:
         return None
@@ -2095,7 +2437,7 @@ def _build_scene_text(scene: dict, scene_rule: dict | None = None) -> str:
     )
     constraint_items = [
         _sanitize_scene_text_for_locked_hair(str(item))
-        for item in (block.get("scene_constraints") or scene.get("constraints") or [])
+        for item in (block.get("scene_constraints") or scene.get("scene_constraints") or scene.get("constraints") or [])
     ]
     segments = []
     if shot:
@@ -2130,10 +2472,22 @@ def _build_styling_text(
         makeup_override=makeup_override,
         outfit_override=outfit_override,
     )
-    accessories = _format_items(styling_block.get("accessories") or [])
-    constraints = _format_items(styling_block.get("styling_constraints") or [])
-    if not constraints:
-        constraints = _normalize_sentence(styling_values["styling_constraints"])
+    accessories = "；".join(
+        _dedupe_keep_order(
+            [
+                _format_items(styling_block.get("accessories") or []),
+                _normalize_sentence(styling_values["accessory_text"]),
+            ]
+        )
+    )
+    constraints = "；".join(
+        _dedupe_keep_order(
+            [
+                _format_items(styling_block.get("styling_constraints") or []),
+                _normalize_sentence(styling_values["styling_constraints"]),
+            ]
+        )
+    )
     segments = []
     if styling_values["makeup_text"]:
         segments.append(f"妆容：{styling_values['makeup_text']}")
@@ -2150,13 +2504,25 @@ def _build_subject_performance_text(
     scene: dict,
     *,
     seed_source: str,
+    performance_profile: dict | None = None,
     expression_override: str | None = None,
     subject_action_override: str | None = None,
+    hairstyle_action: str | None = None,
     allow_hair_touching_actions: bool = False,
 ) -> str:
     block = _preset_block(scene, "subject_performance")
-    expressions = block.get("expression_options") or scene.get("expressions") or []
-    actions = block.get("subject_action_options") or scene.get("actions") or []
+    expressions = (
+        (performance_profile.get("expression_options") if performance_profile else None)
+        or block.get("expression_options")
+        or scene.get("expressions")
+        or []
+    )
+    actions = (
+        (performance_profile.get("action_options") if performance_profile else None)
+        or block.get("subject_action_options")
+        or scene.get("actions")
+        or []
+    )
     normalized_subject_action_override = (
         subject_action_override
         if allow_hair_touching_actions
@@ -2175,27 +2541,57 @@ def _build_subject_performance_text(
         label=f"{scene['id']}:subject-action",
     )
     gesture_constraints = _format_items(
-        block.get("gesture_constraints")
-        or [
-            "后端每次只选 1 个主体动作，不再把多个动作选项同时写进同一条提示词",
-            "单张图中只保留一种主体动作，不要把多个互斥手部动作同时放进同一画面",
-        ]
-    )
-    return (
-        "人物表现系统："
-        f"人物表情固定为{expression or '自然看向镜头'}。"
-        f"人物动作固定为{action or '自然站立或静止停顿'}。"
-        f"手势约束：{gesture_constraints}。"
-    )
-
-
-def _build_hair_shape_lock_text(hairstyle: dict | None) -> str:
-    if hairstyle is None:
-        return (
-            "发型锁定：保持参考图中已经生成完成的当前主发型结构不变；"
-            "同时保持参考图中静态打理完成的当前主发型结构不变，"
-            "不要改变发长、外轮廓、卷度、顶部体积、分线、鬓角与后颈区。"
+        _dedupe_keep_order(
+            [
+                *list((performance_profile.get("gesture_constraints") if performance_profile else None) or []),
+                *list(block.get("gesture_constraints") or []),
+                "后端每次只选 1 个主体动作，不再把多个动作选项同时写进同一条提示词",
+                "单张图中只保留一种主体动作，不要把多个互斥手部动作同时放进同一画面",
+            ]
         )
+    )
+    body_pose_hints = _format_items(
+        (performance_profile.get("body_pose_hints") if performance_profile else None)
+        or block.get("body_pose_hints")
+        or []
+    )
+    hand_prop_policy = _safe_value(
+        (performance_profile.get("hand_prop_policy") if performance_profile else None)
+        or block.get("hand_prop_policy")
+    )
+
+    segments = [
+        f"人物表情固定为{expression or '自然看向镜头'}",
+        f"人物动作固定为{action or '自然站立或静止停顿'}",
+    ]
+    if hairstyle_action:
+        segments.append(
+            f"发型展示参考动作为{hairstyle_action}，发型展示动作不要与主体动作叠加成不合理肢体效果"
+        )
+    if gesture_constraints:
+        segments.append(f"手势约束：{gesture_constraints}")
+    if body_pose_hints:
+        segments.append(f"体态约束：{body_pose_hints}")
+    if hand_prop_policy:
+        segments.append(f"道具规则：{hand_prop_policy}")
+    return "人物表现系统：" + "。".join(segments) + "。"
+
+
+def _build_hair_shape_lock_text(hairstyle: dict | None, hair_policy: str = "strict_lock") -> str:
+    resolved_hair_policy = _normalize_hair_policy(hair_policy) or "strict_lock"
+    if hairstyle is None:
+        segments = [
+            "保持参考图中已经生成完成的当前主发型结构不变",
+            "同时保持参考图中静态打理完成的当前主发型结构不变",
+            "不要改变发长、外轮廓、卷度、顶部体积、分线、鬓角与后颈区",
+        ]
+        if resolved_hair_policy == "soft_lock":
+            segments.append("只允许做极轻微表层顺发与体积微调，但不得改成新的主发型")
+        elif resolved_hair_policy == "ornament_only":
+            segments.append("仅允许增加或替换非结构性发饰，不允许改动主发型结构和分区")
+        else:
+            segments.append("不允许因场景、动作或妆造需要改写主发型种类、层次和分区")
+        return f"发型锁定：{'；'.join(segments)}。"
     block = _preset_block(hairstyle, "hair_shape")
     segments: list[str] = [
         "保持参考图中已经生成完成的当前主发型结构不变",
@@ -2213,15 +2609,27 @@ def _build_hair_shape_lock_text(hairstyle: dict | None) -> str:
         value = _safe_value(block.get(field))
         if value:
             segments.append(f"{label}保持为{value}")
+    if resolved_hair_policy == "soft_lock":
+        segments.append("允许基于同一发型做极轻微表层顺发、边缘服帖和体积微调，但不能改成另一种发型")
+    elif resolved_hair_policy == "ornament_only":
+        segments.append("仅允许增加或替换非结构性发饰，不允许修改主发型种类、层次、卷度和分区")
+    else:
+        segments.append("不允许因场景、动作或妆造需要改写主发型种类、层次和分区")
     return f"发型锁定：{'；'.join(segments)}。"
 
 
-def _build_bangs_lock_text(hairstyle: dict | None) -> str:
+def _build_bangs_lock_text(hairstyle: dict | None, hair_policy: str = "strict_lock") -> str:
+    resolved_hair_policy = _normalize_hair_policy(hair_policy) or "strict_lock"
     if hairstyle is None:
-        return (
-            "刘海锁定：保持参考图中静态完成的当前刘海状态不变；"
-            "如果当前为无刘海，额前不要新增刘海或大片落额发。"
-        )
+        segments = [
+            "保持参考图中静态完成的当前刘海状态不变",
+            "如果当前为无刘海，额前不要新增刘海或大片落额发",
+        ]
+        if resolved_hair_policy == "ornament_only":
+            segments.append("发饰或头饰不得牵连刘海分区和脸侧修饰位置")
+        elif resolved_hair_policy == "soft_lock":
+            segments.append("只允许刘海做极轻微顺发与贴合微调，不得改写刘海结构")
+        return f"刘海锁定：{'；'.join(segments)}。"
     block = _preset_block(hairstyle, "bangs")
     values = {
         "bangs_type": _safe_value(block.get("bangs_type")),
@@ -2232,7 +2640,13 @@ def _build_bangs_lock_text(hairstyle: dict | None) -> str:
     }
     is_no_bangs = not any(value and value != "不适用" for value in values.values())
     if is_no_bangs:
-        return "刘海锁定：保持参考图中静态完成的当前无刘海状态不变；额前不要生成新的刘海或大片落额发。"
+        segments = [
+            "保持参考图中静态完成的当前无刘海状态不变",
+            "额前不要生成新的刘海或大片落额发",
+        ]
+        if resolved_hair_policy == "ornament_only":
+            segments.append("发饰或头饰不得在额前制造新的刘海遮挡感")
+        return f"刘海锁定：{'；'.join(segments)}。"
     segments: list[str] = ["保持参考图中静态完成的当前刘海系统不变"]
     mapping = (
         ("bangs_type", "刘海类型"),
@@ -2246,15 +2660,33 @@ def _build_bangs_lock_text(hairstyle: dict | None) -> str:
         if value and value != "不适用":
             segments.append(f"{label}保持为{value}")
     segments.append("不要新增第二套刘海分区或额前大面积垂落")
+    if resolved_hair_policy == "soft_lock":
+        segments.append("只允许极轻微顺发与贴合微调，不得改变厚薄、长度和开合方式")
+    elif resolved_hair_policy == "ornament_only":
+        segments.append("发饰或头饰不得牵连刘海分区、脸侧修饰和额前遮挡比例")
     return f"刘海锁定：{'；'.join(segments)}。"
 
 
-def _build_hair_motion_constraint_text(hairstyle: dict | None) -> str:
-    segments = [
-        "如当前场景存在风力或空气流动，只允许少量边缘碎发与极少数表层发丝轻微摆动，用于体现环境气流",
-        "禁止风力、动作或镜头变化改变主发型结构",
-        "禁止把当前发型吹散、吹塌或改写成另一种结构性新发型",
-    ]
+def _build_hair_motion_constraint_text(hairstyle: dict | None, hair_policy: str = "strict_lock") -> str:
+    resolved_hair_policy = _normalize_hair_policy(hair_policy) or "strict_lock"
+    if resolved_hair_policy == "soft_lock":
+        segments = [
+            "如当前场景存在风力或空气流动，只允许表层发丝和边缘碎发产生轻微顺势位移，用于贴合环境",
+            "允许极小范围的表层顺发与服帖变化，但不能改动主发型种类、分区和整体轮廓",
+            "禁止把当前发型吹散、吹塌或改写成另一种结构性新发型",
+        ]
+    elif resolved_hair_policy == "ornament_only":
+        segments = [
+            "如需加入发饰或头饰，只能放在不改写主发型结构的稳定位置",
+            "如当前场景存在风力或空气流动，只允许极少量边缘碎发与极少数表层发丝轻微摆动",
+            "禁止风力、动作、发饰或镜头变化改变主发型结构、分区和轮廓",
+        ]
+    else:
+        segments = [
+            "如当前场景存在风力或空气流动，只允许少量边缘碎发与极少数表层发丝轻微摆动，用于体现环境气流",
+            "禁止风力、动作或镜头变化改变主发型结构",
+            "禁止把当前发型吹散、吹塌或改写成另一种结构性新发型",
+        ]
     bangs_block = _preset_block(hairstyle, "bangs") if hairstyle is not None else {}
     bangs_type = _safe_value(bangs_block.get("bangs_type"))
     has_structured_bangs = bool(bangs_type and bangs_type != "不适用")
@@ -2323,21 +2755,15 @@ def build_prompt_assembly(
             styling=styling,
             scene_rule=scene_rule,
         )
-        selected_expression = expression_override or _select_one(
-            scene.get("expressions", []),
+        selected_performance = _resolve_performance_profile(
+            scene=scene,
             seed_source=selection_seed,
-            label=f"{scene['id']}:scene-only-expression",
+            scene_rule=scene_rule,
         )
-        normalized_subject_action_override = _normalize_locked_hair_action_override(subject_action_override)
-        available_actions = (
-            _filter_scene_actions_for_locked_hairstyle(scene.get("actions", []))
-            if not normalized_subject_action_override
-            else _dedupe_keep_order(scene.get("actions", []))
-        )
-        selected_subject_action = normalized_subject_action_override or _select_one(
-            available_actions or GENERIC_SCENE_ACTIONS,
-            seed_source=selection_seed,
-            label=f"{scene['id']}:scene-only-subject-action",
+        hair_policy = _resolve_hair_policy(
+            scene=scene,
+            styling=selected_styling,
+            scene_rule=scene_rule,
         )
         makeup_override_text = _resolve_rule_text(
             scene_rule.get("makeup_override") if scene_rule else None,
@@ -2350,24 +2776,16 @@ def build_prompt_assembly(
                 preferred_gender,
             )
         )
-        styling_values = _build_styling_prompt_values(
-            scene=scene,
-            styling=selected_styling,
-            scene_rule=scene_rule,
-            preferred_gender=preferred_gender,
-            makeup_override=makeup_override_text,
-            outfit_override=resolved_outfit_override,
-        )
         return _assemble_prompt(
             normalized_mode,
             [
                 _make_prompt_block("identity_lock", SCENE_ONLY_IDENTITY_LOCK_SECTION),
                 _make_prompt_block("output_spec", _build_output_spec_text(aspect_ratio)),
                 _make_prompt_block("edit_scope", _build_edit_scope_text(normalized_mode)),
-                _make_prompt_block("hair_shape_lock", _build_hair_shape_lock_text(hairstyle)),
-                _make_prompt_block("bangs_lock", _build_bangs_lock_text(hairstyle)),
+                _make_prompt_block("hair_shape_lock", _build_hair_shape_lock_text(hairstyle, hair_policy)),
+                _make_prompt_block("bangs_lock", _build_bangs_lock_text(hairstyle, hair_policy)),
                 _make_prompt_block("hair_color_lock", _build_hair_color_lock_text(selected_hair_color)),
-                _make_prompt_block("hair_motion_constraint", _build_hair_motion_constraint_text(hairstyle)),
+                _make_prompt_block("hair_motion_constraint", _build_hair_motion_constraint_text(hairstyle, hair_policy)),
                 _make_prompt_block("scene", _build_scene_text(scene, scene_rule)),
                 _make_prompt_block(
                     "styling",
@@ -2385,8 +2803,9 @@ def build_prompt_assembly(
                     _build_subject_performance_text(
                         scene,
                         seed_source=selection_seed,
-                        expression_override=selected_expression,
-                        subject_action_override=selected_subject_action,
+                        performance_profile=selected_performance,
+                        expression_override=expression_override,
+                        subject_action_override=subject_action_override,
                     ),
                 ),
                 *_build_quality_blocks(mode=normalized_mode),
@@ -2413,10 +2832,16 @@ def build_prompt_assembly(
         styling=styling,
         scene_rule=scene_rule,
     )
+    selected_performance = _resolve_performance_profile(
+        scene=scene,
+        seed_source=selection_seed,
+        scene_rule=scene_rule,
+    )
     selected_details = _select_prompt_details(
         hairstyle,
         scene,
         seed_source=selection_seed,
+        performance_profile=selected_performance,
     )
     expression_text = selected_details["expression"] or "自然看向镜头"
     scene_action_text = selected_details["subject_action"] or "自然站立或静止停顿"
@@ -2453,14 +2878,14 @@ def build_prompt_assembly(
             ),
             _make_prompt_block(
                 "subject_performance",
-                "人物表现系统："
-                f"人物表情固定为{expression_text}。"
-                f"人物动作固定为{scene_action_text}。"
-                "后端每次只选 1 个主体动作，不再把多个动作选项同时写进同一条提示词。"
-                + (
-                    f"发型展示参考动作为{hairstyle_action_text}。发型展示动作不要与主体动作叠加成不合理肢体效果。"
-                    if hairstyle_action_text
-                    else "不额外叠加发型手部细节动作，避免与主体动作叠加成不合理肢体效果。"
+                _build_subject_performance_text(
+                    scene,
+                    seed_source=selection_seed,
+                    performance_profile=selected_performance,
+                    expression_override=expression_text,
+                    subject_action_override=scene_action_text,
+                    hairstyle_action=hairstyle_action_text,
+                    allow_hair_touching_actions=True,
                 ),
             ),
             *_build_quality_blocks(mode=normalized_mode),
@@ -2607,12 +3032,18 @@ def build_job_prompt_payload(
     )
     selection_key = hairstyle.get("preset_id") or hairstyle["id"]
     selection_seed = seed_source or f"{selection_key}:{scene['id']}"
+    scene_rule = get_scene_styling_rule(scene["id"])
     selected_styling = _resolve_styling(
         style_line=scene["style_line"],
         preferred_gender=hairstyle.get("gender"),
         seed_source=selection_seed,
         scene=scene,
-        scene_rule=get_scene_styling_rule(scene["id"]),
+        scene_rule=scene_rule,
+    )
+    selected_performance = _resolve_performance_profile(
+        scene=scene,
+        seed_source=selection_seed,
+        scene_rule=scene_rule,
     )
     selected_hair_color = normalize_hair_color_selection(
         tone_id=hair_color_tone_id,
@@ -2646,6 +3077,7 @@ def build_job_prompt_payload(
             aspect_ratio=generation_options["aspect_ratio"],
         ),
         "styling_id": selected_styling["id"],
+        "performance_id": selected_performance["id"] if selected_performance else "",
         "hair_color_selection": selected_hair_color,
         "template_selection": {
             "source": hairstyle.get("selection_source") or "legacy_hairstyle",
@@ -2674,6 +3106,7 @@ def parse_job_prompt_payload(raw_prompt: str) -> dict:
             "hairstyle_only_prompt": "",
             "scene_only_prompt": "",
             "styling_id": "",
+            "performance_id": "",
             "hair_color_selection": empty_hair_color_selection,
             "template_selection": empty_template_selection,
             "output_options": normalized_options,
@@ -2688,6 +3121,7 @@ def parse_job_prompt_payload(raw_prompt: str) -> dict:
             "hairstyle_only_prompt": "",
             "scene_only_prompt": "",
             "styling_id": "",
+            "performance_id": "",
             "hair_color_selection": empty_hair_color_selection,
             "template_selection": empty_template_selection,
             "output_options": normalized_options,
@@ -2700,6 +3134,7 @@ def parse_job_prompt_payload(raw_prompt: str) -> dict:
             "hairstyle_only_prompt": "",
             "scene_only_prompt": "",
             "styling_id": "",
+            "performance_id": "",
             "hair_color_selection": empty_hair_color_selection,
             "template_selection": empty_template_selection,
             "output_options": normalized_options,
@@ -2775,6 +3210,7 @@ def parse_job_prompt_payload(raw_prompt: str) -> dict:
         "hairstyle_only_prompt": str(payload.get("hairstyle_only_prompt") or ""),
         "scene_only_prompt": str(payload.get("scene_only_prompt") or ""),
         "styling_id": str(payload.get("styling_id") or ""),
+        "performance_id": str(payload.get("performance_id") or ""),
         "hair_color_selection": hair_color_selection,
         "template_selection": template_selection,
         "output_options": output_options,

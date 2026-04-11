@@ -246,6 +246,28 @@ def test_build_and_parse_job_prompt_payload_preserves_output_options():
     assert "scene_only_prompt" in parsed
 
 
+def test_build_job_prompt_payload_exposes_selected_performance_id():
+    from app.services import templates
+
+    hairstyle = templates.get_hairstyle("male-forward-spikes")
+    scene = templates.get_scene("morning-window-softlight")
+
+    assert hairstyle is not None
+    assert scene is not None
+
+    payload = templates.build_job_prompt_payload(
+        hairstyle,
+        scene,
+        generator_backend="premium",
+        aspect_ratio="3:4",
+        resolution="2K",
+        seed_source="job-performance-id",
+    )
+    parsed = templates.parse_job_prompt_payload(payload)
+
+    assert parsed["performance_id"] == "modern-still-front"
+
+
 def test_parse_job_prompt_payload_keeps_legacy_output_options_for_history():
     from app.services import templates
 
@@ -355,6 +377,28 @@ def test_build_prompt_assembly_returns_structured_blocks():
     assert assembly.blocks[3].label == "主发型结构"
 
 
+def test_build_prompt_assembly_accepts_identity_locked_scene_render_alias():
+    from app.services import templates
+
+    scene = templates.get_scene("morning-window-softlight")
+    hairstyle = templates.get_hairstyle("male-forward-spikes")
+
+    assert scene is not None
+    assert hairstyle is not None
+
+    assembly = templates.build_prompt_assembly(
+        mode="identity_locked_scene_render",
+        hairstyle=hairstyle,
+        scene=scene,
+        preferred_gender="male",
+        seed_source="identity-locked-alias",
+    )
+
+    assert assembly.mode == "scene_only"
+    assert assembly.blocks[0].key == "identity_lock"
+    assert any(block.key == "subject_performance" for block in assembly.blocks)
+
+
 def test_prompt_block_labels_use_english_keys_and_chinese_labels():
     from app.services import templates
 
@@ -376,6 +420,7 @@ def test_prompt_rule_table_declares_mode_boundaries():
     rules = templates.get_prompt_rule_table()
 
     assert "scene_only" in rules
+    assert "identity_locked_scene_render" in rules
     assert "hair_only" in rules
     assert "hairstyle_only" in rules
     assert "hair_shape_lock" in rules["scene_only"].required_blocks

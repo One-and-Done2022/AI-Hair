@@ -71,7 +71,47 @@
           "服饰颜色必须与自然光和生活感场景保持统一，不要抢过人物面部"
         ]
       }
-    }
+    },
+    "profileId": "female_modern_daily_soft",
+    "profileLabel": "女性现代日常柔光",
+    "themeTags": [
+      "modern"
+    ],
+    "toneTags": [
+      "natural"
+    ],
+    "supportedSceneFamilies": [
+      "modern_interior",
+      "modern_window",
+      "modern_study",
+      "modern_cafe",
+      "modern_bathroom",
+      "modern_hotel",
+      "modern_home",
+      "modern_corridor",
+      "modern_garden",
+      "modern_field"
+    ],
+    "baseMakeup": "轻透自然底妆，修饰泛红与瑕疵，保留真实微光泽与细腻纹理",
+    "lipColor": "低饱和裸粉或豆沙唇色",
+    "eyeMakeup": "眉形柔和整洁，眼妆干净克制，睫毛自然分明",
+    "skinFinish": "清透柔光、干净自然",
+    "hairPolicy": "strict_lock",
+    "hairOrnament": "",
+    "outfitCore": "宽松衬衫、针织上衣、简洁背心或吊带",
+    "outfitMaterial": "柔软针织、轻薄棉质、细腻棉麻",
+    "outfitPaletteStructured": [
+      "米白",
+      "奶油白",
+      "浅灰",
+      "浅卡其"
+    ],
+    "jewelryLevel": "minimal",
+    "accessories": [],
+    "stylingConstraints": [
+      "妆面要真实轻透，不要做成厚粉底和高饱和网红妆",
+      "服饰颜色必须与自然光和生活感场景保持统一，不要抢过人物面部"
+    ]
   },
   {
     "id": "female-evening-film-glow",
@@ -142,7 +182,41 @@
           "服饰需保留柔软生活感，不要出现礼服化和过度夸张配饰"
         ]
       }
-    }
+    },
+    "profileId": "female_modern_evening_soft",
+    "profileLabel": "女性傍晚胶片柔光",
+    "themeTags": [
+      "modern"
+    ],
+    "toneTags": [
+      "natural"
+    ],
+    "supportedSceneFamilies": [
+      "modern_hotel",
+      "modern_home",
+      "modern_window",
+      "modern_garden"
+    ],
+    "baseMakeup": "底妆轻透但带暖调统一感，修饰暗沉与倦态，保持真实皮肤呼吸感",
+    "lipColor": "低饱和玫瑰豆沙或奶茶唇色",
+    "eyeMakeup": "眉眼细节柔和，局部提亮克制，不做锐利时装眼妆",
+    "skinFinish": "柔和胶片感、暖调通透",
+    "hairPolicy": "strict_lock",
+    "hairOrnament": "",
+    "outfitCore": "米白针织、浅卡其衬衫、裸色背心或柔软家居感上衣",
+    "outfitMaterial": "柔软针织、轻薄棉布、松弛家居面料",
+    "outfitPaletteStructured": [
+      "米白",
+      "燕麦色",
+      "浅卡其",
+      "裸色"
+    ],
+    "jewelryLevel": "minimal",
+    "accessories": [],
+    "stylingConstraints": [
+      "妆面要贴合傍晚逆光氛围，不能出现过冷或过于锐利的时装妆",
+      "服饰需保留柔软生活感，不要出现礼服化和过度夸张配饰"
+    ]
   },
   {
     "id": "male-clean-natural-grooming",
@@ -219,7 +293,47 @@
           "服饰保持日常高级感，不要过度街头化或正式商务化"
         ]
       }
-    }
+    },
+    "profileId": "male_clean_natural_grooming_fallback",
+    "profileLabel": "男性干净自然兜底",
+    "themeTags": [
+      "modern"
+    ],
+    "toneTags": [
+      "natural"
+    ],
+    "supportedSceneFamilies": [
+      "modern_interior",
+      "modern_window",
+      "modern_study",
+      "modern_cafe",
+      "modern_bathroom",
+      "modern_hotel",
+      "modern_home",
+      "modern_corridor",
+      "modern_garden",
+      "modern_field"
+    ],
+    "baseMakeup": "仅做轻微底妆修饰与局部提亮，整体强调清洁感和精神状态",
+    "lipColor": "嘴唇自然保湿，不额外强调颜色",
+    "eyeMakeup": "眉形干净整齐，不加入明显彩妆痕迹",
+    "skinFinish": "干净清爽、真实细节适度保留",
+    "hairPolicy": "strict_lock",
+    "hairOrnament": "",
+    "outfitCore": "基础色衬衫、针织或简洁 T 恤",
+    "outfitMaterial": "棉质、细针织、轻薄基础面料",
+    "outfitPaletteStructured": [
+      "白色",
+      "浅灰",
+      "深灰",
+      "卡其"
+    ],
+    "jewelryLevel": "minimal",
+    "accessories": [],
+    "stylingConstraints": [
+      "男士妆面必须克制，不要出现明显眼影、浓唇或高饱和彩妆感",
+      "服饰保持日常高级感，不要过度街头化或正式商务化"
+    ]
   },
   {
     "id": "female-minimal-editorial",
@@ -298,7 +412,47 @@
           "服饰轮廓要简洁明确，不要出现松垮休闲家居感"
         ]
       }
-    }
+    },
+    "profileId": "female_modern_editorial_structured",
+    "profileLabel": "女性现代极简时装",
+    "themeTags": [
+      "modern"
+    ],
+    "toneTags": [
+      "fashion"
+    ],
+    "supportedSceneFamilies": [
+      "modern_studio",
+      "modern_stage",
+      "modern_gallery",
+      "modern_city",
+      "modern_rooftop",
+      "modern_bar",
+      "modern_backstage"
+    ],
+    "baseMakeup": "底妆平整高级，结构清晰，轮廓修饰克制而精准",
+    "lipColor": "低饱和裸棕、烟粉或冷调豆沙唇色",
+    "eyeMakeup": "眼妆利落克制，眉眼线条更干净，强调骨相与镜头可读性",
+    "skinFinish": "高级半哑光、干净清晰",
+    "hairPolicy": "strict_lock",
+    "hairOrnament": "",
+    "outfitCore": "极简利落上衣、修身针织、结构型时装单品",
+    "outfitMaterial": "细腻针织、哑光缎面、结构化时装面料",
+    "outfitPaletteStructured": [
+      "黑色",
+      "灰白",
+      "冷棕",
+      "酒红"
+    ],
+    "jewelryLevel": "controlled",
+    "accessories": [
+      "细项链",
+      "简洁戒指"
+    ],
+    "stylingConstraints": [
+      "妆面必须克制利落，不要做成甜美生活感妆容",
+      "服饰轮廓要简洁明确，不要出现松垮休闲家居感"
+    ]
   },
   {
     "id": "male-sharp-editorial",
@@ -376,7 +530,44 @@
           "服饰必须配合利落发型和高反差布光，不要出现松垮家居感"
         ]
       }
-    }
+    },
+    "profileId": "male_sharp_editorial_fallback",
+    "profileLabel": "男性利落时装兜底",
+    "themeTags": [
+      "modern"
+    ],
+    "toneTags": [
+      "fashion"
+    ],
+    "supportedSceneFamilies": [
+      "modern_studio",
+      "modern_stage",
+      "modern_gallery",
+      "modern_city",
+      "modern_rooftop",
+      "modern_bar",
+      "modern_backstage"
+    ],
+    "baseMakeup": "皮肤与骨相做克制修饰，重点是利落和镜头识别度",
+    "lipColor": "嘴唇自然轻润，不额外强调颜色",
+    "eyeMakeup": "眉眼结构更清晰，避免明显彩妆痕迹",
+    "skinFinish": "清晰半哑光、骨相立体",
+    "hairPolicy": "strict_lock",
+    "hairOrnament": "",
+    "outfitCore": "利落衬衫、结构外套、简洁高领或深色针织",
+    "outfitMaterial": "西装面料、挺括棉布、哑光针织",
+    "outfitPaletteStructured": [
+      "黑色",
+      "深灰",
+      "冷棕",
+      "酒红"
+    ],
+    "jewelryLevel": "minimal",
+    "accessories": [],
+    "stylingConstraints": [
+      "不要做成生活感软妆或甜感妆面",
+      "服饰必须配合利落发型和高反差布光，不要出现松垮家居感"
+    ]
   },
   {
     "id": "unisex-natural-soft",
@@ -453,7 +644,47 @@
           "服饰只作为辅助，不要出现风格冲突或抢主体的造型"
         ]
       }
-    }
+    },
+    "profileId": "unisex_natural_soft_fallback",
+    "profileLabel": "通用自然软光兜底",
+    "themeTags": [
+      "modern"
+    ],
+    "toneTags": [
+      "natural"
+    ],
+    "supportedSceneFamilies": [
+      "modern_interior",
+      "modern_window",
+      "modern_study",
+      "modern_cafe",
+      "modern_bathroom",
+      "modern_hotel",
+      "modern_home",
+      "modern_corridor",
+      "modern_garden",
+      "modern_field"
+    ],
+    "baseMakeup": "以真实干净为第一优先级，底妆轻薄，修饰瑕疵但保留人物真实感",
+    "lipColor": "唇色保持自然低饱和",
+    "eyeMakeup": "眉眼干净整洁，不额外叠加强存在感彩妆",
+    "skinFinish": "自然柔光、纹理可读",
+    "hairPolicy": "strict_lock",
+    "hairOrnament": "",
+    "outfitCore": "低饱和、简洁、生活化上衣",
+    "outfitMaterial": "棉布、针织、轻薄基础面料",
+    "outfitPaletteStructured": [
+      "白色",
+      "米白",
+      "浅灰",
+      "卡其"
+    ],
+    "jewelryLevel": "minimal",
+    "accessories": [],
+    "stylingConstraints": [
+      "优先保证真实与稳定，不要让妆造压过人物身份识别",
+      "服饰只作为辅助，不要出现风格冲突或抢主体的造型"
+    ]
   },
   {
     "id": "unisex-structured-editorial",
@@ -532,6 +763,45 @@
           "服饰控制在高级、克制的范围内，不要加入复杂图案和过度装饰"
         ]
       }
-    }
+    },
+    "profileId": "unisex_structured_editorial_fallback",
+    "profileLabel": "通用结构时装兜底",
+    "themeTags": [
+      "modern"
+    ],
+    "toneTags": [
+      "fashion"
+    ],
+    "supportedSceneFamilies": [
+      "modern_studio",
+      "modern_stage",
+      "modern_gallery",
+      "modern_city",
+      "modern_rooftop",
+      "modern_bar",
+      "modern_backstage"
+    ],
+    "baseMakeup": "底妆平整清晰，面部结构更明确，整体呈现高级镜头质感",
+    "lipColor": "唇色低饱和并服从整体时装色调",
+    "eyeMakeup": "眉眼轮廓干净利落，避免花哨彩妆堆叠",
+    "skinFinish": "高级半哑光、清晰干净",
+    "hairPolicy": "strict_lock",
+    "hairOrnament": "",
+    "outfitCore": "结构明确的黑白灰时装单品或利落针织",
+    "outfitMaterial": "西装面料、哑光缎面、结构针织",
+    "outfitPaletteStructured": [
+      "黑色",
+      "白色",
+      "深灰",
+      "冷棕"
+    ],
+    "jewelryLevel": "controlled",
+    "accessories": [
+      "简洁金属配饰"
+    ],
+    "stylingConstraints": [
+      "妆造必须服务于时装布光和空间线条，不要混入生活感软糯风格",
+      "服饰控制在高级、克制的范围内，不要加入复杂图案和过度装饰"
+    ]
   }
 ]

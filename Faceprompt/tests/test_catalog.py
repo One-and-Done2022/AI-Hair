@@ -123,6 +123,7 @@ class CatalogTests(unittest.TestCase):
         rules = get_prompt_rule_table()
 
         self.assertIn("scene_only", rules)
+        self.assertIn("identity_locked_scene_render", rules)
         self.assertIn("hair_only", rules)
         self.assertIn("hairstyle_only", rules)
         self.assertIn("hair_shape_lock", rules["scene_only"].required_blocks)
@@ -136,6 +137,18 @@ class CatalogTests(unittest.TestCase):
         self.assertIn("scene", rules["hairstyle_only"].forbidden_blocks)
         self.assertIn("styling", rules["hairstyle_only"].forbidden_blocks)
         self.assertIn("subject_performance", rules["hairstyle_only"].forbidden_blocks)
+
+    def test_build_prompt_assembly_accepts_identity_locked_scene_render_alias(self) -> None:
+        assembly = build_prompt_assembly(
+            mode="identity_locked_scene_render",
+            scene_id="morning-window-softlight",
+            hairstyle_id="male-forward-spikes",
+            seed_source="catalog-alias",
+        )
+
+        self.assertEqual(assembly.mode, "scene_only")
+        self.assertEqual(assembly.blocks[0].key, "identity_lock")
+        self.assertTrue(any(block.key == "subject_performance" for block in assembly.blocks))
 
     def test_professional_hair_color_catalog_exposes_recommended_series(self) -> None:
         options = load_professional_hair_color_catalog(recommended_only=True)

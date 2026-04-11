@@ -1,7 +1,7 @@
 [
   {
     "sceneId": "indoor-film-lifestyle",
-    "sceneFamily": "warm_lifestyle_interior",
+    "sceneFamily": "modern_interior",
     "defaultStylingId": "unisex-natural-soft",
     "genderStylingIds": {
       "female": "female-natural-soft-glow",
@@ -70,11 +70,31 @@
       "高饱和撞色",
       "夸张礼服感",
       "复杂印花"
+    ],
+    "recommendedStylingIds": [
+      "female-natural-soft-glow",
+      "male-clean-natural-grooming",
+      "unisex-natural-soft"
+    ],
+    "defaultPerformanceIds": [
+      "modern-candid-pause"
+    ],
+    "recommendedPerformanceIds": [
+      "modern-candid-pause",
+      "modern-lean-seat"
+    ],
+    "forbiddenPerformanceIds": [],
+    "hairPolicyOverride": "strict_lock",
+    "themeCompatibility": [
+      "modern"
+    ],
+    "settingCompatibility": [
+      "indoor"
     ]
   },
   {
     "sceneId": "morning-window-softlight",
-    "sceneFamily": "morning_window_softlight",
+    "sceneFamily": "modern_window",
     "defaultStylingId": "unisex-natural-soft",
     "genderStylingIds": {
       "female": "female-natural-soft-glow",
@@ -144,11 +164,32 @@
       "正式套装",
       "浓妆感",
       "硬挺礼服"
+    ],
+    "recommendedStylingIds": [
+      "female-natural-soft-glow",
+      "male-clean-natural-grooming",
+      "unisex-natural-soft"
+    ],
+    "defaultPerformanceIds": [
+      "modern-still-front"
+    ],
+    "recommendedPerformanceIds": [
+      "modern-still-front",
+      "modern-hold-cup"
+    ],
+    "forbiddenPerformanceIds": [],
+    "hairPolicyOverride": "strict_lock",
+    "themeCompatibility": [
+      "modern"
+    ],
+    "settingCompatibility": [
+      "window",
+      "indoor"
     ]
   },
   {
     "sceneId": "walnut-study-portrait",
-    "sceneFamily": "quiet_walnut_study",
+    "sceneFamily": "modern_study",
     "defaultStylingId": "unisex-natural-soft",
     "genderStylingIds": {
       "female": "female-natural-soft-glow",
@@ -217,11 +258,32 @@
       "潮流大 logo",
       "荧光色",
       "过度时装化"
+    ],
+    "recommendedStylingIds": [
+      "female-natural-soft-glow",
+      "male-clean-natural-grooming",
+      "unisex-natural-soft"
+    ],
+    "defaultPerformanceIds": [
+      "modern-study-pause"
+    ],
+    "recommendedPerformanceIds": [
+      "modern-study-pause",
+      "modern-still-front"
+    ],
+    "forbiddenPerformanceIds": [],
+    "hairPolicyOverride": "strict_lock",
+    "themeCompatibility": [
+      "modern"
+    ],
+    "settingCompatibility": [
+      "study",
+      "indoor"
     ]
   },
   {
     "sceneId": "cafe-candid-seat",
-    "sceneFamily": "urban_cafe_candid",
+    "sceneFamily": "modern_cafe",
     "defaultStylingId": "unisex-natural-soft",
     "genderStylingIds": {
       "female": "female-natural-soft-glow",
@@ -290,11 +352,32 @@
       "过度商务",
       "潮牌堆叠",
       "强对比印花"
+    ],
+    "recommendedStylingIds": [
+      "female-natural-soft-glow",
+      "male-clean-natural-grooming",
+      "unisex-natural-soft"
+    ],
+    "defaultPerformanceIds": [
+      "modern-candid-pause"
+    ],
+    "recommendedPerformanceIds": [
+      "modern-candid-pause",
+      "modern-hold-cup"
+    ],
+    "forbiddenPerformanceIds": [],
+    "hairPolicyOverride": "strict_lock",
+    "themeCompatibility": [
+      "modern"
+    ],
+    "settingCompatibility": [
+      "cafe",
+      "indoor"
     ]
   },
   {
     "sceneId": "bathroom-mirror-morning",
-    "sceneFamily": "bathroom_morning_private",
+    "sceneFamily": "modern_bathroom",
     "defaultStylingId": "unisex-natural-soft",
     "genderStylingIds": {
       "female": "female-natural-soft-glow",
@@ -363,11 +446,32 @@
       "礼服感",
       "高饱和唇色",
       "复杂配饰"
+    ],
+    "recommendedStylingIds": [
+      "female-natural-soft-glow",
+      "male-clean-natural-grooming",
+      "unisex-natural-soft"
+    ],
+    "defaultPerformanceIds": [
+      "modern-still-front"
+    ],
+    "recommendedPerformanceIds": [
+      "modern-still-front"
+    ],
+    "forbiddenPerformanceIds": [],
+    "hairPolicyOverride": "strict_lock",
+    "themeCompatibility": [
+      "modern"
+    ],
+    "settingCompatibility": [
+      "bathroom",
+      "mirror",
+      "indoor"
     ]
   },
   {
     "sceneId": "hotel-room-loose",
-    "sceneFamily": "hotel_loose_daylight",
+    "sceneFamily": "modern_hotel",
     "defaultStylingId": "unisex-natural-soft",
     "genderStylingIds": {
       "female": "female-evening-film-glow",
@@ -439,11 +543,32 @@
       "夜店风",
       "商务正装",
       "高反光亮片"
+    ],
+    "recommendedStylingIds": [
+      "female-evening-film-glow",
+      "female-natural-soft-glow",
+      "male-clean-natural-grooming"
+    ],
+    "defaultPerformanceIds": [
+      "modern-lean-seat"
+    ],
+    "recommendedPerformanceIds": [
+      "modern-lean-seat",
+      "modern-candid-pause"
+    ],
+    "forbiddenPerformanceIds": [],
+    "hairPolicyOverride": "strict_lock",
+    "themeCompatibility": [
+      "modern"
+    ],
+    "settingCompatibility": [
+      "hotel",
+      "indoor"
     ]
   },
   {
     "sceneId": "sunset-home-backlight",
-    "sceneFamily": "sunset_home_backlight",
+    "sceneFamily": "modern_home",
     "defaultStylingId": "unisex-natural-soft",
     "genderStylingIds": {
       "female": "female-evening-film-glow",
@@ -513,11 +638,32 @@
       "冷白商务装",
       "高饱和亮色",
       "硬质皮革"
+    ],
+    "recommendedStylingIds": [
+      "female-evening-film-glow",
+      "female-natural-soft-glow",
+      "male-clean-natural-grooming"
+    ],
+    "defaultPerformanceIds": [
+      "modern-still-front"
+    ],
+    "recommendedPerformanceIds": [
+      "modern-still-front",
+      "modern-turn-back"
+    ],
+    "forbiddenPerformanceIds": [],
+    "hairPolicyOverride": "strict_lock",
+    "themeCompatibility": [
+      "modern"
+    ],
+    "settingCompatibility": [
+      "indoor",
+      "window"
     ]
   },
   {
     "sceneId": "hallway-quiet-frame",
-    "sceneFamily": "quiet_hallway_frame",
+    "sceneFamily": "modern_corridor",
     "defaultStylingId": "unisex-natural-soft",
     "genderStylingIds": {
       "female": "female-natural-soft-glow",
@@ -586,11 +732,31 @@
       "夸张时装感",
       "高饱和撞色",
       "繁复配饰"
+    ],
+    "recommendedStylingIds": [
+      "female-natural-soft-glow",
+      "male-clean-natural-grooming",
+      "unisex-natural-soft"
+    ],
+    "defaultPerformanceIds": [
+      "modern-still-front"
+    ],
+    "recommendedPerformanceIds": [
+      "modern-still-front"
+    ],
+    "forbiddenPerformanceIds": [],
+    "hairPolicyOverride": "strict_lock",
+    "themeCompatibility": [
+      "modern"
+    ],
+    "settingCompatibility": [
+      "corridor",
+      "indoor"
     ]
   },
   {
     "sceneId": "rainy-window-mood",
-    "sceneFamily": "rainy_window_mood",
+    "sceneFamily": "modern_window",
     "defaultStylingId": "unisex-natural-soft",
     "genderStylingIds": {
       "female": "female-evening-film-glow",
@@ -661,11 +827,34 @@
       "高饱和亮色",
       "热烈红唇",
       "金属亮面"
+    ],
+    "recommendedStylingIds": [
+      "female-evening-film-glow",
+      "female-natural-soft-glow",
+      "male-clean-natural-grooming"
+    ],
+    "defaultPerformanceIds": [
+      "modern-still-front"
+    ],
+    "recommendedPerformanceIds": [
+      "modern-still-front",
+      "modern-turn-back"
+    ],
+    "forbiddenPerformanceIds": [],
+    "hairPolicyOverride": "strict_lock",
+    "themeCompatibility": [
+      "modern",
+      "seasonal"
+    ],
+    "settingCompatibility": [
+      "window",
+      "indoor",
+      "rain"
     ]
   },
   {
     "sceneId": "studio-solid-backdrop",
-    "sceneFamily": "studio_clean_backdrop",
+    "sceneFamily": "modern_studio",
     "defaultStylingId": "unisex-structured-editorial",
     "genderStylingIds": {
       "female": "female-minimal-editorial",
@@ -735,11 +924,30 @@
       "家居感",
       "甜美碎花",
       "多余配饰"
+    ],
+    "recommendedStylingIds": [
+      "female-minimal-editorial",
+      "male-sharp-editorial",
+      "unisex-structured-editorial"
+    ],
+    "defaultPerformanceIds": [
+      "modern-editorial-strong"
+    ],
+    "recommendedPerformanceIds": [
+      "modern-editorial-strong"
+    ],
+    "forbiddenPerformanceIds": [],
+    "hairPolicyOverride": "strict_lock",
+    "themeCompatibility": [
+      "modern"
+    ],
+    "settingCompatibility": [
+      "studio"
     ]
   },
   {
     "sceneId": "retro-cinema-box",
-    "sceneFamily": "retro_cinema_editorial",
+    "sceneFamily": "modern_stage",
     "defaultStylingId": "unisex-structured-editorial",
     "genderStylingIds": {
       "female": "female-minimal-editorial",
@@ -809,11 +1017,31 @@
       "舞台浓妆",
       "运动装",
       "高亮荧光色"
+    ],
+    "recommendedStylingIds": [
+      "female-minimal-editorial",
+      "male-sharp-editorial",
+      "unisex-structured-editorial"
+    ],
+    "defaultPerformanceIds": [
+      "modern-editorial-seat"
+    ],
+    "recommendedPerformanceIds": [
+      "modern-editorial-seat"
+    ],
+    "forbiddenPerformanceIds": [],
+    "hairPolicyOverride": "strict_lock",
+    "themeCompatibility": [
+      "modern"
+    ],
+    "settingCompatibility": [
+      "stage",
+      "indoor"
     ]
   },
   {
     "sceneId": "city-neon-night",
-    "sceneFamily": "city_neon_editorial",
+    "sceneFamily": "modern_city",
     "defaultStylingId": "unisex-structured-editorial",
     "genderStylingIds": {
       "female": "female-minimal-editorial",
@@ -883,11 +1111,31 @@
       "夜店亮片",
       "廉价皮革",
       "高反光大片材质"
+    ],
+    "recommendedStylingIds": [
+      "female-minimal-editorial",
+      "male-sharp-editorial",
+      "unisex-structured-editorial"
+    ],
+    "defaultPerformanceIds": [
+      "modern-editorial-strong"
+    ],
+    "recommendedPerformanceIds": [
+      "modern-editorial-strong"
+    ],
+    "forbiddenPerformanceIds": [],
+    "hairPolicyOverride": "strict_lock",
+    "themeCompatibility": [
+      "modern"
+    ],
+    "settingCompatibility": [
+      "night",
+      "city"
     ]
   },
   {
     "sceneId": "gallery-white-cube",
-    "sceneFamily": "gallery_minimal_editorial",
+    "sceneFamily": "modern_gallery",
     "defaultStylingId": "unisex-structured-editorial",
     "genderStylingIds": {
       "female": "female-minimal-editorial",
@@ -957,11 +1205,31 @@
       "复杂花纹",
       "甜美家居服",
       "背景同色融合"
+    ],
+    "recommendedStylingIds": [
+      "female-minimal-editorial",
+      "male-sharp-editorial",
+      "unisex-structured-editorial"
+    ],
+    "defaultPerformanceIds": [
+      "modern-editorial-strong"
+    ],
+    "recommendedPerformanceIds": [
+      "modern-editorial-strong"
+    ],
+    "forbiddenPerformanceIds": [],
+    "hairPolicyOverride": "strict_lock",
+    "themeCompatibility": [
+      "modern"
+    ],
+    "settingCompatibility": [
+      "studio",
+      "indoor"
     ]
   },
   {
     "sceneId": "dramatic-side-light",
-    "sceneFamily": "dramatic_side_light",
+    "sceneFamily": "modern_studio",
     "defaultStylingId": "unisex-structured-editorial",
     "genderStylingIds": {
       "female": "female-minimal-editorial",
@@ -1031,11 +1299,30 @@
       "软糯家居感",
       "甜美淡粉",
       "低对比服装"
+    ],
+    "recommendedStylingIds": [
+      "female-minimal-editorial",
+      "male-sharp-editorial",
+      "unisex-structured-editorial"
+    ],
+    "defaultPerformanceIds": [
+      "modern-editorial-strong"
+    ],
+    "recommendedPerformanceIds": [
+      "modern-editorial-strong"
+    ],
+    "forbiddenPerformanceIds": [],
+    "hairPolicyOverride": "strict_lock",
+    "themeCompatibility": [
+      "modern"
+    ],
+    "settingCompatibility": [
+      "studio"
     ]
   },
   {
     "sceneId": "rooftop-wind",
-    "sceneFamily": "rooftop_wind_editorial",
+    "sceneFamily": "modern_rooftop",
     "defaultStylingId": "unisex-structured-editorial",
     "genderStylingIds": {
       "female": "female-minimal-editorial",
@@ -1105,11 +1392,31 @@
       "过厚大衣",
       "拖沓层叠",
       "甜美元素"
+    ],
+    "recommendedStylingIds": [
+      "female-minimal-editorial",
+      "male-sharp-editorial",
+      "unisex-structured-editorial"
+    ],
+    "defaultPerformanceIds": [
+      "modern-editorial-strong"
+    ],
+    "recommendedPerformanceIds": [
+      "modern-editorial-strong",
+      "modern-turn-back"
+    ],
+    "forbiddenPerformanceIds": [],
+    "hairPolicyOverride": "strict_lock",
+    "themeCompatibility": [
+      "modern"
+    ],
+    "settingCompatibility": [
+      "rooftop"
     ]
   },
   {
     "sceneId": "moody-bar-counter",
-    "sceneFamily": "moody_bar_editorial",
+    "sceneFamily": "modern_bar",
     "defaultStylingId": "unisex-structured-editorial",
     "genderStylingIds": {
       "female": "female-minimal-editorial",
@@ -1179,11 +1486,31 @@
       "夜店浓妆",
       "高饱和紫红",
       "廉价亮片"
+    ],
+    "recommendedStylingIds": [
+      "female-minimal-editorial",
+      "male-sharp-editorial",
+      "unisex-structured-editorial"
+    ],
+    "defaultPerformanceIds": [
+      "modern-editorial-seat"
+    ],
+    "recommendedPerformanceIds": [
+      "modern-editorial-seat"
+    ],
+    "forbiddenPerformanceIds": [],
+    "hairPolicyOverride": "strict_lock",
+    "themeCompatibility": [
+      "modern"
+    ],
+    "settingCompatibility": [
+      "bar",
+      "indoor"
     ]
   },
   {
     "sceneId": "backstage-vanity-mirror",
-    "sceneFamily": "backstage_vanity_editorial",
+    "sceneFamily": "modern_backstage",
     "defaultStylingId": "unisex-structured-editorial",
     "genderStylingIds": {
       "female": "female-minimal-editorial",
@@ -1253,6 +1580,427 @@
       "化妆袍感",
       "杂乱台面感",
       "舞台浓妆"
+    ],
+    "recommendedStylingIds": [
+      "female-minimal-editorial",
+      "male-sharp-editorial",
+      "unisex-structured-editorial"
+    ],
+    "defaultPerformanceIds": [
+      "modern-editorial-seat"
+    ],
+    "recommendedPerformanceIds": [
+      "modern-editorial-seat"
+    ],
+    "forbiddenPerformanceIds": [],
+    "hairPolicyOverride": "strict_lock",
+    "themeCompatibility": [
+      "modern"
+    ],
+    "settingCompatibility": [
+      "mirror",
+      "stage",
+      "indoor"
+    ]
+  },
+  {
+    "sceneId": "modern-garden-backlight",
+    "sceneFamily": "modern_garden",
+    "defaultStylingId": "female-natural-soft-glow",
+    "defaultStylingIds": [
+      "female-natural-soft-glow",
+      "male-clean-natural-grooming",
+      "unisex-natural-soft"
+    ],
+    "recommendedStylingIds": [
+      "female-natural-soft-glow",
+      "male-clean-natural-grooming"
+    ],
+    "fallbackStylingIds": [
+      "unisex-natural-soft"
+    ],
+    "forbiddenStylingIds": [
+      "female-minimal-editorial",
+      "male-sharp-editorial",
+      "unisex-structured-editorial"
+    ],
+    "allowedStylingIds": [
+      "female-natural-soft-glow",
+      "male-clean-natural-grooming",
+      "unisex-natural-soft"
+    ],
+    "genderStylingIds": {
+      "female": "female-natural-soft-glow",
+      "male": "male-clean-natural-grooming"
+    },
+    "makeupOverride": {
+      "female": "底妆轻透干净，保留真实肤色与细微纹理，眉眼柔和清楚，唇色控制在低饱和裸粉或豆沙范围内。",
+      "male": "皮肤状态干净清爽，仅轻微修饰瑕疵与黑眼圈，眉毛整洁自然，保留真实男性气质。"
+    },
+    "outfitOverride": {
+      "default": "绿开衫，白领内搭，蓝波点蝴蝶结"
+    },
+    "stylingConstraintAdditions": {
+      "default": [
+        "背景虚化，光线明亮"
+      ]
+    },
+    "stylingConstraints": [
+      "背景虚化，光线明亮"
+    ],
+    "lightingGuardrails": [
+      "背景虚化，光线明亮"
+    ],
+    "lightingAdjustment": [
+      "背景虚化，光线明亮"
+    ],
+    "recommendedHairstyleCategoryKeys": {},
+    "requiredOutfitTags": [
+      "garden",
+      "白色",
+      "低饱和绿"
+    ],
+    "forbiddenOutfitTags": [
+      "强结构礼服感",
+      "高饱和撞色",
+      "复杂夸张配饰"
+    ],
+    "defaultPerformanceIds": [
+      "modern-outdoor-natural"
+    ],
+    "recommendedPerformanceIds": [
+      "modern-outdoor-natural"
+    ],
+    "forbiddenPerformanceIds": [],
+    "hairPolicyOverride": "strict_lock",
+    "themeCompatibility": [
+      "modern"
+    ],
+    "settingCompatibility": [
+      "garden"
+    ]
+  },
+  {
+    "sceneId": "modern-bar-flash",
+    "sceneFamily": "modern_bar",
+    "defaultStylingId": "female-minimal-editorial",
+    "defaultStylingIds": [
+      "female-minimal-editorial",
+      "male-sharp-editorial",
+      "unisex-structured-editorial"
+    ],
+    "recommendedStylingIds": [
+      "female-minimal-editorial",
+      "male-sharp-editorial",
+      "unisex-structured-editorial"
+    ],
+    "fallbackStylingIds": [
+      "unisex-structured-editorial"
+    ],
+    "forbiddenStylingIds": [
+      "female-natural-soft-glow",
+      "female-evening-film-glow",
+      "male-clean-natural-grooming",
+      "unisex-natural-soft"
+    ],
+    "allowedStylingIds": [
+      "female-minimal-editorial",
+      "male-sharp-editorial",
+      "unisex-structured-editorial"
+    ],
+    "genderStylingIds": {
+      "female": "female-minimal-editorial",
+      "male": "male-sharp-editorial"
+    },
+    "makeupOverride": {
+      "female": "底妆干净利落，轮廓轻度提炼，眼妆与唇色有存在感但仍然克制，整体高级时装化而不过重。",
+      "male": "皮肤与骨相做克制修饰，眉眼结构利落清楚，不出现厚重彩妆感，整体保持高级时装肖像质感。"
+    },
+    "outfitOverride": {
+      "default": "黑色一字肩针织上衣配高领脖套，银色项链与戒指"
+    },
+    "stylingConstraintAdditions": {
+      "default": [
+        "背景保持暗调，不可杂乱，保留闪光灯强光阴影效果"
+      ]
+    },
+    "stylingConstraints": [
+      "背景保持暗调，不可杂乱，保留闪光灯强光阴影效果"
+    ],
+    "lightingGuardrails": [
+      "背景保持暗调，不可杂乱，保留闪光灯强光阴影效果"
+    ],
+    "lightingAdjustment": [
+      "背景保持暗调，不可杂乱，保留闪光灯强光阴影效果"
+    ],
+    "recommendedHairstyleCategoryKeys": {},
+    "requiredOutfitTags": [
+      "bar",
+      "indoor",
+      "黑色",
+      "银灰"
+    ],
+    "forbiddenOutfitTags": [
+      "强结构礼服感",
+      "高饱和撞色",
+      "复杂夸张配饰"
+    ],
+    "defaultPerformanceIds": [
+      "modern-editorial-seat"
+    ],
+    "recommendedPerformanceIds": [
+      "modern-editorial-seat"
+    ],
+    "forbiddenPerformanceIds": [],
+    "hairPolicyOverride": "strict_lock",
+    "themeCompatibility": [
+      "modern"
+    ],
+    "settingCompatibility": [
+      "bar",
+      "indoor"
+    ]
+  },
+  {
+    "sceneId": "modern-wheatfield-goldenhour",
+    "sceneFamily": "modern_field",
+    "defaultStylingId": "female-natural-soft-glow",
+    "defaultStylingIds": [
+      "female-natural-soft-glow",
+      "male-clean-natural-grooming",
+      "unisex-natural-soft"
+    ],
+    "recommendedStylingIds": [
+      "female-natural-soft-glow",
+      "male-clean-natural-grooming"
+    ],
+    "fallbackStylingIds": [
+      "unisex-natural-soft"
+    ],
+    "forbiddenStylingIds": [
+      "female-minimal-editorial",
+      "male-sharp-editorial",
+      "unisex-structured-editorial"
+    ],
+    "allowedStylingIds": [
+      "female-natural-soft-glow",
+      "male-clean-natural-grooming",
+      "unisex-natural-soft"
+    ],
+    "genderStylingIds": {
+      "female": "female-natural-soft-glow",
+      "male": "male-clean-natural-grooming"
+    },
+    "makeupOverride": {
+      "female": "底妆轻透干净，保留真实肤色与细微纹理，眉眼柔和清楚，唇色控制在低饱和裸粉或豆沙范围内。",
+      "male": "皮肤状态干净清爽，仅轻微修饰瑕疵与黑眼圈，眉毛整洁自然，保留真实男性气质。"
+    },
+    "outfitOverride": {
+      "default": "简约的纯白色短袖T恤"
+    },
+    "stylingConstraintAdditions": {
+      "default": [
+        "必须是户外自然场景，保持温暖的金色光影氛围，背景天空需保持干净无杂物"
+      ]
+    },
+    "stylingConstraints": [
+      "必须是户外自然场景，保持温暖的金色光影氛围，背景天空需保持干净无杂物"
+    ],
+    "lightingGuardrails": [
+      "必须是户外自然场景，保持温暖的金色光影氛围，背景天空需保持干净无杂物"
+    ],
+    "lightingAdjustment": [
+      "必须是户外自然场景，保持温暖的金色光影氛围，背景天空需保持干净无杂物"
+    ],
+    "recommendedHairstyleCategoryKeys": {},
+    "requiredOutfitTags": [
+      "field",
+      "outdoor",
+      "白色"
+    ],
+    "forbiddenOutfitTags": [
+      "强结构礼服感",
+      "高饱和撞色",
+      "复杂夸张配饰"
+    ],
+    "defaultPerformanceIds": [
+      "modern-outdoor-natural"
+    ],
+    "recommendedPerformanceIds": [
+      "modern-outdoor-natural"
+    ],
+    "forbiddenPerformanceIds": [],
+    "hairPolicyOverride": "strict_lock",
+    "themeCompatibility": [
+      "modern",
+      "seasonal"
+    ],
+    "settingCompatibility": [
+      "field",
+      "outdoor"
+    ]
+  },
+  {
+    "sceneId": "modern-greenery-bokeh",
+    "sceneFamily": "modern_garden",
+    "defaultStylingId": "female-natural-soft-glow",
+    "defaultStylingIds": [
+      "female-natural-soft-glow",
+      "male-clean-natural-grooming",
+      "unisex-natural-soft"
+    ],
+    "recommendedStylingIds": [
+      "female-natural-soft-glow",
+      "male-clean-natural-grooming"
+    ],
+    "fallbackStylingIds": [
+      "unisex-natural-soft"
+    ],
+    "forbiddenStylingIds": [
+      "female-minimal-editorial",
+      "male-sharp-editorial",
+      "unisex-structured-editorial"
+    ],
+    "allowedStylingIds": [
+      "female-natural-soft-glow",
+      "male-clean-natural-grooming",
+      "unisex-natural-soft"
+    ],
+    "genderStylingIds": {
+      "female": "female-natural-soft-glow",
+      "male": "male-clean-natural-grooming"
+    },
+    "makeupOverride": {
+      "female": "底妆轻透干净，保留真实肤色与细微纹理，眉眼柔和清楚，唇色控制在低饱和裸粉或豆沙范围内。",
+      "male": "皮肤状态干净清爽，仅轻微修饰瑕疵与黑眼圈，眉毛整洁自然，保留真实男性气质。"
+    },
+    "outfitOverride": {
+      "default": "白色宽松长袖衬衫，内搭浅色打底衫，手臂挎着草编包"
+    },
+    "stylingConstraintAdditions": {
+      "default": [
+        "保持背景的绿色植物和光斑效果，突出人物与花朵的互动，保持逆光带来的柔和氛围"
+      ]
+    },
+    "stylingConstraints": [
+      "保持背景的绿色植物和光斑效果，突出人物与花朵的互动，保持逆光带来的柔和氛围"
+    ],
+    "lightingGuardrails": [
+      "保持背景的绿色植物和光斑效果，突出人物与花朵的互动，保持逆光带来的柔和氛围"
+    ],
+    "lightingAdjustment": [
+      "保持背景的绿色植物和光斑效果，突出人物与花朵的互动，保持逆光带来的柔和氛围"
+    ],
+    "recommendedHairstyleCategoryKeys": {},
+    "requiredOutfitTags": [
+      "garden",
+      "outdoor",
+      "白色"
+    ],
+    "forbiddenOutfitTags": [
+      "强结构礼服感",
+      "高饱和撞色",
+      "复杂夸张配饰"
+    ],
+    "defaultPerformanceIds": [
+      "modern-outdoor-natural"
+    ],
+    "recommendedPerformanceIds": [
+      "modern-outdoor-natural"
+    ],
+    "forbiddenPerformanceIds": [],
+    "hairPolicyOverride": "strict_lock",
+    "themeCompatibility": [
+      "modern",
+      "seasonal"
+    ],
+    "settingCompatibility": [
+      "garden",
+      "outdoor"
+    ]
+  },
+  {
+    "sceneId": "modern-cherry-blossom-spring",
+    "sceneFamily": "modern_garden",
+    "defaultStylingId": "female-natural-soft-glow",
+    "defaultStylingIds": [
+      "female-natural-soft-glow",
+      "male-clean-natural-grooming",
+      "unisex-natural-soft"
+    ],
+    "recommendedStylingIds": [
+      "female-natural-soft-glow",
+      "female-evening-film-glow"
+    ],
+    "fallbackStylingIds": [
+      "unisex-natural-soft"
+    ],
+    "forbiddenStylingIds": [
+      "female-minimal-editorial",
+      "male-sharp-editorial",
+      "unisex-structured-editorial"
+    ],
+    "allowedStylingIds": [
+      "female-natural-soft-glow",
+      "male-clean-natural-grooming",
+      "unisex-natural-soft",
+      "female-evening-film-glow"
+    ],
+    "genderStylingIds": {
+      "female": "female-natural-soft-glow",
+      "male": "male-clean-natural-grooming"
+    },
+    "makeupOverride": {
+      "female": "底妆轻透干净，保留真实肤色与细微纹理，眉眼柔和清楚，唇色控制在低饱和裸粉或豆沙范围内。",
+      "male": "皮肤状态干净清爽，仅轻微修饰瑕疵与黑眼圈，眉毛整洁自然，保留真实男性气质。"
+    },
+    "outfitOverride": {
+      "default": "白色柔软上衣，肩颈区域平整顺滑、贴合自然，不在脖颈根部形成堆叠褶皱"
+    },
+    "stylingConstraintAdditions": {
+      "default": [
+        "背景需保持花海的密集感，必须保留打在皮肤上的树影光斑，确保回眸动作的自然流畅",
+        "脖颈线条与领口必须干净流畅，衣领和针织领口自然平顺，不要在脖子根部形成明显堆积褶皱、勒痕或厚重阴影"
+      ]
+    },
+    "stylingConstraints": [
+      "背景需保持花海的密集感，必须保留打在皮肤上的树影光斑，确保回眸动作的自然流畅",
+      "脖颈线条与领口必须干净流畅，衣领和针织领口自然平顺，不要在脖子根部形成明显堆积褶皱、勒痕或厚重阴影"
+    ],
+    "lightingGuardrails": [
+      "背景需保持花海的密集感，必须保留打在皮肤上的树影光斑，确保回眸动作的自然流畅",
+      "脖颈线条与领口必须干净流畅，衣领和针织领口自然平顺，不要在脖子根部形成明显堆积褶皱、勒痕或厚重阴影"
+    ],
+    "lightingAdjustment": [
+      "背景需保持花海的密集感，必须保留打在皮肤上的树影光斑，确保回眸动作的自然流畅",
+      "脖颈线条与领口必须干净流畅，衣领和针织领口自然平顺，不要在脖子根部形成明显堆积褶皱、勒痕或厚重阴影"
+    ],
+    "recommendedHairstyleCategoryKeys": {},
+    "requiredOutfitTags": [
+      "garden",
+      "outdoor",
+      "白色"
+    ],
+    "forbiddenOutfitTags": [
+      "强结构礼服感",
+      "高饱和撞色",
+      "复杂夸张配饰"
+    ],
+    "defaultPerformanceIds": [
+      "modern-turn-back"
+    ],
+    "recommendedPerformanceIds": [
+      "modern-turn-back"
+    ],
+    "forbiddenPerformanceIds": [],
+    "hairPolicyOverride": "strict_lock",
+    "themeCompatibility": [
+      "modern",
+      "seasonal"
+    ],
+    "settingCompatibility": [
+      "garden",
+      "outdoor"
     ]
   }
 ]

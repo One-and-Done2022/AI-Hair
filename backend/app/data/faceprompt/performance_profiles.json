@@ -1,0 +1,498 @@
+[
+  {
+    "id": "modern-still-front",
+    "title": "现代静态正面",
+    "summary": "适合近景写实场景的稳定正面表现。",
+    "themeTags": [
+      "modern"
+    ],
+    "styleLines": [
+      "realistic_editorial"
+    ],
+    "compatibleSceneFamilies": [
+      "modern_window",
+      "modern_study",
+      "modern_bathroom",
+      "modern_corridor",
+      "modern_home"
+    ],
+    "expressionOptions": [
+      "自然看向镜头",
+      "安静地垂眼微笑",
+      "温和地看镜头"
+    ],
+    "actionOptions": [
+      "自然站立或静止停顿",
+      "平视镜头、肩颈轻微放松"
+    ],
+    "gestureConstraints": [
+      "主体动作优先，不要叠加第二套手部动作",
+      "手部必须符合真实解剖结构，十指分明，禁止手指融合"
+    ],
+    "bodyPoseHints": [
+      "肩颈放松，躯干保持稳定，不要夸张扭转"
+    ],
+    "handPropPolicy": "无明确道具需求时，不额外添加杯子、书本或花束。"
+  },
+  {
+    "id": "modern-candid-pause",
+    "title": "现代抓拍停顿",
+    "summary": "适合生活化空间的轻抓拍表现。",
+    "themeTags": [
+      "modern"
+    ],
+    "styleLines": [
+      "realistic_editorial"
+    ],
+    "compatibleSceneFamilies": [
+      "modern_interior",
+      "modern_cafe",
+      "modern_hotel"
+    ],
+    "expressionOptions": [
+      "若有所思地停顿",
+      "眼神放空",
+      "慵懒看镜头"
+    ],
+    "actionOptions": [
+      "停在自然抓拍瞬间",
+      "轻微前倾停顿",
+      "半侧身放松停顿"
+    ],
+    "gestureConstraints": [
+      "动作必须像抓拍截帧，不做刻意摆拍",
+      "不要叠加抓头发、拨头发这类额外手部动作"
+    ],
+    "bodyPoseHints": [
+      "重心自然落在一侧，肩线略有倾斜但不要变形"
+    ],
+    "handPropPolicy": "只有当场景明确提供桌面或坐具时，才允许少量手部支撑动作。"
+  },
+  {
+    "id": "modern-lean-seat",
+    "title": "现代倚靠坐姿",
+    "summary": "适合椅背、沙发、床边等有依靠面的松弛表现。",
+    "themeTags": [
+      "modern"
+    ],
+    "styleLines": [
+      "realistic_editorial"
+    ],
+    "compatibleSceneFamilies": [
+      "modern_interior",
+      "modern_hotel",
+      "modern_home"
+    ],
+    "expressionOptions": [
+      "神情松弛",
+      "轻轻走神",
+      "温和地看向镜头"
+    ],
+    "actionOptions": [
+      "靠在椅背上微侧身",
+      "靠坐在椅子上微微前倾",
+      "停在自然倚靠瞬间"
+    ],
+    "gestureConstraints": [
+      "动作优先体现倚靠关系，不要再叠加复杂手势",
+      "肘部与肩颈角度要自然，不要出现反关节姿态"
+    ],
+    "bodyPoseHints": [
+      "依靠面要明确，腰背角度自然，不做大幅拧转"
+    ],
+    "handPropPolicy": "如果主体动作已经占用手部，不额外叠加杯子、手机等小道具。"
+  },
+  {
+    "id": "modern-hold-cup",
+    "title": "现代持杯停顿",
+    "summary": "适合窗边、咖啡馆等能自然持杯的生活化表现。",
+    "themeTags": [
+      "modern"
+    ],
+    "styleLines": [
+      "realistic_editorial"
+    ],
+    "compatibleSceneFamilies": [
+      "modern_window",
+      "modern_cafe"
+    ],
+    "expressionOptions": [
+      "安静地垂眼微笑",
+      "温和看向镜头",
+      "若有所思地停顿"
+    ],
+    "actionOptions": [
+      "双手轻握杯子停顿",
+      "单手扶杯看向侧前方"
+    ],
+    "gestureConstraints": [
+      "杯子只能作为一个主道具，不要再叠加其它手部动作",
+      "手指要完整可读，杯子与手部接触关系自然真实"
+    ],
+    "bodyPoseHints": [
+      "胸肩放松，手肘角度自然，避免端杯僵硬感"
+    ],
+    "handPropPolicy": "仅允许一个透明杯或马克杯作为主道具。"
+  },
+  {
+    "id": "modern-study-pause",
+    "title": "现代书房停顿",
+    "summary": "适合书房与静物环境的知性表现。",
+    "themeTags": [
+      "modern"
+    ],
+    "styleLines": [
+      "realistic_editorial"
+    ],
+    "compatibleSceneFamilies": [
+      "modern_study"
+    ],
+    "expressionOptions": [
+      "专注后抬眼",
+      "若有所思地轻抿嘴唇",
+      "温和地看镜头"
+    ],
+    "actionOptions": [
+      "低头翻书后抬眼",
+      "手扶椅背微侧身",
+      "单手托住下巴短暂停顿"
+    ],
+    "gestureConstraints": [
+      "书本或椅背动作只保留一种，不要互相叠加",
+      "避免高强度摆拍感，保持安静可信的知识感"
+    ],
+    "bodyPoseHints": [
+      "肩线平稳，头颈关系自然，动作幅度小而准确"
+    ],
+    "handPropPolicy": "如果使用书本或椅背动作，不再叠加第二件道具。"
+  },
+  {
+    "id": "modern-turn-back",
+    "title": "现代回眸停顿",
+    "summary": "适合户外或带空间纵深的回身表现。",
+    "themeTags": [
+      "modern",
+      "seasonal"
+    ],
+    "styleLines": [
+      "realistic_editorial",
+      "fashion_editorial"
+    ],
+    "compatibleSceneFamilies": [
+      "modern_home",
+      "modern_rooftop",
+      "modern_garden"
+    ],
+    "expressionOptions": [
+      "回头看向镜头",
+      "眼神清澈温柔",
+      "略带情绪地停顿"
+    ],
+    "actionOptions": [
+      "上半身轻微侧转并回头凝视镜头",
+      "半转身停在回眸瞬间"
+    ],
+    "gestureConstraints": [
+      "回眸动作只保留一个主方向，不要叠加大幅手臂动作",
+      "肩颈与脖子线条必须干净，不要因为动作制造不合理褶皱或遮挡"
+    ],
+    "bodyPoseHints": [
+      "转身幅度控制在半身范围内，重心稳定，肩颈线条清楚"
+    ],
+    "handPropPolicy": "无必要时不要加道具，优先保证回眸主动作完整。"
+  },
+  {
+    "id": "modern-outdoor-natural",
+    "title": "现代户外自然",
+    "summary": "适合花园、麦田、绿意等户外自然场景。",
+    "themeTags": [
+      "modern",
+      "seasonal"
+    ],
+    "styleLines": [
+      "realistic_editorial"
+    ],
+    "compatibleSceneFamilies": [
+      "modern_garden",
+      "modern_field"
+    ],
+    "expressionOptions": [
+      "温柔微笑",
+      "平静直视镜头",
+      "神态自然灵动"
+    ],
+    "actionOptions": [
+      "静静地站在场景中",
+      "身体微微侧向镜头",
+      "轻松站立停顿"
+    ],
+    "gestureConstraints": [
+      "动作保持轻盈自然，不要做夸张肢体摆拍",
+      "若带花束或包袋，只保留一组稳定手部关系"
+    ],
+    "bodyPoseHints": [
+      "肩线舒展，肢体轻松，保留自然呼吸感"
+    ],
+    "handPropPolicy": "只有当场景明确需要花束、包袋时才加入，并确保主体仍然是人物。"
+  },
+  {
+    "id": "modern-editorial-strong",
+    "title": "现代强结构时装",
+    "summary": "适合高反差、强布光和空间感明确的时装场景。",
+    "themeTags": [
+      "modern"
+    ],
+    "styleLines": [
+      "fashion_editorial"
+    ],
+    "compatibleSceneFamilies": [
+      "modern_studio",
+      "modern_city",
+      "modern_gallery",
+      "modern_rooftop"
+    ],
+    "expressionOptions": [
+      "平静直视镜头",
+      "冷静停顿",
+      "神情克制但有张力"
+    ],
+    "actionOptions": [
+      "正面站立定格",
+      "半侧身停在镜头前",
+      "肩颈轻微转向形成结构线"
+    ],
+    "gestureConstraints": [
+      "动作必须服务轮廓，不要加入生活化零碎小动作",
+      "手部只允许一组简单清晰姿态，禁止手指融合和重复"
+    ],
+    "bodyPoseHints": [
+      "肩线和颈线要干净利落，姿态稳定，强调结构可读性"
+    ],
+    "handPropPolicy": "无明确道具需求时，不添加任何手持物。"
+  },
+  {
+    "id": "modern-editorial-seat",
+    "title": "现代时装坐姿",
+    "summary": "适合酒吧、后台、戏台或暗场空间的时装坐姿表现。",
+    "themeTags": [
+      "modern"
+    ],
+    "styleLines": [
+      "fashion_editorial"
+    ],
+    "compatibleSceneFamilies": [
+      "modern_stage",
+      "modern_bar",
+      "modern_backstage"
+    ],
+    "expressionOptions": [
+      "平静直视",
+      "带轻微疏离感",
+      "专注而克制"
+    ],
+    "actionOptions": [
+      "端坐桌前停顿",
+      "坐在镜前微侧身",
+      "坐姿支撑上半身形成稳定轮廓"
+    ],
+    "gestureConstraints": [
+      "坐姿以轮廓清晰为主，不叠加第二组手部动作",
+      "若有杯子、镜前灯等元素，只保留单一明确关系"
+    ],
+    "bodyPoseHints": [
+      "上半身挺拔但不要僵硬，肩颈角度清楚，坐姿结构完整"
+    ],
+    "handPropPolicy": "允许一个主道具，但必须保证手部和道具关系自然、十指分明。"
+  },
+  {
+    "id": "guofeng-still-front",
+    "title": "国风静态正面",
+    "summary": "国风基础静态表现。",
+    "themeTags": [
+      "guofeng"
+    ],
+    "styleLines": [
+      "realistic_editorial",
+      "fashion_editorial"
+    ],
+    "compatibleSceneFamilies": [],
+    "expressionOptions": [
+      "安静看向镜头",
+      "含蓄垂眼停顿"
+    ],
+    "actionOptions": [
+      "自然静立",
+      "半身停顿"
+    ],
+    "gestureConstraints": [
+      "动作克制，不做现代生活化手势"
+    ],
+    "bodyPoseHints": [
+      "姿态端正但不僵硬，保留东方含蓄感"
+    ],
+    "handPropPolicy": "无道具时保持手部简洁，不额外制造复杂动作。"
+  },
+  {
+    "id": "guofeng-turn-back",
+    "title": "国风回身回眸",
+    "summary": "国风回身动作。",
+    "themeTags": [
+      "guofeng"
+    ],
+    "styleLines": [
+      "realistic_editorial",
+      "fashion_editorial"
+    ],
+    "compatibleSceneFamilies": [],
+    "expressionOptions": [
+      "含蓄回眸",
+      "静静回望"
+    ],
+    "actionOptions": [
+      "半转身回眸停顿"
+    ],
+    "gestureConstraints": [
+      "回身动作轻缓，不叠加多余手部动作"
+    ],
+    "bodyPoseHints": [
+      "衣摆和身体方向统一，动作不要过猛"
+    ],
+    "handPropPolicy": "无明确道具时保持手部低存在感。"
+  },
+  {
+    "id": "guofeng-hold-fan",
+    "title": "国风执扇",
+    "summary": "国风执扇动作。",
+    "themeTags": [
+      "guofeng"
+    ],
+    "styleLines": [
+      "realistic_editorial",
+      "fashion_editorial"
+    ],
+    "compatibleSceneFamilies": [],
+    "expressionOptions": [
+      "低眉停顿",
+      "安静看向镜头"
+    ],
+    "actionOptions": [
+      "单手执扇停顿"
+    ],
+    "gestureConstraints": [
+      "扇子只能作为唯一主道具，不叠加其它手部动作"
+    ],
+    "bodyPoseHints": [
+      "手臂角度自然，扇子与脸部保持合理距离"
+    ],
+    "handPropPolicy": "仅允许一把扇子作为主道具。"
+  },
+  {
+    "id": "guofeng-hold-book",
+    "title": "国风持书",
+    "summary": "国风持书动作。",
+    "themeTags": [
+      "guofeng"
+    ],
+    "styleLines": [
+      "realistic_editorial",
+      "fashion_editorial"
+    ],
+    "compatibleSceneFamilies": [],
+    "expressionOptions": [
+      "若有所思",
+      "安静垂眼"
+    ],
+    "actionOptions": [
+      "双手持书停顿",
+      "单手扶书回看镜头"
+    ],
+    "gestureConstraints": [
+      "书本只能作为唯一主道具，不叠加其它手部动作"
+    ],
+    "bodyPoseHints": [
+      "书本与身体关系稳定，不要悬空错位"
+    ],
+    "handPropPolicy": "仅允许一本书作为主道具。"
+  },
+  {
+    "id": "guofeng-hold-umbrella",
+    "title": "国风执伞",
+    "summary": "国风执伞动作。",
+    "themeTags": [
+      "guofeng"
+    ],
+    "styleLines": [
+      "realistic_editorial",
+      "fashion_editorial"
+    ],
+    "compatibleSceneFamilies": [],
+    "expressionOptions": [
+      "含蓄停顿",
+      "安静回望"
+    ],
+    "actionOptions": [
+      "单手执伞停顿"
+    ],
+    "gestureConstraints": [
+      "伞只能作为唯一主道具，手部关系必须自然稳定"
+    ],
+    "bodyPoseHints": [
+      "伞柄方向明确，手臂与肩线不要扭曲"
+    ],
+    "handPropPolicy": "仅允许一把伞作为主道具。"
+  },
+  {
+    "id": "guofeng-lean-rail",
+    "title": "国风倚栏",
+    "summary": "国风倚栏动作。",
+    "themeTags": [
+      "guofeng"
+    ],
+    "styleLines": [
+      "realistic_editorial",
+      "fashion_editorial"
+    ],
+    "compatibleSceneFamilies": [],
+    "expressionOptions": [
+      "若有所思",
+      "安静侧望"
+    ],
+    "actionOptions": [
+      "轻倚栏杆停顿"
+    ],
+    "gestureConstraints": [
+      "倚靠关系明确，不叠加第二组手部动作"
+    ],
+    "bodyPoseHints": [
+      "身体和栏杆关系自然，肩线舒展"
+    ],
+    "handPropPolicy": "以栏杆支撑为主，不再叠加其它道具。"
+  },
+  {
+    "id": "guofeng-slow-walk",
+    "title": "国风缓步",
+    "summary": "国风缓步动作。",
+    "themeTags": [
+      "guofeng"
+    ],
+    "styleLines": [
+      "realistic_editorial",
+      "fashion_editorial"
+    ],
+    "compatibleSceneFamilies": [],
+    "expressionOptions": [
+      "安静前行",
+      "轻微回看"
+    ],
+    "actionOptions": [
+      "缓步前行定格"
+    ],
+    "gestureConstraints": [
+      "动作节奏轻缓，不允许奔跑或大幅摆臂"
+    ],
+    "bodyPoseHints": [
+      "步态轻稳，衣摆和身体方向协调"
+    ],
+    "handPropPolicy": "如无必要不加道具，优先保持步态干净。"
+  }
+]

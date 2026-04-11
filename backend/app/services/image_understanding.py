@@ -66,7 +66,7 @@ def build_scene_understanding_prompt() -> str:
         "shot, scene_environment, scene_lighting, scene_mood, expression, "
         "subject_action, makeup, outfit, styling_constraints, scene_constraints。\n"
         "要求：\n"
-        "1. scene_only 视角，只保留场景、动作、表情、服饰、构图信息。\n"
+        "1. 以 identity-locked scene render 视角拆解，只保留场景、动作、表情、服饰、构图信息；当前输出继续兼容 scene_only block。\n"
         "2. 如果图片里有人物发型，请完全忽略，不要写入任何发型描述。\n"
         "3. 输出内容要适合直接拼装到中文提示词中，语气简洁、具体、可执行。\n"
         "4. 如果图片中某项不明显，也要给出最合理、最保守的概括。\n"
@@ -174,7 +174,7 @@ def _run_chat_completion_via_curl(
         "messages": [
             {
                 "role": "system",
-                "content": "你只负责把参考图拆成 scene_only 所需的结构化 block。",
+                "content": "你只负责把参考图拆成 identity-locked scene render 所需的结构化 block，当前输出继续兼容 scene_only 字段。",
             },
             {
                 "role": "user",
