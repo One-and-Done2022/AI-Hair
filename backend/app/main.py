@@ -13,6 +13,7 @@ from app.routers import (
     history,
     jobs,
     me,
+    provider_admin,
     recommendations,
     scene_understanding,
     templates,
@@ -103,6 +104,7 @@ def create_app() -> FastAPI:
     app.include_router(jobs.router, prefix=settings.api_prefix)
     app.include_router(history.router, prefix=settings.api_prefix)
     app.include_router(me.router, prefix=settings.api_prefix)
+    app.include_router(provider_admin.router)
 
     @app.get("/healthz")
     def healthcheck() -> dict[str, str]:

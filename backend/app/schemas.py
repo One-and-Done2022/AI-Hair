@@ -327,3 +327,137 @@ class MeResponse(BaseModel):
     processing_jobs: int
     provider_alerts: list[str] = Field(default_factory=list)
     created_at: str
+
+class ProviderAdminAlertRecord(BaseModel):
+    alert_id: str
+    message: str
+    updated_at: str | None = None
+
+
+class ProviderAdminProbeStatus(BaseModel):
+    checked_at: str | None = None
+    reachable: bool | None = None
+    healthy: bool | None = None
+    status_code: int | None = None
+    detail: str | None = None
+
+
+class ProviderAdminTestResult(BaseModel):
+    checked_at: str
+    success: bool
+    duration_seconds: float
+    error_code: str | None = None
+    error_message: str | None = None
+    preview_url: str | None = None
+    summary: str | None = None
+
+
+class ProviderAdminEntryItem(BaseModel):
+    entry_id: str
+    entry_label: str
+    priority: int
+    enabled: bool
+    protocol: str
+    base_url: str
+    endpoint: str
+    model_name: str
+    credential_label: str | None = None
+    console_url: str | None = None
+    docs_url: str | None = None
+    status: str
+    status_label: str
+    note: str | None = None
+    probe: ProviderAdminProbeStatus | None = None
+    last_test: ProviderAdminTestResult | None = None
+
+
+class ProviderAdminGroupItem(BaseModel):
+    provider_id: str
+    provider_label: str
+    category: str
+    runtime_policy: str
+    runtime_note: str | None = None
+    supports_reorder: bool
+    status: str
+    status_label: str
+    updated_at: str | None = None
+    alerts: list[ProviderAdminAlertRecord] = Field(default_factory=list)
+    entries: list[ProviderAdminEntryItem] = Field(default_factory=list)
+
+
+class ProviderAdminDashboardSummary(BaseModel):
+    provider_count: int
+    enabled_provider_count: int
+    entry_count: int
+    enabled_entry_count: int
+    healthy_entry_count: int
+    degraded_entry_count: int
+    unavailable_entry_count: int
+    disabled_entry_count: int
+    unknown_entry_count: int
+    updated_at: str | None = None
+
+
+class ProviderAdminDashboardResponse(BaseModel):
+    updated_at: str | None = None
+    connectivity_updated_at: str | None = None
+    summary: ProviderAdminDashboardSummary
+    providers: list[ProviderAdminGroupItem] = Field(default_factory=list)
+    alerts: list[ProviderAdminAlertRecord] = Field(default_factory=list)
+
+
+class ProviderAdminOrderItem(BaseModel):
+    entry_id: str
+    enabled: bool = True
+
+
+class ProviderAdminOrderRequest(BaseModel):
+    items: list[ProviderAdminOrderItem] = Field(default_factory=list)
+
+
+class ProviderAdminTestRequest(BaseModel):
+    entry_id: str
+    prompt: str | None = None
+    aspect_ratio: Literal["1:1", "3:4", "4:3", "9:16", "16:9"] = "3:4"
+    resolution: Literal["1K", "2K", "4K"] = "2K"
+
+
+class ProviderAdminRouteTestResult(ProviderAdminTestResult):
+    pass
+
+
+class ProviderAdminProfileItem(BaseModel):
+    profile_id: str
+    profile_label: str
+    priority: int
+    enabled: bool
+    protocol: str
+    base_url: str
+    endpoint: str
+    model_name: str
+    probe: ProviderAdminProbeStatus | None = None
+    last_test: ProviderAdminRouteTestResult | None = None
+
+
+class NanoBananaProAdminResponse(BaseModel):
+    provider_name: str
+    updated_at: str | None = None
+    connectivity_updated_at: str | None = None
+    alerts: list[str] = Field(default_factory=list)
+    profiles: list[ProviderAdminProfileItem] = Field(default_factory=list)
+
+
+class ProviderAdminRouteOrderItem(BaseModel):
+    profile_id: str
+    enabled: bool = True
+
+
+class ProviderAdminRouteOrderRequest(BaseModel):
+    items: list[ProviderAdminRouteOrderItem] = Field(default_factory=list)
+
+
+class ProviderAdminRouteTestRequest(BaseModel):
+    profile_id: str
+    prompt: str | None = None
+    aspect_ratio: Literal["1:1", "3:4", "4:3", "9:16", "16:9"] = "3:4"
+    resolution: Literal["1K", "2K", "4K"] = "2K"

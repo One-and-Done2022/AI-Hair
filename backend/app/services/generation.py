@@ -29,7 +29,7 @@ from PIL import Image, ImageDraw, ImageFilter, ImageOps
 from app.config import get_settings
 from app.services.concurrency_limiter import concurrency_slot
 from app.services.key_pool import ApiKeyLease
-from app.services import provider_alerts
+from app.services import provider_alerts, provider_routing
 
 
 logger = logging.getLogger(__name__)
@@ -61,6 +61,13 @@ class ImageGenerationError(Exception):
         self.retryable = retryable
         self.retry_after_seconds = retry_after_seconds
         self.disable_key = disable_key
+
+
+def _ensure_provider_entry_enabled(provider_id: str, entry_id: str) -> None:
+    try:
+        provider_routing.ensure_entry_enabled(provider_id, entry_id)
+    except provider_routing.ProviderRoutingError as exc:
+        raise ImageGenerationError("provider_disabled", str(exc)) from exc
 
 
 def _event_field(event, name: str):
@@ -431,14 +438,21 @@ class MockGenerator(BaseGenerator):
 class SeedreamGenerator(BaseGenerator):
     supports_key_pool = True
 
-    def __init__(self, model_name: str | None = None) -> None:
+    def __init__(self, model_name: str | None = None, entry_id: str | None = None) -> None:
         settings = get_settings()
         if not settings.ark_api_keys:
             raise ImageGenerationError(
                 "missing_api_key", "At least one Ark API key must be configured when using Seedream."
             )
 
-        self.model_name = (model_name or settings.seedream_premium_model or settings.ark_image_model).strip()
+        self.entry_id = (
+            str(entry_id or provider_routing.seedream_entry_id_for_model(model_name, settings) or "premium")
+            .strip()
+            .lower()
+        )
+        self.model_name = (
+            model_name or provider_routing.seedream_model_name_for_entry(self.entry_id, settings)
+        ).strip()
         self._base_url = settings.ark_base_url
         self._clients: dict[str, OpenAI] = {}
         self._client_lock = Lock()
@@ -691,7 +705,10 @@ class SeedreamGenerator(BaseGenerator):
         provider_key: ApiKeyLease | None = None,
         on_preview: PreviewCallback | None = None,
         on_candidate: CandidateCallback | None = None,
+        enforce_enabled: bool = True,
     ) -> GenerationResult:
+        if enforce_enabled:
+            _ensure_provider_entry_enabled("seedream", self.entry_id)
         if provider_key is None:
             settings = get_settings()
             eligible_credentials = settings.ark_api_keys_for_model(self.model_name)
@@ -923,6 +940,23 @@ def _extract_nano_error_message(response: httpx.Response) -> str:
     return response.text or f"HTTP {response.status_code}"
 
 
+def _is_no_available_channel_message(message: str) -> bool:
+    normalized_message = str(message or "").strip().lower()
+    if not normalized_message:
+        return False
+    return any(
+        keyword in normalized_message
+        for keyword in (
+            "无可用渠道",
+            "无可用通道",
+            "no available channel",
+            "no available channels",
+            "no available provider",
+            "no available providers",
+        )
+    )
+
+
 def _map_nano_http_error(response: httpx.Response) -> ImageGenerationError:
     message = _extract_nano_error_message(response)
     normalized_message = message.lower()
@@ -948,6 +982,13 @@ def _map_nano_http_error(response: httpx.Response) -> ImageGenerationError:
         return ImageGenerationError("authentication_failed", message)
     if response.status_code == 400:
         return ImageGenerationError("bad_request", message)
+    if response.status_code in {500, 503} and _is_no_available_channel_message(message):
+        return ImageGenerationError(
+            "provider_unavailable",
+            "当前换发线路暂无可用渠道，请稍后再试。",
+            retryable=True,
+            retry_after_seconds=300,
+        )
     if response.status_code in {408, 409, 429, 500, 502, 503, 504}:
         return ImageGenerationError(
             f"upstream_status_{response.status_code}",
@@ -1020,6 +1061,7 @@ class ApiYiImageGenerator(BaseGenerator):
         provider_name: str,
         api_key_env_name: str,
         max_concurrency: int,
+        routing_provider_id: str | None = None,
     ) -> None:
         if not profiles:
             raise ImageGenerationError(
@@ -1028,6 +1070,7 @@ class ApiYiImageGenerator(BaseGenerator):
             )
         self.model_name = model_name
         self.provider_name = provider_name
+        self._routing_provider_id = (routing_provider_id or "").strip() or None
         self._max_concurrency = max(1, int(max_concurrency))
         self._profiles = tuple(
             self.ProviderProfile(
@@ -1057,6 +1100,14 @@ class ApiYiImageGenerator(BaseGenerator):
                 return profile.base_url
             return f"{profile.base_url}/chat/completions"
         return f"{profile.base_url}/v1beta/models/{profile.model_name}:generateContent"
+
+    def _runtime_profiles(self) -> tuple[ProviderProfile, ...]:
+        if self._routing_provider_id:
+            return provider_routing.apply_provider_entry_routing(
+                self._routing_provider_id,
+                self._profiles,
+            )
+        return self._profiles
 
     def _should_try_next_profile(
         self,
@@ -1112,6 +1163,8 @@ class ApiYiImageGenerator(BaseGenerator):
     ) -> int | None:
         if exc.code == "quota_exhausted":
             return exc.retry_after_seconds or 3600
+        if exc.code == "provider_unavailable":
+            return exc.retry_after_seconds or 300
         if exc.code == "authentication_failed":
             return exc.retry_after_seconds or 600
         if self._is_profile_compatibility_error(profile, exc):
@@ -1120,8 +1173,8 @@ class ApiYiImageGenerator(BaseGenerator):
             return exc.retry_after_seconds or NANO_PROFILE_RETRY_BACKOFF_SECONDS
         return None
 
-    def _provider_alert_id(self, profile: ProviderProfile) -> str:
-        return f"{self.provider_name}:{profile.profile_id}:quota"
+    def _provider_alert_id(self, profile: ProviderProfile, alert_type: str) -> str:
+        return f"{self.provider_name}:{profile.profile_id}:{alert_type}"
 
     def _notify_profile_quota_exhausted(self, profile: ProviderProfile) -> None:
         if self.provider_name != "nano-banana-pro":
@@ -1129,12 +1182,27 @@ class ApiYiImageGenerator(BaseGenerator):
         if profile.profile_id not in {"route1", "route2"}:
             return
         provider_alerts.upsert_alert(
-            alert_id=self._provider_alert_id(profile),
+            alert_id=self._provider_alert_id(profile, "quota"),
             message=f"Nano Banana Pro {profile.profile_label}额度可能已用完，系统已自动切换到下一条线路。",
         )
 
-    def _clear_profile_alert(self, profile: ProviderProfile) -> None:
-        provider_alerts.clear_alert(self._provider_alert_id(profile))
+    def _notify_profile_unavailable(self, profile: ProviderProfile) -> None:
+        if self.provider_name != "nano-banana-pro":
+            return
+        if profile.profile_id in {"route1", "route2"}:
+            message = (
+                f"Nano Banana Pro {profile.profile_label}当前无可用渠道，系统已自动切换到下一条线路。"
+            )
+        else:
+            message = "Nano Banana Pro 主线路当前无可用渠道，暂时无法生成，请稍后再试。"
+        provider_alerts.upsert_alert(
+            alert_id=self._provider_alert_id(profile, "availability"),
+            message=message,
+        )
+
+    def _clear_profile_alerts(self, profile: ProviderProfile) -> None:
+        provider_alerts.clear_alert(self._provider_alert_id(profile, "quota"))
+        provider_alerts.clear_alert(self._provider_alert_id(profile, "availability"))
 
     @staticmethod
     def _prompt_with_ratio(prompt: str, aspect_ratio: str) -> str:
@@ -1305,6 +1373,7 @@ class ApiYiImageGenerator(BaseGenerator):
         request_payload = {
             "contents": [
                 {
+                    "role": "user",
                     "parts": [
                         {"text": prompt},
                         {
@@ -1382,11 +1451,17 @@ class ApiYiImageGenerator(BaseGenerator):
         on_preview: PreviewCallback | None = None,
         on_candidate: CandidateCallback | None = None,
     ) -> GenerationResult:
+        runtime_profiles = self._runtime_profiles()
+        if not runtime_profiles:
+            raise ImageGenerationError(
+                "provider_disabled",
+                f"No enabled provider profiles are configured for {self.provider_name}.",
+            )
         available_profiles = [
-            profile for profile in self._profiles if not self._is_profile_backed_off(profile)
+            profile for profile in runtime_profiles if not self._is_profile_backed_off(profile)
         ]
         if not available_profiles:
-            available_profiles = list(self._profiles)
+            available_profiles = list(runtime_profiles)
 
         last_error: ImageGenerationError | None = None
 
@@ -1401,7 +1476,7 @@ class ApiYiImageGenerator(BaseGenerator):
                     on_candidate=on_candidate,
                 )
                 self._clear_profile_backoff(profile)
-                self._clear_profile_alert(profile)
+                self._clear_profile_alerts(profile)
                 return result
             except ImageGenerationError as exc:
                 last_error = exc
@@ -1410,6 +1485,8 @@ class ApiYiImageGenerator(BaseGenerator):
                     self._set_profile_backoff(profile, backoff_seconds)
                 if exc.code == "quota_exhausted":
                     self._notify_profile_quota_exhausted(profile)
+                elif exc.code == "provider_unavailable":
+                    self._notify_profile_unavailable(profile)
                 has_next_profile = index < len(available_profiles) - 1
                 if not has_next_profile or not self._should_try_next_profile(profile, exc):
                     raise
@@ -1438,6 +1515,7 @@ class NanoBananaProGenerator(ApiYiImageGenerator):
             provider_name="nano-banana-pro",
             api_key_env_name="NANO_BANANA_PRO_API_KEY",
             max_concurrency=settings.nano_banana_pro_max_concurrency,
+            routing_provider_id="nano_banana_pro",
         )
 
 
@@ -1459,6 +1537,7 @@ class NanoBanana2Generator(ApiYiImageGenerator):
             provider_name="nano-banana-2",
             api_key_env_name="NANO_BANANA_2_API_KEY",
             max_concurrency=settings.nano_banana_2_max_concurrency,
+            routing_provider_id="nano_banana_2",
         )
 
 
@@ -1472,6 +1551,7 @@ class SoraImageGenerator(BaseGenerator):
                 "missing_api_key",
                 "SORA_IMAGE_API_KEY must be configured when using sora-image.",
             )
+        self._entry_id = "primary"
         self._api_key = settings.sora_image_api_key
         self._base_url = settings.sora_image_base_url
         self.model_name = settings.sora_image_model
@@ -1493,7 +1573,10 @@ class SoraImageGenerator(BaseGenerator):
         provider_key: ApiKeyLease | None = None,
         on_preview: PreviewCallback | None = None,
         on_candidate: CandidateCallback | None = None,
+        enforce_enabled: bool = True,
     ) -> GenerationResult:
+        if enforce_enabled:
+            _ensure_provider_entry_enabled("sora_image", self._entry_id)
         with open(source_image_path, "rb") as handle:
             image_bytes = handle.read()
 
@@ -1585,11 +1668,12 @@ def build_generator(backend: str | None = None) -> BaseGenerator:
         return MockGenerator()
     resolved_backend = (backend or settings.image_generator_backend).strip().lower()
     if resolved_backend == "seedream_basic":
-        return SeedreamGenerator(model_name=settings.seedream_basic_model)
+        return SeedreamGenerator(model_name=settings.seedream_basic_model, entry_id="basic")
     if resolved_backend == "seedream_premium":
-        return SeedreamGenerator(model_name=settings.seedream_premium_model)
+        return SeedreamGenerator(model_name=settings.seedream_premium_model, entry_id="premium")
     if resolved_backend == "seedream":
-        return SeedreamGenerator()
+        entry_id = provider_routing.first_enabled_entry_id("seedream") or "premium"
+        return SeedreamGenerator(entry_id=entry_id)
     if resolved_backend == "nano_banana_pro":
         return NanoBananaProGenerator()
     if resolved_backend == "nano_banana_2":

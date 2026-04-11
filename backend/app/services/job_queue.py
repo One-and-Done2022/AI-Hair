@@ -7,7 +7,7 @@ from threading import Lock
 from threading import Event, Thread
 
 from app.config import get_settings
-from app.services import repository, storage, templates
+from app.services import provider_routing, repository, storage, templates
 from app.services.dispatch_queue import BaseJobQueue, build_job_queue
 from app.services.generation import (
     BaseGenerator,
@@ -437,7 +437,21 @@ class JobWorker:
         model_name: str | None = None,
     ) -> tuple[BaseGenerator, ApiKeyPool | None]:
         settings = get_settings()
-        generator_cache_key = self._build_generator_cache_key(backend, model_name)
+        effective_model_name = model_name
+        seedream_entry_id: str | None = None
+        if not settings.use_mock_generator and backend == "seedream":
+            if model_name is None:
+                seedream_entry_id = provider_routing.first_enabled_entry_id("seedream")
+                if seedream_entry_id is not None:
+                    effective_model_name = provider_routing.seedream_model_name_for_entry(
+                        seedream_entry_id,
+                        settings,
+                    )
+            else:
+                seedream_entry_id = provider_routing.seedream_entry_id_for_model(model_name, settings)
+                effective_model_name = model_name
+
+        generator_cache_key = self._build_generator_cache_key(backend, effective_model_name)
         with self._runtime_lock:
             generator = self._generator_cache.get(generator_cache_key)
             if generator is None:
@@ -445,20 +459,25 @@ class JobWorker:
                     generator = build_generator(backend)
                 elif backend == "seedream":
                     current_generator_model = getattr(self.generator, "model_name", None)
+                    current_generator_entry_id = getattr(self.generator, "entry_id", None)
                     if (
                         settings.image_generator_backend == "seedream"
-                        and (model_name is None or model_name == current_generator_model)
+                        and effective_model_name == current_generator_model
+                        and (seedream_entry_id is None or current_generator_entry_id == seedream_entry_id)
                     ):
                         generator = self.generator
                     else:
-                        generator = SeedreamGenerator(model_name=model_name)
-                elif backend == settings.image_generator_backend:
+                        generator = SeedreamGenerator(
+                            model_name=effective_model_name,
+                            entry_id=seedream_entry_id,
+                        )
+                elif backend == settings.image_generator_backend and model_name is None:
                     generator = self.generator
                 else:
                     generator = build_generator(backend)
                 self._generator_cache[generator_cache_key] = generator
 
-            resolved_model_name = model_name or getattr(generator, "model_name", None)
+            resolved_model_name = effective_model_name or getattr(generator, "model_name", None)
             key_pool_cache_key = self._build_key_pool_cache_key(
                 backend,
                 resolved_model_name if getattr(generator, "supports_key_pool", False) else None,

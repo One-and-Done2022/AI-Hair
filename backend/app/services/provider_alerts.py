@@ -4,6 +4,7 @@ import json
 from datetime import datetime, timezone
 from pathlib import Path
 from threading import Lock
+from typing import Any
 
 from app.config import get_settings
 
@@ -21,17 +22,24 @@ def _alert_file() -> Path:
     return settings.storage_dir / "provider_alerts.json"
 
 
-def _load_state() -> dict[str, dict]:
+def _load_state() -> dict[str, dict[str, Any]]:
     path = _alert_file()
     if not path.exists():
         return {}
     try:
-        return json.loads(path.read_text(encoding="utf-8"))
+        payload = json.loads(path.read_text(encoding="utf-8"))
     except Exception:
         return {}
+    if not isinstance(payload, dict):
+        return {}
+    return {
+        str(alert_id): item
+        for alert_id, item in payload.items()
+        if isinstance(item, dict)
+    }
 
 
-def _save_state(state: dict[str, dict]) -> None:
+def _save_state(state: dict[str, dict[str, Any]]) -> None:
     path = _alert_file()
     path.write_text(
         json.dumps(state, ensure_ascii=False, indent=2),
@@ -60,13 +68,25 @@ def clear_alert(alert_id: str) -> None:
         _save_state(state)
 
 
-def list_alert_messages() -> list[str]:
+def list_alert_records() -> list[dict[str, str | None]]:
     with _STATE_LOCK:
         state = _load_state()
-        items = list(state.values())
-    items.sort(key=lambda item: item.get("updated_at", ""), reverse=True)
+    items = [
+        {
+            "alert_id": alert_id,
+            "message": str(item.get("message") or "").strip() or None,
+            "created_at": str(item.get("created_at") or "").strip() or None,
+            "updated_at": str(item.get("updated_at") or "").strip() or None,
+        }
+        for alert_id, item in state.items()
+    ]
+    items.sort(key=lambda item: item.get("updated_at") or "", reverse=True)
+    return [item for item in items if item.get("message")]
+
+
+def list_alert_messages() -> list[str]:
     return [
         str(item.get("message") or "").strip()
-        for item in items
+        for item in list_alert_records()
         if str(item.get("message") or "").strip()
     ]

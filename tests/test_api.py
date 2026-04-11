@@ -1822,6 +1822,7 @@ def test_nano_banana_generator_uses_native_image_config(tmp_path, monkeypatch):
 
     assert request_log["url"].endswith(":generateContent")
     assert request_log["headers"]["Authorization"] == "Bearer nano-test-key"
+    assert request_log["json"]["contents"][0]["role"] == "user"
     assert request_log["json"]["generationConfig"]["imageConfig"] == {
         "aspectRatio": "3:4",
         "imageSize": "4K",
@@ -1871,7 +1872,7 @@ def test_nano_banana_pro_falls_back_to_backup_provider(tmp_path, monkeypatch):
             }
 
     def fake_post(url, *, headers=None, json=None, timeout=None):
-        request_log.append({"url": url, "headers": headers, "timeout": timeout})
+        request_log.append({"url": url, "headers": headers, "json": json, "timeout": timeout})
         if url.startswith("https://backup.example.test"):
             return httpx.Response(
                 401,
@@ -1896,6 +1897,7 @@ def test_nano_banana_pro_falls_back_to_backup_provider(tmp_path, monkeypatch):
 
     assert len(request_log) == 2
     assert request_log[0]["headers"]["Authorization"] == "Bearer backup-key"
+    assert request_log[0]["json"]["contents"][0]["role"] == "user"
     assert request_log[1]["headers"]["Authorization"] == "Bearer primary-key"
     assert request_log[0]["url"].startswith("https://backup.example.test")
     assert result.primary_image_bytes
@@ -2344,6 +2346,7 @@ def test_nano_banana_2_generator_uses_native_image_config(tmp_path, monkeypatch)
 
     assert request_log["url"].endswith(":generateContent")
     assert request_log["headers"]["Authorization"] == "Bearer nano-2-test-key"
+    assert request_log["json"]["contents"][0]["role"] == "user"
     assert request_log["json"]["generationConfig"]["imageConfig"] == {
         "aspectRatio": "1:8",
         "imageSize": "512px",

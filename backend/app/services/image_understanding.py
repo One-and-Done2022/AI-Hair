@@ -13,6 +13,7 @@ from PIL import Image
 
 from app.config import get_settings
 from app.services.concurrency_limiter import concurrency_slot
+from app.services import provider_routing
 
 
 SCENE_BLOCK_KEYS = (
@@ -648,6 +649,7 @@ class ImageUnderstandingService:
         if not settings.image_understanding_api_key:
             raise ImageUnderstandingError("尚未配置图片理解 API Key。")
 
+        self._entry_id = "primary"
         self.model_name = settings.image_understanding_model
         self._api_key = settings.image_understanding_api_key
         self._base_url = settings.image_understanding_base_url.rstrip("/")
@@ -657,7 +659,17 @@ class ImageUnderstandingService:
             f"image-understanding:{hashlib.sha1(self._api_key.encode('utf-8')).hexdigest()[:12]}"
         )
 
-    def extract_scene_blocks(self, image_bytes: bytes) -> SceneUnderstandingResult:
+    def extract_scene_blocks(
+        self,
+        image_bytes: bytes,
+        *,
+        enforce_enabled: bool = True,
+    ) -> SceneUnderstandingResult:
+        if enforce_enabled:
+            try:
+                provider_routing.ensure_entry_enabled("image_understanding", self._entry_id)
+            except provider_routing.ProviderRoutingError as exc:
+                raise ImageUnderstandingError(str(exc)) from exc
         optimized_bytes = _prepare_understanding_image(image_bytes)
         data_url = _build_data_url(optimized_bytes)
         with concurrency_slot(self._limiter_name, self._max_concurrency):
