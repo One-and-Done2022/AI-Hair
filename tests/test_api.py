@@ -913,12 +913,17 @@ def test_auth_upload_job_history_flow(tmp_path, monkeypatch):
         me_payload = me.json()
         assert me_payload["user_id"] == login.json()["user_id"]
         assert me_payload["nickname"] == f"微信用户 {login.json()['user_id']}"
-        assert me_payload["member_status"] == "普通用户"
+        assert me_payload["member_status"] == "内测用户"
+        assert me_payload["free_quota_total"] == 10
+        assert me_payload["free_quota_used"] == 1
+        assert me_payload["free_remaining"] == 9
+        assert me_payload["paid_remaining"] == 0
+        assert me_payload["total_remaining"] == 9
         assert me_payload["monthly_used"] == 1
         assert me_payload["total_jobs"] == 1
         assert me_payload["completed_jobs"] == 1
         assert me_payload["processing_jobs"] == 0
-        assert me_payload["remaining_quota"] == 19
+        assert me_payload["remaining_quota"] == 9
         assert me_payload["provider_alerts"] == []
 
         delete_response = client.delete(f"/api/jobs/{job_id}", headers=headers)
@@ -1082,8 +1087,120 @@ def test_job_accepts_professional_hair_color_mapping(tmp_path, monkeypatch):
         assert payload["hair_color_technique"] == "solid"
         assert payload["hair_color_professional_id"] == "solutor-cool-mist-5-72"
         assert payload["hair_color_professional_series_label"] == "烟熏冷雾系列"
-        assert payload["hair_color_professional_code"] == "5/72"
-        assert payload["hair_color_professional_note"] == "偏灰棕、轻烟熏、低饱和冷雾感"
+    assert payload["hair_color_professional_code"] == "5/72"
+    assert payload["hair_color_professional_note"] == "偏灰棕、轻烟熏、低饱和冷雾感"
+
+
+def test_generation_quota_and_purchase_flow(tmp_path, monkeypatch):
+    app = _build_app(tmp_path, monkeypatch)
+
+    with TestClient(app) as client:
+        login = client.post("/api/auth/wechat/login", json={"code": "dev-test"})
+        assert login.status_code == 200
+        headers = {"Authorization": f"Bearer {login.json()['token']}"}
+
+        upload = client.post(
+            "/api/uploads",
+            headers=headers,
+            files={"file": ("portrait.png", _build_test_image(), "image/png")},
+        )
+        assert upload.status_code == 200
+        upload_id = upload.json()["upload_id"]
+
+        catalog = client.get("/api/templates").json()
+        hairstyle_id = catalog["hairstyles"][0]["id"]
+        scene_id = catalog["scenes"][0]["id"]
+
+        me_before = client.get("/api/me", headers=headers)
+        assert me_before.status_code == 200
+        assert me_before.json()["free_remaining"] == 10
+        assert me_before.json()["paid_remaining"] == 0
+        assert me_before.json()["total_remaining"] == 10
+
+        for _ in range(10):
+            job_create = client.post(
+                "/api/jobs",
+                headers=headers,
+                json={
+                    "upload_id": upload_id,
+                    "hairstyle_id": hairstyle_id,
+                    "scene_id": scene_id,
+                    "generator_backend": "premium",
+                },
+            )
+            assert job_create.status_code == 201
+
+        me_exhausted = client.get("/api/me", headers=headers)
+        assert me_exhausted.status_code == 200
+        assert me_exhausted.json()["free_remaining"] == 0
+        assert me_exhausted.json()["paid_remaining"] == 0
+        assert me_exhausted.json()["total_remaining"] == 0
+        assert me_exhausted.json()["remaining_quota"] == 0
+
+        blocked_job = client.post(
+            "/api/jobs",
+            headers=headers,
+            json={
+                "upload_id": upload_id,
+                "hairstyle_id": hairstyle_id,
+                "scene_id": scene_id,
+                "generator_backend": "premium",
+            },
+        )
+        assert blocked_job.status_code == 402
+        assert blocked_job.json()["detail"]["code"] == "quota_exhausted"
+
+        purchase_catalog = client.get("/api/purchase/catalog")
+        assert purchase_catalog.status_code == 200
+        catalog_items = purchase_catalog.json()["items"]
+        assert len(catalog_items) == 1
+        assert catalog_items[0]["product_id"] == "single-generation-pack"
+        assert catalog_items[0]["price_cents"] == 100
+        assert catalog_items[0]["generation_count"] == 1
+
+        order_create = client.post(
+            "/api/purchase/orders",
+            headers=headers,
+            json={"product_id": catalog_items[0]["product_id"]},
+        )
+        assert order_create.status_code == 201
+        order_payload = order_create.json()
+        assert order_payload["status"] == "pending"
+        assert order_payload["amount_cents"] == 100
+        assert order_payload["amount_label"] == "1 元"
+
+        order_confirm = client.post(
+            f"/api/purchase/orders/{order_payload['order_id']}/confirm",
+            headers=headers,
+        )
+        assert order_confirm.status_code == 200
+        confirmed_payload = order_confirm.json()
+        assert confirmed_payload["status"] == "confirmed"
+        assert confirmed_payload["confirmed_at"]
+
+        me_recharged = client.get("/api/me", headers=headers)
+        assert me_recharged.status_code == 200
+        assert me_recharged.json()["free_remaining"] == 0
+        assert me_recharged.json()["paid_remaining"] == 1
+        assert me_recharged.json()["total_remaining"] == 1
+        assert me_recharged.json()["remaining_quota"] == 1
+
+        paid_job = client.post(
+            "/api/jobs",
+            headers=headers,
+            json={
+                "upload_id": upload_id,
+                "hairstyle_id": hairstyle_id,
+                "scene_id": scene_id,
+                "generator_backend": "premium",
+            },
+        )
+        assert paid_job.status_code == 201
+
+        me_after_paid_use = client.get("/api/me", headers=headers)
+        assert me_after_paid_use.status_code == 200
+        assert me_after_paid_use.json()["paid_remaining"] == 0
+        assert me_after_paid_use.json()["total_remaining"] == 0
 
 
 def test_normalize_hair_color_selection_allows_non_recommended_professional_color(monkeypatch):
@@ -1975,14 +2092,99 @@ def test_nano_banana_pro_falls_back_to_chat_provider(tmp_path, monkeypatch):
         on_preview=lambda image_bytes: previews.append(image_bytes),
     )
 
+    assert len(request_log) == 4
+    assert request_log[0]["headers"]["Authorization"] == "Bearer chat-key"
+    assert request_log[1]["headers"]["Authorization"] == "Bearer chat-key"
+    assert request_log[2]["headers"]["Authorization"] == "Bearer backup-key"
+    assert request_log[3]["headers"]["Authorization"] == "Bearer primary-key"
+    assert request_log[0]["url"] == "https://chat.example.test/v1/chat/completions"
+    assert request_log[0]["json"]["model"] == "Nano_Banana_Pro_2K_0"
+    assert request_log[0]["json"]["messages"][0]["content"][1]["type"] == "image_url"
+    assert request_log[0]["timeout"] == 150
+    assert len(previews) == 1
+    assert result.primary_image_bytes
+
+
+def test_nano_banana_pro_skips_chat_retry_after_slow_failure(tmp_path, monkeypatch):
+    _configure_runtime_env(tmp_path, monkeypatch, use_mock_generator="false")
+    monkeypatch.setenv("NANO_BANANA_PRO_API_KEY", "primary-key")
+    monkeypatch.setenv("NANO_BANANA_PRO_BASE_URL", "https://primary.example.test")
+    monkeypatch.setenv("NANO_BANANA_PRO_FALLBACK_API_KEY", "backup-key")
+    monkeypatch.setenv("NANO_BANANA_PRO_FALLBACK_BASE_URL", "https://backup.example.test")
+    monkeypatch.setenv("NANO_BANANA_PRO_CHAT_FALLBACK_API_KEY", "chat-key")
+    monkeypatch.setenv("NANO_BANANA_PRO_CHAT_FALLBACK_BASE_URL", "https://chat.example.test/v1")
+    monkeypatch.setenv("NANO_BANANA_PRO_CHAT_FALLBACK_MODEL", "Nano_Banana_Pro_2K_0")
+
+    import httpx
+
+    from app.services.generation import GenerationContext, NanoBananaProGenerator
+
+    _clear_runtime_caches()
+
+    source_path = tmp_path / "source.png"
+    source_path.write_bytes(_build_test_image())
+
+    request_log = []
+    perf_values = iter([0.0, 11.2])
+
+    def fake_perf_counter():
+        return next(perf_values, 11.2)
+
+    def fake_post(url, *, headers=None, json=None, timeout=None):
+        request_log.append({"url": url, "headers": headers, "json": json, "timeout": timeout})
+        if url.startswith("https://chat.example.test"):
+            return httpx.Response(
+                503,
+                request=httpx.Request("POST", url),
+                json={"error": {"message": "upstream unavailable"}},
+            )
+        if url.startswith("https://backup.example.test"):
+            return httpx.Response(
+                401,
+                request=httpx.Request("POST", url),
+                json={"error": {"message": "无效的令牌"}},
+            )
+        return httpx.Response(
+            200,
+            request=httpx.Request("POST", url),
+            json={
+                "candidates": [
+                    {
+                        "content": {
+                            "parts": [
+                                {
+                                    "inlineData": {
+                                        "mimeType": "image/png",
+                                        "data": base64.b64encode(_build_colored_image("#588157")).decode("utf-8"),
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                ]
+            },
+        )
+
+    monkeypatch.setattr("app.services.generation.httpx.post", fake_post)
+    monkeypatch.setattr("app.services.generation.time.perf_counter", fake_perf_counter)
+
+    generator = NanoBananaProGenerator()
+    result = generator.generate(
+        source_image_path=str(source_path),
+        prompt="test slow chat fallback prompt",
+        context=GenerationContext(
+            hairstyle_name="前刺短发",
+            scene_name="窗边生活感",
+            aspect_ratio="3:4",
+            resolution="1K",
+        ),
+    )
+
     assert len(request_log) == 3
     assert request_log[0]["headers"]["Authorization"] == "Bearer chat-key"
     assert request_log[1]["headers"]["Authorization"] == "Bearer backup-key"
     assert request_log[2]["headers"]["Authorization"] == "Bearer primary-key"
-    assert request_log[0]["url"] == "https://chat.example.test/v1/chat/completions"
-    assert request_log[0]["json"]["model"] == "Nano_Banana_Pro_2K_0"
-    assert request_log[0]["json"]["messages"][0]["content"][1]["type"] == "image_url"
-    assert len(previews) == 1
+    assert request_log[0]["timeout"] == 150
     assert result.primary_image_bytes
 
 

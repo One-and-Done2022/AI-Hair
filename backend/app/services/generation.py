@@ -40,6 +40,9 @@ CandidateCallback = Callable[[bytes], None]
 NANO_IMAGE_TIMEOUT_MAP = {"512px": 40, "1K": 60, "2K": 100, "4K": 120}
 CHAT_COMPLETION_RETRYABLE_STATUS_CODES = {408, 409, 429, 500, 502, 503, 504}
 CHAT_COMPLETION_MAX_ATTEMPTS = 1
+NANO_ROUTE2_TIMEOUT_SECONDS = 150
+NANO_ROUTE2_FAST_RETRY_WINDOW_SECONDS = 10
+NANO_ROUTE2_MAX_ATTEMPTS = 2
 NANO_PROFILE_RETRY_BACKOFF_SECONDS = 180
 SEEDREAM_REST_TIMEOUT_SECONDS = 180
 _PROVIDER_BACKOFF_UNTIL: dict[str, float] = {}
@@ -1211,6 +1214,51 @@ class ApiYiImageGenerator(BaseGenerator):
             return prompt
         return f"{ratio_tag}\n{prompt}"
 
+    def _request_timeout_seconds(
+        self,
+        profile: ProviderProfile,
+        context: GenerationContext,
+    ) -> int:
+        timeout_seconds = NANO_IMAGE_TIMEOUT_MAP.get(context.resolution, 300)
+        if (
+            self.provider_name == "nano-banana-pro"
+            and profile.profile_id == "route2"
+            and profile.protocol == "openai_chat_markdown"
+        ):
+            return NANO_ROUTE2_TIMEOUT_SECONDS
+        return timeout_seconds
+
+    def _is_route2_chat_profile(self, profile: ProviderProfile) -> bool:
+        return (
+            self.provider_name == "nano-banana-pro"
+            and profile.profile_id == "route2"
+            and profile.protocol == "openai_chat_markdown"
+        )
+
+    def _chat_max_attempts(self, profile: ProviderProfile) -> int:
+        if self._is_route2_chat_profile(profile):
+            return NANO_ROUTE2_MAX_ATTEMPTS
+        return CHAT_COMPLETION_MAX_ATTEMPTS
+
+    def _should_retry_chat_request(
+        self,
+        *,
+        profile: ProviderProfile,
+        attempt: int,
+        max_attempts: int,
+        elapsed_seconds: float,
+        status_code: int | None = None,
+    ) -> bool:
+        if attempt + 1 >= max_attempts:
+            return False
+        if not self._is_route2_chat_profile(profile):
+            return False
+        if elapsed_seconds > NANO_ROUTE2_FAST_RETRY_WINDOW_SECONDS:
+            return False
+        if status_code is None:
+            return True
+        return status_code in CHAT_COMPLETION_RETRYABLE_STATUS_CODES
+
     def _generate_via_chat_markdown(
         self,
         *,
@@ -1248,9 +1296,11 @@ class ApiYiImageGenerator(BaseGenerator):
             ],
         }
 
-        timeout_seconds = NANO_IMAGE_TIMEOUT_MAP.get(context.resolution, 300)
+        timeout_seconds = self._request_timeout_seconds(profile, context)
+        max_attempts = self._chat_max_attempts(profile)
         response = None
-        for attempt in range(CHAT_COMPLETION_MAX_ATTEMPTS):
+        for attempt in range(max_attempts):
+            attempt_started = time.perf_counter()
             try:
                 with concurrency_slot(profile.limiter_name, self._max_concurrency):
                     response = httpx.post(
@@ -1263,11 +1313,18 @@ class ApiYiImageGenerator(BaseGenerator):
                         timeout=timeout_seconds,
                     )
             except httpx.TimeoutException as exc:
-                if attempt + 1 < CHAT_COMPLETION_MAX_ATTEMPTS:
+                elapsed_seconds = time.perf_counter() - attempt_started
+                if self._should_retry_chat_request(
+                    profile=profile,
+                    attempt=attempt,
+                    max_attempts=max_attempts,
+                    elapsed_seconds=elapsed_seconds,
+                ):
                     logger.warning(
-                        "%s chat route %s timed out; retrying once.",
+                        "%s chat route %s timed out in %.2fs; retrying once.",
                         self.provider_name,
                         profile.profile_id,
+                        elapsed_seconds,
                     )
                     continue
                 raise ImageGenerationError(
@@ -1277,11 +1334,18 @@ class ApiYiImageGenerator(BaseGenerator):
                     retry_after_seconds=30,
                 ) from exc
             except httpx.HTTPError as exc:
-                if attempt + 1 < CHAT_COMPLETION_MAX_ATTEMPTS:
+                elapsed_seconds = time.perf_counter() - attempt_started
+                if self._should_retry_chat_request(
+                    profile=profile,
+                    attempt=attempt,
+                    max_attempts=max_attempts,
+                    elapsed_seconds=elapsed_seconds,
+                ):
                     logger.warning(
-                        "%s chat route %s hit transport error; retrying once: %s",
+                        "%s chat route %s hit transport error in %.2fs; retrying once: %s",
                         self.provider_name,
                         profile.profile_id,
+                        elapsed_seconds,
                         exc,
                     )
                     continue
@@ -1296,15 +1360,20 @@ class ApiYiImageGenerator(BaseGenerator):
                 break
 
             mapped_error = _map_nano_http_error(response)
-            if (
-                attempt + 1 < CHAT_COMPLETION_MAX_ATTEMPTS
-                and response.status_code in CHAT_COMPLETION_RETRYABLE_STATUS_CODES
+            elapsed_seconds = time.perf_counter() - attempt_started
+            if self._should_retry_chat_request(
+                profile=profile,
+                attempt=attempt,
+                max_attempts=max_attempts,
+                elapsed_seconds=elapsed_seconds,
+                status_code=response.status_code,
             ):
                 logger.warning(
-                    "%s chat route %s returned %s; retrying once.",
+                    "%s chat route %s returned %s in %.2fs; retrying once.",
                     self.provider_name,
                     profile.profile_id,
                     response.status_code,
+                    elapsed_seconds,
                 )
                 continue
             raise mapped_error
