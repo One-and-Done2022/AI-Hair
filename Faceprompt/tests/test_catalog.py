@@ -158,7 +158,8 @@ class CatalogTests(unittest.TestCase):
         prompt = render_hairstyle_only_prompt("male-forward-spikes")
 
         self.assertIn("只更换图中人物的发型", prompt)
-        self.assertIn("编辑范围：本次仅允许修改头发系统", prompt)
+        self.assertIn("编辑范围：本次以头发系统编辑为主", prompt)
+        self.assertIn("轻中度写真级肤质优化与肤色均匀化", prompt)
         self.assertIn("主发型结构：发型改为前刺头", prompt)
         self.assertIn("刘海系统：", prompt)
         self.assertIn("发色系统：发色调整为深棕", prompt)
@@ -273,7 +274,8 @@ class CatalogTests(unittest.TestCase):
 
         output = stdout.getvalue()
         self.assertEqual(exit_code, 0)
-        self.assertIn("编辑范围：本次仅允许修改头发系统", output)
+        self.assertIn("编辑范围：本次以头发系统编辑为主", output)
+        self.assertIn("轻中度写真级肤质优化与肤色均匀化", output)
         self.assertIn("主发型结构：发型改为云朵烫", output)
 
     def test_render_scene_only_prompt_locks_existing_hairstyle(self) -> None:
