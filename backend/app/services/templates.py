@@ -3237,7 +3237,21 @@ def parse_job_prompt_payload(raw_prompt: str) -> dict:
             tone_id=str(raw_hair_color_selection.get("tone_id") or "").strip() or None,
             technique_id=str(raw_hair_color_selection.get("technique_id") or "").strip() or None,
             professional_id=str(raw_hair_color_selection.get("professional_id") or "").strip() or None,
+            strict_professional=False,
         )
+        if raw_hair_color_selection.get("professional_id"):
+            hair_color_selection.update(
+                {
+                    "professional_id": str(raw_hair_color_selection.get("professional_id") or "").strip(),
+                    "professional_brand": str(raw_hair_color_selection.get("professional_brand") or "").strip(),
+                    "professional_series": str(raw_hair_color_selection.get("professional_series") or "").strip(),
+                    "professional_series_label": str(raw_hair_color_selection.get("professional_series_label") or "").strip(),
+                    "professional_code": str(raw_hair_color_selection.get("professional_code") or "").strip(),
+                    "professional_note": str(raw_hair_color_selection.get("professional_note") or "").strip(),
+                    "professional_hex_estimate": str(raw_hair_color_selection.get("professional_hex_estimate") or "").strip(),
+                    "professional_prompt_alias": str(raw_hair_color_selection.get("professional_prompt_alias") or "").strip(),
+                }
+            )
     else:
         hair_color_selection = empty_hair_color_selection
 

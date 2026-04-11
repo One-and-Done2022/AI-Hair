@@ -345,6 +345,47 @@ def test_build_and_parse_job_prompt_payload_supports_professional_hair_color_sel
     assert "补充色感为偏灰棕、轻烟熏、低饱和冷雾感" not in parsed["full_prompt"]
 
 
+def test_parse_job_prompt_payload_tolerates_legacy_unknown_professional_color():
+    from app.services import templates
+
+    payload = {
+        "version": 5,
+        "full_prompt": "legacy full",
+        "hairstyle_only_prompt": "legacy hair",
+        "scene_only_prompt": "legacy scene",
+        "hair_color_selection": {
+            "tone_id": "honey_brown",
+            "tone_label": "蜂蜜茶棕",
+            "tone_hex": "#8B6241",
+            "technique_id": "solid",
+            "technique_label": "统一染",
+            "technique_description": "整体发色统一，只保留自然深浅层次。",
+            "professional_id": "solutor-mist-clear-7-32",
+            "professional_brand": "SOLUTOR",
+            "professional_series": "mist_clear",
+            "professional_series_label": "迷雾清透系列",
+            "professional_code": "7/32",
+            "professional_note": "轻奶茶棕、低饱和暖调、清透柔和",
+            "professional_hex_estimate": "#9A7C63",
+            "professional_prompt_alias": "light milk tea brown",
+        },
+        "output_options": {
+            "generator_backend": "premium",
+            "aspect_ratio": "3:4",
+            "resolution": "2K",
+        },
+    }
+
+    parsed = templates.parse_job_prompt_payload(json.dumps(payload, ensure_ascii=False))
+
+    assert parsed["hair_color_selection"]["tone_id"] == "honey_brown"
+    assert parsed["hair_color_selection"]["technique_id"] == "solid"
+    assert parsed["hair_color_selection"]["professional_id"] == "solutor-mist-clear-7-32"
+    assert parsed["hair_color_selection"]["professional_series_label"] == "迷雾清透系列"
+    assert parsed["hair_color_selection"]["professional_code"] == "7/32"
+    assert parsed["hair_color_selection"]["professional_note"] == "轻奶茶棕、低饱和暖调、清透柔和"
+
+
 def test_build_prompt_assembly_returns_structured_blocks():
     from app.services import templates
 
