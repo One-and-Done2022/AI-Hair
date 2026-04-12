@@ -8,26 +8,31 @@
 
   <view wx:if="{{showcases.length}}" class="showcase-section">
     <view class="section-row">
-      <view class="section-title">历史记录</view>
-      <view class="section-note">展示最近完成的 6 条生成记录</view>
+      <view class="section-title">固定示例模板</view>
+      <view class="section-note">固定展示最近 6 次完成作品，可一键套用同款搭配</view>
     </view>
     <view class="showcase-grid">
       <view
         wx:for="{{showcases}}"
         wx:key="id"
-        class="showcase-card panel"
-        bindtap="openExampleDetail"
+        class="showcase-card panel {{item.is_active ? 'active' : ''}}"
+        bindtap="applyShowcaseTemplate"
         data-id="{{item.id}}"
-        data-job-id="{{item.job_id}}"
       >
+        <view class="showcase-badge">精选模板</view>
+        <view wx:if="{{item.is_active}}" class="showcase-state-pill">当前已套用</view>
         <image class="showcase-cover" src="{{item.cover_url}}" mode="aspectFill" lazy-load="true"></image>
         <view class="showcase-body">
           <view class="showcase-name">{{item.title}}</view>
+          <view class="showcase-scene">{{item.scene_name}}</view>
           <view class="showcase-tag-row">
             <view wx:if="{{item.hair_color_mode_label}}" class="showcase-tag showcase-tag-accent">{{item.hair_color_mode_label}}</view>
             <view wx:if="{{item.hair_color_primary_label}}" class="showcase-tag">{{item.hair_color_primary_label}}</view>
           </view>
           <view wx:if="{{item.summary}}" class="showcase-summary">{{item.summary}}</view>
+          <view class="showcase-action {{item.is_active ? 'active' : ''}}">
+            {{item.action_label}}
+          </view>
         </view>
       </view>
     </view>

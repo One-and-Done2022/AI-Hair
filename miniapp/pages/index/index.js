@@ -17,6 +17,7 @@ const {
   updateCreationDraft
 } = require("../../utils/creation-draft");
 const { mergePendingHistoryJobs } = require("../../utils/pending-history");
+const { findCatalogHairstyle } = require("../../utils/template-selection");
 
 function formatFileSize(bytes) {
   if (!bytes || bytes <= 0) {
@@ -61,24 +62,88 @@ function parseTimestamp(value) {
   return Number.isNaN(timestamp) ? 0 : timestamp;
 }
 
-function buildHistoryShowcases(items) {
+function findById(items, id) {
+  if (!id) {
+    return null;
+  }
+  return (items || []).find((item) => item.id === id) || null;
+}
+
+function isSameHairColorSelection(showcase, draft) {
+  const showcaseMode = showcase.hair_color_selection_mode || "basic";
+  const draftMode = draft.hair_color_selection_mode || "basic";
+  if (showcaseMode !== draftMode) {
+    return false;
+  }
+
+  if (showcaseMode === "professional") {
+    return (
+      (showcase.hair_color_professional_id || "") ===
+      (draft.hair_color_professional_id || "")
+    );
+  }
+
+  return (
+    (showcase.hair_color_tone || "") === (draft.hair_color_tone || "") &&
+    (showcase.hair_color_technique || "") === (draft.hair_color_technique || "")
+  );
+}
+
+function isActiveShowcase(showcase, draft) {
+  if (!showcase || !draft || !draft.hairstyle || !draft.scene) {
+    return false;
+  }
+  const showcaseHairKey = showcase.preset_id || showcase.hairstyle_id || "";
+  const draftHairKey = draft.hairstyle.preset_id || draft.hairstyle.id || "";
+  if (!showcaseHairKey || !draftHairKey || showcaseHairKey !== draftHairKey) {
+    return false;
+  }
+  if ((showcase.scene_id || "") !== (draft.scene.id || "")) {
+    return false;
+  }
+  return isSameHairColorSelection(showcase, draft);
+}
+
+function buildFixedShowcases(items, draft = {}) {
   return (items || [])
     .filter((item) => item && item.status === "succeeded" && (item.result_image_url || item.hair_preview_url))
     .sort((left, right) => parseTimestamp(right.created_at) - parseTimestamp(left.created_at))
     .slice(0, 6)
     .map((item) => {
       const hairColorDisplay = buildHairColorDisplay(item);
+      const isActive = isActiveShowcase(item, draft);
       return {
-      id: item.job_id,
-      job_id: item.job_id,
-      title: `${item.hairstyle_name || "发型"} · ${item.scene_name || "场景"}`,
-      hair_color_mode_label: hairColorDisplay.mode_label,
-      hair_color_primary_label: hairColorDisplay.primary_label,
-      summary: hairColorDisplay.secondary_label || "",
-      cover_url: item.result_image_url || item.hair_preview_url || "",
-      created_at: item.created_at || "",
-      status: item.status || ""
-    };
+        id: item.job_id,
+        job_id: item.job_id,
+        title: item.hairstyle_name || "发型模板",
+        scene_name: item.scene_name || "场景模板",
+        hair_color_mode_label: hairColorDisplay.mode_label,
+        hair_color_primary_label: hairColorDisplay.primary_label,
+        summary: hairColorDisplay.secondary_label || "点击套用这组搭配",
+        cover_url: item.result_image_url || item.hair_preview_url || "",
+        created_at: item.created_at || "",
+        status: item.status || "",
+        hairstyle_id: item.hairstyle_id || "",
+        preset_id: item.preset_id || "",
+        generator_backend: item.generator_backend || "",
+        aspect_ratio: item.aspect_ratio || "",
+        resolution: item.resolution || "",
+        hair_color_selection_mode: item.hair_color_selection_mode || "basic",
+        hair_color_tone: item.hair_color_tone || "",
+        hair_color_tone_label: item.hair_color_tone_label || "",
+        hair_color_technique: item.hair_color_technique || "",
+        hair_color_technique_label: item.hair_color_technique_label || "",
+        hair_color_professional_id: item.hair_color_professional_id || "",
+        hair_color_professional_brand: item.hair_color_professional_brand || "",
+        hair_color_professional_series: item.hair_color_professional_series || "",
+        hair_color_professional_series_label: item.hair_color_professional_series_label || "",
+        hair_color_professional_code: item.hair_color_professional_code || "",
+        hair_color_professional_note: item.hair_color_professional_note || "",
+        hair_color_professional_hex_estimate: item.hair_color_professional_hex_estimate || "",
+        scene_id: item.scene_id || "",
+        is_active: isActive,
+        action_label: isActive ? "已套用" : "换这套"
+      };
     });
 }
 
@@ -210,11 +275,15 @@ Page({
 
   syncDraftState() {
     const draft = readCreationDraft();
-    this.setData({
+    const nextData = {
       selectedImage: getCurrentImagePath(),
       selectedHairstyleName: (draft.hairstyle && draft.hairstyle.name) || "",
       selectedSceneName: (draft.scene && draft.scene.name) || ""
-    });
+    };
+    if (this.showcaseSourceItems) {
+      nextData.showcases = buildFixedShowcases(this.showcaseSourceItems, draft);
+    }
+    this.setData(nextData);
   },
 
   async bootstrap() {
@@ -229,6 +298,8 @@ Page({
       const selectedImage = getCurrentImagePath();
       const cachedUpload = selectedImage ? getCachedUpload(selectedImage) : null;
       const draft = readCreationDraft();
+      const mergedHistoryItems = mergePendingHistoryJobs((historyPayload && historyPayload.items) || []);
+      this.showcaseSourceItems = mergedHistoryItems;
       const cachedRecommendation =
         (cachedUpload && getCachedRecommendation(cachedUpload.upload_id)) ||
         getCachedRecommendation() ||
@@ -237,7 +308,7 @@ Page({
       this.setData({
         loading: false,
         profileSummary: profileSummary ? { ...profileSummary, provider_alerts: [] } : null,
-        showcases: buildHistoryShowcases(mergePendingHistoryJobs((historyPayload && historyPayload.items) || [])),
+        showcases: buildFixedShowcases(mergedHistoryItems, draft),
         selectedImage,
         selectedHairstyleName: (draft.hairstyle && draft.hairstyle.name) || "",
         selectedSceneName: (draft.scene && draft.scene.name) || "",
@@ -308,21 +379,80 @@ Page({
     }
   },
 
-  openExampleDetail(event) {
-    const jobId = event.currentTarget.dataset.jobId;
+  async ensureTemplateCatalog() {
+    if (this.templateCatalog) {
+      return this.templateCatalog;
+    }
+    const catalog = await request({ url: "/api/templates" });
+    this.templateCatalog = catalog;
+    return catalog;
+  },
+
+  async applyShowcaseTemplate(event) {
     const id = event.currentTarget.dataset.id;
-    if (jobId) {
-      wx.navigateTo({
-        url: `/pages/result/index?jobId=${jobId}`
+    const showcase = this.data.showcases.find((item) => item.id === id);
+    if (!showcase) {
+      return;
+    }
+
+    wx.showLoading({ title: "正在套用" });
+    try {
+      const catalog = await this.ensureTemplateCatalog();
+      const hairstyle = findCatalogHairstyle(catalog, showcase);
+      const scene = findById(catalog.scenes || [], showcase.scene_id);
+
+      if (!hairstyle || !scene) {
+        wx.showToast({
+          title: "模板内容已失效",
+          icon: "none"
+        });
+        return;
+      }
+
+      updateCreationDraft({
+        hairstyle,
+        scene,
+        gender: hairstyle.gender || readCreationDraft().gender || "female",
+        generator_backend: showcase.generator_backend || "",
+        aspect_ratio: showcase.aspect_ratio || "",
+        resolution: showcase.resolution || "",
+        hair_color_selection_mode: showcase.hair_color_selection_mode || "basic",
+        hair_color_tone: showcase.hair_color_tone || "",
+        hair_color_tone_label: showcase.hair_color_tone_label || "",
+        hair_color_technique: showcase.hair_color_technique || "",
+        hair_color_technique_label: showcase.hair_color_technique_label || "",
+        hair_color_professional_id: showcase.hair_color_professional_id || "",
+        hair_color_professional_brand: showcase.hair_color_professional_brand || "",
+        hair_color_professional_series: showcase.hair_color_professional_series || "",
+        hair_color_professional_series_label: showcase.hair_color_professional_series_label || "",
+        hair_color_professional_code: showcase.hair_color_professional_code || "",
+        hair_color_professional_note: showcase.hair_color_professional_note || "",
+        hair_color_professional_hex_estimate: showcase.hair_color_professional_hex_estimate || ""
       });
-      return;
+      const nextDraft = readCreationDraft();
+
+      this.setData({
+        selectedHairstyleName: hairstyle.name || "",
+        selectedSceneName: scene.name || "",
+        showcases: buildFixedShowcases(this.showcaseSourceItems || [], nextDraft)
+      });
+
+      if (this.data.selectedImage && !this.data.imagePreparing && !this.data.uploadInvalid) {
+        wx.navigateTo({
+          url: "/pages/options/index"
+        });
+        return;
+      }
+
+      wx.showToast({
+        title: this.data.selectedImage ? "模板已套用，可继续下一步" : "模板已套用，请先上传照片",
+        icon: "none"
+      });
+    } catch (error) {
+      showError(error, { fallback: "套用模板失败，请稍后再试" });
+    } finally {
+      wx.hideLoading();
     }
-    if (!id) {
-      return;
-    }
-    wx.navigateTo({
-      url: `/pages/examples/index?id=${id}`
-    });
   },
 
   openImageSource() {
