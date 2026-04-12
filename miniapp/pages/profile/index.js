@@ -36,6 +36,7 @@ Page({
       this.setData({
         profile: {
           ...profile,
+          provider_alerts: [],
           joined_label: formatJoinedAt(profile.created_at),
           avatar_text: "AI"
         }

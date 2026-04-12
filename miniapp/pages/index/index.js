@@ -236,7 +236,7 @@ Page({
 
       this.setData({
         loading: false,
-        profileSummary,
+        profileSummary: profileSummary ? { ...profileSummary, provider_alerts: [] } : null,
         showcases: buildHistoryShowcases(mergePendingHistoryJobs((historyPayload && historyPayload.items) || [])),
         selectedImage,
         selectedHairstyleName: (draft.hairstyle && draft.hairstyle.name) || "",
