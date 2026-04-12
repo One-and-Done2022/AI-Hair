@@ -1,5 +1,5 @@
 const { ensureLogin } = require("../../utils/auth");
-const { getFriendlyUploadError, showError } = require("../../utils/errors");
+const { getErrorMessage, getFriendlyUploadError, showError } = require("../../utils/errors");
 const { buildHairColorDisplay } = require("../../utils/hair-color");
 const { request } = require("../../utils/request");
 const {
@@ -62,11 +62,93 @@ function parseTimestamp(value) {
   return Number.isNaN(timestamp) ? 0 : timestamp;
 }
 
+function padDateUnit(value) {
+  return String(value).padStart(2, "0");
+}
+
+function buildLocalDateKey(timestamp) {
+  if (!timestamp) {
+    return "";
+  }
+  const date = new Date(timestamp);
+  return `${date.getFullYear()}-${padDateUnit(date.getMonth() + 1)}-${padDateUnit(date.getDate())}`;
+}
+
 function findById(items, id) {
   if (!id) {
     return null;
   }
   return (items || []).find((item) => item.id === id) || null;
+}
+
+function buildShowcaseHairKey(item) {
+  if (!item) {
+    return "";
+  }
+  return (
+    item.preset_id ||
+    item.hairstyle_id ||
+    item.hairstyle_name ||
+    item.job_id ||
+    ""
+  );
+}
+
+function pickPreferredBobShowcase(items) {
+  const keyword = "一刀切波波头";
+  const candidates = (items || []).filter((item) => {
+    return item && String(item.hairstyle_name || "").includes(keyword);
+  });
+  if (!candidates.length) {
+    return null;
+  }
+
+  const todayKey = buildLocalDateKey(Date.now());
+  const targetTime = new Date(`${todayKey}T13:30:00`).getTime();
+  const sameDayCandidates = candidates.filter((item) => {
+    return buildLocalDateKey(parseTimestamp(item.created_at)) === todayKey;
+  });
+  const pool = sameDayCandidates.length ? sameDayCandidates : candidates;
+
+  return pool
+    .slice()
+    .sort((left, right) => {
+      const leftDiff = Math.abs(parseTimestamp(left.created_at) - targetTime);
+      const rightDiff = Math.abs(parseTimestamp(right.created_at) - targetTime);
+      if (leftDiff !== rightDiff) {
+        return leftDiff - rightDiff;
+      }
+      return parseTimestamp(right.created_at) - parseTimestamp(left.created_at);
+    })[0];
+}
+
+function buildCuratedShowcaseItems(items) {
+  const succeededItems = (items || [])
+    .filter((item) => item && item.status === "succeeded" && (item.result_image_url || item.hair_preview_url))
+    .sort((left, right) => parseTimestamp(right.created_at) - parseTimestamp(left.created_at));
+
+  const preferredBob = pickPreferredBobShowcase(succeededItems);
+  const prioritizedItems = preferredBob
+    ? [preferredBob].concat(
+        succeededItems.filter((item) => item && item.job_id !== preferredBob.job_id)
+      )
+    : succeededItems;
+
+  const seenHairKeys = new Set();
+  const curated = [];
+  prioritizedItems.forEach((item) => {
+    if (curated.length >= 6) {
+      return;
+    }
+    const hairKey = buildShowcaseHairKey(item);
+    if (!hairKey || seenHairKeys.has(hairKey)) {
+      return;
+    }
+    seenHairKeys.add(hairKey);
+    curated.push(item);
+  });
+
+  return curated.sort((left, right) => parseTimestamp(right.created_at) - parseTimestamp(left.created_at));
 }
 
 function isSameHairColorSelection(showcase, draft) {
@@ -105,10 +187,7 @@ function isActiveShowcase(showcase, draft) {
 }
 
 function buildFixedShowcases(items, draft = {}) {
-  return (items || [])
-    .filter((item) => item && item.status === "succeeded" && (item.result_image_url || item.hair_preview_url))
-    .sort((left, right) => parseTimestamp(right.created_at) - parseTimestamp(left.created_at))
-    .slice(0, 6)
+  return buildCuratedShowcaseItems(items)
     .map((item) => {
       const hairColorDisplay = buildHairColorDisplay(item);
       const isActive = isActiveShowcase(item, draft);
@@ -629,6 +708,7 @@ Page({
 
       const uploadError = getFriendlyUploadError(error);
       const uploadInvalid = !!uploadError;
+      const rawErrorMessage = getErrorMessage(error, "预上传失败，请稍后再试");
       this.setData({
         uploadPriming: false,
         uploadReady: false,
@@ -636,12 +716,13 @@ Page({
         uploadInvalid,
         uploadMessage: uploadInvalid
           ? "照片未通过校验，请重新选择"
-          : `${compressionPrefix}预上传失败，稍后会自动重试`
+          : `${compressionPrefix}预上传失败：${rawErrorMessage}`
       });
 
-      if (uploadError) {
-        showError(error, { preferModal: true });
-      }
+      showError(error, {
+        fallback: "预上传失败，请稍后再试",
+        preferModal: true
+      });
     }
   },
 

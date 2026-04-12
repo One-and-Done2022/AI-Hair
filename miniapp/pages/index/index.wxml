@@ -8,8 +8,8 @@
 
   <view wx:if="{{showcases.length}}" class="showcase-section">
     <view class="section-row">
-      <view class="section-title">固定示例模板</view>
-      <view class="section-note">固定展示最近 6 次完成作品，可一键套用同款搭配</view>
+      <view class="section-title">精选模板</view>
+      <view class="section-note">精选模板可以一键套用</view>
     </view>
     <view class="showcase-grid">
       <view
