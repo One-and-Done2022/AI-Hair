@@ -1,239 +1,425 @@
-# Faceprompt 场景光影与妆造重构方案
+# 场景与妆造系统重构方案
 
 ## Summary
 
-目标是把当前“场景 + 发型”为主的 prompt 体系，升级成“场景环境 + 场景光影 + 妆造 + 服饰 + 发型”的稳定组合系统，重点解决三个问题：
+把当前 `scene_only` 升级为一个更准确的模式：`identity_locked_scene_render`。
+它不再被视为“纯场景库”，而是一个四层解耦的组合系统：
 
-- 场景描述够了，但光影控制还不够强，导致同一场景出图不稳定
-- 妆造与服饰已经有数据，但仍偏附属，没有成为强约束 block
-- 服饰和场景常常只做弱提示，没有形成明确搭配规则，容易跳戏
+- `identity_lock`：身份与发型稳定层
+- `scene_blocks`：场景层
+- `styling_blocks`：妆造层
+- `performance_blocks`：表现层
 
-重构后保留现有 block 骨架，不推翻现有数据，而是在现有 `scene_environment`、`scene_lighting`、`scene_mood`、`outfit` 基础上，新增更强的结构化来源和拼装优先级。
+已锁定的产品决策：
+
+- 前端用户入口：`主题优先`
+- 国风第一期范围：`自然国风 + 时尚国风` 双线
+- 默认 `hair_policy`：`ornament_only`
+- 节气第一期：`先做基础 overlay`，不一次性上全量 24 节气
+- 妆造第一期：`只做女性分流`，男性继续沿用现有默认兜底
+
+目标不是推翻现有场景系统，而是在保留现有稳定生成链路的前提下，把“场景、妆造、动作、规则”拆成可复用、可叠加、可扩展的资产。
 
 ## Key Changes
 
-### 1. Prompt Block 重构
+### 1. 模式语义与接口重命名
 
-保留现有 block 名称，但内部来源升级为以下结构：
+把内部语义从 `scene_only` 迁移为 `identity_locked_scene_render`，但第一阶段保留兼容别名：
 
-- `scene_environment`
-  继续负责空间元素、背景物件、景别语境、场景叙事
-- `scene_lighting`
-  从一句描述升级为结构化光影描述的汇总输出
-- `scene_mood`
-  只负责气质、情绪、风格，不再混入布光和妆造
-- `makeup`
-  新增独立 block，单独输出妆面
-- `outfit`
-  继续保留，但来源改为“场景服饰规则 + 妆造服饰规则”的组合结果
-- `styling_constraints`
-  新增独立 block，统一收纳妆造与服饰禁忌，不再散落到场景约束里
-- `scene_constraints`
-  只保留空间、布景、背景干净度、镜面风险、风感等场景约束
-- `hair_constraints`
-  继续只管发型，不混入妆造/服饰逻辑
+- 前端和旧接口仍可继续传 `scene_only`
+- 服务层内部统一映射到新模式语义
+- 所有新文档、注释、数据结构说明使用 `identity_locked_scene_render`
 
-建议的新拼装顺序：
+实现要求：
 
-1. 身份保持
-2. 构图
-3. 场景环境
-4. 场景光影
-5. 场景氛围
-6. 人物表情
-7. 主体动作
-8. 人物妆造
-9. 人物服饰
-10. 发型展示动作
-11. 人物发型
-12. 场景约束
-13. 妆造与服饰约束
-14. 发型约束
-15. 画质约束
-16. 负面约束
+- 不要求第一阶段立刻改动所有文件名
+- 但 `templates.py`、场景工具文案、后续数据文档都要明确：这是“锁身份锁发型的场景定向生图模式”，不是“只改背景”
 
-### 2. 场景光影结构化
+### 2. 数据层重构为四层资产
 
-为每个场景新增一组 `lightingProfile` 字段，作为 `scene_lighting` block 的唯一结构化来源。
+#### A. `identity_lock`
 
-建议字段：
+继续保留在 prompt 组装层，不单独做用户资产库。
+职责：
 
-- `lightDirection`: `front` / `side` / `back` / `top` / `mixed`
-- `lightQuality`: `soft` / `medium` / `hard`
-- `colorTemperature`: `cool` / `neutral` / `warm` / `mixed`
-- `contrastLevel`: `low` / `medium` / `high`
-- `shadowDensity`: `light` / `balanced` / `deep`
-- `hairHighlightMode`: `soft_edge` / `clean_rim` / `controlled_specular` / `none`
-- `skinRendering`: `soft_texture` / `clean_texture` / `structured_texture`
-- `exposureBias`: `slightly_under` / `neutral` / `slightly_over`
-- `practicalLightsAllowed`: `true/false`
+- 锁人物身份
+- 锁当前发型主结构
+- 锁刘海
+- 锁发色
+- 锁发丝动态边界
 
-`scene_lighting` 输出规则固定，不让实现者自由发挥。建议统一模板：
+新增明确字段：
 
-“光线：主光为<方向>，整体为<光质>、<色温>、<反差>，阴影层次<描述>，发丝高光<描述>，皮肤呈现<描述>，曝光控制为<描述>。”
+- `hair_policy`
+  - `strict_lock`
+  - `soft_lock`
+  - `ornament_only`
 
-### 3. 妆造体系升级
+第一期默认值：
 
-把现有 `stylings.json` 明确升级为第一层“妆造模板库”，每条 styling 继续保留：
+- 国风主题默认 `ornament_only`
+- 生活感与普通场景沿用当前严格锁发逻辑
+- 只有在明确需要时才允许 `soft_lock`
 
-- `makeupPrompt`
-- `outfitPrompt`
-- `constraints`
-- `detailTags`
+#### B. `scene_blocks`
 
-新增建议字段：
+从现有 `scenes.json` 继续演进，但严格收敛为场景层，不再偷偷承载妆造语义。
+
+每个 scene 必须显式包含：
 
 - `id`
-- `genderScope`: `female` / `male` / `unisex`
+- `title`
+- `sceneFamily`
 - `styleLine`
-- `makeupIntensity`: `barely_there` / `light` / `defined`
-- `outfitStructure`: `soft` / `clean` / `structured`
-- `paletteTags`
-- `compatibleSceneIds`
-- `incompatibleSceneIds`
-- `compatibleLightingTags`
+- `themeTags`
+- `settingTags`
+- `seasonTags`
+- `riskLevel`
+- `shot`
+- `environment`
+- `lighting`
+- `lightingProfile`
+- `mood`
+- `sceneConstraints`
+- `controlProfile`
+- `sampleImageIds`
+- `referenceNotes`
+- `referenceSourceIds`
 
-其中：
+从现有 `scenes.json` 映射关系：
 
-- `makeupPrompt` 只写妆
-- `outfitPrompt` 只写服饰
-- `constraints` 只写妆造禁忌
-- 不再把场景特有覆盖逻辑直接写死在 styling 本体里
+- `shotAdvice` -> `shot`
+- `environment` 保留
+- `lighting` 保留
+- `styleMood` -> `mood`
+- `constraints` -> `sceneConstraints`
 
-### 4. 场景与妆造的匹配层
+第一阶段不删除旧字段，但新增规范字段并在模板服务中优先读取新字段。
 
-保留现有 `scene_styling_rules.json`，但升级成“场景到妆造的调度层”，不要再只做 override 文本。
+#### C. `styling_blocks`
 
-建议每条规则包含：
+把当前 `stylings.json` 从“大段文案模板”升级为“profile + blocks”。
+
+第一期 profile 只做以下几类：
+
+- `female_guofeng_natural_soft`
+- `female_guofeng_fashion_editorial`
+- `female_modern_chinese_daily`
+- `unisex_natural_soft_fallback`
+- `unisex_structured_editorial_fallback`
+- `male_clean_natural_grooming_fallback`
+- `male_sharp_editorial_fallback`
+
+每个 styling profile 需要拆出正式字段，而不是只有文本：
+
+- `base_makeup`
+- `lip_color`
+- `eye_makeup`
+- `skin_finish`
+- `hair_policy`
+- `hair_ornament`
+- `outfit_core`
+- `outfit_material`
+- `outfit_palette`
+- `jewelry_level`
+- `accessories`
+- `styling_constraints`
+
+当前 `makeupPrompt`、`outfitPrompt` 继续保留作为兼容文本输出，但生成逻辑要从结构字段拼装。
+
+#### D. `performance_blocks`
+
+把人物表现从 scene 内继续抽象成独立 profile 资产。
+
+第一期建议建立：
+
+- `guofeng_still`
+- `guofeng_turn_back`
+- `guofeng_hold_fan`
+- `guofeng_hold_book`
+- `guofeng_hold_umbrella`
+- `guofeng_lean_rail`
+- `guofeng_slow_walk`
+
+字段最少包括：
+
+- `expressionOptions`
+- `actionOptions`
+- `gestureConstraints`
+- `bodyPoseHints`
+- `handPropPolicy`
+
+第一阶段可以先保留 scene 里的 `expressions/actions`，但新增 performance profile 解析优先级。
+
+### 3. 规则系统升级
+
+把 `scene_styling_rules.json` 从“默认妆造绑定”升级成三段式规则：
+
+- `default`
+- `recommended`
+- `forbidden`
+
+建议结构：
 
 - `sceneId`
+- `sceneFamily`
 - `defaultStylingIds`
-- `fallbackStylingIds`
+- `recommendedStylingIds`
 - `forbiddenStylingIds`
-- `makeupOverride`
-- `outfitOverride`
-- `stylingConstraints`
-- `lightingAdjustment`
-- `requiredOutfitTags`
+- `defaultPerformanceIds`
+- `recommendedPerformanceIds`
 - `forbiddenOutfitTags`
+- `requiredOutfitTags`
+- `hairPolicyOverride`
+- `lightingGuardrails`
+- `stylingConstraints`
+- `themeCompatibility`
+- `settingCompatibility`
 
-调度优先级固定：
+新增标签体系，供规则匹配使用：
 
-1. 用户显式指定妆造时，优先使用指定妆造
-2. 场景规则中的 `forbiddenStylingIds` 和 `forbiddenOutfitTags` 先过滤
-3. 选 `defaultStylingIds`
-4. 无命中时退到 `fallbackStylingIds`
-5. 再叠加该场景自己的 `makeupOverride` / `outfitOverride`
-6. 最后拼接 `stylingConstraints`
+- `theme`
+  - `guofeng`
+  - `modern_chinese`
+  - `seasonal`
+  - `solar_term`
+- `tone`
+  - `natural`
+  - `fashion`
+- `setting`
+  - `indoor`
+  - `courtyard`
+  - `corridor`
+  - `garden`
+  - `waterside`
+  - `snow`
+  - `rain`
+  - `studio`
+- `risk`
+  - `low`
+  - `medium`
+  - `high`
 
-### 5. 服饰规则升级
+匹配逻辑改为：
 
-当前 `outfitHints` 太弱，建议升级为结构化服饰建议，但不强求立刻改全量 schema。最小可落地方案：
+`scene tags × user theme × style line × preferred gender -> styling/performance candidates`
 
-在 `scenes.json` 每个场景新增：
+不再只靠“一个 scene 对应一个默认 styling”。
 
-- `outfitPalette`
-- `outfitMaterials`
-- `outfitShapes`
-- `outfitAvoids`
+### 4. 国风主题资产设计
 
-输出时仍然渲染为一句中文 `outfit` block，但来源改为结构化拼装。
+第一期不直接做“24 个独立大场景”，而是做三层组合资产：
 
-建议固定输出模板：
+#### 基础 scene pack
 
-“服饰：优先<色系>、<面料>、<版型>，避免<禁忌项>。”
+`guofeng_natural`
 
-### 6. 场景分组策略
+- 庭院
+- 廊下
+- 窗边
+- 竹林
+- 荷塘
+- 古桥
+- 书房
 
-后期不要全场景自由混搭，按三大组先建立默认光影与妆造逻辑：
+`guofeng_fashion`
 
-- 生活感组
-  - 适用场景：窗边、家居、咖啡馆、酒店、书房、浴室
-  - 光影默认：软光、低到中反差、自然肤感
-  - 妆造默认：轻透自然妆、低饱和服饰、柔软材质
-- 冷感时装组
-  - 适用场景：棚拍、金属空间、白盒子、强侧光
-  - 光影默认：中到硬光、中高反差、轮廓清晰
-  - 妆造默认：克制结构妆、黑白灰或低饱和冷色、结构化服饰
-- 夜色情绪组
-  - 适用场景：霓虹、酒吧、复古包厢、后台镜前、大堂
-  - 光影默认：低照度局部重点光、冷暖对比、受控高光
-  - 妆造默认：精致但克制的时装妆、成熟深色服饰、避免夜店感
+- 冷调回廊
+- 暗色戏台侧区
+- 高对比屏风空间
+- 极简东方棚拍
+- 夜色庭院
+- 灯笼巷口
+
+#### seasonal overlay
+
+- `spring_blossom`
+- `summer_lotus`
+- `autumn_fallen_leaf`
+- `winter_snow`
+
+#### solar term overlay 第一阶段只做高频 8 个
+
+- 雨水
+- 清明
+- 小满
+- 小暑
+- 白露
+- 霜降
+- 小雪
+- 冬至
+
+每个 overlay 只允许改这些维度：
+
+- 局部环境元素
+- 光线调性微调
+- 空气状态
+- 道具建议
+- 色彩倾向
+- 情绪标签
+
+禁止 overlay 改动：
+
+- 主场景骨架
+- 主镜头结构
+- 主发型结构
+- 基础身份锁定策略
+
+### 5. 当前数据清理与兼容迁移
+
+#### A. 清理现有 5 个无专属 rule 的 scene
+
+必须补齐 rule，并统一命名规范：
+
+- `scene-35aef68d`
+- `scene-98033eb1`
+- `scene-41e220d6`
+- `green-outdoor-b9edbc24`
+- `scene-473e9e49`
+
+要求：
+
+- 重命名为可读、可维护、可归类的 scene id
+- 补 `sceneFamily`
+- 补 `default/recommended/forbidden` 规则
+- 补标签体系
+
+#### B. `build_scene_draft()` 升级
+
+把它从“场景草案生成器”升级为“场景块提取器”。
+
+必须完整沉淀：
+
+- `shot`
+- `environment`
+- `lighting`
+- `mood`
+- `sceneConstraints`
+- `recommendedStylingProfile`
+- `themeTags`
+- `settingTags`
+- `riskLevel`
+
+明确不做的事：
+
+- 不把 `makeup` 直接塞回 scene 主体
+- 不把 styling 文本继续塞进 scene 的自由字段
+- 妆造只以 `recommendedStylingProfile` 或 tags 形式从 scene 指向 styling
+
+#### C. `stylings.json` 升级但保兼容
+
+- 旧字段 `makeupPrompt` / `outfitPrompt` 保留
+- 新逻辑优先从结构化 block 渲染
+- 旧接口继续能返回一段完整妆造描述文本
 
 ## Implementation Changes
 
-### 数据层
+### 服务层
 
-需要扩展或新增的主要数据来源：
+重点修改 [templates.py](/home/lcy/AIFace/backend/app/services/templates.py)：
+
+- 在 prompt assembly 中显式拆为：
+  - `identity_lock`
+  - `scene`
+  - `styling`
+  - `performance`
+- 新增 `hair_policy` 处理逻辑
+- 新增 scene/styling/performance 的推荐与禁用过滤
+- `scene_only` 模式保留为兼容入口，但内部使用新模式语义
+- 国风主题模式下，默认启用 `ornament_only`
+- `build_scene_text()` 只读场景字段，不再读妆造语义
+- `build_styling_text()` 从结构化 styling blocks 生成文本
+- 新增 `build_performance_text()` 或复用现有主体表现组装逻辑，但数据来源改为 profile 优先
+
+重点修改 [image_understanding.py](/home/lcy/AIFace/backend/app/services/image_understanding.py)：
+
+- 保留现有理解 prompt，但输出结构升级为 scene block 草案
+- `makeup` 与 `styling_constraints` 不直接落 scene 主体
+- 增加 `recommendedStylingProfile` 推断
+- 增加 `themeTags / settingTags / riskLevel` 推断
+- `scene_draft` 输出格式与新 scene schema 对齐
+
+### 数据文件
+
+新增或重构的资产建议：
 
 - `scenes.json`
-  新增 `lightingProfile`、`outfitPalette`、`outfitMaterials`、`outfitShapes`、`outfitAvoids`
-- `stylings.json`
-  新增 `genderScope`、`makeupIntensity`、`outfitStructure`、`paletteTags`、`compatibleSceneIds`、`incompatibleSceneIds`
+  - 补规范字段
+  - 清理临时 id
 - `scene_styling_rules.json`
-  从纯文案 override 升级为“场景调度规则”
+  - 升级为 default/recommended/forbidden 结构
+- `stylings.json`
+  - 拆成 profile + blocks
+- 新增 `performance_profiles.json`
+- 新增 `scene_overlays_seasonal.json`
+- 新增 `scene_overlays_solar_terms.json`
 
-建议先只改 6 个高频场景做试点：
+第一期不要求新增单独的 `makeup_blocks.json`，但 styling profile 内部字段必须结构化，不能继续只有长文本。
 
-- `morning-window-softlight`
-- `indoor-film-lifestyle`
-- `hotel-room-loose`
-- `studio-solid-backdrop`
-- `cold-metal-space`
-- `city-neon-night`
+### 前端
 
-### 运行时拼装
+前端主题入口第一期按“主题优先”组织：
 
-在 `catalog.py` 中新增以下职责函数：
+- 自然国风
+- 时尚国风
+- 春日
+- 夏日
+- 秋日
+- 冬日
+- 节气系列
 
-- `resolve_scene_lighting(scene)`
-- `resolve_scene_styling(scene, gender, style_line, override)`
-- `resolve_makeup_block(scene, styling)`
-- `resolve_outfit_block(scene, styling, override)`
-- `resolve_styling_constraints(scene, styling)`
+点击路径建议：
 
-现有 `_build_runtime_prompt_assembly` 和 `_build_scene_only_runtime_prompt_assembly` 改为显式插入 `makeup` 与 `styling_constraints` block。
+1. 先选主题
+2. 再选基础场景或节气/季节变体
+3. 再选人物妆造风格
+4. 后端自动解析为 scene + styling + performance + overlays
 
-### 接口与输出
-
-需要同步更新的公开结构：
-
-- `backend/app/schemas.py`
-  - 为 block 结果增加 `makeup`
-  - 可选增加 `styling_constraints`
-- `backend/app/services/image_understanding.py`
-  - 如果继续输出 block 级结果，也要支持这两个新字段
-- CLI `blocks` / `render` / `scene-only`
-  - 输出中要包含 `makeup` block，且 block 标签固定
+前端不暴露 `hair_policy` 技术词。
+国风主题默认只给用户呈现“可加发饰/丝带/簪花”等轻装饰表达，不提示“改发型”。
 
 ## Test Plan
 
-### 数据与拼装测试
+### 核心行为测试
 
-- 每个试点场景都能产出非空的 `scene_lighting`
-- 每个试点场景都能产出非空的 `makeup`
-- 每个试点场景都能产出非空且不重复的 `outfit`
-- `scene_constraints` 与 `styling_constraints` 不出现语义重叠或完全重复句子
+- `scene_only` 旧入口仍可生成有效 prompt
+- 新 `identity_locked_scene_render` 语义下，发型结构不被 scene/styling 改写
+- `ornament_only` 时允许发饰，不允许主发型结构漂移
+- `strict_lock` 时发饰也不会被错误加入
+- `soft_lock` 仅在显式开启时生效
 
-### 组合正确性测试
+### 数据与规则测试
 
-- 生活感场景不会落入黑色高领、结构西装、强冷感时装妆
-- 冷感时装场景不会落入奶油白家居针织、清晨素颜生活妆
-- 夜色情绪场景不会落入清晨软光淡妆或过强家居服语义
-- 男性场景不会误配明显女性彩妆
-- 女性生活感场景不会误配厚重夜店妆或舞台妆
+- 所有 scene 都存在 rule；不能再有无 rule 场景
+- 所有 scene rule 的 `default/recommended/forbidden` id 都能解析
+- styling profile 的结构字段能成功渲染为文本 prompt
+- overlay 只能改允许的字段，不会重写 scene 主体
+- 临时 hash 风格 scene id 被全部清理或归档
 
-### 回归测试
+### 生成验收测试
 
-- `full_stylize` 仍能正常输出
-- `hairstyle_only` 不受影响
-- `scene_only` 在锁发模式下也能输出 `makeup`、`outfit`
-- 原有未试点场景在没有新字段时，仍能回退到旧逻辑默认值
+重点抽样组合：
+
+- 自然国风 × 庭院 × 春樱 × 女性自然国风妆造
+- 自然国风 × 书房 × 白露 × 女性新中式日常
+- 时尚国风 × 夜色庭院 × 霜降 × 女性时尚国风妆造
+- 普通生活感 scene × 默认妆造 × `strict_lock`
+- 男性现实场景 × 旧默认 styling fallback
+
+验收标准：
+
+- 人物身份稳定
+- 主发型结构稳定
+- 发饰成立但不假发化
+- 妆容与场景一致
+- 服饰不抢脸
+- 动作与道具不破坏发型和脸部遮挡关系
+- 国风感来自场景/妆造/配饰，不依赖改头换面
 
 ## Assumptions
 
-- 默认不改动现有发型数据结构，只补场景与妆造链路
-- 新增 `makeup` block 是必须项，`styling_constraints` 也是建议同时落地
-- `controlProfile` 不扩到妆造层，妆造优先通过规则调度，不做复杂推荐引擎
-- 第一阶段只做 6 个试点场景，验证通过后再推广到全部 20 个场景
-- 未配置新字段的旧场景，继续使用当前 `scene_lighting + outfitHints + scene_styling_rules` 的兼容回退逻辑
+- 第一阶段不重写整套生成链路，只做结构升级和规则升级
+- 第一阶段以女性国风妆造为重点，男性继续用现有 `male-clean-natural-grooming` / `male-sharp-editorial` 兜底
+- 第一阶段不做完整 24 节气，只做 8 个高频 overlay
+- 第一阶段不要求把所有旧场景都国风化，只新增国风 pack 并保持现有现代场景可用
+- 第一阶段保留 `scene_only` 兼容名，避免前后端接口一次性断裂

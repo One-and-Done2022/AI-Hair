@@ -1,0 +1,517 @@
+[
+  {
+    "displayGroup": "清爽短发",
+    "displayName": "美式前刺",
+    "categoryKey": "clean_short",
+    "categoryLabel": "清爽短发",
+    "structureId": "male-american_forward_spike",
+    "modifierIds": [],
+    "techniqueIds": [],
+    "notes": "前刺体系标准款，适合做默认推荐"
+  },
+  {
+    "displayGroup": "清爽短发",
+    "displayName": "立体前刺",
+    "categoryKey": "clean_short",
+    "categoryLabel": "清爽短发",
+    "structureId": "male-dimensional_forward_spike",
+    "modifierIds": [],
+    "techniqueIds": [],
+    "notes": "强调颅顶和立体支撑"
+  },
+  {
+    "displayGroup": "清爽短发",
+    "displayName": "纹理前刺",
+    "categoryKey": "clean_short",
+    "categoryLabel": "清爽短发",
+    "structureId": "male-textured_forward_spike",
+    "modifierIds": [],
+    "techniqueIds": [
+      "male-texture-perm"
+    ],
+    "notes": "纹理比基础前刺更强"
+  },
+  {
+    "displayGroup": "清爽短发",
+    "displayName": "凌乱抓刺",
+    "categoryKey": "clean_short",
+    "categoryLabel": "清爽短发",
+    "structureId": "male-messy_forward_spike",
+    "modifierIds": [
+      "modifier_messy_texture"
+    ],
+    "techniqueIds": [],
+    "notes": "少年感和街头感更强"
+  },
+  {
+    "displayGroup": "清爽短发",
+    "displayName": "微分前刺",
+    "categoryKey": "clean_short",
+    "categoryLabel": "清爽短发",
+    "structureId": "male-micro_part_forward_spike",
+    "modifierIds": [],
+    "techniqueIds": [],
+    "notes": "前刺里偏修脸路线"
+  },
+  {
+    "displayGroup": "清爽短发",
+    "displayName": "前刺老虎头",
+    "categoryKey": "clean_short",
+    "categoryLabel": "清爽短发",
+    "structureId": "male-tiger_head_spike",
+    "modifierIds": [],
+    "techniqueIds": [],
+    "notes": "顶部更高更圆"
+  },
+  {
+    "displayGroup": "清爽短发",
+    "displayName": "立体碎盖",
+    "categoryKey": "korean_soft",
+    "categoryLabel": "韩系修饰",
+    "structureId": "male-textured_cover",
+    "modifierIds": [],
+    "techniqueIds": [],
+    "notes": "碎盖里更强调顶部立体"
+  },
+  {
+    "displayGroup": "清爽短发",
+    "displayName": "微分碎盖",
+    "categoryKey": "korean_soft",
+    "categoryLabel": "韩系修饰",
+    "structureId": "male-micro_part_cover",
+    "modifierIds": [],
+    "techniqueIds": [],
+    "notes": "当前最稳的少年感款"
+  },
+  {
+    "displayGroup": "清爽短发",
+    "displayName": "短碎栗子头",
+    "categoryKey": "korean_soft",
+    "categoryLabel": "韩系修饰",
+    "structureId": "male-chestnut_crop",
+    "modifierIds": [],
+    "techniqueIds": [],
+    "notes": "低门槛、圆润、减龄"
+  },
+  {
+    "displayGroup": "清爽短发",
+    "displayName": "基础短发",
+    "categoryKey": "clean_short",
+    "categoryLabel": "清爽短发",
+    "structureId": "male-textured_short_foundation",
+    "modifierIds": [],
+    "techniqueIds": [],
+    "notes": "兜底短发预设"
+  },
+  {
+    "displayGroup": "清爽短发",
+    "displayName": "韩式小平头",
+    "categoryKey": "clean_short",
+    "categoryLabel": "清爽短发",
+    "structureId": "male-korean_flat_crop",
+    "modifierIds": [],
+    "techniqueIds": [],
+    "notes": "更韩系的小平头版本"
+  },
+  {
+    "displayGroup": "清爽短发",
+    "displayName": "美式圆寸",
+    "categoryKey": "clean_short",
+    "categoryLabel": "清爽短发",
+    "structureId": "male-american-buzz",
+    "modifierIds": [],
+    "techniqueIds": [],
+    "notes": "沿用当前后端结构 ID"
+  },
+  {
+    "displayGroup": "清爽短发",
+    "displayName": "渐变寸头",
+    "categoryKey": "clean_short",
+    "categoryLabel": "清爽短发",
+    "structureId": "male-fade-buzz",
+    "modifierIds": [],
+    "techniqueIds": [],
+    "notes": "沿用当前后端结构 ID"
+  },
+  {
+    "displayGroup": "清爽短发",
+    "displayName": "短平头",
+    "categoryKey": "clean_short",
+    "categoryLabel": "清爽短发",
+    "structureId": "male-flat-short-cut",
+    "modifierIds": [],
+    "techniqueIds": [],
+    "notes": "沿用当前后端结构 ID"
+  },
+  {
+    "displayGroup": "韩系分线",
+    "displayName": "韩式三七分",
+    "categoryKey": "korean_soft",
+    "categoryLabel": "韩系修饰",
+    "structureId": "male-korean_37_part",
+    "modifierIds": [],
+    "techniqueIds": [],
+    "notes": "分线体系主干款"
+  },
+  {
+    "displayGroup": "韩系分线",
+    "displayName": "括号三七",
+    "categoryKey": "korean_soft",
+    "categoryLabel": "韩系修饰",
+    "structureId": "male-korean_37_part",
+    "modifierIds": [
+      "modifier_bracket_fringe"
+    ],
+    "techniqueIds": [],
+    "notes": "用三七主结构叠括号前区"
+  },
+  {
+    "displayGroup": "韩系分线",
+    "displayName": "逗号侧分",
+    "categoryKey": "korean_soft",
+    "categoryLabel": "韩系修饰",
+    "structureId": "male-clean_side_part",
+    "modifierIds": [
+      "modifier_comma_fringe"
+    ],
+    "techniqueIds": [],
+    "notes": "日常好理解的展示词"
+  },
+  {
+    "displayGroup": "韩系分线",
+    "displayName": "偏分三七",
+    "categoryKey": "korean_soft",
+    "categoryLabel": "韩系修饰",
+    "structureId": "male-clean_37_part",
+    "modifierIds": [],
+    "techniqueIds": [],
+    "notes": "比韩式三七更干净"
+  },
+  {
+    "displayGroup": "韩系分线",
+    "displayName": "纹理三七分",
+    "categoryKey": "korean_soft",
+    "categoryLabel": "韩系修饰",
+    "structureId": "male-textured_37_part",
+    "modifierIds": [],
+    "techniqueIds": [],
+    "notes": "更强调束感和层次"
+  },
+  {
+    "displayGroup": "韩系分线",
+    "displayName": "三七侧分",
+    "categoryKey": "korean_soft",
+    "categoryLabel": "韩系修饰",
+    "structureId": "male-soft_37_part",
+    "modifierIds": [],
+    "techniqueIds": [],
+    "notes": "前区更柔和修脸"
+  },
+  {
+    "displayGroup": "韩系分线",
+    "displayName": "基础侧分",
+    "categoryKey": "korean_soft",
+    "categoryLabel": "韩系修饰",
+    "structureId": "male-clean_side_part",
+    "modifierIds": [],
+    "techniqueIds": [],
+    "notes": "通勤基础款"
+  },
+  {
+    "displayGroup": "韩系分线",
+    "displayName": "二八侧分",
+    "categoryKey": "korean_soft",
+    "categoryLabel": "韩系修饰",
+    "structureId": "male-two_eight_part",
+    "modifierIds": [
+      "modifier_commute_clean"
+    ],
+    "techniqueIds": [],
+    "notes": "更成熟、更正式"
+  },
+  {
+    "displayGroup": "韩系分线",
+    "displayName": "长纹理侧分",
+    "categoryKey": "korean_soft",
+    "categoryLabel": "韩系修饰",
+    "structureId": "male-textured_side_part",
+    "modifierIds": [
+      "modifier_side_fringe"
+    ],
+    "techniqueIds": [],
+    "notes": "轻熟氛围感路线"
+  },
+  {
+    "displayGroup": "韩系分线",
+    "displayName": "微分纹理",
+    "categoryKey": "korean_soft",
+    "categoryLabel": "韩系修饰",
+    "structureId": "male-micro_middle_part",
+    "modifierIds": [],
+    "techniqueIds": [],
+    "notes": "中分/微分主干款"
+  },
+  {
+    "displayGroup": "轻熟背头",
+    "displayName": "纹理背头",
+    "categoryKey": "statement_style",
+    "categoryLabel": "造型感",
+    "structureId": "male-textured_slick_back",
+    "modifierIds": [],
+    "techniqueIds": [],
+    "notes": "轻熟硬朗，不做强油头"
+  },
+  {
+    "displayGroup": "轻熟背头",
+    "displayName": "三七侧背",
+    "categoryKey": "statement_style",
+    "categoryLabel": "造型感",
+    "structureId": "male-three_seven_side_back",
+    "modifierIds": [],
+    "techniqueIds": [],
+    "notes": "修脸和成熟感兼顾"
+  },
+  {
+    "displayGroup": "轻熟背头",
+    "displayName": "侧背短发",
+    "categoryKey": "statement_style",
+    "categoryLabel": "造型感",
+    "structureId": "male-short_side_back",
+    "modifierIds": [],
+    "techniqueIds": [],
+    "notes": "造型感入门款"
+  },
+  {
+    "displayGroup": "轻熟背头",
+    "displayName": "长纹理侧背",
+    "categoryKey": "statement_style",
+    "categoryLabel": "造型感",
+    "structureId": "male-long_textured_side_back",
+    "modifierIds": [],
+    "techniqueIds": [],
+    "notes": "顶区和前区更长"
+  },
+  {
+    "displayGroup": "轻熟背头",
+    "displayName": "蓬松侧背",
+    "categoryKey": "statement_style",
+    "categoryLabel": "造型感",
+    "structureId": "male-fluffy_side_back",
+    "modifierIds": [],
+    "techniqueIds": [],
+    "notes": "空气感更强"
+  },
+  {
+    "displayGroup": "轻熟背头",
+    "displayName": "四六分侧背",
+    "categoryKey": "statement_style",
+    "categoryLabel": "造型感",
+    "structureId": "male-six_four_side_back",
+    "modifierIds": [],
+    "techniqueIds": [],
+    "notes": "偏成熟偏正式"
+  },
+  {
+    "displayGroup": "轻熟背头",
+    "displayName": "复古油头",
+    "categoryKey": "statement_style",
+    "categoryLabel": "造型感",
+    "structureId": "male-vintage_pomade",
+    "modifierIds": [],
+    "techniqueIds": [],
+    "notes": "已做成独立结构预设"
+  },
+  {
+    "displayGroup": "轻熟背头",
+    "displayName": "湿发侧背",
+    "categoryKey": "statement_style",
+    "categoryLabel": "造型感",
+    "structureId": "male-wet_side_back",
+    "modifierIds": [],
+    "techniqueIds": [],
+    "notes": "已做成独立结构预设"
+  },
+  {
+    "displayGroup": "轻熟背头",
+    "displayName": "龙须背头",
+    "categoryKey": "statement_style",
+    "categoryLabel": "造型感",
+    "structureId": "male-dragon_whisker_back",
+    "modifierIds": [],
+    "techniqueIds": [],
+    "notes": "已做成独立结构预设"
+  },
+  {
+    "displayGroup": "轻熟背头",
+    "displayName": "长刘海侧背",
+    "categoryKey": "statement_style",
+    "categoryLabel": "造型感",
+    "structureId": "male-long_fringe_side_back",
+    "modifierIds": [
+      "modifier_long_fringe"
+    ],
+    "techniqueIds": [],
+    "notes": "长前区修饰更明显"
+  },
+  {
+    "displayGroup": "个性长发",
+    "displayName": "港风分线",
+    "categoryKey": "statement_style",
+    "categoryLabel": "造型感",
+    "structureId": "male-hongkong_parted_style",
+    "modifierIds": [
+      "modifier_hk_vibe"
+    ],
+    "techniqueIds": [],
+    "notes": "港风建议作为风格修饰叠加"
+  },
+  {
+    "displayGroup": "个性长发",
+    "displayName": "港风纹理",
+    "categoryKey": "statement_style",
+    "categoryLabel": "造型感",
+    "structureId": "male-hongkong_texture",
+    "modifierIds": [
+      "modifier_hk_vibe",
+      "modifier_messy_texture"
+    ],
+    "techniqueIds": [],
+    "notes": "更松弛、更复古"
+  },
+  {
+    "displayGroup": "个性长发",
+    "displayName": "港风中长发",
+    "categoryKey": "statement_style",
+    "categoryLabel": "造型感",
+    "structureId": "male-hongkong_medium_long",
+    "modifierIds": [
+      "modifier_hk_vibe"
+    ],
+    "techniqueIds": [],
+    "notes": "中长发港风主展示词"
+  },
+  {
+    "displayGroup": "个性长发",
+    "displayName": "鲻鱼头",
+    "categoryKey": "statement_style",
+    "categoryLabel": "造型感",
+    "structureId": "male-mullet",
+    "modifierIds": [],
+    "techniqueIds": [],
+    "notes": "沿用当前后端结构 ID"
+  },
+  {
+    "displayGroup": "个性长发",
+    "displayName": "狼尾发型",
+    "categoryKey": "statement_style",
+    "categoryLabel": "造型感",
+    "structureId": "male-wolf-tail",
+    "modifierIds": [],
+    "techniqueIds": [],
+    "notes": "沿用当前后端结构 ID"
+  },
+  {
+    "displayGroup": "个性长发",
+    "displayName": "日系微卷长发",
+    "categoryKey": "statement_style",
+    "categoryLabel": "造型感",
+    "structureId": "male-japanese-wavy-long",
+    "modifierIds": [],
+    "techniqueIds": [],
+    "notes": "沿用当前后端结构 ID"
+  },
+  {
+    "displayGroup": "个性长发",
+    "displayName": "武士半扎发",
+    "categoryKey": "statement_style",
+    "categoryLabel": "造型感",
+    "structureId": "male-samurai-half-bun",
+    "modifierIds": [],
+    "techniqueIds": [],
+    "notes": "沿用当前后端结构 ID"
+  },
+  {
+    "displayGroup": "烫卷造型",
+    "displayName": "自然纹理烫",
+    "categoryKey": "textured_perm",
+    "categoryLabel": "纹理烫发",
+    "structureId": "male-textured_side_part",
+    "modifierIds": [],
+    "techniqueIds": [
+      "male-texture-perm"
+    ],
+    "notes": "工艺驱动预设，默认挂长纹理侧分骨架"
+  },
+  {
+    "displayGroup": "烫卷造型",
+    "displayName": "气垫纹理烫",
+    "categoryKey": "textured_perm",
+    "categoryLabel": "纹理烫发",
+    "structureId": "male-micro_middle_part",
+    "modifierIds": [],
+    "techniqueIds": [
+      "male-air-cushion-perm"
+    ],
+    "notes": "默认挂微分纹理骨架"
+  },
+  {
+    "displayGroup": "烫卷造型",
+    "displayName": "定位蓬松烫",
+    "categoryKey": "textured_perm",
+    "categoryLabel": "纹理烫发",
+    "structureId": "male-textured_short_foundation",
+    "modifierIds": [],
+    "techniqueIds": [
+      "male-root-lift-perm"
+    ],
+    "notes": "适合作为短发蓬松工艺入口"
+  },
+  {
+    "displayGroup": "烫卷造型",
+    "displayName": "钢夹前刺烫",
+    "categoryKey": "textured_perm",
+    "categoryLabel": "纹理烫发",
+    "structureId": "male-textured_forward_spike",
+    "modifierIds": [],
+    "techniqueIds": [
+      "male-clip-perm"
+    ],
+    "notes": "明确绑定前刺骨架"
+  },
+  {
+    "displayGroup": "烫卷造型",
+    "displayName": "韩式羊毛卷",
+    "categoryKey": "textured_perm",
+    "categoryLabel": "纹理烫发",
+    "structureId": "male-middle-micro-part",
+    "modifierIds": [],
+    "techniqueIds": [
+      "male-wool-perm"
+    ],
+    "notes": "当前先沿用旧结构骨架"
+  },
+  {
+    "displayGroup": "烫卷造型",
+    "displayName": "法式慵懒卷",
+    "categoryKey": "textured_perm",
+    "categoryLabel": "纹理烫发",
+    "structureId": "male-textured_side_part",
+    "modifierIds": [],
+    "techniqueIds": [
+      "male-french-lazy-perm"
+    ],
+    "notes": "默认走轻熟长纹理侧分"
+  },
+  {
+    "displayGroup": "烫卷造型",
+    "displayName": "锡纸束感卷",
+    "categoryKey": "textured_perm",
+    "categoryLabel": "纹理烫发",
+    "structureId": "male-textured_short_foundation",
+    "modifierIds": [],
+    "techniqueIds": [
+      "male-tin-foil-perm"
+    ],
+    "notes": "默认挂基础短发骨架"
+  }
+]

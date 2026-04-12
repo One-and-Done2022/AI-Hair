@@ -17,3 +17,11 @@ project.private.config.json
 .vscode/
 foodtop1.com_certificate.pem
 foodtop1.com_private.key
+lcynas.me_certificate.pem
+lcynas.me_private.key
+output/
+template/output/
+assets/微信图片_*.jpg
+template/space.bilibili.com.har
+template/jishanchuan_*
+template/color.py
