@@ -32,6 +32,21 @@
       <view class="preview-body">
         <view class="preview-title">本次将返回 1 张换发预览和 2 张场景成片</view>
         <view class="preview-copy">你可以先拿到仅换发图，再继续等待 2 张完整场景图。</view>
+        <view wx:if="{{profileSummary}}" class="preview-meta">当前剩余 {{profileSummary.total_remaining || profileSummary.remaining_quota}} 次</view>
+        <view
+          wx:if="{{profileSummary && (profileSummary.total_remaining || profileSummary.remaining_quota) <= 0}}"
+          class="preview-warning"
+        >
+          免费次数已用完，购买 1 次生成包后可立即继续。
+        </view>
+        <button
+          wx:if="{{profileSummary && (profileSummary.total_remaining || profileSummary.remaining_quota) <= 0}}"
+          class="secondary-button preview-purchase-button"
+          loading="{{purchasing}}"
+          bindtap="purchaseOnePack"
+        >
+          {{purchaseItem ? ('购买 1 次 · ' + purchaseItem.price_label) : '购买 1 次生成'}}
+        </button>
       </view>
     </view>
 

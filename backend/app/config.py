@@ -41,6 +41,13 @@ def _resolve_repo_path(value: str | Path) -> Path:
     return (ROOT_DIR / path).resolve()
 
 
+def _optional_repo_path(name: str) -> Path:
+    value = os.getenv(name, "").strip()
+    if not value:
+        return Path()
+    return _resolve_repo_path(value)
+
+
 def _normalize_database_url(raw_url: str) -> str:
     if not raw_url.startswith("sqlite:///"):
         return raw_url
@@ -163,6 +170,15 @@ class Settings:
     use_mock_generator: bool
     wechat_app_id: str
     wechat_app_secret: str
+    wechat_pay_mch_id: str
+    wechat_pay_certificate_serial_no: str
+    wechat_pay_private_key_path: Path
+    wechat_pay_api_v3_key: str
+    wechat_pay_notify_url: str
+    wechat_pay_base_url: str
+    wechat_pay_timeout_seconds: int
+    wechat_pay_platform_public_key_path: Path
+    wechat_pay_platform_serial: str
     allow_dev_login: bool
     enforce_face_detection: bool
     max_upload_size_mb: int
@@ -187,6 +203,25 @@ class Settings:
     @property
     def is_sqlite(self) -> bool:
         return self.database_url.startswith("sqlite")
+
+    @property
+    def wechat_pay_enabled(self) -> bool:
+        required_text = (
+            self.wechat_app_id,
+            self.wechat_pay_mch_id,
+            self.wechat_pay_certificate_serial_no,
+            self.wechat_pay_api_v3_key,
+            self.wechat_pay_notify_url,
+        )
+        return all(item.strip() for item in required_text) and (
+            self.wechat_pay_private_key_path != Path()
+        )
+
+    @property
+    def wechat_pay_notify_verification_enabled(self) -> bool:
+        return self.wechat_pay_enabled and (
+            self.wechat_pay_platform_public_key_path != Path()
+        )
 
     def ensure_directories(self) -> None:
         self.storage_dir.mkdir(parents=True, exist_ok=True)
@@ -470,6 +505,26 @@ def get_settings() -> Settings:
         ),
         wechat_app_id=os.getenv("WECHAT_APP_ID", "").strip(),
         wechat_app_secret=os.getenv("WECHAT_APP_SECRET", "").strip(),
+        wechat_pay_mch_id=os.getenv("WECHAT_PAY_MCH_ID", "").strip(),
+        wechat_pay_certificate_serial_no=os.getenv(
+            "WECHAT_PAY_CERTIFICATE_SERIAL_NO", ""
+        ).strip(),
+        wechat_pay_private_key_path=_optional_repo_path("WECHAT_PAY_PRIVATE_KEY_PATH"),
+        wechat_pay_api_v3_key=os.getenv("WECHAT_PAY_API_V3_KEY", "").strip(),
+        wechat_pay_notify_url=os.getenv("WECHAT_PAY_NOTIFY_URL", "").strip(),
+        wechat_pay_base_url=os.getenv(
+            "WECHAT_PAY_BASE_URL", "https://api.mch.weixin.qq.com"
+        ).strip().rstrip("/"),
+        wechat_pay_timeout_seconds=max(
+            5,
+            _env_int("WECHAT_PAY_TIMEOUT_SECONDS", 15),
+        ),
+        wechat_pay_platform_public_key_path=_optional_repo_path(
+            "WECHAT_PAY_PLATFORM_PUBLIC_KEY_PATH"
+        ),
+        wechat_pay_platform_serial=os.getenv(
+            "WECHAT_PAY_PLATFORM_SERIAL", ""
+        ).strip(),
         allow_dev_login=_env_bool("ALLOW_DEV_LOGIN", True),
         enforce_face_detection=_env_bool("ENFORCE_FACE_DETECTION", False),
         max_upload_size_mb=int(os.getenv("MAX_UPLOAD_SIZE_MB", "10")),

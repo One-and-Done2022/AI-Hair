@@ -157,14 +157,24 @@ def create_job(
     except (ValueError, ImageGenerationError) as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
 
-    job = repository.create_job(
-        user_id=current_user["id"],
-        upload_id=payload.upload_id,
-        hairstyle_id=stored_hairstyle_id,
-        scene_id=payload.scene_id,
-        prompt=prompt,
-        model_name=f"{generation_plan['hair_backend']}+{generation_plan['scene_model_name']}",
-    )
+    try:
+        job = repository.create_job_consuming_quota(
+            user_id=current_user["id"],
+            upload_id=payload.upload_id,
+            hairstyle_id=stored_hairstyle_id,
+            scene_id=payload.scene_id,
+            prompt=prompt,
+            model_name=f"{generation_plan['hair_backend']}+{generation_plan['scene_model_name']}",
+        )
+    except repository.QuotaExceededError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_402_PAYMENT_REQUIRED,
+            detail={
+                "code": "quota_exhausted",
+                "message": "免费次数已用完，请购买 1 次生成包后继续。",
+                "quota": exc.quota,
+            },
+        ) from exc
     request.app.state.job_worker.enqueue(job["id"])
     return _job_response(request, job)
 

@@ -13,6 +13,8 @@ from sqlalchemy import (
     Table,
     Text,
     create_engine,
+    inspect,
+    text,
 )
 from sqlalchemy.engine import Engine
 from sqlalchemy.orm import Session, sessionmaker
@@ -28,6 +30,9 @@ users = Table(
     Column("id", Integer, primary_key=True, autoincrement=True),
     Column("openid", String(255), nullable=False, unique=True),
     Column("created_at", String(64), nullable=False),
+    Column("free_quota_total", Integer, nullable=False, server_default=text("10")),
+    Column("free_quota_used", Integer, nullable=False, server_default=text("0")),
+    Column("paid_quota_balance", Integer, nullable=False, server_default=text("0")),
 )
 
 auth_tokens = Table(
@@ -72,10 +77,30 @@ jobs = Table(
     Column("updated_at", String(64), nullable=False),
 )
 
+purchase_orders = Table(
+    "purchase_orders",
+    metadata,
+    Column("id", String(64), primary_key=True),
+    Column("user_id", Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False),
+    Column("product_id", String(128), nullable=False),
+    Column("product_name", String(255), nullable=False),
+    Column("quantity", Integer, nullable=False),
+    Column("unit_price_cents", Integer, nullable=False),
+    Column("amount_cents", Integer, nullable=False),
+    Column("status", String(32), nullable=False),
+    Column("wechat_prepay_id", String(255)),
+    Column("wechat_transaction_id", String(255)),
+    Column("payment_payload", Text),
+    Column("created_at", String(64), nullable=False),
+    Column("updated_at", String(64), nullable=False),
+    Column("confirmed_at", String(64)),
+)
+
 Index("idx_auth_tokens_user_id", auth_tokens.c.user_id)
 Index("idx_uploads_user_id", uploads.c.user_id)
 Index("idx_jobs_user_id", jobs.c.user_id)
 Index("idx_jobs_status", jobs.c.status)
+Index("idx_purchase_orders_user_id", purchase_orders.c.user_id)
 
 
 @lru_cache
@@ -130,4 +155,67 @@ def session_scope() -> Session:
 
 
 def init_db() -> None:
-    metadata.create_all(get_engine())
+    engine = get_engine()
+    metadata.create_all(engine)
+    _migrate_users_table(engine)
+    _migrate_purchase_orders_table(engine)
+
+
+def _migrate_users_table(engine: Engine) -> None:
+    inspector = inspect(engine)
+    try:
+        existing_columns = {column["name"] for column in inspector.get_columns("users")}
+    except Exception:
+        existing_columns = set()
+
+    statements: list[str] = []
+    if "free_quota_total" not in existing_columns:
+        statements.append(
+            "ALTER TABLE users ADD COLUMN free_quota_total INTEGER NOT NULL DEFAULT 10"
+        )
+    if "free_quota_used" not in existing_columns:
+        statements.append(
+            "ALTER TABLE users ADD COLUMN free_quota_used INTEGER NOT NULL DEFAULT 0"
+        )
+    if "paid_quota_balance" not in existing_columns:
+        statements.append(
+            "ALTER TABLE users ADD COLUMN paid_quota_balance INTEGER NOT NULL DEFAULT 0"
+        )
+
+    if not statements:
+        return
+
+    with engine.begin() as connection:
+        for statement in statements:
+            connection.exec_driver_sql(statement)
+
+
+def _migrate_purchase_orders_table(engine: Engine) -> None:
+    inspector = inspect(engine)
+    try:
+        existing_columns = {
+            column["name"] for column in inspector.get_columns("purchase_orders")
+        }
+    except Exception:
+        existing_columns = set()
+
+    statements: list[str] = []
+    if "wechat_prepay_id" not in existing_columns:
+        statements.append(
+            "ALTER TABLE purchase_orders ADD COLUMN wechat_prepay_id VARCHAR(255)"
+        )
+    if "wechat_transaction_id" not in existing_columns:
+        statements.append(
+            "ALTER TABLE purchase_orders ADD COLUMN wechat_transaction_id VARCHAR(255)"
+        )
+    if "payment_payload" not in existing_columns:
+        statements.append(
+            "ALTER TABLE purchase_orders ADD COLUMN payment_payload TEXT"
+        )
+
+    if not statements:
+        return
+
+    with engine.begin() as connection:
+        for statement in statements:
+            connection.exec_driver_sql(statement)

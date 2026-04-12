@@ -1,11 +1,15 @@
 const { ensureLogin } = require("../../utils/auth");
-const { showError } = require("../../utils/errors");
+const { getErrorCode, showError } = require("../../utils/errors");
 const {
   findProfessionalHairColorById,
   resolveHairColorSelection,
   resolveProfessionalMappedSelection
 } = require("../../utils/hair-color");
 const { upsertPendingHistoryJob } = require("../../utils/pending-history");
+const {
+  getDefaultPurchaseItem,
+  quickPurchaseDefaultGenerationPack
+} = require("../../utils/purchase");
 const { request } = require("../../utils/request");
 const {
   ensureCurrentUpload,
@@ -33,6 +37,28 @@ function buildProfessionalSummary(professionalColor) {
   return `${professionalColor.series_name} · ${professionalColor.code}`;
 }
 
+function getTotalRemaining(profileSummary) {
+  if (!profileSummary) {
+    return 0;
+  }
+  const explicitTotal = Number(profileSummary.total_remaining);
+  if (!Number.isNaN(explicitTotal)) {
+    return explicitTotal;
+  }
+  const fallback = Number(profileSummary.remaining_quota);
+  return Number.isNaN(fallback) ? 0 : fallback;
+}
+
+function showConfirmModal(options) {
+  return new Promise((resolve) => {
+    wx.showModal({
+      ...options,
+      success: ({ confirm }) => resolve(!!confirm),
+      fail: () => resolve(false)
+    });
+  });
+}
+
 Page({
   data: {
     loading: true,
@@ -46,7 +72,10 @@ Page({
     selectedHairColorToneLabel: "",
     selectedHairColorTechniqueLabel: "",
     selectedHairColorProfessionalSummary: "",
-    submitting: false
+    profileSummary: null,
+    purchaseItem: null,
+    submitting: false,
+    purchasing: false
   },
 
   async onLoad() {
@@ -79,7 +108,11 @@ Page({
     this.setData({ loading: true });
     try {
       await ensureLogin();
-      const catalog = await request({ url: "/api/templates" });
+      const [catalog, profileSummary, purchaseItem] = await Promise.all([
+        request({ url: "/api/templates" }),
+        request({ url: "/api/me" }).catch(() => null),
+        getDefaultPurchaseItem().catch(() => null)
+      ]);
       const generationBackends = formatGenerationBackends(catalog.generation_backends || []);
       const generationSelection = buildGenerationSelection(generationBackends, draft);
       const selectedHairstyle =
@@ -144,7 +177,9 @@ Page({
         selectedHairColorMode,
         selectedHairColorToneLabel: selectedHairColor ? selectedHairColor.label : "",
         selectedHairColorTechniqueLabel: selectedHairTechnique ? selectedHairTechnique.label : "",
-        selectedHairColorProfessionalSummary: buildProfessionalSummary(selectedProfessionalHairColor)
+        selectedHairColorProfessionalSummary: buildProfessionalSummary(selectedProfessionalHairColor),
+        profileSummary,
+        purchaseItem
       });
     } catch (error) {
       this.setData({ loading: false });
@@ -185,6 +220,128 @@ Page({
     });
   },
 
+  async refreshQuotaSummary() {
+    const profileSummary = await request({ url: "/api/me" });
+    this.setData({ profileSummary });
+    return profileSummary;
+  },
+
+  async ensurePurchaseItem() {
+    if (this.data.purchaseItem) {
+      return this.data.purchaseItem;
+    }
+    const purchaseItem = await getDefaultPurchaseItem().catch(() => null);
+    if (purchaseItem) {
+      this.setData({ purchaseItem });
+    }
+    return purchaseItem;
+  },
+
+  async promptPurchaseForQuota() {
+    const purchaseItem = await this.ensurePurchaseItem();
+    if (!purchaseItem) {
+      wx.showToast({
+        title: "当前没有可购买商品",
+        icon: "none"
+      });
+      return false;
+    }
+    const confirmed = await showConfirmModal({
+      title: "购买生成包",
+      content: `免费次数已用完。确认购买 ${purchaseItem.name}（${purchaseItem.price_label}）后，会拉起微信支付，支付完成后继续本次生成。`,
+      confirmText: "立即购买"
+    });
+    if (!confirmed) {
+      return false;
+    }
+
+    this.setData({ purchasing: true });
+    wx.showLoading({ title: "正在购买" });
+    try {
+      await quickPurchaseDefaultGenerationPack(purchaseItem.product_id);
+      wx.showToast({
+        title: "已增加 1 次生成",
+        icon: "success"
+      });
+      const profileSummary = await this.refreshQuotaSummary().catch(() => null);
+      return getTotalRemaining(profileSummary || this.data.profileSummary) > 0;
+    } catch (error) {
+      showError(error, {
+        fallback: "购买失败，请稍后再试",
+        preferModal: true
+      });
+      return false;
+    } finally {
+      wx.hideLoading();
+      this.setData({ purchasing: false });
+    }
+  },
+
+  async purchaseOnePack() {
+    await this.promptPurchaseForQuota();
+  },
+
+  async ensureQuotaBeforeCreateJob() {
+    const profileSummary = await this.refreshQuotaSummary().catch(() => this.data.profileSummary);
+    if (getTotalRemaining(profileSummary) > 0) {
+      return true;
+    }
+    wx.hideLoading();
+    const purchased = await this.promptPurchaseForQuota();
+    if (!purchased) {
+      return false;
+    }
+    wx.showLoading({ title: "正在提交任务" });
+    return true;
+  },
+
+  async submitJobRequest() {
+    const upload = await ensureCurrentUpload(this.data.selectedImage);
+    const draft = readCreationDraft();
+    const job = await request({
+      url: "/api/jobs",
+      method: "POST",
+      data: buildJobCreatePayload({
+        uploadId: upload.upload_id,
+        hairstyle: this.data.selectedHairstyle,
+        scene: this.data.selectedScene,
+        generatorBackend: this.data.selectedGeneratorBackend,
+        aspectRatio: this.data.selectedAspectRatio,
+        resolution: this.data.selectedResolution,
+        hairColorTone: draft.hair_color_tone,
+        hairColorTechnique: draft.hair_color_technique,
+        hairColorProfessionalId: draft.hair_color_professional_id
+      })
+    });
+    upsertPendingHistoryJob({
+      job_id: job.job_id,
+      status: job.status,
+      upload_url: upload.upload_url || "",
+      hairstyle_id: job.hairstyle_id || this.data.selectedHairstyle.id,
+      preset_id: job.preset_id || this.data.selectedHairstyle.preset_id || "",
+      hairstyle_name: job.hairstyle_name || this.data.selectedHairstyle.name || "",
+      preset_name: job.preset_name || this.data.selectedHairstyle.name || "",
+      scene_id: this.data.selectedScene.id,
+      scene_name: job.scene_name || this.data.selectedScene.name || "",
+      generator_backend: this.data.selectedGeneratorBackend,
+      hair_color_selection_mode: draft.hair_color_professional_id ? "professional" : "basic",
+      hair_color_tone: job.hair_color_tone || draft.hair_color_tone || "",
+      hair_color_tone_label: job.hair_color_tone_label || this.data.selectedHairColorToneLabel || "",
+      hair_color_technique: job.hair_color_technique || draft.hair_color_technique || "",
+      hair_color_technique_label: job.hair_color_technique_label || this.data.selectedHairColorTechniqueLabel || "",
+      hair_color_professional_id: job.hair_color_professional_id || draft.hair_color_professional_id || "",
+      hair_color_professional_brand: job.hair_color_professional_brand || draft.hair_color_professional_brand || "",
+      hair_color_professional_series: job.hair_color_professional_series || draft.hair_color_professional_series || "",
+      hair_color_professional_series_label: job.hair_color_professional_series_label || draft.hair_color_professional_series_label || "",
+      hair_color_professional_code: job.hair_color_professional_code || draft.hair_color_professional_code || "",
+      hair_color_professional_note: job.hair_color_professional_note || draft.hair_color_professional_note || "",
+      hair_color_professional_hex_estimate: job.hair_color_professional_hex_estimate || draft.hair_color_professional_hex_estimate || "",
+      created_at: job.created_at || new Date().toISOString(),
+      updated_at: job.updated_at || job.created_at || new Date().toISOString()
+    });
+    return job;
+  },
+
   async createJob() {
     if (!this.data.selectedImage) {
       wx.showToast({ title: "请先上传照片", icon: "none" });
@@ -199,49 +356,25 @@ Page({
     wx.showLoading({ title: "正在提交任务" });
     try {
       await ensureLogin();
-      const upload = await ensureCurrentUpload(this.data.selectedImage);
-      const draft = readCreationDraft();
-      const job = await request({
-        url: "/api/jobs",
-        method: "POST",
-        data: buildJobCreatePayload({
-          uploadId: upload.upload_id,
-          hairstyle: this.data.selectedHairstyle,
-          scene: this.data.selectedScene,
-          generatorBackend: this.data.selectedGeneratorBackend,
-          aspectRatio: this.data.selectedAspectRatio,
-          resolution: this.data.selectedResolution,
-          hairColorTone: draft.hair_color_tone,
-          hairColorTechnique: draft.hair_color_technique,
-          hairColorProfessionalId: draft.hair_color_professional_id
-        })
-      });
-      upsertPendingHistoryJob({
-        job_id: job.job_id,
-        status: job.status,
-        upload_url: upload.upload_url || "",
-        hairstyle_id: job.hairstyle_id || this.data.selectedHairstyle.id,
-        preset_id: job.preset_id || this.data.selectedHairstyle.preset_id || "",
-        hairstyle_name: job.hairstyle_name || this.data.selectedHairstyle.name || "",
-        preset_name: job.preset_name || this.data.selectedHairstyle.name || "",
-        scene_id: this.data.selectedScene.id,
-        scene_name: job.scene_name || this.data.selectedScene.name || "",
-        generator_backend: this.data.selectedGeneratorBackend,
-        hair_color_selection_mode: draft.hair_color_professional_id ? "professional" : "basic",
-        hair_color_tone: job.hair_color_tone || draft.hair_color_tone || "",
-        hair_color_tone_label: job.hair_color_tone_label || this.data.selectedHairColorToneLabel || "",
-        hair_color_technique: job.hair_color_technique || draft.hair_color_technique || "",
-        hair_color_technique_label: job.hair_color_technique_label || this.data.selectedHairColorTechniqueLabel || "",
-        hair_color_professional_id: job.hair_color_professional_id || draft.hair_color_professional_id || "",
-        hair_color_professional_brand: job.hair_color_professional_brand || draft.hair_color_professional_brand || "",
-        hair_color_professional_series: job.hair_color_professional_series || draft.hair_color_professional_series || "",
-        hair_color_professional_series_label: job.hair_color_professional_series_label || draft.hair_color_professional_series_label || "",
-        hair_color_professional_code: job.hair_color_professional_code || draft.hair_color_professional_code || "",
-        hair_color_professional_note: job.hair_color_professional_note || draft.hair_color_professional_note || "",
-        hair_color_professional_hex_estimate: job.hair_color_professional_hex_estimate || draft.hair_color_professional_hex_estimate || "",
-        created_at: job.created_at || new Date().toISOString(),
-        updated_at: job.updated_at || job.created_at || new Date().toISOString()
-      });
+      const canCreate = await this.ensureQuotaBeforeCreateJob();
+      if (!canCreate) {
+        return;
+      }
+      let job;
+      try {
+        job = await this.submitJobRequest();
+      } catch (error) {
+        if (getErrorCode(error) !== "quota_exhausted") {
+          throw error;
+        }
+        wx.hideLoading();
+        const purchased = await this.promptPurchaseForQuota();
+        if (!purchased) {
+          return;
+        }
+        wx.showLoading({ title: "正在提交任务" });
+        job = await this.submitJobRequest();
+      }
 
       wx.navigateTo({
         url:

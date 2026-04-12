@@ -322,11 +322,63 @@ class MeResponse(BaseModel):
     member_status: str
     remaining_quota: int
     monthly_used: int
+    free_quota_total: int
+    free_quota_used: int
+    free_remaining: int
+    paid_remaining: int
+    total_remaining: int
     total_jobs: int
     completed_jobs: int
     processing_jobs: int
     provider_alerts: list[str] = Field(default_factory=list)
     created_at: str
+
+
+class PurchaseCatalogItem(BaseModel):
+    product_id: str
+    name: str
+    description: str
+    price_cents: int
+    price_label: str
+    generation_count: int
+    is_default: bool = True
+
+
+class PurchaseCatalogResponse(BaseModel):
+    items: list[PurchaseCatalogItem] = Field(default_factory=list)
+
+
+class PurchaseOrderCreateRequest(BaseModel):
+    product_id: str = Field(min_length=1)
+
+
+class PurchaseOrderResponse(BaseModel):
+    order_id: str
+    product_id: str
+    product_name: str
+    quantity: int
+    unit_price_cents: int
+    amount_cents: int
+    amount_label: str
+    status: Literal["pending", "payment_prepared", "confirmed"]
+    wechat_prepay_id: str | None = None
+    wechat_transaction_id: str | None = None
+    created_at: str
+    updated_at: str
+    confirmed_at: str | None = None
+
+
+class WechatPaymentParams(BaseModel):
+    timeStamp: str
+    nonceStr: str
+    package: str
+    signType: Literal["RSA"] = "RSA"
+    paySign: str
+
+
+class PurchasePaymentPrepareResponse(BaseModel):
+    order: PurchaseOrderResponse
+    payment: WechatPaymentParams
 
 class ProviderAdminAlertRecord(BaseModel):
     alert_id: str

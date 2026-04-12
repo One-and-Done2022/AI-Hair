@@ -2,7 +2,7 @@
   <view class="landing-head">
     <view class="title hero-title">上传照片，开始换发</view>
     <view class="subtitle hero-subtitle">先上传清晰自拍照，再按步骤选择发型、场景和参数。</view>
-    <view wx:if="{{profileSummary}}" class="quota-pill">剩余 {{profileSummary.remaining_quota}} 次</view>
+    <view wx:if="{{profileSummary}}" class="quota-pill">剩余 {{profileSummary.total_remaining || profileSummary.remaining_quota}} 次</view>
   </view>
 
 

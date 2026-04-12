@@ -37,6 +37,37 @@ const UPLOAD_ERROR_MESSAGES = {
   }
 };
 
+const GENERIC_ERROR_MESSAGES = {
+  quota_exhausted: {
+    title: "次数已用完",
+    content: "你的免费次数已经用完，请先购买 1 次生成包，再继续本次完整生成。"
+  },
+  invalid_purchase_product: {
+    title: "商品不可用",
+    content: "当前购买项暂不可用，请稍后刷新后重试。"
+  },
+  purchase_order_not_found: {
+    title: "订单不存在",
+    content: "未找到当前订单，请重新发起购买。"
+  },
+  wechat_pay_not_configured: {
+    title: "支付暂不可用",
+    content: "当前微信支付尚未配置完成，请稍后再试。"
+  },
+  wechat_pay_prepare_failed: {
+    title: "拉起支付失败",
+    content: "微信支付下单失败，请稍后再试。"
+  },
+  payment_cancelled: {
+    title: "已取消支付",
+    content: "你已取消本次支付。"
+  },
+  payment_confirm_timeout: {
+    title: "支付确认中",
+    content: "支付已发起成功，到账确认稍有延迟，请稍后刷新额度。"
+  }
+};
+
 function getErrorCode(error) {
   if (!error || typeof error !== "object") {
     return "";
@@ -55,10 +86,19 @@ function getFriendlyUploadError(error) {
   return UPLOAD_ERROR_MESSAGES[code] || null;
 }
 
+function getFriendlyGenericError(error) {
+  const code = getErrorCode(error);
+  return GENERIC_ERROR_MESSAGES[code] || null;
+}
+
 function getErrorMessage(error, fallback = "请求失败，请稍后再试") {
   const uploadError = getFriendlyUploadError(error);
   if (uploadError) {
     return uploadError.content;
+  }
+  const genericError = getFriendlyGenericError(error);
+  if (genericError) {
+    return genericError.content;
   }
   if (!error) {
     return fallback;
@@ -84,11 +124,22 @@ function showError(error, options = {}) {
     preferModal = false
   } = options;
   const uploadError = getFriendlyUploadError(error);
+  const genericError = getFriendlyGenericError(error);
 
   if (preferModal && uploadError) {
     wx.showModal({
       title: uploadError.title,
       content: uploadError.content,
+      showCancel: false,
+      confirmText: "我知道了"
+    });
+    return;
+  }
+
+  if (preferModal && genericError) {
+    wx.showModal({
+      title: genericError.title,
+      content: genericError.content,
       showCancel: false,
       confirmText: "我知道了"
     });
@@ -104,6 +155,7 @@ function showError(error, options = {}) {
 module.exports = {
   getErrorCode,
   getErrorMessage,
+  getFriendlyGenericError,
   getFriendlyUploadError,
   showError
 };

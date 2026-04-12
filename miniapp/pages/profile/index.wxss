@@ -94,6 +94,12 @@
   font-weight: 700;
 }
 
+.mini-note {
+  color: #5d6670;
+  font-size: 22rpx;
+  font-weight: 600;
+}
+
 .quota-grid {
   margin-top: 20rpx;
   display: grid;
@@ -121,6 +127,13 @@
 .quota-label {
   margin-top: 10rpx;
   font-size: 22rpx;
+  color: #5d6670;
+}
+
+.quota-footnote {
+  margin-top: 18rpx;
+  font-size: 22rpx;
+  line-height: 1.55;
   color: #5d6670;
 }
 
