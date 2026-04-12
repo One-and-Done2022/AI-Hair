@@ -10,6 +10,9 @@ from pathlib import Path
 
 import pytest
 from PIL import Image
+from cryptography.hazmat.primitives import hashes, serialization
+from cryptography.hazmat.primitives.asymmetric import padding, rsa
+from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 from fastapi.testclient import TestClient
 from sqlalchemy import update
 
@@ -36,6 +39,52 @@ def _build_colored_image(color: str) -> bytes:
 
 def _load_asset_image_bytes(name: str) -> bytes:
     return (ROOT_DIR / "assets" / name).read_bytes()
+
+
+def _write_pem_keypair(private_path: Path, public_path: Path) -> None:
+    private_key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
+    private_path.write_bytes(
+        private_key.private_bytes(
+            encoding=serialization.Encoding.PEM,
+            format=serialization.PrivateFormat.TraditionalOpenSSL,
+            encryption_algorithm=serialization.NoEncryption(),
+        )
+    )
+    public_path.write_bytes(
+        private_key.public_key().public_bytes(
+            encoding=serialization.Encoding.PEM,
+            format=serialization.PublicFormat.SubjectPublicKeyInfo,
+        )
+    )
+
+
+def _configure_wechat_pay_env(tmp_path, monkeypatch) -> dict[str, Path | str]:
+    merchant_private = tmp_path / "merchant_private.pem"
+    merchant_public = tmp_path / "merchant_public.pem"
+    platform_private = tmp_path / "platform_private.pem"
+    platform_public = tmp_path / "platform_public.pem"
+    _write_pem_keypair(merchant_private, merchant_public)
+    _write_pem_keypair(platform_private, platform_public)
+    api_v3_key = "0123456789abcdef0123456789abcdef"
+
+    monkeypatch.setenv("WECHAT_PAY_MCH_ID", "1900001111")
+    monkeypatch.setenv("WECHAT_APP_ID", "wx-test-app")
+    monkeypatch.setenv("WECHAT_PAY_CERTIFICATE_SERIAL_NO", "merchant-serial-001")
+    monkeypatch.setenv("WECHAT_PAY_PRIVATE_KEY_PATH", str(merchant_private))
+    monkeypatch.setenv("WECHAT_PAY_API_V3_KEY", api_v3_key)
+    monkeypatch.setenv("WECHAT_PAY_NOTIFY_URL", "https://api.lcynas.me/api/purchase/wechat/notify")
+    monkeypatch.setenv("WECHAT_PAY_BASE_URL", "https://api.mch.weixin.qq.com")
+    monkeypatch.setenv("WECHAT_PAY_TIMEOUT_SECONDS", "15")
+    monkeypatch.setenv("WECHAT_PAY_PLATFORM_PUBLIC_KEY_PATH", str(platform_public))
+    monkeypatch.setenv("WECHAT_PAY_PLATFORM_SERIAL", "platform-serial-001")
+
+    return {
+        "merchant_private": merchant_private,
+        "merchant_public": merchant_public,
+        "platform_private": platform_private,
+        "platform_public": platform_public,
+        "api_v3_key": api_v3_key,
+    }
 
 
 def _configure_runtime_env(tmp_path, monkeypatch, *, use_mock_generator: str = "true") -> None:
@@ -80,6 +129,15 @@ def _configure_runtime_env(tmp_path, monkeypatch, *, use_mock_generator: str = "
     monkeypatch.delenv("IMAGE_UNDERSTANDING_MODEL", raising=False)
     monkeypatch.delenv("IMAGE_UNDERSTANDING_MAX_CONCURRENCY", raising=False)
     monkeypatch.delenv("IMAGE_UNDERSTANDING_TIMEOUT_SECONDS", raising=False)
+    monkeypatch.delenv("WECHAT_PAY_MCH_ID", raising=False)
+    monkeypatch.delenv("WECHAT_PAY_CERTIFICATE_SERIAL_NO", raising=False)
+    monkeypatch.delenv("WECHAT_PAY_PRIVATE_KEY_PATH", raising=False)
+    monkeypatch.delenv("WECHAT_PAY_API_V3_KEY", raising=False)
+    monkeypatch.delenv("WECHAT_PAY_NOTIFY_URL", raising=False)
+    monkeypatch.delenv("WECHAT_PAY_BASE_URL", raising=False)
+    monkeypatch.delenv("WECHAT_PAY_TIMEOUT_SECONDS", raising=False)
+    monkeypatch.delenv("WECHAT_PAY_PLATFORM_PUBLIC_KEY_PATH", raising=False)
+    monkeypatch.delenv("WECHAT_PAY_PLATFORM_SERIAL", raising=False)
     monkeypatch.delenv("JOB_WORKER_CONCURRENCY", raising=False)
     monkeypatch.delenv("DB_POOL_SIZE", raising=False)
     monkeypatch.delenv("DB_MAX_OVERFLOW", raising=False)
@@ -100,11 +158,13 @@ def _clear_runtime_caches() -> None:
     from app.db import get_engine, get_session_factory
     from app.services import generation
     from app.services.storage import get_object_storage
+    from app.services.wechat_pay import clear_key_caches
 
     get_settings.cache_clear()
     get_engine.cache_clear()
     get_session_factory.cache_clear()
     get_object_storage.cache_clear()
+    clear_key_caches()
     generation._PROVIDER_BACKOFF_UNTIL.clear()
 
 
@@ -115,6 +175,16 @@ def _build_app(tmp_path, monkeypatch):
     from app.main import create_app
 
     return create_app()
+
+
+def _build_app_with_wechat_pay(tmp_path, monkeypatch):
+    _configure_runtime_env(tmp_path, monkeypatch, use_mock_generator="true")
+    key_paths = _configure_wechat_pay_env(tmp_path, monkeypatch)
+    _clear_runtime_caches()
+
+    from app.main import create_app
+
+    return create_app(), key_paths
 
 
 def _create_job_fixture(tmp_path, monkeypatch, *, ark_api_keys: str | None = None) -> dict:
@@ -171,6 +241,80 @@ def _create_job_fixture(tmp_path, monkeypatch, *, ark_api_keys: str | None = Non
         "hairstyle": hairstyle,
         "scene": scene,
     }
+
+
+def _build_wechat_notify_payload(
+    *,
+    platform_private_key_path: Path,
+    api_v3_key: str,
+    order_id: str,
+    amount_cents: int,
+    transaction_id: str = "4200000000000000001",
+) -> tuple[dict[str, str], bytes]:
+    resource_plaintext = json.dumps(
+        {
+            "mchid": "1900001111",
+            "appid": "wx-test-app",
+            "out_trade_no": order_id,
+            "transaction_id": transaction_id,
+            "trade_state": "SUCCESS",
+            "amount": {
+                "total": amount_cents,
+                "payer_total": amount_cents,
+                "currency": "CNY",
+                "payer_currency": "CNY",
+            },
+        },
+        ensure_ascii=False,
+        separators=(",", ":"),
+    ).encode("utf-8")
+    resource_nonce = "0123456789ab"
+    associated_data = "transaction"
+    ciphertext = AESGCM(api_v3_key.encode("utf-8")).encrypt(
+        resource_nonce.encode("utf-8"),
+        resource_plaintext,
+        associated_data.encode("utf-8"),
+    )
+    body = json.dumps(
+        {
+            "id": "notif-test-001",
+            "create_time": "2026-04-12T12:00:00+08:00",
+            "event_type": "TRANSACTION.SUCCESS",
+            "resource_type": "encrypt-resource",
+            "summary": "支付成功",
+            "resource": {
+                "original_type": "transaction",
+                "algorithm": "AEAD_AES_256_GCM",
+                "ciphertext": base64.b64encode(ciphertext).decode("utf-8"),
+                "associated_data": associated_data,
+                "nonce": resource_nonce,
+            },
+        },
+        ensure_ascii=False,
+        separators=(",", ":"),
+    ).encode("utf-8")
+    timestamp = "1712900000"
+    nonce = "notify-nonce-001"
+    message = f"{timestamp}\n{nonce}\n{body.decode('utf-8')}\n".encode("utf-8")
+    private_key = serialization.load_pem_private_key(
+        platform_private_key_path.read_bytes(),
+        password=None,
+    )
+    signature = base64.b64encode(
+        private_key.sign(
+            message,
+            padding.PKCS1v15(),
+            hashes.SHA256(),
+        )
+    ).decode("utf-8")
+    headers = {
+        "Wechatpay-Timestamp": timestamp,
+        "Wechatpay-Nonce": nonce,
+        "Wechatpay-Signature": signature,
+        "Wechatpay-Serial": "platform-serial-001",
+        "Content-Type": "application/json",
+    }
+    return headers, body
 
 
 def test_build_prompt_uses_faceprompt_single_image_structure():
@@ -1201,6 +1345,103 @@ def test_generation_quota_and_purchase_flow(tmp_path, monkeypatch):
         assert me_after_paid_use.status_code == 200
         assert me_after_paid_use.json()["paid_remaining"] == 0
         assert me_after_paid_use.json()["total_remaining"] == 0
+
+
+def test_prepare_wechat_payment_returns_request_payment_params(tmp_path, monkeypatch):
+    app, _key_paths = _build_app_with_wechat_pay(tmp_path, monkeypatch)
+
+    class _FakeResponse:
+        status_code = 200
+
+        @staticmethod
+        def json():
+            return {"prepay_id": "wx-prepay-001"}
+
+    def fake_post(url, content=None, headers=None, timeout=None):
+        assert url == "https://api.mch.weixin.qq.com/v3/pay/transactions/jsapi"
+        assert headers is not None
+        assert headers["Authorization"].startswith("WECHATPAY2-SHA256-RSA2048 ")
+        body = json.loads(content.decode("utf-8"))
+        assert body["appid"]
+        assert body["mchid"] == "1900001111"
+        assert body["notify_url"].endswith("/api/purchase/wechat/notify")
+        assert body["payer"]["openid"].startswith("dev_")
+        return _FakeResponse()
+
+    monkeypatch.setattr("app.services.wechat_pay.httpx.post", fake_post)
+
+    with TestClient(app) as client:
+        login = client.post("/api/auth/wechat/login", json={"code": "dev-test"})
+        headers = {"Authorization": f"Bearer {login.json()['token']}"}
+
+        order_create = client.post(
+            "/api/purchase/orders",
+            headers=headers,
+            json={"product_id": "single-generation-pack"},
+        )
+        assert order_create.status_code == 201
+        order_id = order_create.json()["order_id"]
+
+        pay_prepare = client.post(
+            f"/api/purchase/orders/{order_id}/pay",
+            headers=headers,
+        )
+        assert pay_prepare.status_code == 200
+        payload = pay_prepare.json()
+        assert payload["order"]["status"] == "payment_prepared"
+        assert payload["order"]["wechat_prepay_id"] == "wx-prepay-001"
+        assert payload["payment"]["package"] == "prepay_id=wx-prepay-001"
+        assert payload["payment"]["signType"] == "RSA"
+        assert payload["payment"]["timeStamp"]
+        assert payload["payment"]["nonceStr"]
+        assert payload["payment"]["paySign"]
+
+
+def test_wechat_payment_notify_confirms_order_and_recharges_quota(tmp_path, monkeypatch):
+    app, key_paths = _build_app_with_wechat_pay(tmp_path, monkeypatch)
+
+    with TestClient(app) as client:
+        login = client.post("/api/auth/wechat/login", json={"code": "dev-test"})
+        headers = {"Authorization": f"Bearer {login.json()['token']}"}
+
+        order_create = client.post(
+            "/api/purchase/orders",
+            headers=headers,
+            json={"product_id": "single-generation-pack"},
+        )
+        assert order_create.status_code == 201
+        order_id = order_create.json()["order_id"]
+
+        me_before = client.get("/api/me", headers=headers)
+        assert me_before.status_code == 200
+        assert me_before.json()["paid_remaining"] == 0
+
+        notify_headers, notify_body = _build_wechat_notify_payload(
+            platform_private_key_path=key_paths["platform_private"],
+            api_v3_key=str(key_paths["api_v3_key"]),
+            order_id=order_id,
+            amount_cents=100,
+            transaction_id="4200000000000000009",
+        )
+        notify_response = client.post(
+            "/api/purchase/wechat/notify",
+            headers=notify_headers,
+            content=notify_body,
+        )
+        assert notify_response.status_code == 200
+        assert notify_response.json() == {"code": "SUCCESS", "message": "成功"}
+
+        order_detail = client.get(f"/api/purchase/orders/{order_id}", headers=headers)
+        assert order_detail.status_code == 200
+        order_payload = order_detail.json()
+        assert order_payload["status"] == "confirmed"
+        assert order_payload["wechat_transaction_id"] == "4200000000000000009"
+        assert order_payload["confirmed_at"]
+
+        me_after = client.get("/api/me", headers=headers)
+        assert me_after.status_code == 200
+        assert me_after.json()["paid_remaining"] == 1
+        assert me_after.json()["total_remaining"] == 11
 
 
 def test_normalize_hair_color_selection_allows_non_recommended_professional_color(monkeypatch):
