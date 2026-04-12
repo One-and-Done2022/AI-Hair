@@ -19,6 +19,10 @@ const UPLOAD_ERROR_MESSAGES = {
     title: "图片无法识别",
     content: "系统无法解析这张图片，请换一张正常的 JPG/PNG 照片。"
   },
+  face_not_detected: {
+    title: "未检测到清晰人脸",
+    content: "请上传单人正脸或半侧脸自拍，避免遮挡、逆光、过暗和明显模糊。"
+  },
   no_face: {
     title: "未检测到清晰人脸",
     content: "请上传单人正脸或半侧脸自拍，避免遮挡、逆光、过暗和明显模糊。"
@@ -112,6 +116,9 @@ function getErrorMessage(error, fallback = "请求失败，请稍后再试") {
   if (error.detail && typeof error.detail === "string") {
     return error.detail;
   }
+  if (typeof error.errMsg === "string" && error.errMsg.trim()) {
+    return error.errMsg.trim();
+  }
   if (error.message) {
     return error.message;
   }
@@ -140,6 +147,16 @@ function showError(error, options = {}) {
     wx.showModal({
       title: genericError.title,
       content: genericError.content,
+      showCancel: false,
+      confirmText: "我知道了"
+    });
+    return;
+  }
+
+  if (preferModal) {
+    wx.showModal({
+      title: "请求失败",
+      content: getErrorMessage(error, fallback),
       showCancel: false,
       confirmText: "我知道了"
     });
