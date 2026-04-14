@@ -9,7 +9,7 @@
   <view wx:if="{{showcases.length}}" class="showcase-section">
     <view class="section-row">
       <view class="section-title">精选模板</view>
-      <view class="section-note">精选模板可以一键套用</view>
+      <view class="section-note">服务端固定精选模板，所有内测用户都可见并可一键套用</view>
     </view>
     <view class="showcase-grid">
       <view
