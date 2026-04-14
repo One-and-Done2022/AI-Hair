@@ -88,6 +88,13 @@ def _mapping_to_dict(row) -> dict | None:
     return dict(row)
 
 
+def _resolved_nickname(user_id: object, nickname: object | None = None) -> str:
+    normalized = str(nickname or "").strip()
+    if normalized:
+        return normalized
+    return f"微信用户 {user_id}"
+
+
 def _normalize_quota_int(value: object, default: int = 0) -> int:
     try:
         normalized = int(value if value is not None else default)
@@ -122,18 +129,29 @@ def _purchase_order_amount(quantity: int, unit_price_cents: int) -> int:
     return max(0, quantity) * max(0, unit_price_cents)
 
 
-def get_or_create_user(openid: str) -> dict:
+def get_or_create_user(openid: str, nickname: str | None = None) -> dict:
     with session_scope() as session:
         row = session.execute(
             select(users).where(users.c.openid == openid)
         ).mappings().one_or_none()
         if row is not None:
+            normalized_nickname = str(nickname or "").strip()
+            if normalized_nickname and normalized_nickname != str(row.get("nickname") or "").strip():
+                session.execute(
+                    update(users)
+                    .where(users.c.id == row["id"])
+                    .values(nickname=normalized_nickname)
+                )
+                updated_row = dict(row)
+                updated_row["nickname"] = normalized_nickname
+                return updated_row
             return dict(row)
 
         created_at = utc_now()
         result = session.execute(
             insert(users).values(
                 openid=openid,
+                nickname=str(nickname or "").strip() or None,
                 created_at=created_at,
                 free_quota_total=DEFAULT_FREE_QUOTA_TOTAL,
                 free_quota_used=0,
@@ -144,11 +162,31 @@ def get_or_create_user(openid: str) -> dict:
         return {
             "id": user_id,
             "openid": openid,
+            "nickname": str(nickname or "").strip() or None,
             "created_at": created_at,
             "free_quota_total": DEFAULT_FREE_QUOTA_TOTAL,
             "free_quota_used": 0,
             "paid_quota_balance": 0,
         }
+
+
+def get_user(user_id: int) -> dict | None:
+    with session_scope() as session:
+        row = session.execute(
+            select(users).where(users.c.id == user_id)
+        ).mappings().one_or_none()
+        return _mapping_to_dict(row)
+
+
+def update_user_nickname(user_id: int, nickname: str | None) -> dict | None:
+    normalized_nickname = str(nickname or "").strip() or None
+    with session_scope() as session:
+        session.execute(
+            update(users)
+            .where(users.c.id == user_id)
+            .values(nickname=normalized_nickname)
+        )
+    return get_user(user_id)
 
 
 def create_auth_token(user_id: int) -> str:
@@ -178,6 +216,7 @@ def get_user_by_token(token: str) -> dict | None:
             select(
                 users.c.id,
                 users.c.openid,
+                users.c.nickname,
                 users.c.created_at,
             )
             .select_from(auth_tokens.join(users, users.c.id == auth_tokens.c.user_id))
@@ -379,6 +418,8 @@ def list_admin_jobs(
                 func.lower(cast(jobs.c.error_message, String)).like(pattern),
                 func.lower(cast(jobs.c.model_name, String)).like(pattern),
                 func.lower(cast(jobs.c.user_id, String)).like(pattern),
+                func.lower(cast(users.c.nickname, String)).like(pattern),
+                func.lower(cast(users.c.openid, String)).like(pattern),
             )
         )
 
@@ -392,6 +433,8 @@ def list_admin_jobs(
     list_statement = (
         select(
             jobs,
+            users.c.nickname.label("user_nickname"),
+            users.c.openid.label("user_openid"),
             uploads.c.original_name.label("upload_original_name"),
             uploads.c.stored_path.label("upload_stored_path"),
             uploads.c.mime_type.label("upload_mime_type"),
@@ -452,7 +495,7 @@ def get_user_profile_summary(user_id: int) -> dict:
 
     return {
         "user_id": user_row["id"],
-        "nickname": f"微信用户 {user_row['id']}",
+        "nickname": _resolved_nickname(user_row["id"], user_row.get("nickname")),
         "member_status": "内测用户",
         "remaining_quota": quota["total_remaining"],
         "monthly_used": monthly_used,
@@ -710,16 +753,39 @@ def update_job_status(
 ) -> None:
     updated_at = utc_now()
     with session_scope() as session:
+        current_job = session.execute(
+            select(jobs).where(jobs.c.id == job_id)
+        ).mappings().one_or_none()
+        if current_job is None:
+            return
+        current = dict(current_job)
+        values = {
+            "status": status,
+            "result_path": result_path,
+            "error_code": error_code,
+            "error_message": error_message,
+            "updated_at": updated_at,
+        }
+        if status == "hair_generating" and not current.get("hair_started_at"):
+            values["hair_started_at"] = updated_at
+        if status == "hair_ready" and not current.get("first_image_ready_at"):
+            values["first_image_ready_at"] = updated_at
+            if not current.get("hair_started_at"):
+                values["hair_started_at"] = updated_at
+        if status == "scene_generating" and not current.get("scene_started_at"):
+            values["scene_started_at"] = updated_at
+        if status == "scene_partial" and not current.get("first_scene_ready_at"):
+            values["first_scene_ready_at"] = updated_at
+            if not current.get("scene_started_at"):
+                values["scene_started_at"] = updated_at
+        if status in TERMINAL_JOB_STATUSES and not current.get("completed_at"):
+            values["completed_at"] = updated_at
+            if status == "succeeded" and not current.get("first_scene_ready_at"):
+                values["first_scene_ready_at"] = updated_at
         session.execute(
             update(jobs)
             .where(jobs.c.id == job_id)
-            .values(
-                status=status,
-                result_path=result_path,
-                error_code=error_code,
-                error_message=error_message,
-                updated_at=updated_at,
-            )
+            .values(**values)
         )
 
 

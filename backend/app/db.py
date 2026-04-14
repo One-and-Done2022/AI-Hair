@@ -29,6 +29,7 @@ users = Table(
     metadata,
     Column("id", Integer, primary_key=True, autoincrement=True),
     Column("openid", String(255), nullable=False, unique=True),
+    Column("nickname", String(255)),
     Column("created_at", String(64), nullable=False),
     Column("free_quota_total", Integer, nullable=False, server_default=text("10")),
     Column("free_quota_used", Integer, nullable=False, server_default=text("0")),
@@ -73,6 +74,11 @@ jobs = Table(
     Column("result_path", String(1024)),
     Column("error_code", String(255)),
     Column("error_message", Text),
+    Column("hair_started_at", String(64)),
+    Column("first_image_ready_at", String(64)),
+    Column("scene_started_at", String(64)),
+    Column("first_scene_ready_at", String(64)),
+    Column("completed_at", String(64)),
     Column("created_at", String(64), nullable=False),
     Column("updated_at", String(64), nullable=False),
 )
@@ -158,6 +164,7 @@ def init_db() -> None:
     engine = get_engine()
     metadata.create_all(engine)
     _migrate_users_table(engine)
+    _migrate_jobs_table(engine)
     _migrate_purchase_orders_table(engine)
 
 
@@ -181,6 +188,35 @@ def _migrate_users_table(engine: Engine) -> None:
         statements.append(
             "ALTER TABLE users ADD COLUMN paid_quota_balance INTEGER NOT NULL DEFAULT 0"
         )
+    if "nickname" not in existing_columns:
+        statements.append("ALTER TABLE users ADD COLUMN nickname VARCHAR(255)")
+
+    if not statements:
+        return
+
+    with engine.begin() as connection:
+        for statement in statements:
+            connection.exec_driver_sql(statement)
+
+
+def _migrate_jobs_table(engine: Engine) -> None:
+    inspector = inspect(engine)
+    try:
+        existing_columns = {column["name"] for column in inspector.get_columns("jobs")}
+    except Exception:
+        existing_columns = set()
+
+    statements: list[str] = []
+    if "hair_started_at" not in existing_columns:
+        statements.append("ALTER TABLE jobs ADD COLUMN hair_started_at VARCHAR(64)")
+    if "first_image_ready_at" not in existing_columns:
+        statements.append("ALTER TABLE jobs ADD COLUMN first_image_ready_at VARCHAR(64)")
+    if "scene_started_at" not in existing_columns:
+        statements.append("ALTER TABLE jobs ADD COLUMN scene_started_at VARCHAR(64)")
+    if "first_scene_ready_at" not in existing_columns:
+        statements.append("ALTER TABLE jobs ADD COLUMN first_scene_ready_at VARCHAR(64)")
+    if "completed_at" not in existing_columns:
+        statements.append("ALTER TABLE jobs ADD COLUMN completed_at VARCHAR(64)")
 
     if not statements:
         return

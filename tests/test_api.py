@@ -1085,6 +1085,31 @@ def test_auth_upload_job_history_flow(tmp_path, monkeypatch):
         assert list((tmp_path / "storage" / "results").iterdir()) == []
 
 
+def test_me_profile_update_persists_user_nickname(tmp_path, monkeypatch):
+    app = _build_app(tmp_path, monkeypatch)
+
+    with TestClient(app) as client:
+        login = client.post("/api/auth/wechat/login", json={"code": "dev-profile"})
+        assert login.status_code == 200
+        headers = {"Authorization": f"Bearer {login.json()['token']}"}
+
+        before = client.get("/api/me", headers=headers)
+        assert before.status_code == 200
+        assert before.json()["nickname"] == f"微信用户 {login.json()['user_id']}"
+
+        update_profile = client.patch(
+            "/api/me/profile",
+            headers=headers,
+            json={"nickname": "阿晨"},
+        )
+        assert update_profile.status_code == 200
+        assert update_profile.json()["nickname"] == "阿晨"
+
+        after = client.get("/api/me", headers=headers)
+        assert after.status_code == 200
+        assert after.json()["nickname"] == "阿晨"
+
+
 def test_upload_validation_allows_when_detector_is_unavailable(tmp_path, monkeypatch):
     _configure_runtime_env(tmp_path, monkeypatch, use_mock_generator="true")
     monkeypatch.setenv("ENFORCE_FACE_DETECTION", "true")

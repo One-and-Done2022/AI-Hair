@@ -333,6 +333,7 @@ class AdminHistoryItem(JobResponse):
     nickname: str
     model_name: str
     upload_id: str
+    user_openid: str | None = None
     upload_path: str | None = None
     upload_absolute_path: str | None = None
     hair_preview_path: str | None = None
@@ -341,6 +342,14 @@ class AdminHistoryItem(JobResponse):
     result_dir_absolute_path: str | None = None
     result_image_paths: list[str] = Field(default_factory=list)
     result_image_absolute_paths: list[str] = Field(default_factory=list)
+    hair_started_at: str | None = None
+    first_image_ready_at: str | None = None
+    first_image_duration_seconds: float | None = None
+    scene_started_at: str | None = None
+    first_scene_ready_at: str | None = None
+    first_scene_duration_seconds: float | None = None
+    completed_at: str | None = None
+    completed_duration_seconds: float | None = None
 
 
 class AdminHistoryResponse(BaseModel):
@@ -367,6 +376,10 @@ class MeResponse(BaseModel):
     processing_jobs: int
     provider_alerts: list[str] = Field(default_factory=list)
     created_at: str
+
+
+class MeProfileUpdateRequest(BaseModel):
+    nickname: str = Field(min_length=1, max_length=255)
 
 
 class PurchaseCatalogItem(BaseModel):

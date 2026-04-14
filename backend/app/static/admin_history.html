@@ -37,6 +37,7 @@
       }
       .shell,
       .toolbar,
+      .chart-panel,
       .list-panel,
       .detail-panel,
       .table-wrap,
@@ -210,6 +211,54 @@
       .list-panel,
       .detail-panel {
         padding: 18px;
+      }
+      .chart-panel {
+        padding: 18px;
+        margin-bottom: 18px;
+      }
+      .chart-wrap {
+        margin-top: 16px;
+        border-radius: 20px;
+        background: rgba(255, 255, 255, 0.42);
+        border: 1px solid var(--line);
+        padding: 16px;
+      }
+      .chart-legend {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 16px;
+        margin-top: 12px;
+      }
+      .legend-item {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        color: var(--muted);
+        font-size: 13px;
+      }
+      .legend-line {
+        width: 18px;
+        height: 3px;
+        border-radius: 999px;
+      }
+      .legend-first {
+        background: #0d6b5f;
+      }
+      .legend-scene {
+        background: #b04332;
+      }
+      .legend-complete {
+        background: #a86a12;
+      }
+      .chart-svg {
+        width: 100%;
+        height: 280px;
+        display: block;
+      }
+      .chart-caption {
+        margin-top: 10px;
+        color: var(--muted);
+        font-size: 13px;
       }
       .table-wrap {
         overflow: auto;
@@ -430,6 +479,29 @@
           <div id="selectedMetric" class="metric-value">-</div>
           <div class="muted">点击左侧任一任务查看详情</div>
         </article>
+        <article class="metric">
+          <strong>平均首图返回</strong>
+          <div id="avgFirstMetric" class="metric-value">-</div>
+          <div class="muted">当前页任务从创建到发型首图的平均耗时</div>
+        </article>
+        <article class="metric">
+          <strong>平均场景首图</strong>
+          <div id="avgSceneMetric" class="metric-value">-</div>
+          <div class="muted">当前页任务从创建到场景首图的平均耗时</div>
+        </article>
+      </section>
+
+      <section class="chart-panel">
+        <h2>关键耗时可视化</h2>
+        <p class="muted" style="margin-top: 8px;">展示当前页任务的首图返回、场景首图返回和任务完成耗时。横轴按创建时间排序，纵轴单位为秒。</p>
+        <div id="chartWrap" class="chart-wrap">
+          <div class="empty">正在准备图表...</div>
+        </div>
+        <div class="chart-legend">
+          <span class="legend-item"><span class="legend-line legend-first"></span>首图返回</span>
+          <span class="legend-item"><span class="legend-line legend-scene"></span>场景首图返回</span>
+          <span class="legend-item"><span class="legend-line legend-complete"></span>任务完成</span>
+        </div>
       </section>
 
       <section class="content">
@@ -496,9 +568,12 @@
       const pageMetric = document.getElementById("pageMetric");
       const pageCountMetric = document.getElementById("pageCountMetric");
       const selectedMetric = document.getElementById("selectedMetric");
+      const avgFirstMetric = document.getElementById("avgFirstMetric");
+      const avgSceneMetric = document.getElementById("avgSceneMetric");
       const paginationInfo = document.getElementById("paginationInfo");
       const prevBtn = document.getElementById("prevBtn");
       const nextBtn = document.getElementById("nextBtn");
+      const chartWrap = document.getElementById("chartWrap");
 
       function escapeHtml(value) {
         return String(value || "")
@@ -546,6 +621,21 @@
         if (status === "succeeded") return '<span class="status-pill ok">succeeded</span>';
         if (status === "failed") return '<span class="status-pill error">failed</span>';
         return '<span class="status-pill warn">' + escapeHtml(status || "unknown") + "</span>";
+      }
+
+      function formatDuration(value) {
+        const seconds = Number(value);
+        if (!Number.isFinite(seconds)) return "-";
+        if (seconds < 60) return seconds.toFixed(1) + "s";
+        return (seconds / 60).toFixed(1) + "m";
+      }
+
+      function averageOf(items, key) {
+        const values = items
+          .map(function (item) { return Number(item[key]); })
+          .filter(function (value) { return Number.isFinite(value) && value >= 0; });
+        if (!values.length) return null;
+        return values.reduce(function (sum, value) { return sum + value; }, 0) / values.length;
       }
 
       async function readJson(response) {
@@ -614,7 +704,7 @@
               <td>
                 <div class="row-title">
                   <strong>${escapeHtml(item.nickname)}</strong>
-                  <span class="row-sub">user_id: ${escapeHtml(item.user_id)}</span>
+                  <span class="row-sub">${escapeHtml(formatDuration(item.first_image_duration_seconds))} / ${escapeHtml(formatDuration(item.first_scene_duration_seconds))}</span>
                 </div>
               </td>
               <td>${escapeHtml(formatDateTime(item.created_at))}</td>
@@ -687,23 +777,124 @@
           </div>
           <div class="detail-grid">
             <div class="detail-item"><strong>任务 ID</strong><code>${escapeHtml(item.job_id)}</code></div>
-            <div class="detail-item"><strong>用户</strong><code>${escapeHtml(item.nickname)} / ${escapeHtml(item.user_id)}</code></div>
+            <div class="detail-item"><strong>用户</strong><code>${escapeHtml(item.nickname)}</code></div>
             <div class="detail-item"><strong>模型</strong><code>${escapeHtml(item.model_name || "-")}</code></div>
             <div class="detail-item"><strong>生成后端</strong><code>${escapeHtml(item.generator_backend || "-")}</code></div>
             <div class="detail-item"><strong>发型</strong><code>${escapeHtml(item.hairstyle_name)} (${escapeHtml(item.hairstyle_id)})</code></div>
             <div class="detail-item"><strong>场景</strong><code>${escapeHtml(item.scene_name)} (${escapeHtml(item.scene_id)})</code></div>
             <div class="detail-item"><strong>比例 / 分辨率</strong><code>${escapeHtml(item.aspect_ratio || "-")} / ${escapeHtml(item.resolution || "-")}</code></div>
             <div class="detail-item"><strong>完成场景数</strong><code>${escapeHtml(item.completed_scene_count)}</code></div>
+            <div class="detail-item"><strong>用户 ID / OpenID</strong><code>${escapeHtml(item.user_id)} / ${escapeHtml(item.user_openid || "-")}</code></div>
             <div class="detail-item"><strong>上传 ID</strong><code>${escapeHtml(item.upload_id || "-")}</code></div>
             <div class="detail-item"><strong>媒体过期时间</strong><code>${escapeHtml(formatDateTime(item.media_expires_at))}</code></div>
             <div class="detail-item"><strong>错误码</strong><code>${escapeHtml(item.error_code || "-")}</code></div>
             <div class="detail-item"><strong>错误信息</strong><code>${escapeHtml(item.error_message || "-")}</code></div>
+            <div class="detail-item"><strong>首图返回</strong><code>${escapeHtml(formatDateTime(item.first_image_ready_at))} / ${escapeHtml(formatDuration(item.first_image_duration_seconds))}</code></div>
+            <div class="detail-item"><strong>场景首图返回</strong><code>${escapeHtml(formatDateTime(item.first_scene_ready_at))} / ${escapeHtml(formatDuration(item.first_scene_duration_seconds))}</code></div>
+            <div class="detail-item"><strong>任务完成</strong><code>${escapeHtml(formatDateTime(item.completed_at))} / ${escapeHtml(formatDuration(item.completed_duration_seconds))}</code></div>
           </div>
           <div class="media-grid">
             ${renderMediaBlock("原始上传图", item.upload_url, item.upload_path, item.upload_absolute_path, uploadFallback)}
             ${renderMediaBlock("发型预览图", item.hair_preview_url, item.hair_preview_path, item.hair_preview_absolute_path, hairFallback)}
             ${resultCards}
           </div>
+        `;
+      }
+
+      function renderChart() {
+        const items = state.items
+          .slice()
+          .filter(function (item) {
+            return Number.isFinite(Number(item.first_image_duration_seconds))
+              || Number.isFinite(Number(item.first_scene_duration_seconds))
+              || Number.isFinite(Number(item.completed_duration_seconds));
+          })
+          .sort(function (left, right) {
+            return new Date(left.created_at).getTime() - new Date(right.created_at).getTime();
+          });
+
+        const avgFirst = averageOf(items, "first_image_duration_seconds");
+        const avgScene = averageOf(items, "first_scene_duration_seconds");
+        avgFirstMetric.textContent = formatDuration(avgFirst);
+        avgSceneMetric.textContent = formatDuration(avgScene);
+
+        if (!items.length) {
+          chartWrap.innerHTML = '<div class="empty">当前页还没有可用的耗时数据。</div>';
+          return;
+        }
+
+        const width = 1040;
+        const height = 280;
+        const padding = { top: 20, right: 26, bottom: 54, left: 48 };
+        const plotWidth = width - padding.left - padding.right;
+        const plotHeight = height - padding.top - padding.bottom;
+        const values = [];
+        items.forEach(function (item) {
+          ["first_image_duration_seconds", "first_scene_duration_seconds", "completed_duration_seconds"].forEach(function (key) {
+            const value = Number(item[key]);
+            if (Number.isFinite(value) && value >= 0) values.push(value);
+          });
+        });
+        const maxValue = Math.max.apply(null, values.concat([10]));
+
+        function xFor(index) {
+          if (items.length === 1) return padding.left + plotWidth / 2;
+          return padding.left + (plotWidth * index) / (items.length - 1);
+        }
+
+        function yFor(value) {
+          return padding.top + plotHeight - (Math.max(0, value) / maxValue) * plotHeight;
+        }
+
+        function buildPath(key) {
+          let started = false;
+          let path = "";
+          items.forEach(function (item, index) {
+            const value = Number(item[key]);
+            if (!Number.isFinite(value)) return;
+            const x = xFor(index);
+            const y = yFor(value);
+            path += (started ? " L " : "M ") + x.toFixed(2) + " " + y.toFixed(2);
+            started = true;
+          });
+          return path;
+        }
+
+        const ticks = 4;
+        let gridHtml = "";
+        for (let tick = 0; tick <= ticks; tick += 1) {
+          const value = (maxValue / ticks) * tick;
+          const y = yFor(value);
+          gridHtml += '<line x1="' + padding.left + '" y1="' + y.toFixed(2) + '" x2="' + (width - padding.right) + '" y2="' + y.toFixed(2) + '" stroke="rgba(31,27,24,0.12)" stroke-width="1" />';
+          gridHtml += '<text x="' + (padding.left - 10) + '" y="' + (y + 4).toFixed(2) + '" text-anchor="end" fill="#6f6256" font-size="12">' + escapeHtml(Math.round(value)) + 's</text>';
+        }
+
+        let pointHtml = "";
+        items.forEach(function (item, index) {
+          const x = xFor(index);
+          const label = formatDateTime(item.created_at).slice(5, 16) + " · " + item.nickname;
+          [
+            { key: "first_image_duration_seconds", color: "#0d6b5f", title: "首图" },
+            { key: "first_scene_duration_seconds", color: "#b04332", title: "场景首图" },
+            { key: "completed_duration_seconds", color: "#a86a12", title: "完成" },
+          ].forEach(function (series) {
+            const value = Number(item[series.key]);
+            if (!Number.isFinite(value)) return;
+            const y = yFor(value);
+            pointHtml += '<circle cx="' + x.toFixed(2) + '" cy="' + y.toFixed(2) + '" r="4" fill="' + series.color + '"><title>' + escapeHtml(label + ' ' + series.title + ': ' + formatDuration(value)) + '</title></circle>';
+          });
+          pointHtml += '<text x="' + x.toFixed(2) + '" y="' + (height - 16) + '" text-anchor="middle" fill="#6f6256" font-size="11">' + escapeHtml(item.nickname.slice(0, 4) || "用户") + '</text>';
+        });
+
+        chartWrap.innerHTML = `
+          <svg class="chart-svg" viewBox="0 0 ${width} ${height}" preserveAspectRatio="none" aria-label="耗时折线图">
+            ${gridHtml}
+            <path d="${buildPath("first_image_duration_seconds")}" fill="none" stroke="#0d6b5f" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"></path>
+            <path d="${buildPath("first_scene_duration_seconds")}" fill="none" stroke="#b04332" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"></path>
+            <path d="${buildPath("completed_duration_seconds")}" fill="none" stroke="#a86a12" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"></path>
+            ${pointHtml}
+          </svg>
+          <div class="chart-caption">当前页共 ${items.length} 条有耗时数据的任务。鼠标悬停圆点可查看单任务耗时。</div>
         `;
       }
 
@@ -733,6 +924,7 @@
         paginationInfo.textContent = "第 " + payload.page + " 页 / 每页 " + payload.page_size + " 条";
         prevBtn.disabled = payload.page <= 1;
         nextBtn.disabled = payload.page * payload.page_size >= payload.total;
+        renderChart();
         renderTable();
         renderDetail();
         setStatus("历史数据已刷新");

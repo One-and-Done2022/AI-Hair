@@ -129,6 +129,48 @@ Page({
     }
   },
 
+  async syncWechatNickname() {
+    try {
+      await ensureLogin();
+      const profilePayload = await new Promise((resolve, reject) => {
+        if (typeof wx.getUserProfile !== "function") {
+          reject(new Error("当前微信版本不支持同步昵称"));
+          return;
+        }
+        wx.getUserProfile({
+          desc: "用于在管理后台展示你的微信昵称",
+          success: resolve,
+          fail: reject
+        });
+      });
+      const nickname = profilePayload && profilePayload.userInfo && profilePayload.userInfo.nickName
+        ? String(profilePayload.userInfo.nickName).trim()
+        : "";
+      if (!nickname) {
+        wx.showToast({
+          title: "未获取到昵称",
+          icon: "none"
+        });
+        return;
+      }
+      await request({
+        url: "/api/me/profile",
+        method: "PATCH",
+        data: { nickname }
+      });
+      wx.showToast({
+        title: "昵称已同步",
+        icon: "success"
+      });
+      await this.loadProfile();
+    } catch (error) {
+      if (error && /cancel/i.test(String(error.errMsg || error.message || ""))) {
+        return;
+      }
+      showError(error, { fallback: "同步昵称失败" });
+    }
+  },
+
   showComingSoon(event) {
     const { label } = event.currentTarget.dataset;
     wx.showToast({

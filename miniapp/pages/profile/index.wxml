@@ -12,6 +12,7 @@
       </view>
       <view class="identity-id">UID {{profile.user_id}}</view>
       <view class="identity-joined">{{profile.joined_label}}</view>
+      <view class="identity-sync" bindtap="syncWechatNickname">同步微信昵称</view>
     </view>
   </view>
 

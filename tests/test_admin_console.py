@@ -86,6 +86,7 @@ def _seed_job(
     *,
     openid: str,
     created_at: str,
+    nickname: str | None = None,
     job_status: str = "succeeded",
     error_code: str | None = None,
     error_message: str | None = None,
@@ -94,7 +95,7 @@ def _seed_job(
     from app.db import jobs, session_scope, uploads
     from app.services import repository, storage
 
-    user = repository.get_or_create_user(openid)
+    user = repository.get_or_create_user(openid, nickname=nickname)
     upload_bytes = _build_test_image("#8ecae6")
     upload_path = storage.save_upload_file(upload_bytes, ".png")
     upload = repository.create_upload(
@@ -130,6 +131,24 @@ def _seed_job(
     )
 
     with session_scope() as session:
+        created_dt = datetime.fromisoformat(created_at.replace("Z", "+00:00"))
+        hair_started_at = (created_dt + timedelta(seconds=1)).replace(microsecond=0).isoformat()
+        first_image_ready_at = (
+            (created_dt + timedelta(seconds=45)).replace(microsecond=0).isoformat()
+            if with_media
+            else None
+        )
+        scene_started_at = (
+            (created_dt + timedelta(seconds=50)).replace(microsecond=0).isoformat()
+            if with_media
+            else None
+        )
+        first_scene_ready_at = (
+            (created_dt + timedelta(seconds=120)).replace(microsecond=0).isoformat()
+            if with_media
+            else None
+        )
+        completed_at = (created_dt + timedelta(seconds=150)).replace(microsecond=0).isoformat()
         session.execute(
             update(uploads)
             .where(uploads.c.id == upload["id"])
@@ -138,7 +157,15 @@ def _seed_job(
         session.execute(
             update(jobs)
             .where(jobs.c.id == job["id"])
-            .values(created_at=created_at, updated_at=created_at)
+            .values(
+                created_at=created_at,
+                updated_at=completed_at,
+                hair_started_at=hair_started_at,
+                first_image_ready_at=first_image_ready_at,
+                scene_started_at=scene_started_at,
+                first_scene_ready_at=first_scene_ready_at,
+                completed_at=completed_at,
+            )
         )
 
     return {
@@ -186,6 +213,7 @@ def test_admin_history_filters_and_pagination(tmp_path, monkeypatch):
     recent_success = _seed_job(
         openid="history-user-a",
         created_at=recent_a,
+        nickname="阿青",
         job_status="succeeded",
         with_media=True,
     )
@@ -219,6 +247,10 @@ def test_admin_history_filters_and_pagination(tmp_path, monkeypatch):
         assert first_item["hair_preview_url"]
         assert len(first_item["result_image_urls"]) == 2
         assert first_item["result_dir_absolute_path"].endswith(first_item["job_id"])
+        assert first_item["nickname"] == "阿青"
+        assert first_item["first_image_duration_seconds"] == 45.0
+        assert first_item["first_scene_duration_seconds"] == 120.0
+        assert first_item["completed_duration_seconds"] == 150.0
 
         user_filter = client.get(f"/api/admin/history?user_id={recent_success['user_id']}")
         assert user_filter.status_code == 200

@@ -53,6 +53,19 @@ def _absolute_media_path(object_key: str | None) -> str | None:
     return str((settings.storage_dir / object_key).resolve())
 
 
+def _file_mtime_iso(object_key: str | None) -> str | None:
+    settings = get_settings()
+    if not settings.uses_local_media or not object_key:
+        return None
+    file_path = settings.storage_dir / object_key
+    if not file_path.exists():
+        return None
+    return datetime.fromtimestamp(
+        file_path.stat().st_mtime,
+        tz=timezone.utc,
+    ).replace(microsecond=0).isoformat()
+
+
 def _media_object_exists(object_key: str | None) -> bool:
     settings = get_settings()
     if not object_key:
@@ -66,6 +79,22 @@ def _optional_media_url(object_key: str | None, *, base_url: str) -> str | None:
     if not object_key or not _media_object_exists(object_key):
         return None
     return storage.media_url(object_key, base_url=base_url)
+
+
+def _effective_event_time(*values: str | None) -> str | None:
+    for value in values:
+        normalized = str(value or "").strip()
+        if normalized:
+            return normalized
+    return None
+
+
+def _duration_seconds(start_value: str | None, end_value: str | None) -> float | None:
+    start_dt = repository._parse_iso_datetime(start_value)
+    end_dt = repository._parse_iso_datetime(end_value)
+    if start_dt is None or end_dt is None:
+        return None
+    return round(max(0.0, (end_dt - start_dt).total_seconds()), 2)
 
 
 def _protected_page_response(
@@ -109,6 +138,25 @@ def _admin_history_item_response(request: Request, job: dict) -> AdminHistoryIte
     result_image_url = result_image_urls[0] if result_image_urls else hair_preview_url
     media_expires_at = retention.media_expires_at(job["created_at"])
     media_expired = retention.is_media_expired(job["created_at"])
+    hair_preview_file_time = _file_mtime_iso(hair_preview_path)
+    first_result_path = result_image_paths[0] if result_image_paths else None
+    first_result_file_time = _file_mtime_iso(first_result_path)
+    latest_result_file_time = _file_mtime_iso(result_image_paths[-1]) if result_image_paths else None
+    hair_started_at = _effective_event_time(job.get("hair_started_at"))
+    first_image_ready_at = _effective_event_time(
+        job.get("first_image_ready_at"),
+        hair_preview_file_time,
+    )
+    scene_started_at = _effective_event_time(job.get("scene_started_at"))
+    first_scene_ready_at = _effective_event_time(
+        job.get("first_scene_ready_at"),
+        first_result_file_time,
+    )
+    completed_at = _effective_event_time(
+        job.get("completed_at"),
+        latest_result_file_time,
+        job.get("updated_at"),
+    )
     hair_color_selection = prompt_payload.get("hair_color_selection") or {}
     hair_color_tone = str(hair_color_selection.get("tone_id") or "").strip() or None
     hair_color_tone_label = (
@@ -145,7 +193,10 @@ def _admin_history_item_response(request: Request, job: dict) -> AdminHistoryIte
     return AdminHistoryItem(
         job_id=job["id"],
         user_id=int(job["user_id"]),
-        nickname=f"微信用户 {job['user_id']}",
+        nickname=repository._resolved_nickname(
+            job["user_id"],
+            job.get("user_nickname"),
+        ),
         status=job["status"],
         upload_url=upload_url,
         hair_preview_url=hair_preview_url,
@@ -183,6 +234,7 @@ def _admin_history_item_response(request: Request, job: dict) -> AdminHistoryIte
         updated_at=job["updated_at"],
         model_name=str(job.get("model_name") or ""),
         upload_id=str(job.get("upload_id") or ""),
+        user_openid=str(job.get("user_openid") or "").strip() or None,
         upload_path=upload_path,
         upload_absolute_path=_absolute_media_path(upload_path),
         hair_preview_path=hair_preview_path,
@@ -199,6 +251,23 @@ def _admin_history_item_response(request: Request, job: dict) -> AdminHistoryIte
             for absolute in (_absolute_media_path(path) for path in result_image_paths)
             if absolute
         ],
+        hair_started_at=hair_started_at,
+        first_image_ready_at=first_image_ready_at,
+        first_image_duration_seconds=_duration_seconds(
+            job.get("created_at"),
+            first_image_ready_at,
+        ),
+        scene_started_at=scene_started_at,
+        first_scene_ready_at=first_scene_ready_at,
+        first_scene_duration_seconds=_duration_seconds(
+            job.get("created_at"),
+            first_scene_ready_at,
+        ),
+        completed_at=completed_at,
+        completed_duration_seconds=_duration_seconds(
+            job.get("created_at"),
+            completed_at,
+        ),
     )
 
 
