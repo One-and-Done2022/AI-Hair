@@ -316,6 +316,41 @@ class HistoryResponse(BaseModel):
     items: list[JobResponse]
 
 
+class AdminSessionLoginRequest(BaseModel):
+    username: str = Field(min_length=1, max_length=128)
+    password: str = Field(min_length=1, max_length=512)
+
+
+class AdminSessionResponse(BaseModel):
+    configured: bool
+    authenticated: bool
+    username: str | None = None
+    expires_at: str | None = None
+
+
+class AdminHistoryItem(JobResponse):
+    user_id: int
+    nickname: str
+    model_name: str
+    upload_id: str
+    upload_path: str | None = None
+    upload_absolute_path: str | None = None
+    hair_preview_path: str | None = None
+    hair_preview_absolute_path: str | None = None
+    result_dir_path: str | None = None
+    result_dir_absolute_path: str | None = None
+    result_image_paths: list[str] = Field(default_factory=list)
+    result_image_absolute_paths: list[str] = Field(default_factory=list)
+
+
+class AdminHistoryResponse(BaseModel):
+    page: int
+    page_size: int
+    total: int
+    storage_root: str
+    items: list[AdminHistoryItem] = Field(default_factory=list)
+
+
 class MeResponse(BaseModel):
     user_id: int
     nickname: str

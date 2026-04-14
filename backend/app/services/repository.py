@@ -5,13 +5,15 @@ import secrets
 import uuid
 from datetime import datetime, timedelta, timezone
 from typing import Any
+from zoneinfo import ZoneInfo
 
-from sqlalchemy import and_, delete, insert, not_, or_, select, update
+from sqlalchemy import String, and_, cast, delete, func, insert, not_, or_, select, update
 
 from app.config import get_settings
 from app.db import auth_tokens, jobs, purchase_orders, session_scope, uploads, users
 
 DEFAULT_FREE_QUOTA_TOTAL = 10
+_ASIA_SHANGHAI = ZoneInfo("Asia/Shanghai")
 
 
 class QuotaExceededError(Exception):
@@ -49,6 +51,35 @@ def _parse_iso_datetime(value: str | None) -> datetime | None:
     if parsed.tzinfo is None:
         return parsed.replace(tzinfo=timezone.utc)
     return parsed.astimezone(timezone.utc)
+
+
+def _normalize_admin_datetime_filter(
+    value: str | None,
+    *,
+    end_of_day: bool = False,
+) -> str | None:
+    if value is None:
+        return None
+    normalized = value.strip()
+    if not normalized:
+        return None
+
+    if len(normalized) == 10:
+        try:
+            parsed = datetime.fromisoformat(normalized)
+        except ValueError:
+            return None
+        if end_of_day:
+            parsed = parsed.replace(hour=23, minute=59, second=59, microsecond=0)
+        else:
+            parsed = parsed.replace(hour=0, minute=0, second=0, microsecond=0)
+        parsed = parsed.replace(tzinfo=_ASIA_SHANGHAI)
+        return parsed.astimezone(timezone.utc).replace(microsecond=0).isoformat()
+
+    parsed = _parse_iso_datetime(normalized)
+    if parsed is None:
+        return None
+    return parsed.replace(microsecond=0).isoformat()
 
 
 def _mapping_to_dict(row) -> dict | None:
@@ -307,6 +338,87 @@ def list_jobs_for_user(user_id: int) -> list[dict]:
             .order_by(jobs.c.created_at.desc())
         ).mappings().all()
         return [dict(row) for row in rows]
+
+
+def list_admin_jobs(
+    *,
+    page: int = 1,
+    page_size: int = 20,
+    user_id: int | None = None,
+    status: str | None = None,
+    created_from: str | None = None,
+    created_to: str | None = None,
+    keyword: str | None = None,
+) -> dict[str, Any]:
+    normalized_created_from = _normalize_admin_datetime_filter(created_from)
+    normalized_created_to = _normalize_admin_datetime_filter(created_to, end_of_day=True)
+    filters = []
+
+    if user_id is not None:
+        filters.append(jobs.c.user_id == user_id)
+
+    normalized_status = str(status or "").strip()
+    if normalized_status:
+        filters.append(jobs.c.status == normalized_status)
+
+    if normalized_created_from:
+        filters.append(jobs.c.created_at >= normalized_created_from)
+    if normalized_created_to:
+        filters.append(jobs.c.created_at <= normalized_created_to)
+
+    normalized_keyword = str(keyword or "").strip().lower()
+    if normalized_keyword:
+        pattern = f"%{normalized_keyword}%"
+        filters.append(
+            or_(
+                func.lower(cast(jobs.c.id, String)).like(pattern),
+                func.lower(cast(jobs.c.upload_id, String)).like(pattern),
+                func.lower(cast(jobs.c.hairstyle_id, String)).like(pattern),
+                func.lower(cast(jobs.c.scene_id, String)).like(pattern),
+                func.lower(cast(jobs.c.error_code, String)).like(pattern),
+                func.lower(cast(jobs.c.error_message, String)).like(pattern),
+                func.lower(cast(jobs.c.model_name, String)).like(pattern),
+                func.lower(cast(jobs.c.user_id, String)).like(pattern),
+            )
+        )
+
+    joined_tables = (
+        jobs.join(users, users.c.id == jobs.c.user_id)
+        .outerjoin(uploads, uploads.c.id == jobs.c.upload_id)
+    )
+    where_clause = and_(*filters) if filters else None
+
+    total_statement = select(func.count()).select_from(joined_tables)
+    list_statement = (
+        select(
+            jobs,
+            uploads.c.original_name.label("upload_original_name"),
+            uploads.c.stored_path.label("upload_stored_path"),
+            uploads.c.mime_type.label("upload_mime_type"),
+            uploads.c.file_size.label("upload_file_size"),
+            uploads.c.width.label("upload_width"),
+            uploads.c.height.label("upload_height"),
+            uploads.c.created_at.label("upload_created_at"),
+        )
+        .select_from(joined_tables)
+        .order_by(jobs.c.created_at.desc())
+        .limit(page_size)
+        .offset(max(0, page - 1) * page_size)
+    )
+    if where_clause is not None:
+        total_statement = total_statement.where(where_clause)
+        list_statement = list_statement.where(where_clause)
+
+    with session_scope() as session:
+        total = int(session.execute(total_statement).scalar_one() or 0)
+        rows = session.execute(list_statement).mappings().all()
+
+    return {
+        "page": page,
+        "page_size": page_size,
+        "total": total,
+        "items": [dict(row) for row in rows],
+    }
 
 
 def get_user_profile_summary(user_id: int) -> dict:

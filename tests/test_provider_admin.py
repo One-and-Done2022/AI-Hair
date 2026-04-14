@@ -62,6 +62,9 @@ def _configure_runtime_env(tmp_path, monkeypatch, *, use_mock_generator: str = "
     monkeypatch.setenv("IMAGE_UNDERSTANDING_API_KEY", "understanding-key")
     monkeypatch.setenv("IMAGE_UNDERSTANDING_BASE_URL", "https://understanding.example.test/v1")
     monkeypatch.setenv("IMAGE_UNDERSTANDING_MODEL", "gemini-3-pro-preview")
+    monkeypatch.setenv("ADMIN_CONSOLE_USERNAME", "admin")
+    monkeypatch.setenv("ADMIN_CONSOLE_PASSWORD", "secret-pass")
+    monkeypatch.setenv("ADMIN_CONSOLE_SESSION_SECRET", "test-admin-session-secret")
 
 
 def _clear_runtime_caches() -> None:
@@ -84,27 +87,31 @@ def _create_authed_client(tmp_path, monkeypatch, *, use_mock_generator: str = "t
     from app.config import get_settings
     from app.db import init_db
     from app.main import create_app
-    from app.services import repository
-
     settings = get_settings()
     settings.ensure_directories()
     init_db()
-    user = repository.get_or_create_user("provider-admin-user")
-    token = repository.create_auth_token(user["id"])
     client = TestClient(create_app())
-    headers = {"Authorization": f"Bearer {token}"}
-    return client, headers
+    response = client.post(
+        "/api/admin/session/login",
+        json={"username": "admin", "password": "secret-pass"},
+    )
+    assert response.status_code == 200
+    return client
 
 
 def test_provider_admin_dashboard_lists_all_groups(tmp_path, monkeypatch):
-    client, headers = _create_authed_client(tmp_path, monkeypatch, use_mock_generator="true")
+    client = _create_authed_client(tmp_path, monkeypatch, use_mock_generator="true")
 
     with client:
-        page = client.get("/provider-admin")
-        assert page.status_code == 200
-        assert "多 Provider 统一管理台" in page.text
+        page = client.get("/provider-admin", follow_redirects=False)
+        assert page.status_code == 307
+        assert page.headers["location"] == "/admin/providers"
 
-        response = client.get("/api/provider-admin/providers", headers=headers)
+        admin_page = client.get("/admin/providers")
+        assert admin_page.status_code == 200
+        assert "线路管理台" in admin_page.text
+
+        response = client.get("/api/provider-admin/providers")
         assert response.status_code == 200
         payload = response.json()
         assert payload["summary"]["provider_count"] == 4
@@ -124,21 +131,20 @@ def test_provider_admin_dashboard_lists_all_groups(tmp_path, monkeypatch):
         assert route2["console_url"] == "https://xais.dchai.cn/"
         assert route2["docs_url"] == "https://my.feishu.cn/wiki/AdrXwbi7HikISik5vh6c8NhOnFd"
 
-        legacy = client.get("/api/provider-admin/nano-pro", headers=headers)
+        legacy = client.get("/api/provider-admin/nano-pro")
         assert legacy.status_code == 200
         legacy_payload = legacy.json()
         assert [item["profile_id"] for item in legacy_payload["profiles"]] == ["route2", "route1", "primary"]
 
 
 def test_provider_admin_order_endpoint_updates_nano_banana_pro(tmp_path, monkeypatch):
-    client, headers = _create_authed_client(tmp_path, monkeypatch, use_mock_generator="true")
+    client = _create_authed_client(tmp_path, monkeypatch, use_mock_generator="true")
 
     from app.services import provider_routing
 
     with client:
         response = client.put(
             "/api/provider-admin/providers/nano_banana_pro/order",
-            headers=headers,
             json={
                 "items": [
                     {"entry_id": "primary", "enabled": True},
@@ -251,7 +257,7 @@ def test_nano_banana_2_disabled_returns_provider_disabled(tmp_path, monkeypatch)
 
 
 def test_provider_admin_probe_endpoint_returns_dashboard_state(tmp_path, monkeypatch):
-    client, headers = _create_authed_client(tmp_path, monkeypatch, use_mock_generator="true")
+    client = _create_authed_client(tmp_path, monkeypatch, use_mock_generator="true")
 
     fake_state = {
         "updated_at": "2026-04-11T10:00:00+00:00",
@@ -279,7 +285,7 @@ def test_provider_admin_probe_endpoint_returns_dashboard_state(tmp_path, monkeyp
     monkeypatch.setattr("app.services.provider_connectivity.load_state", lambda: fake_state)
 
     with client:
-        response = client.post("/api/provider-admin/providers/probe", headers=headers)
+        response = client.post("/api/provider-admin/providers/probe")
         assert response.status_code == 200
         payload = response.json()
         assert payload["connectivity_updated_at"] == "2026-04-11T10:00:00+00:00"
@@ -290,7 +296,7 @@ def test_provider_admin_probe_endpoint_returns_dashboard_state(tmp_path, monkeyp
 
 
 def test_provider_admin_image_understanding_test_endpoint_records_result(tmp_path, monkeypatch):
-    client, headers = _create_authed_client(tmp_path, monkeypatch, use_mock_generator="true")
+    client = _create_authed_client(tmp_path, monkeypatch, use_mock_generator="true")
 
     source_path = tmp_path / "source.png"
     source_path.write_bytes(_build_test_image())
@@ -327,7 +333,6 @@ def test_provider_admin_image_understanding_test_endpoint_records_result(tmp_pat
     with client:
         response = client.post(
             "/api/provider-admin/providers/image_understanding/entries/primary/test",
-            headers=headers,
             json={"entry_id": "primary", "aspect_ratio": "3:4", "resolution": "2K"},
         )
         assert response.status_code == 200

@@ -9,6 +9,7 @@ from fastapi.staticfiles import StaticFiles
 from app.config import get_settings
 from app.db import init_db
 from app.routers import (
+    admin_console,
     auth,
     history,
     jobs,
@@ -107,6 +108,7 @@ def create_app() -> FastAPI:
     app.include_router(me.router, prefix=settings.api_prefix)
     app.include_router(purchase.router, prefix=settings.api_prefix)
     app.include_router(provider_admin.router)
+    app.include_router(admin_console.router)
 
     @app.get("/healthz")
     def healthcheck() -> dict[str, str]:

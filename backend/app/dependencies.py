@@ -1,8 +1,9 @@
 from __future__ import annotations
 
-from fastapi import Header, HTTPException, status
+from fastapi import Header, HTTPException, Request, status
 
 from app.services import repository
+from app.services import admin_auth
 
 
 def get_current_user(authorization: str | None = Header(default=None)) -> dict:
@@ -21,3 +22,18 @@ def get_current_user(authorization: str | None = Header(default=None)) -> dict:
         )
     return user
 
+
+def get_current_admin(request: Request) -> dict:
+    if not admin_auth.is_admin_auth_configured():
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="管理员后台未配置账号密码。",
+        )
+
+    admin = admin_auth.current_admin_from_request(request)
+    if admin is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="管理员登录已失效或未登录。",
+        )
+    return admin

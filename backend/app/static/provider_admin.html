@@ -1,12 +1,13 @@
+<!doctype html>
 <html lang="zh-CN">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Provider 管理台</title>
+    <title>线路管理台</title>
     <style>
       :root {
         --bg: #efe4d4;
-        --panel: rgba(255, 250, 243, 0.84);
+        --panel: rgba(255, 250, 243, 0.88);
         --panel-strong: #fffdf8;
         --panel-muted: rgba(93, 72, 53, 0.06);
         --text: #1f1b18;
@@ -25,82 +26,304 @@
         min-height: 100vh;
         font-family: "IBM Plex Sans", "PingFang SC", "Microsoft YaHei", sans-serif;
         color: var(--text);
-        background: radial-gradient(circle at 12% 0%, rgba(13, 107, 95, 0.18), transparent 24%), radial-gradient(circle at 100% 12%, rgba(176, 67, 50, 0.16), transparent 25%), linear-gradient(180deg, #fbf6ee 0%, var(--bg) 100%);
+        background:
+          radial-gradient(circle at 12% 0%, rgba(13, 107, 95, 0.18), transparent 24%),
+          radial-gradient(circle at 100% 12%, rgba(176, 67, 50, 0.16), transparent 25%),
+          linear-gradient(180deg, #fbf6ee 0%, var(--bg) 100%);
       }
-      .page { max-width: 1360px; margin: 0 auto; padding: 28px 18px 56px; }
-      .hero, .toolbar, .summary-grid, .provider-list { display: grid; gap: 18px; }
-      .hero-card, .toolbar, .summary-card, .provider-card, .entry-card { background: var(--panel); backdrop-filter: blur(18px); border: 1px solid var(--line); box-shadow: var(--shadow); border-radius: 26px; }
-      .hero-card { padding: 28px; }
-      .eyebrow { margin: 0 0 10px; font-size: 12px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--accent); }
+      .page {
+        max-width: 1380px;
+        margin: 0 auto;
+        padding: 28px 18px 56px;
+      }
+      .hero,
+      .toolbar,
+      .summary-card,
+      .provider-card,
+      .entry-card {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 24px;
+        box-shadow: var(--shadow);
+        backdrop-filter: blur(18px);
+      }
+      .hero {
+        padding: 24px;
+        margin-bottom: 18px;
+      }
+      .topbar {
+        display: flex;
+        justify-content: space-between;
+        gap: 18px;
+        align-items: flex-start;
+      }
+      .eyebrow {
+        margin: 0 0 10px;
+        font-size: 12px;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        color: var(--accent);
+      }
       h1, h2, h3, p { margin: 0; }
-      h1 { font-size: clamp(30px, 5vw, 54px); line-height: 0.95; margin-bottom: 14px; }
-      .hero-copy, .provider-note, .provider-meta, .entry-sub, .muted { color: var(--muted); line-height: 1.65; }
-      .toolbar { padding: 18px; }
-      .toolbar-grid { display: grid; gap: 12px; grid-template-columns: minmax(0, 1.8fr) repeat(3, minmax(0, 1fr)); }
-      .field { display: grid; gap: 8px; }
-      .field label { font-size: 13px; color: var(--muted); }
-      input, textarea, select, button { font: inherit; }
-      input, textarea, select { width: 100%; border-radius: 16px; border: 1px solid var(--line); background: var(--panel-strong); padding: 12px 14px; color: var(--text); }
-      textarea { min-height: 84px; resize: vertical; }
-      .actions, .meta, .provider-actions, .entry-actions, .badge-row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
-      button { border: 0; border-radius: 999px; padding: 11px 16px; cursor: pointer; transition: transform 0.18s ease, opacity 0.18s ease, background 0.18s ease; }
-      button:hover { transform: translateY(-1px); }
-      button:disabled { opacity: 0.55; cursor: not-allowed; transform: none; }
-      .btn-primary { background: var(--accent); color: #f4fffd; }
-      .btn-secondary { background: var(--accent-soft); color: var(--accent); }
-      .btn-ghost { background: rgba(31, 27, 24, 0.06); color: var(--text); }
-      .pill, .status-pill, .mini-pill { display: inline-flex; align-items: center; gap: 6px; border-radius: 999px; }
-      .pill { padding: 7px 11px; background: rgba(31, 27, 24, 0.06); color: var(--muted); font-size: 14px; }
-      .mini-pill { padding: 6px 10px; background: var(--panel-muted); color: var(--muted); font-size: 13px; }
-      .status-pill { padding: 8px 12px; font-size: 13px; font-weight: 600; }
+      h1 {
+        font-size: clamp(30px, 5vw, 54px);
+        line-height: 0.95;
+        margin-bottom: 12px;
+      }
+      .muted {
+        color: var(--muted);
+        line-height: 1.65;
+      }
+      .nav,
+      .actions,
+      .meta,
+      .provider-actions,
+      .entry-actions,
+      .badge-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        align-items: center;
+      }
+      .nav a,
+      .nav button,
+      button {
+        font: inherit;
+        border: 0;
+        border-radius: 999px;
+        padding: 11px 16px;
+        text-decoration: none;
+        cursor: pointer;
+      }
+      .nav a,
+      .nav button,
+      .btn-ghost {
+        background: rgba(31, 27, 24, 0.06);
+        color: var(--text);
+      }
+      .nav a.active,
+      .btn-primary {
+        background: var(--accent);
+        color: #f4fffd;
+      }
+      .btn-secondary {
+        background: var(--accent-soft);
+        color: var(--accent);
+      }
+      button:disabled {
+        opacity: 0.55;
+        cursor: not-allowed;
+      }
+      .toolbar {
+        padding: 18px;
+        margin-bottom: 18px;
+      }
+      .toolbar-grid,
+      .summary-grid,
+      .entry-grid,
+      .entry-info {
+        display: grid;
+        gap: 14px;
+      }
+      .toolbar-grid {
+        grid-template-columns: minmax(0, 1.7fr) repeat(2, minmax(0, 1fr));
+      }
+      .field {
+        display: grid;
+        gap: 8px;
+      }
+      .field label {
+        font-size: 13px;
+        color: var(--muted);
+      }
+      textarea,
+      select,
+      input {
+        width: 100%;
+        border-radius: 16px;
+        border: 1px solid var(--line);
+        background: var(--panel-strong);
+        padding: 12px 14px;
+        color: var(--text);
+        font: inherit;
+      }
+      textarea {
+        min-height: 90px;
+        resize: vertical;
+      }
+      .pill,
+      .mini-pill,
+      .status-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        border-radius: 999px;
+      }
+      .pill {
+        padding: 8px 12px;
+        background: rgba(31, 27, 24, 0.06);
+        color: var(--muted);
+      }
+      .mini-pill {
+        padding: 6px 10px;
+        background: var(--panel-muted);
+        color: var(--muted);
+        font-size: 13px;
+      }
+      .status-pill {
+        padding: 8px 12px;
+        font-size: 13px;
+        font-weight: 600;
+      }
       .status-healthy { background: rgba(23, 114, 69, 0.12); color: var(--ok); }
       .status-degraded { background: rgba(168, 106, 18, 0.13); color: var(--warn); }
       .status-unavailable { background: rgba(176, 67, 50, 0.13); color: var(--danger); }
-      .status-disabled, .status-unknown { background: rgba(31, 27, 24, 0.08); color: var(--muted); }
-      .summary-grid { grid-template-columns: repeat(5, minmax(0, 1fr)); margin-top: 18px; }
-      .summary-card { padding: 18px; display: grid; gap: 8px; }
-      .summary-card strong { font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
-      .summary-value { font-size: 30px; font-weight: 700; line-height: 1; }
-      .summary-note { color: var(--muted); font-size: 14px; }
-      .provider-card { padding: 20px; display: grid; gap: 18px; }
-      .provider-head { display: flex; justify-content: space-between; gap: 18px; align-items: flex-start; }
-      .provider-title { display: grid; gap: 10px; }
+      .status-disabled,
+      .status-unknown { background: rgba(31, 27, 24, 0.08); color: var(--muted); }
+      .summary-grid {
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+        margin-bottom: 18px;
+      }
+      .summary-card {
+        padding: 18px;
+        display: grid;
+        gap: 8px;
+      }
+      .summary-card strong {
+        font-size: 12px;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--muted);
+      }
+      .summary-value {
+        font-size: 30px;
+        font-weight: 700;
+      }
+      .provider-list {
+        display: grid;
+        gap: 18px;
+      }
+      .provider-card {
+        padding: 20px;
+        display: grid;
+        gap: 16px;
+      }
+      .provider-head,
+      .entry-head {
+        display: flex;
+        justify-content: space-between;
+        gap: 16px;
+        align-items: flex-start;
+      }
+      .provider-title,
+      .entry-title,
+      .alert-list {
+        display: grid;
+        gap: 10px;
+      }
       .provider-title h2 { font-size: 28px; }
-      .alert-list { display: grid; gap: 8px; }
-      .alert-item { padding: 10px 12px; border-radius: 14px; background: rgba(176, 67, 50, 0.09); color: var(--danger); font-size: 14px; }
-      .entry-grid { display: grid; gap: 14px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
-      .entry-card { padding: 18px; display: grid; gap: 14px; }
-      .entry-head { display: flex; justify-content: space-between; gap: 12px; align-items: flex-start; }
-      .entry-title { display: grid; gap: 8px; }
-      .entry-title h3 { font-size: 22px; }
-      .entry-info { display: grid; gap: 10px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
-      .info-panel { background: rgba(255, 255, 255, 0.42); border: 1px solid var(--line); border-radius: 18px; padding: 14px; display: grid; gap: 6px; }
-      .info-panel strong { font-size: 13px; color: var(--muted); }
-      .toggle { display: inline-flex; align-items: center; gap: 8px; padding: 10px 12px; border-radius: 999px; background: rgba(31, 27, 24, 0.06); }
-      .toggle input { width: auto; margin: 0; }
-      .preview-link { color: var(--accent); text-decoration: none; font-weight: 600; }
-      .empty { padding: 24px; border-radius: 24px; border: 1px dashed var(--line); color: var(--muted); text-align: center; background: rgba(255, 255, 255, 0.28); }
-      @media (max-width: 1180px) { .summary-grid, .toolbar-grid, .entry-grid, .entry-info { grid-template-columns: 1fr 1fr; } }
-      @media (max-width: 860px) { .summary-grid, .toolbar-grid, .entry-grid, .entry-info, .provider-head, .entry-head { grid-template-columns: 1fr; display: grid; } }
+      .entry-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+      .entry-card {
+        padding: 18px;
+        display: grid;
+        gap: 14px;
+      }
+      .entry-title h3 {
+        font-size: 22px;
+      }
+      .entry-info {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+      .info-panel {
+        background: rgba(255, 255, 255, 0.42);
+        border: 1px solid var(--line);
+        border-radius: 18px;
+        padding: 14px;
+        display: grid;
+        gap: 6px;
+      }
+      .info-panel strong {
+        font-size: 13px;
+        color: var(--muted);
+      }
+      .toggle {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 12px;
+        border-radius: 999px;
+        background: rgba(31, 27, 24, 0.06);
+      }
+      .toggle input {
+        width: auto;
+        margin: 0;
+      }
+      .alert-item {
+        padding: 10px 12px;
+        border-radius: 14px;
+        background: rgba(176, 67, 50, 0.09);
+        color: var(--danger);
+        font-size: 14px;
+      }
+      .preview-link {
+        color: var(--accent);
+        text-decoration: none;
+        font-weight: 600;
+      }
+      .empty {
+        padding: 24px;
+        border-radius: 24px;
+        border: 1px dashed var(--line);
+        color: var(--muted);
+        text-align: center;
+        background: rgba(255, 255, 255, 0.28);
+      }
+      @media (max-width: 1180px) {
+        .toolbar-grid,
+        .summary-grid,
+        .entry-grid,
+        .entry-info {
+          grid-template-columns: 1fr 1fr;
+        }
+      }
+      @media (max-width: 880px) {
+        .topbar,
+        .toolbar-grid,
+        .summary-grid,
+        .entry-grid,
+        .entry-info,
+        .provider-head,
+        .entry-head {
+          grid-template-columns: 1fr;
+          display: grid;
+        }
+      }
     </style>
   </head>
   <body>
-    <div class="page">
+    <main class="page">
       <section class="hero">
-        <div class="hero-card">
-          <p class="eyebrow">Provider Console</p>
-          <h1>多 Provider 统一管理台</h1>
-          <p class="hero-copy">这里会把当前 .env 已配置的模型和 API 线路全部纳入管理，支持连通性探测、真实测试、启停和组内优先级调整。页面不自行处理登录，所有接口都需要你粘贴当前系统可用的 Bearer Token。</p>
+        <div class="topbar">
+          <div>
+            <p class="eyebrow">Provider Console</p>
+            <h1>线路管理台</h1>
+            <p class="muted">当前 `.env` 已配置的模型和 API 线路都会纳入这个页面，支持连通性探测、真实测试、启停和组内优先级调整。页面直接复用管理员 Cookie 会话，不再手动输入 Bearer Token。</p>
+          </div>
+          <div class="nav">
+            <a href="/admin">后台首页</a>
+            <a href="/admin/providers" class="active">线路管理台</a>
+            <a href="/admin/history">用户历史后台</a>
+            <button id="logoutBtn" type="button">退出登录</button>
+          </div>
         </div>
       </section>
+
       <section class="toolbar">
         <div class="toolbar-grid">
           <div class="field">
-            <label for="tokenInput">Bearer Token</label>
-            <input id="tokenInput" type="password" placeholder="粘贴 token，不要带 Bearer 前缀" />
-          </div>
-          <div class="field">
-            <label for="promptInput">测试 Prompt</label>
+            <label for="promptInput">真实测试 Prompt</label>
             <textarea id="promptInput">保持人物面部和五官高度一致，男生前刺短发，清晨窗边自然软光，写实人像写真，肤质干净，画面克制，高级感，单人半身构图。</textarea>
           </div>
           <div class="field">
@@ -123,181 +346,428 @@
           </div>
         </div>
         <div class="actions">
-          <button id="saveTokenBtn" class="btn-secondary">保存 Token</button>
-          <button id="refreshBtn" class="btn-primary">刷新状态</button>
-          <button id="probeBtn" class="btn-secondary">全量探测</button>
+          <button id="refreshBtn" class="btn-primary" type="button">刷新状态</button>
+          <button id="probeBtn" class="btn-secondary" type="button">全量探测</button>
         </div>
         <div class="meta">
+          <span id="adminMeta" class="pill">管理员: -</span>
           <span id="routingMeta" class="pill">路由更新时间: -</span>
           <span id="connectivityMeta" class="pill">探测更新时间: -</span>
-          <span id="statusMeta" class="pill">状态: 等待连接</span>
+          <span id="statusMeta" class="pill">状态: 初始化中</span>
         </div>
       </section>
+
       <section id="summaryGrid" class="summary-grid"></section>
       <section id="providerList" class="provider-list"></section>
-    </div>
+    </main>
+
     <script>
-      var state = { token: localStorage.getItem("providerAdminToken") || "", data: null };
-      var tokenInput = document.getElementById("tokenInput");
-      var promptInput = document.getElementById("promptInput");
-      var aspectInput = document.getElementById("aspectInput");
-      var resolutionInput = document.getElementById("resolutionInput");
-      var routingMetaEl = document.getElementById("routingMeta");
-      var connectivityMetaEl = document.getElementById("connectivityMeta");
-      var statusMetaEl = document.getElementById("statusMeta");
-      var summaryGridEl = document.getElementById("summaryGrid");
-      var providerListEl = document.getElementById("providerList");
-      tokenInput.value = state.token;
-      function setStatus(text) { statusMetaEl.textContent = "状态: " + text; }
+      const state = {
+        session: null,
+        data: null,
+      };
+
+      const promptInput = document.getElementById("promptInput");
+      const aspectInput = document.getElementById("aspectInput");
+      const resolutionInput = document.getElementById("resolutionInput");
+      const adminMetaEl = document.getElementById("adminMeta");
+      const routingMetaEl = document.getElementById("routingMeta");
+      const connectivityMetaEl = document.getElementById("connectivityMeta");
+      const statusMetaEl = document.getElementById("statusMeta");
+      const summaryGridEl = document.getElementById("summaryGrid");
+      const providerListEl = document.getElementById("providerList");
+
       function escapeHtml(value) {
-        return String(value || "").replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('\"', "&quot;");
+        return String(value || "")
+          .replaceAll("&", "&amp;")
+          .replaceAll("<", "&lt;")
+          .replaceAll(">", "&gt;")
+          .replaceAll("\"", "&quot;");
       }
-      function getHeaders() {
-        var token = tokenInput.value.trim();
-        if (token.length === 0) { throw new Error("请先填写 Bearer Token。"); }
-        return { "Content-Type": "application/json", Authorization: "Bearer " + token };
+
+      function formatDateTime(value) {
+        if (!value) return "-";
+        const date = new Date(value);
+        if (Number.isNaN(date.getTime())) return String(value);
+        return new Intl.DateTimeFormat("zh-CN", {
+          timeZone: "Asia/Shanghai",
+          year: "numeric",
+          month: "2-digit",
+          day: "2-digit",
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit",
+          hour12: false,
+        }).format(date);
       }
+
+      function setStatus(text) {
+        statusMetaEl.textContent = "状态: " + text;
+      }
+
+      async function readJson(response) {
+        try {
+          return await response.json();
+        } catch (error) {
+          return null;
+        }
+      }
+
       async function request(url, options) {
-        var actual = options || {};
-        var response = await fetch(url, { ...actual, headers: { ...(actual.headers || {}), ...getHeaders() } });
-        var payload = null;
-        try { payload = await response.json(); } catch (error) { payload = null; }
-        if (response.ok === false) {
-          var detail = payload && payload.detail ? payload.detail : "HTTP " + response.status;
-          throw new Error(detail);
+        const response = await fetch(url, {
+          credentials: "same-origin",
+          ...(options || {}),
+        });
+        const payload = await readJson(response);
+        if (response.status === 401) {
+          window.location.href = "/admin?next=/admin/providers";
+          throw new Error("管理员登录已失效。");
+        }
+        if (!response.ok) {
+          throw new Error((payload && payload.detail) || ("HTTP " + response.status));
         }
         return payload;
       }
-      function statusClass(status) { return "status-" + (status || "unknown"); }
+
+      async function ensureSession() {
+        const payload = await request("/api/admin/session");
+        if (!payload.authenticated) {
+          window.location.href = "/admin?next=/admin/providers";
+          throw new Error("管理员未登录。");
+        }
+        state.session = payload;
+        adminMetaEl.textContent = "管理员: " + (payload.username || "-");
+      }
+
+      function statusClass(status) {
+        return "status-" + (status || "unknown");
+      }
+
       function renderSummary(summary) {
-        if (summary == null) { summaryGridEl.innerHTML = ""; return; }
-        var cards = [
+        if (!summary) {
+          summaryGridEl.innerHTML = "";
+          return;
+        }
+        const cards = [
           { label: "Provider 组数", value: summary.provider_count, note: "当前启用 " + summary.enabled_provider_count + " 组" },
           { label: "线路总数", value: summary.entry_count, note: "启用中 " + summary.enabled_entry_count + " 条" },
           { label: "健康线路", value: summary.healthy_entry_count, note: "真实测试成功或最近探测健康" },
           { label: "降级线路", value: summary.degraded_entry_count, note: "探测可达，但最近真实测试失败" },
-          { label: "不可用线路", value: summary.unavailable_entry_count, note: "探测失败或明确不可用" }
+          { label: "不可用线路", value: summary.unavailable_entry_count, note: "探测失败或明确不可用" },
         ];
-        var html = "";
-        cards.forEach(function (item) {
-          html += '<article class="summary-card"><strong>' + escapeHtml(item.label) + '</strong><div class="summary-value">' + escapeHtml(item.value) + '</div><div class="summary-note">' + escapeHtml(item.note) + '</div></article>';
-        });
-        summaryGridEl.innerHTML = html;
+        summaryGridEl.innerHTML = cards.map(function (item) {
+          return `
+            <article class="summary-card">
+              <strong>${escapeHtml(item.label)}</strong>
+              <div class="summary-value">${escapeHtml(item.value)}</div>
+              <div class="muted">${escapeHtml(item.note)}</div>
+            </article>
+          `;
+        }).join("");
       }
+
       function probeSummary(probe) {
-        if (probe == null) { return '<span class="muted">暂无探测结果</span>'; }
-        var detail = probe.detail ? " · " + escapeHtml(probe.detail) : "";
-        if (probe.healthy) { return '<span class="status-pill status-healthy">可达</span><span class="muted">' + escapeHtml(probe.checked_at || "-") + detail + '</span>'; }
-        if (probe.reachable) { return '<span class="status-pill status-degraded">可达但异常</span><span class="muted">' + escapeHtml(probe.checked_at || "-") + detail + '</span>'; }
-        return '<span class="status-pill status-unavailable">不可达</span><span class="muted">' + escapeHtml(probe.checked_at || "-") + detail + '</span>';
-      }
-      function testSummary(test) {
-        if (test == null) { return '<span class="muted">尚未执行真实测试</span>'; }
-        if (test.success) {
-          var extra = [];
-          if (test.preview_url) { extra.push('<a class="preview-link" href="' + escapeHtml(test.preview_url) + '" target="_blank" rel="noreferrer">查看测试图</a>'); }
-          if (test.summary) { extra.push('<span class="muted">' + escapeHtml(test.summary) + '</span>'); }
-          extra.push('<span class="muted">' + escapeHtml(test.checked_at) + ' · ' + escapeHtml(test.duration_seconds) + 's</span>');
-          return '<span class="status-pill status-healthy">成功</span>' + extra.join(' ');
+        if (!probe) {
+          return '<span class="muted">暂无探测结果</span>';
         }
-        var parts = ['<span class="status-pill status-unavailable">失败</span>'];
-        if (test.error_code) { parts.push('<span class="muted">' + escapeHtml(test.error_code) + '</span>'); }
-        if (test.error_message) { parts.push('<span class="muted">' + escapeHtml(test.error_message) + '</span>'); }
-        parts.push('<span class="muted">' + escapeHtml(test.checked_at) + ' · ' + escapeHtml(test.duration_seconds) + 's</span>');
-        return parts.join(' ');
+        const detail = probe.detail ? " · " + escapeHtml(probe.detail) : "";
+        if (probe.healthy) {
+          return '<span class="status-pill status-healthy">可达</span><span class="muted">' + escapeHtml(formatDateTime(probe.checked_at)) + detail + "</span>";
+        }
+        if (probe.reachable) {
+          return '<span class="status-pill status-degraded">可达但异常</span><span class="muted">' + escapeHtml(formatDateTime(probe.checked_at)) + detail + "</span>";
+        }
+        return '<span class="status-pill status-unavailable">不可达</span><span class="muted">' + escapeHtml(formatDateTime(probe.checked_at)) + detail + "</span>";
       }
+
+      function testSummary(test) {
+        if (!test) {
+          return '<span class="muted">尚未执行真实测试</span>';
+        }
+        if (test.success) {
+          const extra = [];
+          if (test.preview_url) {
+            extra.push('<a class="preview-link" href="' + escapeHtml(test.preview_url) + '" target="_blank" rel="noreferrer">查看测试图</a>');
+          }
+          if (test.summary) {
+            extra.push('<span class="muted">' + escapeHtml(test.summary) + '</span>');
+          }
+          extra.push('<span class="muted">' + escapeHtml(formatDateTime(test.checked_at)) + ' · ' + escapeHtml(test.duration_seconds) + 's</span>');
+          return '<span class="status-pill status-healthy">成功</span>' + extra.join(" ");
+        }
+        const parts = ['<span class="status-pill status-unavailable">失败</span>'];
+        if (test.error_code) parts.push('<span class="muted">' + escapeHtml(test.error_code) + "</span>");
+        if (test.error_message) parts.push('<span class="muted">' + escapeHtml(test.error_message) + "</span>");
+        parts.push('<span class="muted">' + escapeHtml(formatDateTime(test.checked_at)) + ' · ' + escapeHtml(test.duration_seconds) + 's</span>');
+        return parts.join(" ");
+      }
+
       function getProvider(providerId) {
-        if (state.data == null) { return null; }
-        return state.data.providers.find(function (item) { return item.provider_id === providerId; }) || null;
+        if (!state.data) return null;
+        return state.data.providers.find(function (item) {
+          return item.provider_id === providerId;
+        }) || null;
       }
+
       function moveEntry(providerId, entryId, offset) {
-        var provider = getProvider(providerId);
-        if (provider == null || provider.supports_reorder === false) { return; }
-        var items = provider.entries.slice();
-        var index = items.findIndex(function (item) { return item.entry_id === entryId; });
-        if (index < 0) { return; }
-        var nextIndex = index + offset;
-        if (nextIndex < 0 || nextIndex >= items.length) { return; }
-        var moved = items.splice(index, 1)[0];
+        const provider = getProvider(providerId);
+        if (!provider || provider.supports_reorder === false) return;
+        const items = provider.entries.slice();
+        const index = items.findIndex(function (item) {
+          return item.entry_id === entryId;
+        });
+        if (index < 0) return;
+        const nextIndex = index + offset;
+        if (nextIndex < 0 || nextIndex >= items.length) return;
+        const moved = items.splice(index, 1)[0];
         items.splice(nextIndex, 0, moved);
-        provider.entries = items.map(function (entry, idx) { return { ...entry, priority: idx + 1 }; });
+        provider.entries = items.map(function (entry, idx) {
+          return { ...entry, priority: idx + 1 };
+        });
         render();
       }
+
       function setEntryEnabled(providerId, entryId, enabled) {
-        var provider = getProvider(providerId);
-        if (provider == null) { return; }
-        provider.entries = provider.entries.map(function (item) { return item.entry_id === entryId ? { ...item, enabled: enabled } : item; });
-      }
-      async function refreshData() {
-        try { setStatus("正在拉取状态..."); state.data = await request("/api/provider-admin/providers"); render(); setStatus("状态已刷新"); }
-        catch (error) { setStatus("刷新失败: " + error.message); alert(error.message); }
-      }
-      async function probeAll() {
-        try { setStatus("正在探测全部 provider..."); state.data = await request("/api/provider-admin/providers/probe", { method: "POST" }); render(); setStatus("全量探测完成"); }
-        catch (error) { setStatus("探测失败: " + error.message); alert(error.message); }
-      }
-      async function probeProvider(providerId) {
-        try { setStatus("正在探测 " + providerId + " ..."); state.data = await request("/api/provider-admin/providers/" + providerId + "/probe", { method: "POST" }); render(); setStatus(providerId + " 探测完成"); }
-        catch (error) { setStatus("探测失败: " + error.message); alert(error.message); }
-      }
-      async function saveProvider(providerId) {
-        var provider = getProvider(providerId);
-        if (provider == null) { return; }
-        try {
-          setStatus("正在保存 " + providerId + " 顺序...");
-          state.data = await request("/api/provider-admin/providers/" + providerId + "/order", { method: "PUT", body: JSON.stringify({ items: provider.entries.map(function (entry) { return { entry_id: entry.entry_id, enabled: Boolean(entry.enabled) }; }) }) });
-          render();
-          setStatus(providerId + " 已保存");
-        } catch (error) { setStatus("保存失败: " + error.message); alert(error.message); }
-      }
-      async function runEntryTest(providerId, entryId) {
-        try {
-          setStatus("正在测试 " + providerId + "." + entryId + " ...");
-          var payload = await request("/api/provider-admin/providers/" + providerId + "/entries/" + entryId + "/test", { method: "POST", body: JSON.stringify({ entry_id: entryId, prompt: promptInput.value.trim(), aspect_ratio: aspectInput.value, resolution: resolutionInput.value }) });
-          var provider = getProvider(providerId);
-          if (provider) { provider.entries = provider.entries.map(function (entry) { return entry.entry_id === entryId ? { ...entry, last_test: payload } : entry; }); }
-          render();
-          setStatus(providerId + "." + entryId + " 测试完成");
-        } catch (error) { setStatus("测试失败: " + error.message); alert(error.message); }
-      }
-      function renderProviders(providers) {
-        if (providers == null || providers.length === 0) { providerListEl.innerHTML = '<div class="empty">当前没有可管理的 provider 配置。</div>'; return; }
-        var html = "";
-        providers.forEach(function (provider) {
-          var alertsHtml = "";
-          if (provider.alerts && provider.alerts.length > 0) {
-            alertsHtml = '<div class="alert-list">';
-            provider.alerts.forEach(function (alert) { alertsHtml += '<div class="alert-item">' + escapeHtml(alert.message) + '<span class="muted">' + escapeHtml(alert.updated_at || "") + '</span></div>'; });
-            alertsHtml += '</div>';
-          }
-          var entriesHtml = "";
-          provider.entries.forEach(function (entry, index) {
-            var entryLinks = [];
-            if (entry.console_url) { entryLinks.push('<a class="preview-link" href="' + escapeHtml(entry.console_url) + '" target="_blank" rel="noreferrer">访问主页</a>'); }
-            if (entry.docs_url) { entryLinks.push('<a class="preview-link" href="' + escapeHtml(entry.docs_url) + '" target="_blank" rel="noreferrer">说明文档</a>'); }
-            var linksHtml = entryLinks.length > 0 ? '<div>' + entryLinks.join(' <span class="muted">·</span> ') + '</div>' : '';
-            entriesHtml += '<article class="entry-card"><div class="entry-head"><div class="entry-title"><div class="badge-row"><span class="mini-pill">优先级 ' + (index + 1) + '</span><span class="status-pill ' + statusClass(entry.status) + '">' + escapeHtml(entry.status_label) + '</span></div><h3>' + escapeHtml(entry.entry_label) + '</h3><div class="entry-sub">' + escapeHtml(entry.entry_id) + ' · ' + escapeHtml(entry.model_name) + '</div><div class="entry-sub">' + escapeHtml(entry.endpoint) + '</div></div><div class="entry-actions"><label class="toggle"><input type="checkbox" data-toggle-provider="' + escapeHtml(provider.provider_id) + '" data-toggle-entry="' + escapeHtml(entry.entry_id) + '" ' + (entry.enabled ? 'checked' : '') + ' />启用</label><button class="btn-ghost" data-move-provider="' + escapeHtml(provider.provider_id) + '" data-move-entry="' + escapeHtml(entry.entry_id) + '" data-move-offset="-1" ' + (provider.supports_reorder ? '' : 'disabled') + '>上移</button><button class="btn-ghost" data-move-provider="' + escapeHtml(provider.provider_id) + '" data-move-entry="' + escapeHtml(entry.entry_id) + '" data-move-offset="1" ' + (provider.supports_reorder ? '' : 'disabled') + '>下移</button><button class="btn-secondary" data-test-provider="' + escapeHtml(provider.provider_id) + '" data-test-entry="' + escapeHtml(entry.entry_id) + '">真实测试</button></div></div><div class="entry-info"><div class="info-panel"><strong>协议与凭据</strong><div>' + escapeHtml(entry.protocol) + '</div><div class="muted">' + escapeHtml(entry.credential_label || '独立密钥') + '</div><div class="muted">' + escapeHtml(entry.base_url) + '</div>' + linksHtml + '</div><div class="info-panel"><strong>连通性探测</strong><div>' + probeSummary(entry.probe) + '</div></div><div class="info-panel"><strong>真实测试</strong><div>' + testSummary(entry.last_test) + '</div></div><div class="info-panel"><strong>说明</strong><div class="muted">' + escapeHtml(entry.note || provider.runtime_note || '-') + '</div></div></div></article>';
-          });
-          html += '<section class="provider-card"><div class="provider-head"><div class="provider-title"><div class="badge-row"><span class="status-pill ' + statusClass(provider.status) + '">' + escapeHtml(provider.status_label) + '</span><span class="mini-pill">' + escapeHtml(provider.category) + '</span><span class="mini-pill">' + escapeHtml(provider.runtime_policy) + '</span></div><h2>' + escapeHtml(provider.provider_label) + '</h2><p class="provider-note">' + escapeHtml(provider.runtime_note || '-') + '</p><div class="provider-meta">路由更新时间：' + escapeHtml(provider.updated_at || '-') + '</div></div><div class="provider-actions"><button class="btn-secondary" data-probe-provider="' + escapeHtml(provider.provider_id) + '">探测本组</button><button class="btn-primary" data-save-provider="' + escapeHtml(provider.provider_id) + '">保存本组顺序</button></div></div>' + alertsHtml + '<div class="entry-grid">' + entriesHtml + '</div></section>';
+        const provider = getProvider(providerId);
+        if (!provider) return;
+        provider.entries = provider.entries.map(function (entry) {
+          return entry.entry_id === entryId ? { ...entry, enabled: enabled } : entry;
         });
-        providerListEl.innerHTML = html;
-        document.querySelectorAll('[data-probe-provider]').forEach(function (button) { button.addEventListener('click', function () { probeProvider(button.dataset.probeProvider); }); });
-        document.querySelectorAll('[data-save-provider]').forEach(function (button) { button.addEventListener('click', function () { saveProvider(button.dataset.saveProvider); }); });
-        document.querySelectorAll('[data-test-provider]').forEach(function (button) { button.addEventListener('click', function () { runEntryTest(button.dataset.testProvider, button.dataset.testEntry); }); });
-        document.querySelectorAll('[data-move-provider]').forEach(function (button) { button.addEventListener('click', function () { moveEntry(button.dataset.moveProvider, button.dataset.moveEntry, Number(button.dataset.moveOffset)); }); });
-        document.querySelectorAll('[data-toggle-provider]').forEach(function (input) { input.addEventListener('change', function () { setEntryEnabled(input.dataset.toggleProvider, input.dataset.toggleEntry, input.checked); }); });
       }
+
+      async function refreshData() {
+        setStatus("正在拉取状态...");
+        state.data = await request("/api/provider-admin/providers");
+        render();
+        setStatus("状态已刷新");
+      }
+
+      async function probeAll() {
+        setStatus("正在探测全部 provider...");
+        state.data = await request("/api/provider-admin/providers/probe", { method: "POST" });
+        render();
+        setStatus("全量探测完成");
+      }
+
+      async function probeProvider(providerId) {
+        setStatus("正在探测 " + providerId + " ...");
+        state.data = await request("/api/provider-admin/providers/" + providerId + "/probe", { method: "POST" });
+        render();
+        setStatus(providerId + " 探测完成");
+      }
+
+      async function saveProvider(providerId) {
+        const provider = getProvider(providerId);
+        if (!provider) return;
+        setStatus("正在保存 " + providerId + " 顺序...");
+        state.data = await request("/api/provider-admin/providers/" + providerId + "/order", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            items: provider.entries.map(function (entry) {
+              return { entry_id: entry.entry_id, enabled: Boolean(entry.enabled) };
+            }),
+          }),
+        });
+        render();
+        setStatus(providerId + " 已保存");
+      }
+
+      async function runEntryTest(providerId, entryId) {
+        setStatus("正在测试 " + providerId + "." + entryId + " ...");
+        const payload = await request("/api/provider-admin/providers/" + providerId + "/entries/" + entryId + "/test", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            entry_id: entryId,
+            prompt: promptInput.value.trim(),
+            aspect_ratio: aspectInput.value,
+            resolution: resolutionInput.value,
+          }),
+        });
+        const provider = getProvider(providerId);
+        if (provider) {
+          provider.entries = provider.entries.map(function (entry) {
+            return entry.entry_id === entryId ? { ...entry, last_test: payload } : entry;
+          });
+        }
+        render();
+        setStatus(providerId + "." + entryId + " 测试完成");
+      }
+
       function render() {
-        if (state.data == null) { routingMetaEl.textContent = "路由更新时间: -"; connectivityMetaEl.textContent = "探测更新时间: -"; renderSummary(null); providerListEl.innerHTML = '<div class="empty">先保存 Token，然后点击刷新状态。</div>'; return; }
-        routingMetaEl.textContent = "路由更新时间: " + (state.data.updated_at || "-");
-        connectivityMetaEl.textContent = "探测更新时间: " + (state.data.connectivity_updated_at || "-");
+        if (!state.data) {
+          summaryGridEl.innerHTML = "";
+          providerListEl.innerHTML = '<div class="empty">暂无数据。</div>';
+          return;
+        }
+        routingMetaEl.textContent = "路由更新时间: " + formatDateTime(state.data.updated_at);
+        connectivityMetaEl.textContent = "探测更新时间: " + formatDateTime(state.data.connectivity_updated_at);
         renderSummary(state.data.summary);
-        renderProviders(state.data.providers || []);
+        providerListEl.innerHTML = (state.data.providers || []).map(function (provider) {
+          const alertsHtml = (provider.alerts || []).length
+            ? '<div class="alert-list">' + provider.alerts.map(function (alert) {
+                return '<div class="alert-item">' + escapeHtml(alert.message) + " · " + escapeHtml(formatDateTime(alert.updated_at)) + "</div>";
+              }).join("") + "</div>"
+            : "";
+          const entryHtml = (provider.entries || []).map(function (entry, index) {
+            return `
+              <article class="entry-card">
+                <div class="entry-head">
+                  <div class="entry-title">
+                    <div class="badge-row">
+                      <span class="mini-pill">优先级 ${escapeHtml(entry.priority)}</span>
+                      <span class="status-pill ${statusClass(entry.status)}">${escapeHtml(entry.status_label)}</span>
+                    </div>
+                    <h3>${escapeHtml(entry.entry_label)}</h3>
+                    <p class="muted">${escapeHtml(entry.note || "")}</p>
+                  </div>
+                  <label class="toggle">
+                    <input data-toggle-provider="${escapeHtml(provider.provider_id)}" data-toggle-entry="${escapeHtml(entry.entry_id)}" type="checkbox" ${entry.enabled ? "checked" : ""} />
+                    启用
+                  </label>
+                </div>
+                <div class="entry-info">
+                  <div class="info-panel">
+                    <strong>基础信息</strong>
+                    <div>${escapeHtml(entry.protocol)} / ${escapeHtml(entry.model_name)}</div>
+                    <div class="muted">${escapeHtml(entry.base_url)}${escapeHtml(entry.endpoint)}</div>
+                    <div class="muted">凭证: ${escapeHtml(entry.credential_label || "-")}</div>
+                  </div>
+                  <div class="info-panel">
+                    <strong>探测状态</strong>
+                    <div>${probeSummary(entry.probe)}</div>
+                  </div>
+                  <div class="info-panel">
+                    <strong>真实测试</strong>
+                    <div>${testSummary(entry.last_test)}</div>
+                  </div>
+                  <div class="info-panel">
+                    <strong>文档与后台</strong>
+                    <div class="badge-row">
+                      ${entry.console_url ? '<a class="preview-link" href="' + escapeHtml(entry.console_url) + '" target="_blank" rel="noreferrer">访问后台</a>' : ""}
+                      ${entry.docs_url ? '<a class="preview-link" href="' + escapeHtml(entry.docs_url) + '" target="_blank" rel="noreferrer">查看文档</a>' : ""}
+                    </div>
+                  </div>
+                </div>
+                <div class="entry-actions">
+                  <button class="btn-secondary" type="button" data-test-provider="${escapeHtml(provider.provider_id)}" data-test-entry="${escapeHtml(entry.entry_id)}">真实测试</button>
+                  <button class="btn-ghost" type="button" data-up-provider="${escapeHtml(provider.provider_id)}" data-up-entry="${escapeHtml(entry.entry_id)}" ${index === 0 ? "disabled" : ""}>上移</button>
+                  <button class="btn-ghost" type="button" data-down-provider="${escapeHtml(provider.provider_id)}" data-down-entry="${escapeHtml(entry.entry_id)}" ${index === provider.entries.length - 1 ? "disabled" : ""}>下移</button>
+                </div>
+              </article>
+            `;
+          }).join("");
+          return `
+            <section class="provider-card">
+              <div class="provider-head">
+                <div class="provider-title">
+                  <div class="badge-row">
+                    <span class="mini-pill">${escapeHtml(provider.category)}</span>
+                    <span class="status-pill ${statusClass(provider.status)}">${escapeHtml(provider.status_label)}</span>
+                  </div>
+                  <h2>${escapeHtml(provider.provider_label)}</h2>
+                  <p class="muted">${escapeHtml(provider.runtime_note || provider.runtime_policy || "")}</p>
+                  <div class="badge-row">
+                    <span class="pill">更新时间: ${escapeHtml(formatDateTime(provider.updated_at))}</span>
+                    <span class="pill">策略: ${escapeHtml(provider.runtime_policy)}</span>
+                  </div>
+                </div>
+                <div class="provider-actions">
+                  <button class="btn-secondary" type="button" data-probe-provider="${escapeHtml(provider.provider_id)}">探测本组</button>
+                  <button class="btn-primary" type="button" data-save-provider="${escapeHtml(provider.provider_id)}" ${provider.supports_reorder ? "" : "disabled"}>保存顺序</button>
+                </div>
+              </div>
+              ${alertsHtml}
+              <div class="entry-grid">${entryHtml || '<div class="empty">当前 provider 没有可管理线路。</div>'}</div>
+            </section>
+          `;
+        }).join("");
+
+        bindActions();
       }
-      document.getElementById("saveTokenBtn").addEventListener("click", function () { var token = tokenInput.value.trim(); localStorage.setItem("providerAdminToken", token); setStatus(token.length > 0 ? "Token 已保存到浏览器本地" : "Token 已清空"); });
-      document.getElementById("refreshBtn").addEventListener("click", refreshData);
-      document.getElementById("probeBtn").addEventListener("click", probeAll);
-      render();
+
+      function bindActions() {
+        Array.from(document.querySelectorAll("[data-probe-provider]")).forEach(function (element) {
+          element.addEventListener("click", function () {
+            probeProvider(element.getAttribute("data-probe-provider")).catch(function (error) {
+              setStatus(error.message || "探测失败");
+            });
+          });
+        });
+        Array.from(document.querySelectorAll("[data-save-provider]")).forEach(function (element) {
+          element.addEventListener("click", function () {
+            saveProvider(element.getAttribute("data-save-provider")).catch(function (error) {
+              setStatus(error.message || "保存失败");
+            });
+          });
+        });
+        Array.from(document.querySelectorAll("[data-test-provider]")).forEach(function (element) {
+          element.addEventListener("click", function () {
+            runEntryTest(
+              element.getAttribute("data-test-provider"),
+              element.getAttribute("data-test-entry")
+            ).catch(function (error) {
+              setStatus(error.message || "测试失败");
+            });
+          });
+        });
+        Array.from(document.querySelectorAll("[data-up-provider]")).forEach(function (element) {
+          element.addEventListener("click", function () {
+            moveEntry(
+              element.getAttribute("data-up-provider"),
+              element.getAttribute("data-up-entry"),
+              -1
+            );
+          });
+        });
+        Array.from(document.querySelectorAll("[data-down-provider]")).forEach(function (element) {
+          element.addEventListener("click", function () {
+            moveEntry(
+              element.getAttribute("data-down-provider"),
+              element.getAttribute("data-down-entry"),
+              1
+            );
+          });
+        });
+        Array.from(document.querySelectorAll("[data-toggle-provider]")).forEach(function (element) {
+          element.addEventListener("change", function () {
+            setEntryEnabled(
+              element.getAttribute("data-toggle-provider"),
+              element.getAttribute("data-toggle-entry"),
+              element.checked
+            );
+          });
+        });
+      }
+
+      document.getElementById("refreshBtn").addEventListener("click", function () {
+        refreshData().catch(function (error) {
+          setStatus(error.message || "刷新失败");
+        });
+      });
+
+      document.getElementById("probeBtn").addEventListener("click", function () {
+        probeAll().catch(function (error) {
+          setStatus(error.message || "探测失败");
+        });
+      });
+
+      document.getElementById("logoutBtn").addEventListener("click", async function () {
+        try {
+          await request("/api/admin/session/logout", { method: "POST" });
+        } finally {
+          window.location.href = "/admin";
+        }
+      });
+
+      ensureSession()
+        .then(function () {
+          return refreshData();
+        })
+        .catch(function (error) {
+          setStatus(error.message || "初始化失败");
+        });
     </script>
   </body>
 </html>

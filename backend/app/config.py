@@ -34,6 +34,22 @@ def _env_csv_tuple(name: str) -> tuple[str, ...]:
     )
 
 
+def _env_first(names: tuple[str, ...], default: str = "") -> str:
+    for name in names:
+        value = os.getenv(name)
+        if value is not None and value.strip():
+            return value.strip()
+    return default
+
+
+def _env_int_first(names: tuple[str, ...], default: int) -> int:
+    for name in names:
+        value = os.getenv(name)
+        if value is not None and value.strip():
+            return int(value)
+    return default
+
+
 def _resolve_repo_path(value: str | Path) -> Path:
     path = value if isinstance(value, Path) else Path(value)
     if path.is_absolute():
@@ -180,6 +196,10 @@ class Settings:
     wechat_pay_platform_public_key_path: Path
     wechat_pay_platform_serial: str
     allow_dev_login: bool
+    admin_console_username: str
+    admin_console_password: str
+    admin_console_session_secret: str
+    admin_console_session_ttl_hours: int
     enforce_face_detection: bool
     max_upload_size_mb: int
     media_retention_days: int
@@ -215,6 +235,12 @@ class Settings:
         )
         return all(item.strip() for item in required_text) and (
             self.wechat_pay_private_key_path != Path()
+        )
+
+    @property
+    def admin_console_enabled(self) -> bool:
+        return bool(
+            self.admin_console_username.strip() and self.admin_console_password.strip()
         )
 
     @property
@@ -410,32 +436,40 @@ def get_settings() -> Settings:
         ).strip(),
         ark_key_cooldown_seconds=_env_int("ARK_API_KEY_COOLDOWN_SECONDS", 120),
         image_generator_backend=image_generator_backend,
-        nano_banana_pro_api_key=os.getenv("NANO_BANANA_PRO_API_KEY", "").strip(),
-        nano_banana_pro_base_url=os.getenv(
-            "NANO_BANANA_PRO_BASE_URL", "https://api.apiyi.com"
-        ).strip().rstrip("/"),
-        nano_banana_pro_model=os.getenv(
-            "NANO_BANANA_PRO_MODEL", "gemini-3-pro-image-preview"
-        ).strip(),
+        nano_banana_pro_api_key=_env_first(
+            ("NANO_BANANA_PRO_PRIMARY_API_KEY", "NANO_BANANA_PRO_API_KEY")
+        ),
+        nano_banana_pro_base_url=_env_first(
+            ("NANO_BANANA_PRO_PRIMARY_BASE_URL", "NANO_BANANA_PRO_BASE_URL"),
+            default="https://api.apiyi.com",
+        ).rstrip("/"),
+        nano_banana_pro_model=_env_first(
+            ("NANO_BANANA_PRO_PRIMARY_MODEL", "NANO_BANANA_PRO_MODEL"),
+            default="gemini-3-pro-image-preview",
+        ),
         nano_banana_pro_max_concurrency=max(
             1,
-            _env_int("NANO_BANANA_PRO_MAX_CONCURRENCY", 8),
+            _env_int_first(
+                ("NANO_BANANA_PRO_PRIMARY_MAX_CONCURRENCY", "NANO_BANANA_PRO_MAX_CONCURRENCY"),
+                8,
+            ),
         ),
-        nano_banana_pro_fallback_api_key=os.getenv(
-            "NANO_BANANA_PRO_FALLBACK_API_KEY", ""
-        ).strip(),
-        nano_banana_pro_fallback_base_url=os.getenv(
-            "NANO_BANANA_PRO_FALLBACK_BASE_URL", ""
-        ).strip(),
-        nano_banana_pro_chat_fallback_api_key=os.getenv(
-            "NANO_BANANA_PRO_CHAT_FALLBACK_API_KEY", ""
-        ).strip(),
-        nano_banana_pro_chat_fallback_base_url=os.getenv(
-            "NANO_BANANA_PRO_CHAT_FALLBACK_BASE_URL", ""
-        ).strip(),
-        nano_banana_pro_chat_fallback_model=os.getenv(
-            "NANO_BANANA_PRO_CHAT_FALLBACK_MODEL", "Nano_Banana_Pro_2K_1"
-        ).strip(),
+        nano_banana_pro_fallback_api_key=_env_first(
+            ("NANO_BANANA_PRO_ROUTE1_API_KEY", "NANO_BANANA_PRO_FALLBACK_API_KEY")
+        ),
+        nano_banana_pro_fallback_base_url=_env_first(
+            ("NANO_BANANA_PRO_ROUTE1_BASE_URL", "NANO_BANANA_PRO_FALLBACK_BASE_URL")
+        ),
+        nano_banana_pro_chat_fallback_api_key=_env_first(
+            ("NANO_BANANA_PRO_ROUTE2_API_KEY", "NANO_BANANA_PRO_CHAT_FALLBACK_API_KEY")
+        ),
+        nano_banana_pro_chat_fallback_base_url=_env_first(
+            ("NANO_BANANA_PRO_ROUTE2_BASE_URL", "NANO_BANANA_PRO_CHAT_FALLBACK_BASE_URL")
+        ),
+        nano_banana_pro_chat_fallback_model=_env_first(
+            ("NANO_BANANA_PRO_ROUTE2_MODEL", "NANO_BANANA_PRO_CHAT_FALLBACK_MODEL"),
+            default="Nano_Banana_Pro_2K_1",
+        ),
         nano_banana_2_api_key=os.getenv("NANO_BANANA_2_API_KEY", "").strip(),
         nano_banana_2_base_url=os.getenv(
             "NANO_BANANA_2_BASE_URL", "https://api.apiyi.com"
@@ -526,6 +560,13 @@ def get_settings() -> Settings:
             "WECHAT_PAY_PLATFORM_SERIAL", ""
         ).strip(),
         allow_dev_login=_env_bool("ALLOW_DEV_LOGIN", True),
+        admin_console_username=os.getenv("ADMIN_CONSOLE_USERNAME", "").strip(),
+        admin_console_password=os.getenv("ADMIN_CONSOLE_PASSWORD", "").strip(),
+        admin_console_session_secret=os.getenv("ADMIN_CONSOLE_SESSION_SECRET", "").strip(),
+        admin_console_session_ttl_hours=max(
+            1,
+            _env_int("ADMIN_CONSOLE_SESSION_TTL_HOURS", 24),
+        ),
         enforce_face_detection=_env_bool("ENFORCE_FACE_DETECTION", False),
         max_upload_size_mb=int(os.getenv("MAX_UPLOAD_SIZE_MB", "10")),
         media_retention_days=max(1, _env_int("MEDIA_RETENTION_DAYS", 7)),

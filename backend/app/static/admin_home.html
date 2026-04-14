@@ -1,0 +1,389 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>AIFace 管理后台</title>
+    <style>
+      :root {
+        --bg: #efe4d4;
+        --panel: rgba(255, 250, 243, 0.88);
+        --panel-strong: #fffdf8;
+        --text: #1f1b18;
+        --muted: #6f6256;
+        --line: rgba(31, 27, 24, 0.12);
+        --accent: #0d6b5f;
+        --accent-soft: rgba(13, 107, 95, 0.1);
+        --danger: #b04332;
+        --shadow: 0 24px 70px rgba(70, 45, 25, 0.12);
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        font-family: "IBM Plex Sans", "PingFang SC", "Microsoft YaHei", sans-serif;
+        color: var(--text);
+        background:
+          radial-gradient(circle at 12% 0%, rgba(13, 107, 95, 0.18), transparent 24%),
+          radial-gradient(circle at 100% 12%, rgba(176, 67, 50, 0.16), transparent 25%),
+          linear-gradient(180deg, #fbf6ee 0%, var(--bg) 100%);
+      }
+      .page {
+        max-width: 1180px;
+        margin: 0 auto;
+        padding: 28px 18px 56px;
+      }
+      .hero,
+      .panel,
+      .card {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 28px;
+        box-shadow: var(--shadow);
+        backdrop-filter: blur(18px);
+      }
+      .hero {
+        padding: 30px;
+        margin-bottom: 18px;
+      }
+      .eyebrow {
+        margin: 0 0 10px;
+        font-size: 12px;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        color: var(--accent);
+      }
+      h1, h2, h3, p { margin: 0; }
+      h1 {
+        font-size: clamp(32px, 5vw, 56px);
+        line-height: 0.95;
+        margin-bottom: 14px;
+      }
+      .muted {
+        color: var(--muted);
+        line-height: 1.7;
+      }
+      .grid {
+        display: grid;
+        gap: 18px;
+        grid-template-columns: minmax(0, 380px) minmax(0, 1fr);
+      }
+      .panel {
+        padding: 22px;
+      }
+      .panel h2 {
+        font-size: 24px;
+        margin-bottom: 10px;
+      }
+      .field {
+        display: grid;
+        gap: 8px;
+        margin-bottom: 14px;
+      }
+      .field label {
+        font-size: 13px;
+        color: var(--muted);
+      }
+      input, button {
+        font: inherit;
+      }
+      input {
+        width: 100%;
+        border-radius: 16px;
+        border: 1px solid var(--line);
+        background: var(--panel-strong);
+        padding: 12px 14px;
+        color: var(--text);
+      }
+      button,
+      .link-card {
+        border: 0;
+        border-radius: 18px;
+        text-decoration: none;
+        font: inherit;
+      }
+      button {
+        padding: 12px 16px;
+        cursor: pointer;
+      }
+      .btn-primary {
+        background: var(--accent);
+        color: #f4fffd;
+      }
+      .btn-secondary {
+        background: var(--accent-soft);
+        color: var(--accent);
+      }
+      .btn-ghost {
+        background: rgba(31, 27, 24, 0.06);
+        color: var(--text);
+      }
+      .actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 16px;
+      }
+      .status {
+        margin-top: 14px;
+        min-height: 24px;
+        color: var(--muted);
+      }
+      .status.error {
+        color: var(--danger);
+      }
+      .pill-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 16px;
+      }
+      .pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 8px 12px;
+        border-radius: 999px;
+        background: rgba(31, 27, 24, 0.06);
+        color: var(--muted);
+      }
+      .cards {
+        display: grid;
+        gap: 18px;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+      .card {
+        padding: 22px;
+        display: grid;
+        gap: 14px;
+      }
+      .card h3 {
+        font-size: 24px;
+      }
+      .card-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+      .link-card {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 12px 16px;
+        background: var(--accent);
+        color: #f4fffd;
+      }
+      .hidden {
+        display: none !important;
+      }
+      @media (max-width: 900px) {
+        .grid,
+        .cards {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="page">
+      <section class="hero">
+        <p class="eyebrow">Admin Console</p>
+        <h1>AIFace 管理后台</h1>
+        <p class="muted">同一套后台登录态下，分开进入线路管理台和用户历史后台。未登录时这里显示账号密码登录，已登录时这里作为后台首页和跳转入口。</p>
+      </section>
+
+      <section class="grid">
+        <section id="loginPanel" class="panel">
+          <h2>后台登录</h2>
+          <p class="muted">使用环境变量里配置的管理员账号密码登录，登录成功后会写入当前站点的 HttpOnly 会话 Cookie。</p>
+          <form id="loginForm">
+            <div class="field">
+              <label for="usernameInput">账号</label>
+              <input id="usernameInput" type="text" autocomplete="username" placeholder="管理员账号" />
+            </div>
+            <div class="field">
+              <label for="passwordInput">密码</label>
+              <input id="passwordInput" type="password" autocomplete="current-password" placeholder="管理员密码" />
+            </div>
+            <div class="actions">
+              <button class="btn-primary" type="submit">登录后台</button>
+            </div>
+            <div id="loginStatus" class="status"></div>
+          </form>
+        </section>
+
+        <section id="sessionPanel" class="panel">
+          <h2>当前会话</h2>
+          <p class="muted">登录后可以直接进入各后台页面，不需要再单独粘贴 Bearer Token。</p>
+          <div class="pill-row">
+            <span id="configuredPill" class="pill">后台配置: 检查中</span>
+            <span id="sessionPill" class="pill">登录状态: 检查中</span>
+            <span id="expiresPill" class="pill">会话过期: -</span>
+          </div>
+          <div class="actions">
+            <button id="refreshSessionBtn" class="btn-secondary" type="button">刷新状态</button>
+            <button id="logoutBtn" class="btn-ghost hidden" type="button">退出登录</button>
+            <a id="continueBtn" class="link-card hidden" href="/admin">继续前往</a>
+          </div>
+        </section>
+      </section>
+
+      <section id="entrySection" class="hidden" style="margin-top: 18px;">
+        <div class="cards">
+          <article class="card">
+            <h3>线路管理台</h3>
+            <p class="muted">查看所有 provider 线路状态，执行探测、真实测试、启停和优先级调整。</p>
+            <div class="card-actions">
+              <a class="link-card" href="/admin/providers">进入线路管理台</a>
+            </div>
+          </article>
+          <article class="card">
+            <h3>用户历史后台</h3>
+            <p class="muted">按最近 7 天查看全部用户任务历史，支持筛选、分页、预览图片和服务器文件定位。</p>
+            <div class="card-actions">
+              <a class="link-card" href="/admin/history">进入用户历史后台</a>
+            </div>
+          </article>
+        </div>
+      </section>
+    </main>
+
+    <script>
+      const loginForm = document.getElementById("loginForm");
+      const loginPanel = document.getElementById("loginPanel");
+      const entrySection = document.getElementById("entrySection");
+      const configuredPill = document.getElementById("configuredPill");
+      const sessionPill = document.getElementById("sessionPill");
+      const expiresPill = document.getElementById("expiresPill");
+      const loginStatus = document.getElementById("loginStatus");
+      const refreshSessionBtn = document.getElementById("refreshSessionBtn");
+      const logoutBtn = document.getElementById("logoutBtn");
+      const continueBtn = document.getElementById("continueBtn");
+      const nextPath = new URLSearchParams(window.location.search).get("next") || "";
+
+      function formatDateTime(value) {
+        if (!value) return "-";
+        const date = new Date(value);
+        if (Number.isNaN(date.getTime())) return String(value);
+        return new Intl.DateTimeFormat("zh-CN", {
+          timeZone: "Asia/Shanghai",
+          year: "numeric",
+          month: "2-digit",
+          day: "2-digit",
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit",
+          hour12: false,
+        }).format(date);
+      }
+
+      function setLoginStatus(text, isError) {
+        loginStatus.textContent = text || "";
+        loginStatus.classList.toggle("error", Boolean(isError));
+      }
+
+      function updateView(session) {
+        configuredPill.textContent = "后台配置: " + (session.configured ? "已配置" : "未配置");
+        sessionPill.textContent = "登录状态: " + (session.authenticated ? "已登录" : "未登录");
+        expiresPill.textContent = "会话过期: " + (session.expires_at ? formatDateTime(session.expires_at) : "-");
+        loginPanel.classList.toggle("hidden", Boolean(session.authenticated));
+        entrySection.classList.toggle("hidden", !session.authenticated);
+        logoutBtn.classList.toggle("hidden", !session.authenticated);
+        continueBtn.classList.toggle("hidden", !session.authenticated || !nextPath);
+        continueBtn.href = nextPath || "/admin";
+        continueBtn.textContent = nextPath ? "继续前往目标页面" : "进入后台";
+        if (!session.configured) {
+          setLoginStatus("管理员账号密码尚未在环境变量中配置。", true);
+          return;
+        }
+        if (session.authenticated) {
+          setLoginStatus("");
+        }
+      }
+
+      async function readJson(response) {
+        try {
+          return await response.json();
+        } catch (error) {
+          return null;
+        }
+      }
+
+      async function fetchSession() {
+        const response = await fetch("/api/admin/session", {
+          credentials: "same-origin",
+        });
+        const payload = await readJson(response);
+        if (!response.ok || !payload) {
+          throw new Error("读取管理员会话失败。");
+        }
+        updateView(payload);
+        return payload;
+      }
+
+      async function login(username, password) {
+        const response = await fetch("/api/admin/session/login", {
+          method: "POST",
+          credentials: "same-origin",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ username, password }),
+        });
+        const payload = await readJson(response);
+        if (!response.ok) {
+          throw new Error((payload && payload.detail) || "登录失败。");
+        }
+        updateView(payload);
+        window.location.href = nextPath || "/admin";
+      }
+
+      async function logout() {
+        const response = await fetch("/api/admin/session/logout", {
+          method: "POST",
+          credentials: "same-origin",
+        });
+        const payload = await readJson(response);
+        if (!response.ok || !payload) {
+          throw new Error("退出登录失败。");
+        }
+        updateView(payload);
+      }
+
+      loginForm.addEventListener("submit", async function (event) {
+        event.preventDefault();
+        const username = document.getElementById("usernameInput").value.trim();
+        const password = document.getElementById("passwordInput").value;
+        if (!username || !password) {
+          setLoginStatus("请输入账号和密码。", true);
+          return;
+        }
+        setLoginStatus("正在登录...");
+        try {
+          await login(username, password);
+        } catch (error) {
+          setLoginStatus(error.message || "登录失败。", true);
+        }
+      });
+
+      refreshSessionBtn.addEventListener("click", async function () {
+        try {
+          setLoginStatus("");
+          await fetchSession();
+        } catch (error) {
+          setLoginStatus(error.message || "刷新失败。", true);
+        }
+      });
+
+      logoutBtn.addEventListener("click", async function () {
+        try {
+          await logout();
+        } catch (error) {
+          setLoginStatus(error.message || "退出失败。", true);
+        }
+      });
+
+      fetchSession().catch(function (error) {
+        setLoginStatus(error.message || "初始化失败。", true);
+      });
+    </script>
+  </body>
+</html>

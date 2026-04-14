@@ -5,11 +5,11 @@ import uuid
 from datetime import datetime, timezone
 from pathlib import Path
 
-from fastapi import APIRouter, Depends, HTTPException, status
-from fastapi.responses import FileResponse
+from fastapi import APIRouter, Depends, HTTPException, Request, status
+from fastapi.responses import FileResponse, RedirectResponse
 
 from app.config import ROOT_DIR, get_settings
-from app.dependencies import get_current_user
+from app.dependencies import get_current_admin
 from app.schemas import (
     NanoBananaProAdminResponse,
     ProviderAdminAlertRecord,
@@ -27,6 +27,7 @@ from app.schemas import (
     ProviderAdminTestResult,
 )
 from app.services import image_understanding, provider_alerts, provider_connectivity, provider_routing
+from app.services.admin_auth import current_admin_from_request
 from app.services.generation import (
     GenerationContext,
     ImageGenerationError,
@@ -449,22 +450,37 @@ def _run_test_for_provider(
     return response
 
 
-@router.get("/provider-admin", response_class=FileResponse)
-def provider_admin_page() -> FileResponse:
+@router.get("/provider-admin", include_in_schema=False)
+def legacy_provider_admin_page() -> RedirectResponse:
+    return RedirectResponse(
+        url="/admin/providers",
+        status_code=status.HTTP_307_TEMPORARY_REDIRECT,
+    )
+
+
+@router.get("/admin/providers", response_class=FileResponse)
+def provider_admin_page(request: Request):
+    if current_admin_from_request(request) is None:
+        return RedirectResponse(
+            url="/admin?next=/admin/providers",
+            status_code=status.HTTP_303_SEE_OTHER,
+        )
     return FileResponse(_PAGE_PATH)
 
 
 @router.get("/api/provider-admin/providers", response_model=ProviderAdminDashboardResponse)
 def get_provider_dashboard(
-    current_user: dict = Depends(get_current_user),
+    current_admin: dict = Depends(get_current_admin),
 ) -> ProviderAdminDashboardResponse:
+    del current_admin
     return _build_dashboard_response()
 
 
 @router.post("/api/provider-admin/providers/probe", response_model=ProviderAdminDashboardResponse)
 def probe_all_providers(
-    current_user: dict = Depends(get_current_user),
+    current_admin: dict = Depends(get_current_admin),
 ) -> ProviderAdminDashboardResponse:
+    del current_admin
     provider_connectivity.run_probe_once()
     return _build_dashboard_response()
 
@@ -472,8 +488,9 @@ def probe_all_providers(
 @router.post("/api/provider-admin/providers/{provider_id}/probe", response_model=ProviderAdminDashboardResponse)
 def probe_provider(
     provider_id: str,
-    current_user: dict = Depends(get_current_user),
+    current_admin: dict = Depends(get_current_admin),
 ) -> ProviderAdminDashboardResponse:
+    del current_admin
     try:
         provider_connectivity.run_probe_once(provider_id=provider_id)
     except provider_routing.ProviderRoutingError as exc:
@@ -485,8 +502,9 @@ def probe_provider(
 def update_provider_order(
     provider_id: str,
     payload: ProviderAdminOrderRequest,
-    current_user: dict = Depends(get_current_user),
+    current_admin: dict = Depends(get_current_admin),
 ) -> ProviderAdminDashboardResponse:
+    del current_admin
     try:
         provider_routing.update_provider_entries(
             provider_id,
@@ -505,8 +523,9 @@ def test_provider_entry(
     provider_id: str,
     entry_id: str,
     payload: ProviderAdminTestRequest,
-    current_user: dict = Depends(get_current_user),
+    current_admin: dict = Depends(get_current_admin),
 ) -> ProviderAdminTestResult:
+    del current_admin
     if payload.entry_id != entry_id:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -520,15 +539,17 @@ def test_provider_entry(
 
 @router.get("/api/provider-admin/nano-pro", response_model=NanoBananaProAdminResponse)
 def get_nano_banana_pro_admin(
-    current_user: dict = Depends(get_current_user),
+    current_admin: dict = Depends(get_current_admin),
 ) -> NanoBananaProAdminResponse:
+    del current_admin
     return _build_legacy_nano_banana_pro_response()
 
 
 @router.post("/api/provider-admin/nano-pro/probe", response_model=NanoBananaProAdminResponse)
 def probe_nano_banana_pro_admin(
-    current_user: dict = Depends(get_current_user),
+    current_admin: dict = Depends(get_current_admin),
 ) -> NanoBananaProAdminResponse:
+    del current_admin
     provider_connectivity.run_probe_once(provider_id="nano_banana_pro")
     return _build_legacy_nano_banana_pro_response()
 
@@ -536,8 +557,9 @@ def probe_nano_banana_pro_admin(
 @router.put("/api/provider-admin/nano-pro/order", response_model=NanoBananaProAdminResponse)
 def update_nano_banana_pro_order(
     payload: ProviderAdminRouteOrderRequest,
-    current_user: dict = Depends(get_current_user),
+    current_admin: dict = Depends(get_current_admin),
 ) -> NanoBananaProAdminResponse:
+    del current_admin
     try:
         provider_routing.update_provider_entries(
             "nano_banana_pro",
@@ -560,8 +582,9 @@ def update_nano_banana_pro_order(
 )
 def test_nano_banana_pro_route(
     payload: ProviderAdminRouteTestRequest,
-    current_user: dict = Depends(get_current_user),
+    current_admin: dict = Depends(get_current_admin),
 ) -> ProviderAdminRouteTestResult:
+    del current_admin
     result = _run_test_for_provider(
         "nano_banana_pro",
         payload.profile_id,
