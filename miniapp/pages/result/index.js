@@ -308,7 +308,28 @@ function buildStageSteps(status, hasHairPreview, completedSceneCount) {
     steps[failureIndex].state = "failed";
   }
 
-  return steps;
+  return steps.map((step, index) => {
+    const nextStep = index < steps.length - 1 ? steps[index + 1] : null;
+    let connectorState = "pending";
+    if (nextStep) {
+      if (nextStep.state === "failed") {
+        connectorState = "failed";
+      } else if (step.state === "done" && nextStep.state === "done") {
+        connectorState = "done";
+      } else if (
+        (step.state === "done" || step.state === "active") &&
+        nextStep.state === "active"
+      ) {
+        connectorState = "active";
+      }
+    }
+    return {
+      ...step,
+      index: index + 1,
+      showConnector: index < steps.length - 1,
+      connectorState
+    };
+  });
 }
 
 function getProgressPercent(status, elapsedSeconds, hasHairPreview, completedSceneCount) {

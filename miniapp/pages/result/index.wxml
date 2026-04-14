@@ -13,9 +13,13 @@
     <view
       wx:for="{{stageSteps}}"
       wx:key="label"
-      class="stage-chip {{item.state}}"
+      class="stage-flow-item"
     >
-      {{item.label}}
+      <view class="stage-node {{item.state}}">
+        <view class="stage-node-index">{{item.state === 'done' ? '✓' : item.index}}</view>
+      </view>
+      <view class="stage-label {{item.state}}">{{item.label}}</view>
+      <view wx:if="{{item.showConnector}}" class="stage-arrow {{item.connectorState}}">→</view>
     </view>
   </scroll-view>
 

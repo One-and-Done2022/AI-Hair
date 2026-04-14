@@ -52,11 +52,24 @@
         data-id="{{item.id}}"
         bindtap="applyRecommendedHairstyle"
       >
-        <image wx:if="{{item.cover_url}}" class="recommend-cover recommend-cover-hair" src="{{item.cover_url}}" mode="aspectFill"></image>
+        <view class="recommend-cover-shell">
+          <image
+            wx:if="{{item.cover_url}}"
+            class="recommend-cover recommend-cover-hair"
+            src="{{item.cover_url}}"
+            mode="aspectFit"
+            catchtap="previewRecommendedHairstyle"
+            data-id="{{item.id}}"
+          ></image>
+          <view class="preview-pill preview-pill-top" catchtap="previewRecommendedHairstyle" data-id="{{item.id}}">预览全图</view>
+        </view>
         <view class="recommend-row-body">
           <view class="recommend-name">{{item.name}}</view>
           <view class="recommend-reason">{{item.reason}}</view>
-          <view class="recommend-action">{{item.actionText}}</view>
+          <view class="recommend-action-row">
+            <view class="recommend-preview-tip">点图片看全貌，点卡片应用</view>
+            <view class="recommend-action">{{item.actionText}}</view>
+          </view>
         </view>
       </view>
     </view>
@@ -73,11 +86,24 @@
         data-id="{{item.id}}"
         bindtap="applyRecommendedScene"
       >
-        <image wx:if="{{item.cover_url}}" class="scene-cover" src="{{item.cover_url}}" mode="aspectFill"></image>
+        <view class="recommend-cover-shell">
+          <image
+            wx:if="{{item.cover_url}}"
+            class="scene-cover"
+            src="{{item.cover_url}}"
+            mode="aspectFit"
+            catchtap="previewRecommendedScene"
+            data-id="{{item.id}}"
+          ></image>
+          <view class="preview-pill preview-pill-top" catchtap="previewRecommendedScene" data-id="{{item.id}}">预览全图</view>
+        </view>
         <view class="scene-row-body">
           <view class="scene-name">{{item.name}}</view>
           <view class="scene-reason">{{item.reason}}</view>
-          <view class="scene-action">{{item.actionText}}</view>
+          <view class="recommend-action-row">
+            <view class="recommend-preview-tip">点图片看全貌，点卡片应用</view>
+            <view class="scene-action">{{item.actionText}}</view>
+          </view>
         </view>
       </view>
     </view>

@@ -82,7 +82,7 @@ function buildRecommendedHairstyles(recommendation, catalog, gender, selectedHai
         selectedClass:
           !!selectedHairstyle && selectedHairstyle.id === full.id ? "selected" : "",
         actionText:
-          !!selectedHairstyle && selectedHairstyle.id === full.id ? "已应用" : "点击应用"
+          !!selectedHairstyle && selectedHairstyle.id === full.id ? "已应用" : "应用推荐"
       };
     })
     .filter(Boolean);
@@ -102,7 +102,7 @@ function buildRecommendedScenes(recommendation, catalog, selectedScene) {
         selectedClass:
           !!selectedScene && selectedScene.id === full.id ? "selected" : "",
         actionText:
-          !!selectedScene && selectedScene.id === full.id ? "已应用" : "点击应用"
+          !!selectedScene && selectedScene.id === full.id ? "已应用" : "应用推荐"
       };
     })
     .filter(Boolean);
@@ -289,6 +289,21 @@ Page({
     });
   },
 
+  previewRecommendedHairstyle(event) {
+    const hairstyleId = event.currentTarget.dataset.id;
+    if (!this.catalog) {
+      return;
+    }
+    const hairstyle = findById(this.catalog.hairstyles || [], hairstyleId);
+    if (!hairstyle || !hairstyle.cover_url) {
+      return;
+    }
+    wx.previewImage({
+      current: hairstyle.cover_url,
+      urls: [hairstyle.cover_url]
+    });
+  },
+
   applyRecommendedScene(event) {
     const sceneId = event.currentTarget.dataset.id;
     if (!this.catalog) {
@@ -323,6 +338,21 @@ Page({
     wx.showToast({
       title: "已应用推荐场景",
       icon: "success"
+    });
+  },
+
+  previewRecommendedScene(event) {
+    const sceneId = event.currentTarget.dataset.id;
+    if (!this.catalog) {
+      return;
+    }
+    const scene = findById(this.catalog.scenes || [], sceneId);
+    if (!scene || !scene.cover_url) {
+      return;
+    }
+    wx.previewImage({
+      current: scene.cover_url,
+      urls: [scene.cover_url]
     });
   },
 

@@ -6,7 +6,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 12rpx;
+  margin-bottom: 16rpx;
 }
 
 .progress-state {
@@ -25,48 +25,113 @@
 
 .progress-track {
   width: 100%;
-  height: 10rpx;
+  height: 18rpx;
   border-radius: 999rpx;
-  background: #dadddf;
+  background: linear-gradient(180deg, #d9dee7 0%, #cfd6e2 100%);
   overflow: hidden;
+  box-shadow: inset 0 2rpx 6rpx rgba(15, 23, 42, 0.06);
 }
 
 .progress-fill {
   height: 100%;
   border-radius: inherit;
   background: linear-gradient(90deg, #0058ba 0%, #5091ff 100%);
+  box-shadow: 0 6rpx 16rpx rgba(11, 94, 207, 0.24);
 }
 
 .stage-strip {
-  margin-top: 16rpx;
+  margin-top: 22rpx;
   white-space: nowrap;
 }
 
-.stage-chip {
+.stage-flow-item {
   display: inline-flex;
+  align-items: center;
   margin-right: 12rpx;
-  padding: 12rpx 18rpx;
-  border-radius: 999rpx;
-  background: #ffffff;
-  border: 1rpx solid rgba(0, 88, 186, 0.06);
-  color: #5d6670;
-  font-size: 20rpx;
-  font-weight: 700;
-  box-shadow: 0 10rpx 22rpx rgba(0, 88, 186, 0.04);
 }
 
-.stage-chip.done {
+.stage-node {
+  width: 52rpx;
+  height: 52rpx;
+  border-radius: 999rpx;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #ffffff;
+  border: 2rpx solid rgba(148, 163, 184, 0.26);
+  box-shadow: 0 10rpx 24rpx rgba(0, 88, 186, 0.05);
+}
+
+.stage-node-index {
+  font-size: 22rpx;
+  font-weight: 800;
+  color: #7a8591;
+}
+
+.stage-node.done {
   background: rgba(11, 94, 207, 0.12);
+  border-color: rgba(11, 94, 207, 0.26);
+}
+
+.stage-node.done .stage-node-index {
   color: #0b5ecf;
 }
 
-.stage-chip.active {
-  background: #0058ba;
+.stage-node.active {
+  background: linear-gradient(135deg, #0058ba 0%, #1a73e8 100%);
+  border-color: rgba(0, 88, 186, 0.4);
+  box-shadow: 0 14rpx 34rpx rgba(0, 88, 186, 0.22);
+}
+
+.stage-node.active .stage-node-index {
   color: #ffffff;
 }
 
-.stage-chip.failed {
+.stage-node.failed {
   background: rgba(179, 27, 37, 0.12);
+  border-color: rgba(179, 27, 37, 0.24);
+}
+
+.stage-node.failed .stage-node-index {
+  color: #b31b25;
+}
+
+.stage-label {
+  margin-left: 12rpx;
+  min-width: 116rpx;
+  font-size: 22rpx;
+  font-weight: 700;
+  color: #7a8591;
+}
+
+.stage-label.done {
+  color: #0b5ecf;
+}
+
+.stage-label.active {
+  color: #0058ba;
+}
+
+.stage-label.failed {
+  color: #b31b25;
+}
+
+.stage-arrow {
+  margin: 0 14rpx;
+  font-size: 28rpx;
+  font-weight: 700;
+  color: #c0c8d4;
+}
+
+.stage-arrow.done {
+  color: #0b5ecf;
+}
+
+.stage-arrow.active {
+  color: #1a73e8;
+}
+
+.stage-arrow.failed {
   color: #b31b25;
 }
 
