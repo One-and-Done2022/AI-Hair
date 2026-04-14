@@ -23,6 +23,87 @@ const STAGE_LABELS = [
   "完成"
 ];
 
+const FEEDBACK_REQUIRED_FIELDS = [
+  {
+    field: "hairstyle_expectation",
+    label: "发型效果是否达到预期"
+  },
+  {
+    field: "hair_color_satisfaction",
+    label: "发色是否满意"
+  },
+  {
+    field: "scene_satisfaction",
+    label: "场景图是否满意"
+  },
+  {
+    field: "wait_time_feeling",
+    label: "等待时间是否比较久"
+  },
+  {
+    field: "image_clarity_satisfaction",
+    label: "出图是否清晰"
+  },
+  {
+    field: "ui_usability",
+    label: "整体界面是否好用"
+  }
+];
+
+const FEEDBACK_HAIRSTYLE_OPTIONS = [
+  { value: "met", label: "达到预期" },
+  { value: "mostly_met", label: "基本达到" },
+  { value: "not_met", label: "未达到" }
+];
+
+const FEEDBACK_SATISFACTION_OPTIONS = [
+  { value: "satisfied", label: "满意" },
+  { value: "neutral", label: "一般" },
+  { value: "dissatisfied", label: "不满意" }
+];
+
+const FEEDBACK_WAIT_TIME_OPTIONS = [
+  { value: "acceptable", label: "可以接受" },
+  { value: "a_bit_long", label: "有点久" },
+  { value: "too_long", label: "太久了" }
+];
+
+const FEEDBACK_CLARITY_OPTIONS = [
+  { value: "clear", label: "清晰" },
+  { value: "neutral", label: "一般" },
+  { value: "blurry", label: "不够清晰" }
+];
+
+const FEEDBACK_UI_OPTIONS = [
+  { value: "easy", label: "好用" },
+  { value: "neutral", label: "一般" },
+  { value: "hard", label: "不太好用" }
+];
+
+function buildEmptyFeedbackForm() {
+  return {
+    hairstyle_expectation: "",
+    hair_color_satisfaction: "",
+    scene_satisfaction: "",
+    wait_time_feeling: "",
+    image_clarity_satisfaction: "",
+    ui_usability: "",
+    improvement_suggestion: ""
+  };
+}
+
+function buildFeedbackPromptKey(prompt) {
+  if (!prompt || !prompt.job_id || !prompt.survey_type) {
+    return "";
+  }
+  return `${prompt.job_id}:${prompt.survey_type}`;
+}
+
+function getMissingFeedbackQuestion(form) {
+  const nextForm = form || {};
+  return FEEDBACK_REQUIRED_FIELDS.find((item) => !nextForm[item.field]) || null;
+}
+
 function decodeText(value) {
   if (!value) {
     return "";
@@ -333,7 +414,17 @@ Page({
     estimatedTotalSeconds: ESTIMATED_TOTAL_SECONDS,
     progressStage: "正在排队准备生成",
     progressHint: "先生成发型预览，再继续生成 2 张场景成片",
-    stageSteps: buildStageSteps("pending", false, 0)
+    stageSteps: buildStageSteps("pending", false, 0),
+    feedbackVisible: false,
+    feedbackSubmitting: false,
+    feedbackPrompt: null,
+    feedbackForm: buildEmptyFeedbackForm(),
+    feedbackSuggestionLength: 0,
+    feedbackHairstyleOptions: FEEDBACK_HAIRSTYLE_OPTIONS,
+    feedbackSatisfactionOptions: FEEDBACK_SATISFACTION_OPTIONS,
+    feedbackWaitTimeOptions: FEEDBACK_WAIT_TIME_OPTIONS,
+    feedbackClarityOptions: FEEDBACK_CLARITY_OPTIONS,
+    feedbackUiOptions: FEEDBACK_UI_OPTIONS
   },
 
   onLoad(options) {
@@ -345,6 +436,10 @@ Page({
     this.jobId = options.jobId;
     this.isPolling = false;
     this.jobCreatedAtMs = parseTimestamp(decodeText(options.createdAt)) || Date.now();
+    this.feedbackLoading = false;
+    this.feedbackCheckedJobId = "";
+    this.feedbackDismissedPromptKey = "";
+    this.feedbackSubmittedPromptKeys = new Set();
 
     const initialJob = buildJobMeta({
       job_id: options.jobId,
@@ -538,6 +633,141 @@ Page({
 
     this.syncPendingHistory(job, nextHairPreviewUrl, nextSceneUrls, nextCompletedSceneCount);
     this.updateProgressState();
+    this.maybeLoadFeedbackPrompt(job);
+  },
+
+  noop() {},
+
+  async maybeLoadFeedbackPrompt(job) {
+    const jobId = job && job.job_id;
+    if (!jobId || job.status !== "succeeded") {
+      return;
+    }
+    if (this.feedbackLoading || this.feedbackCheckedJobId === jobId) {
+      return;
+    }
+
+    this.feedbackLoading = true;
+    try {
+      const payload = await request({
+        url: `/api/feedback/pending?job_id=${encodeURIComponent(jobId)}`
+      });
+      this.feedbackCheckedJobId = jobId;
+      if (!payload || !payload.pending) {
+        return;
+      }
+
+      const promptKey = buildFeedbackPromptKey(payload);
+      if (
+        promptKey &&
+        (
+          this.feedbackDismissedPromptKey === promptKey ||
+          this.feedbackSubmittedPromptKeys.has(promptKey)
+        )
+      ) {
+        return;
+      }
+
+      this.setData({
+        feedbackVisible: true,
+        feedbackPrompt: payload,
+        feedbackForm: buildEmptyFeedbackForm(),
+        feedbackSuggestionLength: 0
+      });
+    } catch (error) {
+      console.warn("failed to load feedback prompt", error);
+    } finally {
+      this.feedbackLoading = false;
+    }
+  },
+
+  selectFeedbackOption(event) {
+    const { field, value } = event.currentTarget.dataset;
+    if (!field || !value) {
+      return;
+    }
+    this.setData({
+      [`feedbackForm.${field}`]: value
+    });
+  },
+
+  handleFeedbackSuggestionInput(event) {
+    const value = (event.detail && event.detail.value) || "";
+    this.setData({
+      "feedbackForm.improvement_suggestion": value,
+      feedbackSuggestionLength: value.length
+    });
+  },
+
+  dismissFeedback() {
+    const promptKey = buildFeedbackPromptKey(this.data.feedbackPrompt);
+    if (promptKey) {
+      this.feedbackDismissedPromptKey = promptKey;
+    }
+    this.setData({
+      feedbackVisible: false,
+      feedbackPrompt: null,
+      feedbackForm: buildEmptyFeedbackForm(),
+      feedbackSuggestionLength: 0
+    });
+  },
+
+  async submitFeedback() {
+    if (this.data.feedbackSubmitting || !this.data.feedbackPrompt) {
+      return;
+    }
+
+    const missingQuestion = getMissingFeedbackQuestion(this.data.feedbackForm);
+    if (missingQuestion) {
+      wx.showToast({
+        title: `请先填写：${missingQuestion.label}`,
+        icon: "none"
+      });
+      return;
+    }
+
+    const improvementSuggestion = (
+      (this.data.feedbackForm && this.data.feedbackForm.improvement_suggestion) || ""
+    ).trim();
+
+    this.setData({ feedbackSubmitting: true });
+    try {
+      await request({
+        url: "/api/feedback/submissions",
+        method: "POST",
+        data: {
+          job_id: this.data.feedbackPrompt.job_id,
+          survey_type: this.data.feedbackPrompt.survey_type,
+          hairstyle_expectation: this.data.feedbackForm.hairstyle_expectation,
+          hair_color_satisfaction: this.data.feedbackForm.hair_color_satisfaction,
+          scene_satisfaction: this.data.feedbackForm.scene_satisfaction,
+          wait_time_feeling: this.data.feedbackForm.wait_time_feeling,
+          image_clarity_satisfaction: this.data.feedbackForm.image_clarity_satisfaction,
+          ui_usability: this.data.feedbackForm.ui_usability,
+          improvement_suggestion: improvementSuggestion || null
+        }
+      });
+
+      const promptKey = buildFeedbackPromptKey(this.data.feedbackPrompt);
+      if (promptKey) {
+        this.feedbackSubmittedPromptKeys.add(promptKey);
+      }
+
+      this.setData({
+        feedbackVisible: false,
+        feedbackPrompt: null,
+        feedbackForm: buildEmptyFeedbackForm(),
+        feedbackSuggestionLength: 0
+      });
+      wx.showToast({
+        title: "反馈已提交",
+        icon: "success"
+      });
+    } catch (error) {
+      showError(error, { fallback: "提交反馈失败，请稍后再试" });
+    } finally {
+      this.setData({ feedbackSubmitting: false });
+    }
   },
 
   syncPendingHistory(job, hairPreviewUrl, sceneUrls, completedSceneCount) {

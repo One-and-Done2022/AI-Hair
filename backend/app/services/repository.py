@@ -7,10 +7,18 @@ from datetime import datetime, timedelta, timezone
 from typing import Any
 from zoneinfo import ZoneInfo
 
-from sqlalchemy import String, and_, cast, delete, func, insert, not_, or_, select, update
+from sqlalchemy import String, and_, case, cast, delete, func, insert, not_, or_, select, update
 
 from app.config import get_settings
-from app.db import auth_tokens, jobs, purchase_orders, session_scope, uploads, users
+from app.db import (
+    auth_tokens,
+    feedback_submissions,
+    jobs,
+    purchase_orders,
+    session_scope,
+    uploads,
+    users,
+)
 
 DEFAULT_FREE_QUOTA_TOTAL = 10
 _ASIA_SHANGHAI = ZoneInfo("Asia/Shanghai")
@@ -34,6 +42,8 @@ TERMINAL_JOB_STATUSES = ("succeeded", "failed")
 PURCHASE_ORDER_PENDING = "pending"
 PURCHASE_ORDER_PAYMENT_PREPARED = "payment_prepared"
 PURCHASE_ORDER_CONFIRMED = "confirmed"
+FEEDBACK_SURVEY_FIRST_SUCCESS = "first_success"
+FEEDBACK_SURVEY_FOURTH_SUCCESS = "fourth_success"
 
 
 def utc_now() -> str:
@@ -508,6 +518,239 @@ def get_user_profile_summary(user_id: int) -> dict:
         "completed_jobs": completed_jobs,
         "processing_jobs": processing_jobs,
         "created_at": user_row["created_at"],
+    }
+
+
+def count_succeeded_jobs_for_user(user_id: int) -> int:
+    with session_scope() as session:
+        return int(
+            session.execute(
+                select(func.count())
+                .select_from(jobs)
+                .where(
+                    and_(
+                        jobs.c.user_id == user_id,
+                        jobs.c.status == "succeeded",
+                    )
+                )
+            ).scalar_one()
+            or 0
+        )
+
+
+def _feedback_prompt_for_success_ordinal(success_ordinal: int) -> dict[str, Any] | None:
+    if success_ordinal == 1:
+        return {
+            "survey_type": FEEDBACK_SURVEY_FIRST_SUCCESS,
+            "trigger_completed_jobs": 1,
+            "title": "首次使用体验反馈",
+            "description": "这是你第一次成功出图，想收集一下首次使用体验。",
+        }
+    if success_ordinal == 4:
+        return {
+            "survey_type": FEEDBACK_SURVEY_FOURTH_SUCCESS,
+            "trigger_completed_jobs": 4,
+            "title": "多次使用体验反馈",
+            "description": "你已经累计成功出图 4 次，想了解你连续使用后的真实感受。",
+        }
+    return None
+
+
+def get_feedback_submission_for_user(
+    user_id: int,
+    survey_type: str,
+) -> dict | None:
+    with session_scope() as session:
+        row = session.execute(
+            select(feedback_submissions).where(
+                and_(
+                    feedback_submissions.c.user_id == user_id,
+                    feedback_submissions.c.survey_type == survey_type,
+                )
+            )
+        ).mappings().one_or_none()
+        return _mapping_to_dict(row)
+
+
+def get_pending_feedback_for_job(user_id: int, job_id: str) -> dict[str, Any] | None:
+    job = get_job_for_user(job_id, user_id)
+    if job is None or job.get("status") != "succeeded":
+        return None
+
+    with session_scope() as session:
+        success_ordinal = int(
+            session.execute(
+                select(func.count())
+                .select_from(jobs)
+                .where(
+                    and_(
+                        jobs.c.user_id == user_id,
+                        jobs.c.status == "succeeded",
+                        or_(
+                            jobs.c.created_at < job["created_at"],
+                            and_(
+                                jobs.c.created_at == job["created_at"],
+                                jobs.c.id <= job["id"],
+                            ),
+                        ),
+                    )
+                )
+            ).scalar_one()
+            or 0
+        )
+
+    prompt = _feedback_prompt_for_success_ordinal(success_ordinal)
+    if prompt is None:
+        return None
+    if get_feedback_submission_for_user(user_id, prompt["survey_type"]) is not None:
+        return None
+    return {
+        **prompt,
+        "job_id": job["id"],
+        "success_ordinal": success_ordinal,
+    }
+
+
+def create_feedback_submission(
+    *,
+    user_id: int,
+    job_id: str,
+    survey_type: str,
+    trigger_completed_jobs: int,
+    hairstyle_expectation: str,
+    hair_color_satisfaction: str,
+    scene_satisfaction: str,
+    wait_time_feeling: str,
+    image_clarity_satisfaction: str,
+    ui_usability: str,
+    improvement_suggestion: str | None = None,
+) -> dict:
+    submission_id = uuid.uuid4().hex
+    created_at = utc_now()
+    with session_scope() as session:
+        existing = session.execute(
+            select(feedback_submissions.c.id).where(
+                and_(
+                    feedback_submissions.c.user_id == user_id,
+                    feedback_submissions.c.survey_type == survey_type,
+                )
+            )
+        ).first()
+        if existing is not None:
+            raise ValueError("feedback_already_submitted")
+
+        session.execute(
+            insert(feedback_submissions).values(
+                id=submission_id,
+                user_id=user_id,
+                job_id=job_id,
+                survey_type=survey_type,
+                trigger_completed_jobs=trigger_completed_jobs,
+                hairstyle_expectation=hairstyle_expectation,
+                hair_color_satisfaction=hair_color_satisfaction,
+                scene_satisfaction=scene_satisfaction,
+                wait_time_feeling=wait_time_feeling,
+                image_clarity_satisfaction=image_clarity_satisfaction,
+                ui_usability=ui_usability,
+                improvement_suggestion=str(improvement_suggestion or "").strip() or None,
+                created_at=created_at,
+            )
+        )
+    return get_feedback_submission_by_id(submission_id) or {
+        "id": submission_id,
+        "created_at": created_at,
+    }
+
+
+def get_feedback_submission_by_id(submission_id: str) -> dict | None:
+    with session_scope() as session:
+        row = session.execute(
+            select(feedback_submissions).where(feedback_submissions.c.id == submission_id)
+        ).mappings().one_or_none()
+        return _mapping_to_dict(row)
+
+
+def list_admin_feedback_submissions(
+    *,
+    page: int = 1,
+    page_size: int = 20,
+    survey_type: str | None = None,
+    keyword: str | None = None,
+) -> dict[str, Any]:
+    filters = []
+    normalized_survey_type = str(survey_type or "").strip()
+    if normalized_survey_type:
+        filters.append(feedback_submissions.c.survey_type == normalized_survey_type)
+
+    normalized_keyword = str(keyword or "").strip().lower()
+    if normalized_keyword:
+        pattern = f"%{normalized_keyword}%"
+        filters.append(
+            or_(
+                func.lower(cast(feedback_submissions.c.id, String)).like(pattern),
+                func.lower(cast(feedback_submissions.c.job_id, String)).like(pattern),
+                func.lower(cast(feedback_submissions.c.improvement_suggestion, String)).like(pattern),
+                func.lower(cast(users.c.nickname, String)).like(pattern),
+                func.lower(cast(users.c.openid, String)).like(pattern),
+            )
+        )
+
+    joined_tables = (
+        feedback_submissions.join(users, users.c.id == feedback_submissions.c.user_id)
+        .outerjoin(jobs, jobs.c.id == feedback_submissions.c.job_id)
+    )
+    where_clause = and_(*filters) if filters else None
+    total_statement = select(func.count()).select_from(joined_tables)
+    list_statement = (
+        select(
+            feedback_submissions,
+            users.c.nickname.label("user_nickname"),
+            users.c.openid.label("user_openid"),
+            jobs.c.hairstyle_id.label("job_hairstyle_id"),
+            jobs.c.scene_id.label("job_scene_id"),
+            jobs.c.status.label("job_status"),
+            jobs.c.created_at.label("job_created_at"),
+        )
+        .select_from(joined_tables)
+        .order_by(feedback_submissions.c.created_at.desc())
+        .limit(page_size)
+        .offset(max(0, page - 1) * page_size)
+    )
+    if where_clause is not None:
+        total_statement = total_statement.where(where_clause)
+        list_statement = list_statement.where(where_clause)
+
+    with session_scope() as session:
+        total = int(session.execute(total_statement).scalar_one() or 0)
+        rows = session.execute(list_statement).mappings().all()
+        summary_statement = (
+            select(
+                func.count().label("total_count"),
+                func.sum(
+                    case(
+                        (feedback_submissions.c.survey_type == FEEDBACK_SURVEY_FIRST_SUCCESS, 1),
+                        else_=0,
+                    )
+                ).label("first_success_count"),
+                func.sum(
+                    case(
+                        (feedback_submissions.c.survey_type == FEEDBACK_SURVEY_FOURTH_SUCCESS, 1),
+                        else_=0,
+                    )
+                ).label("fourth_success_count"),
+            )
+            .select_from(joined_tables)
+        )
+        if where_clause is not None:
+            summary_statement = summary_statement.where(where_clause)
+        summary_row = session.execute(summary_statement).mappings().one()
+
+    return {
+        "page": page,
+        "page_size": page_size,
+        "total": total,
+        "summary": dict(summary_row),
+        "items": [dict(row) for row in rows],
     }
 
 

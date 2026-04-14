@@ -3701,3 +3701,216 @@ def test_templates_hair_color_reference_static_url_download(tmp_path, monkeypatc
     assert response.status_code == 200
     assert response.headers['content-type'].startswith('application/pdf')
     assert response.content.startswith(b'%PDF')
+
+
+def _create_feedback_ready_job_for_user(
+    *,
+    user_id: int,
+    created_at: str,
+    status_name: str = "succeeded",
+) -> dict:
+    from app.db import jobs, session_scope, uploads
+    from app.services import repository, storage
+
+    source_bytes = _build_colored_image("#8ecae6")
+    upload_path = storage.save_upload_file(source_bytes, ".png")
+    upload = repository.create_upload(
+        user_id=user_id,
+        original_name="feedback-source.png",
+        stored_path=upload_path,
+        mime_type="image/png",
+        file_size=len(source_bytes),
+        width=768,
+        height=1024,
+    )
+    job = repository.create_job(
+        user_id=user_id,
+        upload_id=upload["id"],
+        hairstyle_id="male-forward-spikes",
+        scene_id="morning-window-softlight",
+        prompt="feedback prompt",
+        model_name="feedback-model",
+    )
+
+    result_path = None
+    if status_name == "succeeded":
+        storage.save_hair_preview_result(job["id"], _build_colored_image("#264653"))
+        result_path = storage.save_scene_result(job["id"], _build_colored_image("#2a9d8f"), index=1)
+        storage.save_scene_result(job["id"], _build_colored_image("#e76f51"), index=2)
+
+    repository.update_job_status(
+        job["id"],
+        status=status_name,
+        result_path=result_path,
+        error_code=None if status_name == "succeeded" else "mock_failed",
+        error_message=None if status_name == "succeeded" else "mock failed",
+    )
+
+    created_dt = datetime.fromisoformat(created_at.replace("Z", "+00:00"))
+    updated_at = (created_dt + timedelta(seconds=10)).replace(microsecond=0).isoformat()
+    with session_scope() as session:
+        session.execute(
+            update(uploads)
+            .where(uploads.c.id == upload["id"])
+            .values(created_at=created_at)
+        )
+        session.execute(
+            update(jobs)
+            .where(jobs.c.id == job["id"])
+            .values(
+                created_at=created_at,
+                updated_at=updated_at,
+                completed_at=updated_at if status_name == "succeeded" else None,
+            )
+        )
+
+    return job
+
+
+def test_feedback_pending_and_submission_flow(tmp_path, monkeypatch):
+    app = _build_app(tmp_path, monkeypatch)
+
+    with TestClient(app) as client:
+        login = client.post("/api/auth/wechat/login", json={"code": "dev-feedback-user"})
+        assert login.status_code == 200
+        headers = {"Authorization": f"Bearer {login.json()['token']}"}
+        user_id = login.json()["user_id"]
+
+        first_job = _create_feedback_ready_job_for_user(
+            user_id=user_id,
+            created_at=datetime.now(timezone.utc).replace(microsecond=0).isoformat(),
+        )
+
+        pending_response = client.get(
+            f"/api/feedback/pending?job_id={first_job['id']}",
+            headers=headers,
+        )
+        assert pending_response.status_code == 200
+        pending_payload = pending_response.json()
+        assert pending_payload["pending"] is True
+        assert pending_payload["survey_type"] == "first_success"
+        assert pending_payload["trigger_completed_jobs"] == 1
+        assert pending_payload["success_ordinal"] == 1
+
+        submission_response = client.post(
+            "/api/feedback/submissions",
+            headers=headers,
+            json={
+                "job_id": first_job["id"],
+                "survey_type": "first_success",
+                "hairstyle_expectation": "met",
+                "hair_color_satisfaction": "satisfied",
+                "scene_satisfaction": "neutral",
+                "wait_time_feeling": "acceptable",
+                "image_clarity_satisfaction": "clear",
+                "ui_usability": "easy",
+                "improvement_suggestion": "期待发型细节再自然一些",
+            },
+        )
+        assert submission_response.status_code == 201
+        submission_payload = submission_response.json()
+        assert submission_payload["survey_type"] == "first_success"
+        assert submission_payload["trigger_completed_jobs"] == 1
+
+        duplicate_submission = client.post(
+            "/api/feedback/submissions",
+            headers=headers,
+            json={
+                "job_id": first_job["id"],
+                "survey_type": "first_success",
+                "hairstyle_expectation": "met",
+                "hair_color_satisfaction": "satisfied",
+                "scene_satisfaction": "satisfied",
+                "wait_time_feeling": "acceptable",
+                "image_clarity_satisfaction": "clear",
+                "ui_usability": "easy",
+            },
+        )
+        assert duplicate_submission.status_code == 409
+
+        pending_after_submit = client.get(
+            f"/api/feedback/pending?job_id={first_job['id']}",
+            headers=headers,
+        )
+        assert pending_after_submit.status_code == 200
+        pending_after_submit_payload = pending_after_submit.json()
+        assert pending_after_submit_payload["pending"] is False
+        assert pending_after_submit_payload["survey_type"] is None
+
+
+def test_feedback_pending_only_on_first_and_fourth_success(tmp_path, monkeypatch):
+    app = _build_app(tmp_path, monkeypatch)
+
+    with TestClient(app) as client:
+        login = client.post("/api/auth/wechat/login", json={"code": "dev-feedback-ordinal"})
+        assert login.status_code == 200
+        headers = {"Authorization": f"Bearer {login.json()['token']}"}
+        user_id = login.json()["user_id"]
+        base_time = datetime.now(timezone.utc).replace(microsecond=0) - timedelta(hours=1)
+
+        first_job = _create_feedback_ready_job_for_user(
+            user_id=user_id,
+            created_at=base_time.isoformat(),
+        )
+        second_job = _create_feedback_ready_job_for_user(
+            user_id=user_id,
+            created_at=(base_time + timedelta(minutes=5)).isoformat(),
+        )
+        third_job = _create_feedback_ready_job_for_user(
+            user_id=user_id,
+            created_at=(base_time + timedelta(minutes=10)).isoformat(),
+        )
+        fourth_job = _create_feedback_ready_job_for_user(
+            user_id=user_id,
+            created_at=(base_time + timedelta(minutes=15)).isoformat(),
+        )
+        failed_job = _create_feedback_ready_job_for_user(
+            user_id=user_id,
+            created_at=(base_time + timedelta(minutes=20)).isoformat(),
+            status_name="failed",
+        )
+
+        first_pending = client.get(
+            f"/api/feedback/pending?job_id={first_job['id']}",
+            headers=headers,
+        )
+        assert first_pending.status_code == 200
+        assert first_pending.json()["survey_type"] == "first_success"
+
+        second_pending = client.get(
+            f"/api/feedback/pending?job_id={second_job['id']}",
+            headers=headers,
+        )
+        assert second_pending.status_code == 200
+        second_pending_payload = second_pending.json()
+        assert second_pending_payload["pending"] is False
+        assert second_pending_payload["survey_type"] is None
+
+        third_pending = client.get(
+            f"/api/feedback/pending?job_id={third_job['id']}",
+            headers=headers,
+        )
+        assert third_pending.status_code == 200
+        third_pending_payload = third_pending.json()
+        assert third_pending_payload["pending"] is False
+        assert third_pending_payload["survey_type"] is None
+
+        fourth_pending = client.get(
+            f"/api/feedback/pending?job_id={fourth_job['id']}",
+            headers=headers,
+        )
+        assert fourth_pending.status_code == 200
+        fourth_payload = fourth_pending.json()
+        assert fourth_payload["pending"] is True
+        assert fourth_payload["survey_type"] == "fourth_success"
+        assert fourth_payload["trigger_completed_jobs"] == 4
+        assert fourth_payload["success_ordinal"] == 4
+
+        failed_pending = client.get(
+            f"/api/feedback/pending?job_id={failed_job['id']}",
+            headers=headers,
+        )
+        assert failed_pending.status_code == 200
+        failed_pending_payload = failed_pending.json()
+        assert failed_pending_payload["pending"] is False
+        assert failed_pending_payload["survey_type"] is None

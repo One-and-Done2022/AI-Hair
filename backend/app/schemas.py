@@ -382,6 +382,71 @@ class MeProfileUpdateRequest(BaseModel):
     nickname: str = Field(min_length=1, max_length=255)
 
 
+class FeedbackPendingResponse(BaseModel):
+    pending: bool
+    survey_type: Literal["first_success", "fourth_success"] | None = None
+    title: str | None = None
+    description: str | None = None
+    trigger_completed_jobs: int | None = None
+    success_ordinal: int | None = None
+    job_id: str | None = None
+
+
+class FeedbackSubmissionRequest(BaseModel):
+    job_id: str = Field(min_length=1)
+    survey_type: Literal["first_success", "fourth_success"]
+    hairstyle_expectation: Literal["met", "mostly_met", "not_met"]
+    hair_color_satisfaction: Literal["satisfied", "neutral", "dissatisfied"]
+    scene_satisfaction: Literal["satisfied", "neutral", "dissatisfied"]
+    wait_time_feeling: Literal["acceptable", "a_bit_long", "too_long"]
+    image_clarity_satisfaction: Literal["clear", "neutral", "blurry"]
+    ui_usability: Literal["easy", "neutral", "hard"]
+    improvement_suggestion: str | None = Field(default=None, max_length=2000)
+
+
+class FeedbackSubmissionResponse(BaseModel):
+    submission_id: str
+    created_at: str
+    survey_type: Literal["first_success", "fourth_success"]
+    trigger_completed_jobs: int
+
+
+class AdminFeedbackItem(BaseModel):
+    submission_id: str
+    user_id: int
+    nickname: str
+    user_openid: str | None = None
+    job_id: str | None = None
+    job_status: str | None = None
+    hairstyle_id: str | None = None
+    scene_id: str | None = None
+    survey_type: Literal["first_success", "fourth_success"]
+    trigger_completed_jobs: int
+    hairstyle_expectation: str
+    hair_color_satisfaction: str
+    scene_satisfaction: str
+    wait_time_feeling: str
+    image_clarity_satisfaction: str
+    ui_usability: str
+    improvement_suggestion: str | None = None
+    created_at: str
+    job_created_at: str | None = None
+
+
+class AdminFeedbackSummary(BaseModel):
+    total_count: int = 0
+    first_success_count: int = 0
+    fourth_success_count: int = 0
+
+
+class AdminFeedbackResponse(BaseModel):
+    page: int
+    page_size: int
+    total: int
+    summary: AdminFeedbackSummary
+    items: list[AdminFeedbackItem] = Field(default_factory=list)
+
+
 class PurchaseCatalogItem(BaseModel):
     product_id: str
     name: str

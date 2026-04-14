@@ -10,6 +10,9 @@ from fastapi.responses import FileResponse, RedirectResponse
 from app.config import get_settings
 from app.dependencies import get_current_admin
 from app.schemas import (
+    AdminFeedbackItem,
+    AdminFeedbackResponse,
+    AdminFeedbackSummary,
     AdminHistoryItem,
     AdminHistoryResponse,
     AdminSessionLoginRequest,
@@ -21,6 +24,7 @@ from app.services import admin_auth, repository, retention, storage, templates
 router = APIRouter(tags=["admin-console"])
 _STATIC_DIR = Path(__file__).resolve().parents[1] / "static"
 _HOME_PAGE_PATH = _STATIC_DIR / "admin_home.html"
+_FEEDBACK_PAGE_PATH = _STATIC_DIR / "admin_feedback.html"
 _HISTORY_PAGE_PATH = _STATIC_DIR / "admin_history.html"
 
 
@@ -285,6 +289,15 @@ def admin_history_page(request: Request) -> Response:
     )
 
 
+@router.get("/admin/feedback", response_class=FileResponse)
+def admin_feedback_page(request: Request) -> Response:
+    return _protected_page_response(
+        request,
+        page_path=_FEEDBACK_PAGE_PATH,
+        next_path="/admin/feedback",
+    )
+
+
 @router.get("/api/admin/session", response_model=AdminSessionResponse)
 def get_admin_session(request: Request) -> AdminSessionResponse:
     current_admin = admin_auth.current_admin_from_request(request)
@@ -386,5 +399,56 @@ def get_admin_history(
         items=[
             _admin_history_item_response(request, job)
             for job in query_result["items"]
+        ],
+    )
+
+
+@router.get("/api/admin/feedback", response_model=AdminFeedbackResponse)
+def get_admin_feedback(
+    page: int = Query(default=1, ge=1),
+    page_size: int = Query(default=20, ge=1, le=200),
+    survey_type: str | None = Query(default=None),
+    keyword: str | None = Query(default=None),
+    current_admin: dict = Depends(get_current_admin),
+) -> AdminFeedbackResponse:
+    del current_admin
+
+    query_result = repository.list_admin_feedback_submissions(
+        page=page,
+        page_size=page_size,
+        survey_type=survey_type,
+        keyword=keyword,
+    )
+    return AdminFeedbackResponse(
+        page=query_result["page"],
+        page_size=query_result["page_size"],
+        total=query_result["total"],
+        summary=AdminFeedbackSummary.model_validate(query_result["summary"]),
+        items=[
+            AdminFeedbackItem(
+                submission_id=item["id"],
+                user_id=int(item["user_id"]),
+                nickname=repository._resolved_nickname(
+                    item["user_id"],
+                    item.get("user_nickname"),
+                ),
+                user_openid=str(item.get("user_openid") or "").strip() or None,
+                job_id=str(item.get("job_id") or "").strip() or None,
+                job_status=str(item.get("job_status") or "").strip() or None,
+                hairstyle_id=str(item.get("job_hairstyle_id") or "").strip() or None,
+                scene_id=str(item.get("job_scene_id") or "").strip() or None,
+                survey_type=item["survey_type"],
+                trigger_completed_jobs=int(item["trigger_completed_jobs"]),
+                hairstyle_expectation=item["hairstyle_expectation"],
+                hair_color_satisfaction=item["hair_color_satisfaction"],
+                scene_satisfaction=item["scene_satisfaction"],
+                wait_time_feeling=item["wait_time_feeling"],
+                image_clarity_satisfaction=item["image_clarity_satisfaction"],
+                ui_usability=item["ui_usability"],
+                improvement_suggestion=item.get("improvement_suggestion"),
+                created_at=item["created_at"],
+                job_created_at=item.get("job_created_at"),
+            )
+            for item in query_result["items"]
         ],
     )

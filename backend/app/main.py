@@ -11,6 +11,7 @@ from app.db import init_db
 from app.routers import (
     admin_console,
     auth,
+    feedback,
     history,
     jobs,
     me,
@@ -107,6 +108,7 @@ def create_app() -> FastAPI:
     app.include_router(history.router, prefix=settings.api_prefix)
     app.include_router(me.router, prefix=settings.api_prefix)
     app.include_router(purchase.router, prefix=settings.api_prefix)
+    app.include_router(feedback.router, prefix=settings.api_prefix)
     app.include_router(provider_admin.router)
     app.include_router(admin_console.router)
 

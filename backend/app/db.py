@@ -102,11 +102,37 @@ purchase_orders = Table(
     Column("confirmed_at", String(64)),
 )
 
+feedback_submissions = Table(
+    "feedback_submissions",
+    metadata,
+    Column("id", String(64), primary_key=True),
+    Column("user_id", Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False),
+    Column("job_id", String(64), ForeignKey("jobs.id", ondelete="SET NULL")),
+    Column("survey_type", String(64), nullable=False),
+    Column("trigger_completed_jobs", Integer, nullable=False),
+    Column("hairstyle_expectation", String(64), nullable=False),
+    Column("hair_color_satisfaction", String(64), nullable=False),
+    Column("scene_satisfaction", String(64), nullable=False),
+    Column("wait_time_feeling", String(64), nullable=False),
+    Column("image_clarity_satisfaction", String(64), nullable=False),
+    Column("ui_usability", String(64), nullable=False),
+    Column("improvement_suggestion", Text),
+    Column("created_at", String(64), nullable=False),
+)
+
 Index("idx_auth_tokens_user_id", auth_tokens.c.user_id)
 Index("idx_uploads_user_id", uploads.c.user_id)
 Index("idx_jobs_user_id", jobs.c.user_id)
 Index("idx_jobs_status", jobs.c.status)
 Index("idx_purchase_orders_user_id", purchase_orders.c.user_id)
+Index("idx_feedback_submissions_user_id", feedback_submissions.c.user_id)
+Index("idx_feedback_submissions_created_at", feedback_submissions.c.created_at)
+Index(
+    "uq_feedback_submissions_user_survey_type",
+    feedback_submissions.c.user_id,
+    feedback_submissions.c.survey_type,
+    unique=True,
+)
 
 
 @lru_cache

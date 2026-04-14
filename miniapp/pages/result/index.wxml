@@ -205,4 +205,119 @@
     <button class="primary-button" bindtap="createAnother">返回首页重新生成</button>
     <button class="secondary-button" bindtap="goHistory">去历史记录查看</button>
   </view>
+
+  <view wx:if="{{feedbackVisible && feedbackPrompt}}" class="feedback-layer" catchtouchmove="noop">
+    <view class="feedback-mask" catchtap="noop"></view>
+    <view class="feedback-sheet" catchtap="noop">
+      <view class="feedback-kicker">{{feedbackPrompt.survey_type === 'first_success' ? '首次成功反馈' : '多次使用反馈'}}</view>
+      <view class="feedback-title">{{feedbackPrompt.title}}</view>
+      <view class="feedback-copy">{{feedbackPrompt.description}}</view>
+      <view class="feedback-meta">当前是你第 {{feedbackPrompt.trigger_completed_jobs}} 次成功出图后的反馈</view>
+
+      <scroll-view class="feedback-scroll" scroll-y="true" enable-flex="true">
+        <view class="feedback-question">
+          <view class="feedback-question-title">1. 发型效果是否达到预期</view>
+          <view class="feedback-option-row">
+            <view
+              wx:for="{{feedbackHairstyleOptions}}"
+              wx:key="value"
+              class="feedback-option {{feedbackForm.hairstyle_expectation === item.value ? 'active' : ''}}"
+              data-field="hairstyle_expectation"
+              data-value="{{item.value}}"
+              bindtap="selectFeedbackOption"
+            >{{item.label}}</view>
+          </view>
+        </view>
+
+        <view class="feedback-question">
+          <view class="feedback-question-title">2. 发色是否满意</view>
+          <view class="feedback-option-row">
+            <view
+              wx:for="{{feedbackSatisfactionOptions}}"
+              wx:key="value"
+              class="feedback-option {{feedbackForm.hair_color_satisfaction === item.value ? 'active' : ''}}"
+              data-field="hair_color_satisfaction"
+              data-value="{{item.value}}"
+              bindtap="selectFeedbackOption"
+            >{{item.label}}</view>
+          </view>
+        </view>
+
+        <view class="feedback-question">
+          <view class="feedback-question-title">3. 场景图是否满意</view>
+          <view class="feedback-option-row">
+            <view
+              wx:for="{{feedbackSatisfactionOptions}}"
+              wx:key="value"
+              class="feedback-option {{feedbackForm.scene_satisfaction === item.value ? 'active' : ''}}"
+              data-field="scene_satisfaction"
+              data-value="{{item.value}}"
+              bindtap="selectFeedbackOption"
+            >{{item.label}}</view>
+          </view>
+        </view>
+
+        <view class="feedback-question">
+          <view class="feedback-question-title">4. 等待时间是否比较久</view>
+          <view class="feedback-option-row">
+            <view
+              wx:for="{{feedbackWaitTimeOptions}}"
+              wx:key="value"
+              class="feedback-option {{feedbackForm.wait_time_feeling === item.value ? 'active' : ''}}"
+              data-field="wait_time_feeling"
+              data-value="{{item.value}}"
+              bindtap="selectFeedbackOption"
+            >{{item.label}}</view>
+          </view>
+        </view>
+
+        <view class="feedback-question">
+          <view class="feedback-question-title">5. 出图是否清晰</view>
+          <view class="feedback-option-row">
+            <view
+              wx:for="{{feedbackClarityOptions}}"
+              wx:key="value"
+              class="feedback-option {{feedbackForm.image_clarity_satisfaction === item.value ? 'active' : ''}}"
+              data-field="image_clarity_satisfaction"
+              data-value="{{item.value}}"
+              bindtap="selectFeedbackOption"
+            >{{item.label}}</view>
+          </view>
+        </view>
+
+        <view class="feedback-question">
+          <view class="feedback-question-title">6. 整体界面是否好用</view>
+          <view class="feedback-option-row">
+            <view
+              wx:for="{{feedbackUiOptions}}"
+              wx:key="value"
+              class="feedback-option {{feedbackForm.ui_usability === item.value ? 'active' : ''}}"
+              data-field="ui_usability"
+              data-value="{{item.value}}"
+              bindtap="selectFeedbackOption"
+            >{{item.label}}</view>
+          </view>
+        </view>
+
+        <view class="feedback-question">
+          <view class="feedback-question-title">7. 你希望我们重点改进什么</view>
+          <textarea
+            class="feedback-textarea"
+            maxlength="2000"
+            placeholder="例如发型更贴合原脸型、发色更准确、等待更短、结果更稳定等"
+            value="{{feedbackForm.improvement_suggestion}}"
+            bindinput="handleFeedbackSuggestionInput"
+          ></textarea>
+          <view class="feedback-text-count">{{feedbackSuggestionLength}} / 2000</view>
+        </view>
+      </scroll-view>
+
+      <view class="feedback-actions">
+        <button class="feedback-secondary-button" bindtap="dismissFeedback" disabled="{{feedbackSubmitting}}">稍后再说</button>
+        <button class="feedback-primary-button" bindtap="submitFeedback" loading="{{feedbackSubmitting}}" disabled="{{feedbackSubmitting}}">
+          {{feedbackSubmitting ? '提交中...' : '提交反馈'}}
+        </button>
+      </view>
+    </view>
+  </view>
 </view>

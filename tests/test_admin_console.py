@@ -308,3 +308,88 @@ def test_admin_history_keeps_records_after_media_cleanup(tmp_path, monkeypatch):
         assert item["result_image_urls"] == []
         assert item["upload_path"] is None
         assert item["result_dir_absolute_path"].endswith(expired_job["job_id"])
+
+
+def test_admin_feedback_requires_login_and_supports_filters(tmp_path, monkeypatch):
+    client = _create_client(tmp_path, monkeypatch)
+    now = datetime.now(timezone.utc).replace(microsecond=0)
+
+    first_job = _seed_job(
+        openid="feedback-user-a",
+        created_at=now.isoformat(),
+        nickname="阿青",
+        job_status="succeeded",
+        with_media=True,
+    )
+    fourth_job = _seed_job(
+        openid="feedback-user-b",
+        created_at=(now - timedelta(hours=1)).isoformat(),
+        nickname="小满",
+        job_status="succeeded",
+        with_media=True,
+    )
+
+    from app.services import repository
+
+    repository.create_feedback_submission(
+        user_id=first_job["user_id"],
+        job_id=first_job["job_id"],
+        survey_type="first_success",
+        trigger_completed_jobs=1,
+        hairstyle_expectation="met",
+        hair_color_satisfaction="satisfied",
+        scene_satisfaction="neutral",
+        wait_time_feeling="acceptable",
+        image_clarity_satisfaction="clear",
+        ui_usability="easy",
+        improvement_suggestion="希望场景匹配再丰富一点",
+    )
+    repository.create_feedback_submission(
+        user_id=fourth_job["user_id"],
+        job_id=fourth_job["job_id"],
+        survey_type="fourth_success",
+        trigger_completed_jobs=4,
+        hairstyle_expectation="mostly_met",
+        hair_color_satisfaction="neutral",
+        scene_satisfaction="satisfied",
+        wait_time_feeling="a_bit_long",
+        image_clarity_satisfaction="clear",
+        ui_usability="neutral",
+        improvement_suggestion="整体不错，但还想再快一些",
+    )
+
+    with client:
+        response = client.get("/api/admin/feedback")
+        assert response.status_code == 401
+
+        page_response = client.get("/admin/feedback", follow_redirects=False)
+        assert page_response.status_code == 303
+        assert page_response.headers["location"] == "/admin?next=/admin/feedback"
+
+        _login_admin(client)
+
+        feedback_response = client.get("/api/admin/feedback")
+        assert feedback_response.status_code == 200
+        payload = feedback_response.json()
+        assert payload["total"] == 2
+        assert payload["summary"]["total_count"] == 2
+        assert payload["summary"]["first_success_count"] == 1
+        assert payload["summary"]["fourth_success_count"] == 1
+        assert payload["items"][0]["nickname"] in {"阿青", "小满"}
+
+        survey_filter = client.get("/api/admin/feedback?survey_type=first_success")
+        assert survey_filter.status_code == 200
+        survey_payload = survey_filter.json()
+        assert survey_payload["total"] == 1
+        assert survey_payload["summary"]["total_count"] == 1
+        assert survey_payload["summary"]["first_success_count"] == 1
+        assert survey_payload["summary"]["fourth_success_count"] == 0
+        assert survey_payload["items"][0]["survey_type"] == "first_success"
+        assert survey_payload["items"][0]["nickname"] == "阿青"
+
+        keyword_filter = client.get("/api/admin/feedback?keyword=%E6%83%B3%E5%86%8D%E5%BF%AB%E4%B8%80%E4%BA%9B")
+        assert keyword_filter.status_code == 200
+        keyword_payload = keyword_filter.json()
+        assert keyword_payload["total"] == 1
+        assert keyword_payload["items"][0]["nickname"] == "小满"
+        assert keyword_payload["items"][0]["improvement_suggestion"] == "整体不错，但还想再快一些"
