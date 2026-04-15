@@ -153,6 +153,7 @@ class Settings:
     nano_banana_pro_max_concurrency: int
     nano_banana_pro_fallback_api_key: str
     nano_banana_pro_fallback_base_url: str
+    nano_banana_pro_route1_model: str
     nano_banana_pro_chat_fallback_api_key: str
     nano_banana_pro_chat_fallback_base_url: str
     nano_banana_pro_chat_fallback_model: str
@@ -304,6 +305,10 @@ class Settings:
         fallback_base_url = (
             self.nano_banana_pro_fallback_base_url.strip() or primary_base_url
         )
+        route1_model = (
+            self.nano_banana_pro_route1_model.strip()
+            or self.nano_banana_pro_model
+        )
         if fallback_base_url and fallback_api_key:
             profiles.append(
                 (
@@ -312,7 +317,7 @@ class Settings:
                     fallback_base_url,
                     fallback_api_key,
                     "gemini_v1beta",
-                    self.nano_banana_pro_model,
+                    route1_model,
                 )
             )
 
@@ -459,6 +464,13 @@ def get_settings() -> Settings:
         ),
         nano_banana_pro_fallback_base_url=_env_first(
             ("NANO_BANANA_PRO_ROUTE1_BASE_URL", "NANO_BANANA_PRO_FALLBACK_BASE_URL")
+        ),
+        nano_banana_pro_route1_model=_env_first(
+            ("NANO_BANANA_PRO_ROUTE1_MODEL",),
+            default=_env_first(
+                ("NANO_BANANA_PRO_PRIMARY_MODEL", "NANO_BANANA_PRO_MODEL"),
+                default="gemini-3-pro-image-preview",
+            ),
         ),
         nano_banana_pro_chat_fallback_api_key=_env_first(
             ("NANO_BANANA_PRO_ROUTE2_API_KEY", "NANO_BANANA_PRO_CHAT_FALLBACK_API_KEY")

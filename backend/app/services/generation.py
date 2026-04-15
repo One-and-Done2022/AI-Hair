@@ -1582,7 +1582,7 @@ class NanoBananaProGenerator(ApiYiImageGenerator):
             profiles=settings.nano_banana_pro_profiles(),
             model_name=settings.nano_banana_pro_model,
             provider_name="nano-banana-pro",
-            api_key_env_name="NANO_BANANA_PRO_API_KEY",
+            api_key_env_name="NANO_BANANA_PRO_PRIMARY_API_KEY",
             max_concurrency=settings.nano_banana_pro_max_concurrency,
             routing_provider_id="nano_banana_pro",
         )
