@@ -248,6 +248,11 @@ def test_admin_history_filters_and_pagination(tmp_path, monkeypatch):
         assert len(first_item["result_image_urls"]) == 2
         assert first_item["result_dir_absolute_path"].endswith(first_item["job_id"])
         assert first_item["nickname"] == "阿青"
+        assert first_item["free_quota_total"] == 10
+        assert first_item["free_quota_used"] == 0
+        assert first_item["free_remaining"] == 10
+        assert first_item["paid_remaining"] == 0
+        assert first_item["total_remaining"] == 10
         assert first_item["first_image_duration_seconds"] == 45.0
         assert first_item["first_scene_duration_seconds"] == 120.0
         assert first_item["completed_duration_seconds"] == 150.0
@@ -308,6 +313,43 @@ def test_admin_history_keeps_records_after_media_cleanup(tmp_path, monkeypatch):
         assert item["result_image_urls"] == []
         assert item["upload_path"] is None
         assert item["result_dir_absolute_path"].endswith(expired_job["job_id"])
+
+
+def test_admin_can_grant_user_quota_and_history_reflects_remaining_times(tmp_path, monkeypatch):
+    client = _create_client(tmp_path, monkeypatch)
+    now = datetime.now(timezone.utc).replace(microsecond=0)
+    seeded = _seed_job(
+        openid="history-grant-user",
+        created_at=now.isoformat(),
+        nickname="阿澈",
+        job_status="succeeded",
+        with_media=True,
+    )
+
+    with client:
+        _login_admin(client)
+
+        grant_response = client.post(
+            f"/api/admin/users/{seeded['user_id']}/quota/grant",
+            json={"count": 3},
+        )
+        assert grant_response.status_code == 200
+        payload = grant_response.json()
+        assert payload["user_id"] == seeded["user_id"]
+        assert payload["nickname"] == "阿澈"
+        assert payload["free_remaining"] == 10
+        assert payload["paid_remaining"] == 3
+        assert payload["total_remaining"] == 13
+
+        history_response = client.get(f"/api/admin/history?user_id={seeded['user_id']}")
+        assert history_response.status_code == 200
+        history_payload = history_response.json()
+        assert history_payload["total"] == 1
+        item = history_payload["items"][0]
+        assert item["user_id"] == seeded["user_id"]
+        assert item["free_remaining"] == 10
+        assert item["paid_remaining"] == 3
+        assert item["total_remaining"] == 13
 
 
 def test_admin_feedback_requires_login_and_supports_filters(tmp_path, monkeypatch):

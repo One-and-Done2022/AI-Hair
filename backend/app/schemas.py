@@ -331,6 +331,11 @@ class AdminSessionResponse(BaseModel):
 class AdminHistoryItem(JobResponse):
     user_id: int
     nickname: str
+    free_quota_total: int = 0
+    free_quota_used: int = 0
+    free_remaining: int = 0
+    paid_remaining: int = 0
+    total_remaining: int = 0
     model_name: str
     upload_id: str
     user_openid: str | None = None
@@ -358,6 +363,21 @@ class AdminHistoryResponse(BaseModel):
     total: int
     storage_root: str
     items: list[AdminHistoryItem] = Field(default_factory=list)
+
+
+class AdminUserQuotaGrantRequest(BaseModel):
+    count: int = Field(ge=1, le=10000)
+
+
+class AdminUserQuotaResponse(BaseModel):
+    user_id: int
+    nickname: str
+    free_quota_total: int
+    free_quota_used: int
+    free_remaining: int
+    paid_remaining: int
+    total_remaining: int
+    created_at: str
 
 
 class MeResponse(BaseModel):

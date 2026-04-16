@@ -309,6 +309,28 @@
         grid-template-columns: repeat(2, minmax(0, 1fr));
         margin-top: 16px;
       }
+      .quota-manager {
+        margin-top: 16px;
+        padding: 16px;
+        border-radius: 20px;
+        background: rgba(255, 255, 255, 0.42);
+        border: 1px solid var(--line);
+        display: grid;
+        gap: 12px;
+      }
+      .quota-manager-head {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        align-items: flex-start;
+        flex-wrap: wrap;
+      }
+      .quota-manager-grid {
+        display: grid;
+        gap: 14px;
+        grid-template-columns: minmax(0, 200px) minmax(0, 1fr);
+        align-items: end;
+      }
       .detail-item {
         padding: 14px;
         border-radius: 18px;
@@ -382,7 +404,8 @@
         .metrics,
         .content,
         .detail-grid,
-        .media-grid {
+        .media-grid,
+        .quota-manager-grid {
           grid-template-columns: 1fr;
           display: grid;
         }
@@ -494,7 +517,7 @@
 
       <section class="chart-panel">
         <h2>关键耗时可视化</h2>
-        <p class="muted" style="margin-top: 8px;">展示当前页任务的首图返回、场景首图返回和任务完成耗时。横轴按创建时间排序，纵轴单位为秒。</p>
+        <p class="muted" style="margin-top: 8px;">展示当前页任务按每 6 小时分桶后的平均首图返回、平均场景首图返回和平均任务完成耗时。纵轴单位为秒。</p>
         <div id="chartWrap" class="chart-wrap">
           <div class="empty">正在准备图表...</div>
         </div>
@@ -552,6 +575,7 @@
         pageSize: 50,
         items: [],
         selectedJobId: null,
+        quotaGrantBusy: false,
       };
 
       const createdFromInput = document.getElementById("createdFromInput");
@@ -639,6 +663,46 @@
         return values.reduce(function (sum, value) { return sum + value; }, 0) / values.length;
       }
 
+      function bucketDateParts(value) {
+        const date = new Date(value);
+        if (Number.isNaN(date.getTime())) return null;
+        const formatter = new Intl.DateTimeFormat("en-CA", {
+          timeZone: "Asia/Shanghai",
+          year: "numeric",
+          month: "2-digit",
+          day: "2-digit",
+          hour: "2-digit",
+          hour12: false,
+          hourCycle: "h23",
+        });
+        const parts = formatter.formatToParts(date).reduce(function (result, part) {
+          if (part.type !== "literal") {
+            result[part.type] = part.value;
+          }
+          return result;
+        }, {});
+        return {
+          year: Number(parts.year),
+          month: Number(parts.month),
+          day: Number(parts.day),
+          hour: Number(parts.hour),
+        };
+      }
+
+      function bucketKeyForSixHours(value) {
+        const parts = bucketDateParts(value);
+        if (!parts) return null;
+        const bucketHour = Math.floor(parts.hour / 6) * 6;
+        const year = String(parts.year).padStart(4, "0");
+        const month = String(parts.month).padStart(2, "0");
+        const day = String(parts.day).padStart(2, "0");
+        const hour = String(bucketHour).padStart(2, "0");
+        return {
+          key: year + "-" + month + "-" + day + "T" + hour + ":00:00+08:00",
+          label: month + "/" + day + " " + hour + ":00",
+        };
+      }
+
       async function readJson(response) {
         try {
           return await response.json();
@@ -684,6 +748,54 @@
         };
       }
 
+      function selectedItem() {
+        return state.items.find(function (entry) {
+          return entry.job_id === state.selectedJobId;
+        }) || state.items[0] || null;
+      }
+
+      function syncUserQuotaAcrossItems(userId, quotaPayload) {
+        state.items = state.items.map(function (item) {
+          if (item.user_id !== userId) return item;
+          return {
+            ...item,
+            nickname: quotaPayload.nickname || item.nickname,
+            free_quota_total: quotaPayload.free_quota_total,
+            free_quota_used: quotaPayload.free_quota_used,
+            free_remaining: quotaPayload.free_remaining,
+            paid_remaining: quotaPayload.paid_remaining,
+            total_remaining: quotaPayload.total_remaining,
+          };
+        });
+      }
+
+      async function grantSelectedUserQuota() {
+        const item = selectedItem();
+        if (!item) return;
+        const input = document.getElementById("grantCountInput");
+        const count = Number(input ? input.value : "");
+        if (!Number.isFinite(count) || count <= 0) {
+          throw new Error("请输入大于 0 的补发次数。");
+        }
+        state.quotaGrantBusy = true;
+        renderDetail();
+        setStatus("正在为用户 " + item.user_id + " 补发次数...");
+        try {
+          const payload = await requestJson("/api/admin/users/" + item.user_id + "/quota/grant", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ count: Math.floor(count) }),
+          });
+          syncUserQuotaAcrossItems(item.user_id, payload);
+          renderTable();
+          renderDetail();
+          setStatus("已为用户 " + item.user_id + " 增加 " + Math.floor(count) + " 次，剩余 " + payload.total_remaining + " 次");
+        } finally {
+          state.quotaGrantBusy = false;
+          renderDetail();
+        }
+      }
+
       function renderTable() {
         if (!state.items.length) {
           tableBody.innerHTML = '<tr><td colspan="5"><div class="empty">当前筛选条件下没有任务记录。</div></td></tr>';
@@ -705,7 +817,7 @@
               <td>
                 <div class="row-title">
                   <strong>${escapeHtml(item.nickname)}</strong>
-                  <span class="row-sub">${escapeHtml(formatDuration(item.first_image_duration_seconds))} / ${escapeHtml(formatDuration(item.first_scene_duration_seconds))}</span>
+                  <span class="row-sub">剩余 ${escapeHtml(item.total_remaining)} 次 · ${escapeHtml(formatDuration(item.first_image_duration_seconds))} / ${escapeHtml(formatDuration(item.first_scene_duration_seconds))}</span>
                 </div>
               </td>
               <td>${escapeHtml(formatDateTime(item.created_at))}</td>
@@ -739,9 +851,7 @@
       }
 
       function renderDetail() {
-        const item = state.items.find(function (entry) {
-          return entry.job_id === state.selectedJobId;
-        }) || state.items[0] || null;
+        const item = selectedItem();
         if (!item) {
           detailRoot.innerHTML = '<div class="empty" style="margin-top: 16px;">请选择一条任务记录。</div>';
           selectedMetric.textContent = "-";
@@ -786,6 +896,9 @@
             <div class="detail-item"><strong>比例 / 分辨率</strong><code>${escapeHtml(item.aspect_ratio || "-")} / ${escapeHtml(item.resolution || "-")}</code></div>
             <div class="detail-item"><strong>完成场景数</strong><code>${escapeHtml(item.completed_scene_count)}</code></div>
             <div class="detail-item"><strong>用户 ID / OpenID</strong><code>${escapeHtml(item.user_id)} / ${escapeHtml(item.user_openid || "-")}</code></div>
+            <div class="detail-item"><strong>用户剩余总次数</strong><code>${escapeHtml(item.total_remaining)} 次</code></div>
+            <div class="detail-item"><strong>免费剩余 / 已用</strong><code>${escapeHtml(item.free_remaining)} / ${escapeHtml(item.free_quota_used)} （总免费 ${escapeHtml(item.free_quota_total)}）</code></div>
+            <div class="detail-item"><strong>补发 / 付费剩余</strong><code>${escapeHtml(item.paid_remaining)} 次</code></div>
             <div class="detail-item"><strong>上传 ID</strong><code>${escapeHtml(item.upload_id || "-")}</code></div>
             <div class="detail-item"><strong>媒体过期时间</strong><code>${escapeHtml(formatDateTime(item.media_expires_at))}</code></div>
             <div class="detail-item"><strong>错误码</strong><code>${escapeHtml(item.error_code || "-")}</code></div>
@@ -794,12 +907,39 @@
             <div class="detail-item"><strong>场景首图返回</strong><code>${escapeHtml(formatDateTime(item.first_scene_ready_at))} / ${escapeHtml(formatDuration(item.first_scene_duration_seconds))}</code></div>
             <div class="detail-item"><strong>任务完成</strong><code>${escapeHtml(formatDateTime(item.completed_at))} / ${escapeHtml(formatDuration(item.completed_duration_seconds))}</code></div>
           </div>
+          <section class="quota-manager">
+            <div class="quota-manager-head">
+              <div>
+                <h3>用户次数管理</h3>
+                <p class="muted">这里只补发额外可用次数，不改动免费总次数。当前用户还剩 ${escapeHtml(item.total_remaining)} 次。</p>
+              </div>
+              <span class="pill">用户 ${escapeHtml(item.user_id)} · ${escapeHtml(item.nickname)}</span>
+            </div>
+            <div class="quota-manager-grid">
+              <div class="field">
+                <label for="grantCountInput">补发次数</label>
+                <input id="grantCountInput" type="number" min="1" step="1" value="1" ${state.quotaGrantBusy ? "disabled" : ""} />
+              </div>
+              <div class="actions" style="margin-top: 0;">
+                <button id="grantQuotaBtn" class="btn-primary" type="button" ${state.quotaGrantBusy ? "disabled" : ""}>${state.quotaGrantBusy ? "正在补发..." : "给该用户加次数"}</button>
+              </div>
+            </div>
+          </section>
           <div class="media-grid">
             ${renderMediaBlock("原始上传图", item.upload_url, item.upload_path, item.upload_absolute_path, uploadFallback)}
             ${renderMediaBlock("发型预览图", item.hair_preview_url, item.hair_preview_path, item.hair_preview_absolute_path, hairFallback)}
             ${resultCards}
           </div>
         `;
+
+        const grantQuotaBtn = document.getElementById("grantQuotaBtn");
+        if (grantQuotaBtn) {
+          grantQuotaBtn.addEventListener("click", function () {
+            grantSelectedUserQuota().catch(function (error) {
+              setStatus(error.message || "补发次数失败");
+            });
+          });
+        }
       }
 
       function renderChart() {
@@ -824,13 +964,66 @@
           return;
         }
 
+        const bucketMap = new Map();
+        items.forEach(function (item) {
+          const bucket = bucketKeyForSixHours(item.created_at);
+          if (!bucket) return;
+          const record = bucketMap.get(bucket.key) || {
+            key: bucket.key,
+            label: bucket.label,
+            count: 0,
+            firstValues: [],
+            sceneValues: [],
+            completeValues: [],
+          };
+          record.count += 1;
+          const firstValue = Number(item.first_image_duration_seconds);
+          const sceneValue = Number(item.first_scene_duration_seconds);
+          const completeValue = Number(item.completed_duration_seconds);
+          if (Number.isFinite(firstValue) && firstValue >= 0) record.firstValues.push(firstValue);
+          if (Number.isFinite(sceneValue) && sceneValue >= 0) record.sceneValues.push(sceneValue);
+          if (Number.isFinite(completeValue) && completeValue >= 0) record.completeValues.push(completeValue);
+          bucketMap.set(bucket.key, record);
+        });
+
+        const points = Array.from(bucketMap.values())
+          .sort(function (left, right) {
+            return new Date(left.key).getTime() - new Date(right.key).getTime();
+          })
+          .map(function (bucket) {
+            return {
+              key: bucket.key,
+              label: bucket.label,
+              count: bucket.count,
+              first_image_duration_seconds: bucket.firstValues.length
+                ? bucket.firstValues.reduce(function (sum, value) { return sum + value; }, 0) / bucket.firstValues.length
+                : null,
+              first_scene_duration_seconds: bucket.sceneValues.length
+                ? bucket.sceneValues.reduce(function (sum, value) { return sum + value; }, 0) / bucket.sceneValues.length
+                : null,
+              completed_duration_seconds: bucket.completeValues.length
+                ? bucket.completeValues.reduce(function (sum, value) { return sum + value; }, 0) / bucket.completeValues.length
+                : null,
+            };
+          })
+          .filter(function (bucket) {
+            return Number.isFinite(bucket.first_image_duration_seconds)
+              || Number.isFinite(bucket.first_scene_duration_seconds)
+              || Number.isFinite(bucket.completed_duration_seconds);
+          });
+
+        if (!points.length) {
+          chartWrap.innerHTML = '<div class="empty">当前页还没有可用的 6 小时平均耗时数据。</div>';
+          return;
+        }
+
         const width = 1040;
         const height = 280;
         const padding = { top: 20, right: 26, bottom: 54, left: 48 };
         const plotWidth = width - padding.left - padding.right;
         const plotHeight = height - padding.top - padding.bottom;
         const values = [];
-        items.forEach(function (item) {
+        points.forEach(function (item) {
           ["first_image_duration_seconds", "first_scene_duration_seconds", "completed_duration_seconds"].forEach(function (key) {
             const value = Number(item[key]);
             if (Number.isFinite(value) && value >= 0) values.push(value);
@@ -839,8 +1032,8 @@
         const maxValue = Math.max.apply(null, values.concat([10]));
 
         function xFor(index) {
-          if (items.length === 1) return padding.left + plotWidth / 2;
-          return padding.left + (plotWidth * index) / (items.length - 1);
+          if (points.length === 1) return padding.left + plotWidth / 2;
+          return padding.left + (plotWidth * index) / (points.length - 1);
         }
 
         function yFor(value) {
@@ -850,7 +1043,7 @@
         function buildPath(key) {
           let started = false;
           let path = "";
-          items.forEach(function (item, index) {
+          points.forEach(function (item, index) {
             const value = Number(item[key]);
             if (!Number.isFinite(value)) return;
             const x = xFor(index);
@@ -871,20 +1064,23 @@
         }
 
         let pointHtml = "";
-        items.forEach(function (item, index) {
+        const labelEvery = Math.max(1, Math.ceil(points.length / 8));
+        points.forEach(function (item, index) {
           const x = xFor(index);
-          const label = formatDateTime(item.created_at).slice(5, 16) + " · " + item.nickname;
+          const label = item.label + " · " + item.count + " 条";
           [
-            { key: "first_image_duration_seconds", color: "#0d6b5f", title: "首图" },
-            { key: "first_scene_duration_seconds", color: "#b04332", title: "场景首图" },
-            { key: "completed_duration_seconds", color: "#a86a12", title: "完成" },
+            { key: "first_image_duration_seconds", color: "#0d6b5f", title: "首图平均" },
+            { key: "first_scene_duration_seconds", color: "#b04332", title: "场景首图平均" },
+            { key: "completed_duration_seconds", color: "#a86a12", title: "完成平均" },
           ].forEach(function (series) {
             const value = Number(item[series.key]);
             if (!Number.isFinite(value)) return;
             const y = yFor(value);
             pointHtml += '<circle cx="' + x.toFixed(2) + '" cy="' + y.toFixed(2) + '" r="4" fill="' + series.color + '"><title>' + escapeHtml(label + ' ' + series.title + ': ' + formatDuration(value)) + '</title></circle>';
           });
-          pointHtml += '<text x="' + x.toFixed(2) + '" y="' + (height - 16) + '" text-anchor="middle" fill="#6f6256" font-size="11">' + escapeHtml(item.nickname.slice(0, 4) || "用户") + '</text>';
+          if (index % labelEvery === 0 || index === points.length - 1) {
+            pointHtml += '<text x="' + x.toFixed(2) + '" y="' + (height - 16) + '" text-anchor="middle" fill="#6f6256" font-size="11">' + escapeHtml(item.label) + '</text>';
+          }
         });
 
         chartWrap.innerHTML = `
@@ -895,7 +1091,7 @@
             <path d="${buildPath("completed_duration_seconds")}" fill="none" stroke="#a86a12" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"></path>
             ${pointHtml}
           </svg>
-          <div class="chart-caption">当前页共 ${items.length} 条有耗时数据的任务。鼠标悬停圆点可查看单任务耗时。</div>
+          <div class="chart-caption">当前页共 ${items.length} 条有耗时数据的任务，聚合为 ${points.length} 个 6 小时时间桶。鼠标悬停圆点可查看该时间桶的平均耗时。</div>
         `;
       }
 
@@ -915,6 +1111,7 @@
         const payload = await requestJson("/api/admin/history?" + params.toString());
         state.total = payload.total;
         state.items = payload.items || [];
+        state.quotaGrantBusy = false;
         if (!state.items.find(function (item) { return item.job_id === state.selectedJobId; })) {
           state.selectedJobId = state.items[0] ? state.items[0].job_id : null;
         }

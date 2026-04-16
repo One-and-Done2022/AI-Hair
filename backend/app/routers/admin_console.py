@@ -17,6 +17,8 @@ from app.schemas import (
     AdminHistoryResponse,
     AdminSessionLoginRequest,
     AdminSessionResponse,
+    AdminUserQuotaGrantRequest,
+    AdminUserQuotaResponse,
 )
 from app.services import admin_auth, repository, retention, storage, templates
 
@@ -194,6 +196,13 @@ def _admin_history_item_response(request: Request, job: dict) -> AdminHistoryIte
         str(hair_color_selection.get("professional_hex_estimate") or "").strip() or None
     )
     result_dir_path = _result_dir_path(job["id"])
+    quota = repository._build_quota_snapshot(
+        {
+            "free_quota_total": job.get("user_free_quota_total"),
+            "free_quota_used": job.get("user_free_quota_used"),
+            "paid_quota_balance": job.get("user_paid_quota_balance"),
+        }
+    )
     return AdminHistoryItem(
         job_id=job["id"],
         user_id=int(job["user_id"]),
@@ -201,6 +210,11 @@ def _admin_history_item_response(request: Request, job: dict) -> AdminHistoryIte
             job["user_id"],
             job.get("user_nickname"),
         ),
+        free_quota_total=quota["free_quota_total"],
+        free_quota_used=quota["free_quota_used"],
+        free_remaining=quota["free_remaining"],
+        paid_remaining=quota["paid_remaining"],
+        total_remaining=quota["total_remaining"],
         status=job["status"],
         upload_url=upload_url,
         hair_preview_url=hair_preview_url,
@@ -272,6 +286,19 @@ def _admin_history_item_response(request: Request, job: dict) -> AdminHistoryIte
             job.get("created_at"),
             completed_at,
         ),
+    )
+
+
+def _admin_user_quota_response(summary: dict) -> AdminUserQuotaResponse:
+    return AdminUserQuotaResponse(
+        user_id=int(summary["user_id"]),
+        nickname=str(summary.get("nickname") or ""),
+        free_quota_total=int(summary.get("free_quota_total") or 0),
+        free_quota_used=int(summary.get("free_quota_used") or 0),
+        free_remaining=int(summary.get("free_remaining") or 0),
+        paid_remaining=int(summary.get("paid_remaining") or 0),
+        total_remaining=int(summary.get("total_remaining") or 0),
+        created_at=str(summary.get("created_at") or ""),
     )
 
 
@@ -401,6 +428,34 @@ def get_admin_history(
             for job in query_result["items"]
         ],
     )
+
+
+@router.post(
+    "/api/admin/users/{user_id}/quota/grant",
+    response_model=AdminUserQuotaResponse,
+)
+def grant_admin_user_quota(
+    user_id: int,
+    payload: AdminUserQuotaGrantRequest,
+    current_admin: dict = Depends(get_current_admin),
+) -> AdminUserQuotaResponse:
+    del current_admin
+    try:
+        summary = repository.grant_user_paid_quota(user_id, payload.count)
+    except ValueError as exc:
+        message = str(exc)
+        if message == "grant_count_must_be_positive":
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="补发次数必须大于 0。",
+            ) from exc
+        if message.startswith("User not found:"):
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="用户不存在。",
+            ) from exc
+        raise
+    return _admin_user_quota_response(summary)
 
 
 @router.get("/api/admin/feedback", response_model=AdminFeedbackResponse)

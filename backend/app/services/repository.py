@@ -199,6 +199,31 @@ def update_user_nickname(user_id: int, nickname: str | None) -> dict | None:
     return get_user(user_id)
 
 
+def grant_user_paid_quota(user_id: int, count: int) -> dict:
+    normalized_count = _normalize_quota_int(count, 0)
+    if normalized_count <= 0:
+        raise ValueError("grant_count_must_be_positive")
+
+    with session_scope() as session:
+        user_row = session.execute(
+            select(users).where(users.c.id == user_id)
+        ).mappings().one_or_none()
+        if user_row is None:
+            raise ValueError(f"User not found: {user_id}")
+
+        current_balance = _normalize_quota_int(user_row.get("paid_quota_balance"), 0)
+        session.execute(
+            update(users)
+            .where(users.c.id == user_id)
+            .values(paid_quota_balance=current_balance + normalized_count)
+        )
+
+    summary = get_user_profile_summary(user_id)
+    if not summary:
+        raise ValueError(f"User not found: {user_id}")
+    return summary
+
+
 def create_auth_token(user_id: int) -> str:
     settings = get_settings()
     token = secrets.token_urlsafe(32)
@@ -445,6 +470,9 @@ def list_admin_jobs(
             jobs,
             users.c.nickname.label("user_nickname"),
             users.c.openid.label("user_openid"),
+            users.c.free_quota_total.label("user_free_quota_total"),
+            users.c.free_quota_used.label("user_free_quota_used"),
+            users.c.paid_quota_balance.label("user_paid_quota_balance"),
             uploads.c.original_name.label("upload_original_name"),
             uploads.c.stored_path.label("upload_stored_path"),
             uploads.c.mime_type.label("upload_mime_type"),
