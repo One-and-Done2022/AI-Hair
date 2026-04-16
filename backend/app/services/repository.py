@@ -391,6 +391,18 @@ def get_job(job_id: str) -> dict | None:
         return _mapping_to_dict(row)
 
 
+def list_jobs_by_ids(job_ids: list[str]) -> list[dict]:
+    normalized_ids = [str(job_id).strip() for job_id in job_ids if str(job_id).strip()]
+    if not normalized_ids:
+        return []
+    with session_scope() as session:
+        rows = session.execute(
+            select(jobs).where(jobs.c.id.in_(normalized_ids))
+        ).mappings().all()
+    row_map = {str(row["id"]): dict(row) for row in rows}
+    return [row_map[job_id] for job_id in normalized_ids if job_id in row_map]
+
+
 def get_job_for_user(job_id: str, user_id: int) -> dict | None:
     with session_scope() as session:
         row = session.execute(
@@ -410,6 +422,65 @@ def list_jobs_for_user(user_id: int) -> list[dict]:
             select(jobs)
             .where(jobs.c.user_id == user_id)
             .order_by(jobs.c.created_at.desc())
+        ).mappings().all()
+        return [dict(row) for row in rows]
+
+
+def _non_internal_user_filter():
+    return and_(
+        not_(users.c.openid.like("dev\\_%", escape="\\")),
+        not_(users.c.openid.like("provider-admin-%")),
+    )
+
+
+def get_shared_showcase_source_user_id() -> int | None:
+    primary_filters = and_(
+        jobs.c.status == "succeeded",
+        users.c.openid.like("og%"),
+    )
+    fallback_filters = and_(
+        jobs.c.status == "succeeded",
+        _non_internal_user_filter(),
+    )
+
+    with session_scope() as session:
+        base_statement = (
+            select(users.c.id)
+            .select_from(users.join(jobs, jobs.c.user_id == users.c.id))
+            .group_by(users.c.id)
+            .order_by(
+                func.count(jobs.c.id).desc(),
+                func.max(jobs.c.created_at).desc(),
+                users.c.id.desc(),
+            )
+            .limit(1)
+        )
+        row = session.execute(base_statement.where(primary_filters)).first()
+        if row is not None:
+            return int(row[0])
+
+        fallback_row = session.execute(base_statement.where(fallback_filters)).first()
+        if fallback_row is None:
+            return None
+        return int(fallback_row[0])
+
+
+def list_shared_showcase_jobs(*, limit: int = 48) -> list[dict]:
+    source_user_id = get_shared_showcase_source_user_id()
+    if source_user_id is None:
+        return []
+
+    with session_scope() as session:
+        rows = session.execute(
+            select(jobs)
+            .where(
+                and_(
+                    jobs.c.user_id == source_user_id,
+                    jobs.c.status == "succeeded",
+                )
+            )
+            .order_by(jobs.c.created_at.desc())
+            .limit(max(1, limit))
         ).mappings().all()
         return [dict(row) for row in rows]
 
@@ -1014,20 +1085,22 @@ def list_expired_uploads(cutoff_iso: str) -> list[dict]:
         return [dict(row) for row in rows]
 
 
-def list_expired_jobs_with_media(cutoff_iso: str) -> list[dict]:
+def list_expired_jobs_with_media(cutoff_iso: str, *, exclude_job_ids: list[str] | None = None) -> list[dict]:
+    excluded_ids = [str(job_id).strip() for job_id in (exclude_job_ids or []) if str(job_id).strip()]
     with session_scope() as session:
-        rows = session.execute(
-            select(jobs).where(
-                and_(
-                    jobs.c.created_at < cutoff_iso,
-                    jobs.c.status.in_((*TERMINAL_JOB_STATUSES, "preview_ready")),
-                    or_(
-                        jobs.c.result_path.is_not(None),
-                        jobs.c.status == "preview_ready",
-                    ),
-                )
+        statement = select(jobs).where(
+            and_(
+                jobs.c.created_at < cutoff_iso,
+                jobs.c.status.in_((*TERMINAL_JOB_STATUSES, "preview_ready")),
+                or_(
+                    jobs.c.result_path.is_not(None),
+                    jobs.c.status == "preview_ready",
+                ),
             )
-        ).mappings().all()
+        )
+        if excluded_ids:
+            statement = statement.where(not_(jobs.c.id.in_(excluded_ids)))
+        rows = session.execute(statement).mappings().all()
         return [dict(row) for row in rows]
 
 

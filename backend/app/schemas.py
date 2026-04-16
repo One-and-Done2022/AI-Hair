@@ -111,18 +111,34 @@ class TemplateCatalogResponse(BaseModel):
 
 class ShowcaseItem(BaseModel):
     id: str
+    job_id: str | None = None
     title: str
     summary: str
     cover_url: str
     hairstyle_id: str
     hairstyle_name: str
     hairstyle_cover_url: str
+    preset_id: str | None = None
+    preset_name: str | None = None
     scene_id: str
     scene_name: str
     scene_cover_url: str
     generator_backend: str
     aspect_ratio: str
     resolution: str | None = None
+    hair_color_selection_mode: str | None = None
+    hair_color_tone: str | None = None
+    hair_color_tone_label: str | None = None
+    hair_color_technique: str | None = None
+    hair_color_technique_label: str | None = None
+    hair_color_professional_id: str | None = None
+    hair_color_professional_brand: str | None = None
+    hair_color_professional_series: str | None = None
+    hair_color_professional_series_label: str | None = None
+    hair_color_professional_code: str | None = None
+    hair_color_professional_note: str | None = None
+    hair_color_professional_hex_estimate: str | None = None
+    created_at: str | None = None
 
 
 class ShowcaseResponse(BaseModel):

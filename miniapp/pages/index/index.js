@@ -109,11 +109,11 @@ function buildFixedShowcases(items, draft = {}) {
       const isActive = isActiveShowcase(item, draft);
       return {
         id: item.id,
-        title: item.title || item.hairstyle_name || "精选模板",
-        summary: item.summary || "服务端固定精选模板，可一键套用",
+        title: item.title || item.hairstyle_name || "精选示例",
+        summary: item.summary || "服务端固定保留的历史成片，可一键套用",
         cover_url: item.cover_url || item.scene_cover_url || "",
         hairstyle_name: item.hairstyle_name || "",
-        scene_name: item.scene_name || "场景模板",
+        scene_name: item.scene_name || "场景示例",
         hairstyle_id: item.hairstyle_id || "",
         preset_id: item.preset_id || "",
         generator_backend: item.generator_backend || "",

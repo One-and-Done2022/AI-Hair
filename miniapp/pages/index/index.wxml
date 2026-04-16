@@ -8,8 +8,8 @@
 
   <view wx:if="{{showcases.length}}" class="showcase-section">
     <view class="section-row">
-      <view class="section-title">精选模板</view>
-      <view class="section-note">服务端固定精选模板，所有内测用户都可见并可一键套用</view>
+      <view class="section-title">精选示例</view>
+      <view class="section-note">服务端固定保留的历史成片，所有内测用户都可见并可一键套用</view>
     </view>
     <view class="showcase-grid">
       <view
@@ -19,7 +19,7 @@
         bindtap="applyShowcaseTemplate"
         data-id="{{item.id}}"
       >
-        <view class="showcase-badge">精选模板</view>
+        <view class="showcase-badge">精选示例</view>
         <view wx:if="{{item.is_active}}" class="showcase-state-pill">当前已套用</view>
         <image class="showcase-cover" src="{{item.cover_url}}" mode="aspectFill" lazy-load="true"></image>
         <view class="showcase-body">

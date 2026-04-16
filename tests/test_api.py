@@ -3667,6 +3667,158 @@ def test_showcases_endpoint_returns_curated_examples(tmp_path, monkeypatch):
     assert payload["items"][0]["cover_url"]
     assert payload["items"][0]["hairstyle_cover_url"]
     assert payload["items"][0]["scene_cover_url"]
+    assert payload["items"][0]["job_id"] is None
+
+
+def test_showcases_endpoint_prefers_shared_history_scene_images(tmp_path, monkeypatch):
+    _configure_runtime_env(tmp_path, monkeypatch, use_mock_generator="true")
+    _clear_runtime_caches()
+
+    from app.config import get_settings
+    from app.db import init_db
+    from app.main import create_app
+    from app.services import repository, storage, templates
+
+    settings = get_settings()
+    settings.ensure_directories()
+    init_db()
+
+    user = repository.get_or_create_user("og-curated-user")
+    source_bytes = _build_colored_image("#8ecae6")
+    upload_path = storage.save_upload_file(source_bytes, ".png")
+    upload = repository.create_upload(
+        user_id=user["id"],
+        original_name="showcase-source.png",
+        stored_path=upload_path,
+        mime_type="image/png",
+        file_size=len(source_bytes),
+        width=768,
+        height=1024,
+    )
+    hairstyle = templates.resolve_male_hairstyle_preset("male-preset-male-messy-forward-spike-mod-messy-texture")
+    scene = templates.get_scene("walnut-study-portrait")
+    assert hairstyle is not None
+    assert scene is not None
+    prompt = templates.build_job_prompt_payload(
+        hairstyle,
+        scene,
+        generator_backend="premium",
+        aspect_ratio="3:4",
+        resolution="2K",
+        hair_color_tone_id="honey_brown",
+        hair_color_technique_id="solid",
+        seed_source="showcase-history-test",
+    )
+    job = repository.create_job(
+        user_id=user["id"],
+        upload_id=upload["id"],
+        hairstyle_id=hairstyle["resolved_hairstyle_id"],
+        scene_id=scene["id"],
+        prompt=prompt,
+        model_name="showcase-test-model",
+    )
+    storage.save_hair_preview_result(job["id"], _build_colored_image("#264653"))
+    result_path = storage.save_scene_result(job["id"], _build_colored_image("#2a9d8f"), index=1)
+    storage.save_scene_result(job["id"], _build_colored_image("#e76f51"), index=2)
+    repository.update_job_status(
+        job["id"],
+        status="succeeded",
+        result_path=result_path,
+    )
+
+    monkeypatch.setattr(
+        templates,
+        "get_fixed_showcase_jobs",
+        lambda: [
+            {
+                "job_id": job["id"],
+                "title": "固定精选示例",
+                "summary": "固定历史成片",
+            }
+        ],
+    )
+
+    app = create_app()
+    with TestClient(app) as client:
+        response = client.get("/api/templates/showcases")
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["items"]
+    first_item = payload["items"][0]
+    assert first_item["job_id"] == job["id"]
+    assert f"/media/results/{job['id']}/scene-1" in first_item["cover_url"]
+    assert first_item["scene_cover_url"] != first_item["cover_url"]
+    assert first_item["preset_id"] == "male-preset-male-messy-forward-spike-mod-messy-texture"
+    assert first_item["scene_id"] == "walnut-study-portrait"
+    assert first_item["hair_color_tone"] == "honey_brown"
+    assert first_item["hair_color_technique"] == "solid"
+    assert first_item["title"] == "固定精选示例"
+    assert first_item["summary"] == "固定历史成片"
+
+
+def test_retention_keeps_fixed_showcase_job_media(tmp_path, monkeypatch):
+    _configure_runtime_env(tmp_path, monkeypatch, use_mock_generator="true")
+    _clear_runtime_caches()
+
+    from app.config import get_settings
+    from app.db import init_db, jobs as jobs_table, session_scope
+    from app.services import repository, retention, storage, templates
+
+    settings = get_settings()
+    settings.ensure_directories()
+    init_db()
+
+    user = repository.get_or_create_user("og-fixed-showcase-user")
+    source_bytes = _build_colored_image("#8ecae6")
+    upload_path = storage.save_upload_file(source_bytes, ".png")
+    upload = repository.create_upload(
+        user_id=user["id"],
+        original_name="fixed-showcase-source.png",
+        stored_path=upload_path,
+        mime_type="image/png",
+        file_size=len(source_bytes),
+        width=768,
+        height=1024,
+    )
+    job = repository.create_job(
+        user_id=user["id"],
+        upload_id=upload["id"],
+        hairstyle_id="male-forward-spikes",
+        scene_id="walnut-study-portrait",
+        prompt="{}",
+        model_name="retention-test-model",
+    )
+    result_path = storage.save_scene_result(job["id"], _build_colored_image("#2a9d8f"), index=1)
+    repository.update_job_status(job["id"], status="succeeded", result_path=result_path)
+    scene_path = settings.storage_dir / f"results/{job['id']}/scene-1.png"
+    assert scene_path.exists()
+
+    expired_created_at = (
+        datetime.now(timezone.utc) - timedelta(days=30)
+    ).replace(microsecond=0).isoformat()
+    with session_scope() as session:
+        session.execute(
+            update(jobs_table)
+            .where(jobs_table.c.id == job["id"])
+            .values(created_at=expired_created_at, updated_at=expired_created_at)
+        )
+
+    monkeypatch.setattr(
+        templates,
+        "get_fixed_showcase_job_ids",
+        lambda: [job["id"]],
+    )
+    monkeypatch.setattr(
+        templates,
+        "get_fixed_showcase_jobs",
+        lambda: [{"job_id": job["id"], "title": "", "summary": ""}],
+    )
+
+    result = retention.purge_expired_media(force=True)
+
+    assert result["jobs"] == 0
+    assert scene_path.exists()
 
 
 def test_scene_understanding_endpoint_returns_blocks_and_scene_draft(tmp_path, monkeypatch):

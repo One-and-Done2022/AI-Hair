@@ -5,7 +5,7 @@ from threading import Lock
 from time import monotonic
 
 from app.config import get_settings
-from app.services import repository, storage
+from app.services import repository, storage, templates
 
 
 _cleanup_lock = Lock()
@@ -53,7 +53,10 @@ def purge_expired_media(*, force: bool = False, min_interval_seconds: int = 1800
         ).isoformat()
 
         expired_uploads = repository.list_expired_uploads(cutoff)
-        expired_jobs = repository.list_expired_jobs_with_media(cutoff)
+        expired_jobs = repository.list_expired_jobs_with_media(
+            cutoff,
+            exclude_job_ids=templates.get_fixed_showcase_job_ids(),
+        )
 
         purged_uploads = 0
         purged_jobs = 0

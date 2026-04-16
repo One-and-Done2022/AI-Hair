@@ -49,6 +49,7 @@ DEFAULT_RESOLUTION = "2K"
 DEFAULT_HAIR_COLOR_TONE = "natural_black"
 DEFAULT_HAIR_COLOR_TECHNIQUE = "solid"
 PROFESSIONAL_HAIR_COLOR_DATA_FILE = "hair_color_professional_solutor.json"
+FIXED_SHOWCASE_JOBS_FILE = "fixed_showcase_jobs.json"
 
 GENERATOR_BACKEND_CAPABILITIES = {
     "premium": {
@@ -548,6 +549,59 @@ def get_generation_backend_catalog() -> list[dict]:
 
 def get_curated_showcases() -> list[dict]:
     return [dict(item) for item in CURATED_SHOWCASES]
+
+
+@lru_cache(maxsize=1)
+def get_fixed_showcase_jobs() -> list[dict]:
+    file_path = DATA_DIR / FIXED_SHOWCASE_JOBS_FILE
+    if not file_path.exists():
+        return []
+    try:
+        payload = json.loads(file_path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError:
+        return []
+    if not isinstance(payload, list):
+        return []
+    items: list[dict] = []
+    for raw in payload:
+        if not isinstance(raw, dict):
+            continue
+        job_id = str(raw.get("job_id") or "").strip()
+        if not job_id:
+            continue
+        items.append(
+            {
+                "job_id": job_id,
+                "title": str(raw.get("title") or "").strip(),
+                "summary": str(raw.get("summary") or "").strip(),
+            }
+        )
+    return items
+
+
+def get_fixed_showcase_job_ids() -> list[str]:
+    return [item["job_id"] for item in get_fixed_showcase_jobs() if item.get("job_id")]
+
+
+def find_curated_showcase_descriptor(
+    *,
+    preset_id: str | None = None,
+    hairstyle_id: str | None = None,
+    scene_id: str | None = None,
+) -> dict | None:
+    normalized_preset_id = str(preset_id or "").strip()
+    normalized_hairstyle_id = str(hairstyle_id or "").strip()
+    normalized_scene_id = str(scene_id or "").strip()
+    if not normalized_scene_id:
+        return None
+    for item in CURATED_SHOWCASES:
+        if str(item.get("scene_id") or "").strip() != normalized_scene_id:
+            continue
+        if normalized_preset_id and str(item.get("preset_id") or "").strip() == normalized_preset_id:
+            return dict(item)
+        if normalized_hairstyle_id and str(item.get("hairstyle_id") or "").strip() == normalized_hairstyle_id:
+            return dict(item)
+    return None
 
 
 def _load_json(name: str) -> list[dict]:
