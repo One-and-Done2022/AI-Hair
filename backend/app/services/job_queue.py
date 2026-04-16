@@ -102,7 +102,16 @@ class JobWorker:
                 continue
 
             try:
-                self._process(lease.job_id)
+                try:
+                    self._process(lease.job_id)
+                except Exception as exc:  # pragma: no cover - safety net for live worker
+                    logger.exception("Unhandled job worker error for job %s", lease.job_id)
+                    repository.update_job_status(
+                        lease.job_id,
+                        status="failed",
+                        error_code="worker_exception",
+                        error_message=str(exc)[:500] or "Unexpected worker error.",
+                    )
             finally:
                 self.job_queue.ack(lease)
 

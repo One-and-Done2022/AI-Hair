@@ -105,6 +105,14 @@ def create_job(
     upload = repository.get_upload(payload.upload_id)
     if upload is None or upload["user_id"] != current_user["id"]:
         raise HTTPException(status_code=404, detail="Upload not found.")
+    if not str(upload.get("stored_path") or "").strip():
+        raise HTTPException(
+            status_code=400,
+            detail={
+                "code": "upload_expired",
+                "message": "上传图片已失效，请重新上传照片。",
+            },
+        )
 
     selected_hairstyle_id = payload.preset_id or payload.hairstyle_id
     if not selected_hairstyle_id:
@@ -133,15 +141,14 @@ def create_job(
             for item in templates.get_generation_backend_catalog()
         ):
             raise ValueError("Selected generation plan is not currently available.")
+        try:
+            upload_bytes = storage.read_file_bytes(upload["stored_path"])
+        except OSError as exc:
+            raise ValueError("上传图片已失效，请重新上传照片。") from exc
         detected_hair_color_tone_id = None
-        if upload.get("stored_path"):
-            try:
-                upload_bytes = storage.read_file_bytes(upload["stored_path"])
-                detected_hair_color = hair_color.estimate_hair_color(upload_bytes)
-                if detected_hair_color is not None:
-                    detected_hair_color_tone_id = detected_hair_color.tone_id
-            except OSError:
-                detected_hair_color_tone_id = None
+        detected_hair_color = hair_color.estimate_hair_color(upload_bytes)
+        if detected_hair_color is not None:
+            detected_hair_color_tone_id = detected_hair_color.tone_id
         prompt = templates.build_job_prompt_payload(
             hairstyle,
             scene,

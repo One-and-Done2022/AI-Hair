@@ -95,9 +95,13 @@ function buildRecommendedScenes(recommendation, catalog, selectedScene) {
       if (!full) {
         return null;
       }
+      const reason = (item.reasons || [])[0] || "";
+      const displayDescription = full.description || reason;
       return {
         ...full,
-        reason: (item.reasons || [])[0] || "",
+        reason,
+        displayDescription,
+        reasonNote: displayDescription === reason ? "" : reason,
         selected: !!selectedScene && selectedScene.id === full.id,
         selectedClass:
           !!selectedScene && selectedScene.id === full.id ? "selected" : "",

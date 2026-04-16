@@ -1222,6 +1222,48 @@ def test_job_accepts_extended_output_options(tmp_path, monkeypatch):
         assert payload["hair_color_professional_id"] is None
 
 
+def test_job_rejects_expired_upload_before_queue(tmp_path, monkeypatch):
+    app = _build_app(tmp_path, monkeypatch)
+
+    with TestClient(app) as client:
+        login = client.post("/api/auth/wechat/login", json={"code": "dev-test"})
+        token = login.json()["token"]
+        headers = {"Authorization": f"Bearer {token}"}
+
+        upload = client.post(
+            "/api/uploads",
+            headers=headers,
+            files={"file": ("portrait.png", _build_test_image(), "image/png")},
+        )
+        upload_id = upload.json()["upload_id"]
+
+        from app.db import session_scope, uploads
+
+        with session_scope() as session:
+            session.execute(
+                update(uploads)
+                .where(uploads.c.id == upload_id)
+                .values(stored_path="")
+            )
+
+        catalog = client.get("/api/templates").json()
+        job_create = client.post(
+            "/api/jobs",
+            headers=headers,
+            json={
+                "upload_id": upload_id,
+                "hairstyle_id": catalog["hairstyles"][0]["id"],
+                "scene_id": catalog["scenes"][0]["id"],
+                "generator_backend": "premium",
+            },
+        )
+
+        assert job_create.status_code == 400
+        detail = job_create.json()["detail"]
+        assert detail["code"] == "upload_expired"
+        assert "重新上传照片" in detail["message"]
+
+
 def test_job_accepts_professional_hair_color_mapping(tmp_path, monkeypatch):
     app = _build_app(tmp_path, monkeypatch)
 
@@ -1258,6 +1300,70 @@ def test_job_accepts_professional_hair_color_mapping(tmp_path, monkeypatch):
         assert payload["hair_color_professional_series_label"] == "烟熏冷雾系列"
     assert payload["hair_color_professional_code"] == "5/72"
     assert payload["hair_color_professional_note"] == "偏灰棕、轻烟熏、低饱和冷雾感"
+
+
+def test_worker_marks_unhandled_pre_generation_error_as_failed(tmp_path, monkeypatch):
+    app = _build_app(tmp_path, monkeypatch)
+
+    with TestClient(app) as client:
+        login = client.post("/api/auth/wechat/login", json={"code": "dev-test"})
+        token = login.json()["token"]
+        user_id = login.json()["user_id"]
+        headers = {"Authorization": f"Bearer {token}"}
+
+        upload = client.post(
+            "/api/uploads",
+            headers=headers,
+            files={"file": ("portrait.png", _build_test_image(), "image/png")},
+        )
+        upload_id = upload.json()["upload_id"]
+        catalog = client.get("/api/templates").json()
+
+        from app.db import session_scope, uploads
+        from app.services import repository, templates
+
+        with session_scope() as session:
+            session.execute(
+                update(uploads)
+                .where(uploads.c.id == upload_id)
+                .values(stored_path="")
+            )
+
+        hairstyle = templates.get_hairstyle(catalog["hairstyles"][0]["id"])
+        scene = templates.get_scene(catalog["scenes"][0]["id"])
+        assert hairstyle is not None
+        assert scene is not None
+
+        prompt = templates.build_job_prompt_payload(
+            hairstyle,
+            scene,
+            generator_backend="premium",
+            aspect_ratio="3:4",
+            resolution="2K",
+        )
+        job = repository.create_job(
+            user_id=user_id,
+            upload_id=upload_id,
+            hairstyle_id=hairstyle["id"],
+            scene_id=scene["id"],
+            prompt=prompt,
+            model_name="nano_banana_pro+doubao-seedream-4-5-251128",
+        )
+
+        client.app.state.job_worker.enqueue(job["id"])
+
+        final_payload = None
+        for _ in range(30):
+            final_payload = repository.get_job(job["id"])
+            assert final_payload is not None
+            if final_payload["status"] == "failed":
+                break
+            time.sleep(0.1)
+
+        assert final_payload is not None
+        assert final_payload["status"] == "failed"
+        assert final_payload["error_code"] == "worker_exception"
+        assert final_payload["error_message"]
 
 
 def test_generation_quota_and_purchase_flow(tmp_path, monkeypatch):

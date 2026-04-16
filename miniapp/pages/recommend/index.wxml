@@ -45,31 +45,34 @@
         </view>
       </view>
       <view wx:if="{{!recommendedHairstyles.length}}" class="empty-copy">暂无发型推荐</view>
-      <view
-        wx:for="{{recommendedHairstyles}}"
-        wx:key="id"
-        class="recommend-row {{item.selectedClass}}"
-        data-id="{{item.id}}"
-        bindtap="applyRecommendedHairstyle"
-      >
-        <view class="recommend-cover-shell">
-          <image
-            wx:if="{{item.cover_url}}"
-            class="recommend-cover recommend-cover-hair"
-            src="{{item.cover_url}}"
-            mode="aspectFit"
-            catchtap="previewRecommendedHairstyle"
-            data-id="{{item.id}}"
-          ></image>
-          <view class="preview-pill preview-pill-top" catchtap="previewRecommendedHairstyle" data-id="{{item.id}}">预览全图</view>
-        </view>
-        <view class="recommend-row-body">
-          <view class="recommend-name">{{item.name}}</view>
-          <view class="recommend-reason">{{item.reason}}</view>
-          <view class="recommend-action-row">
-            <view class="recommend-preview-tip">点图片看全貌，点卡片应用</view>
-            <view class="recommend-action">{{item.actionText}}</view>
+      <view class="template-grid">
+        <view
+          wx:for="{{recommendedHairstyles}}"
+          wx:key="id"
+          class="template-tile {{item.selectedClass}}"
+          data-id="{{item.id}}"
+          bindtap="applyRecommendedHairstyle"
+        >
+          <view class="tile-cover-shell">
+            <image
+              wx:if="{{item.cover_url}}"
+              class="tile-cover tile-cover-hair"
+              src="{{item.cover_url}}"
+              mode="aspectFill"
+              lazy-load="true"
+              catchtap="previewRecommendedHairstyle"
+              data-id="{{item.id}}"
+            ></image>
+            <view class="preview-pill" catchtap="previewRecommendedHairstyle" data-id="{{item.id}}">预览</view>
+            <view class="selection-indicator {{item.selected ? 'active' : ''}}">✓</view>
           </view>
+          <view class="tile-name">{{item.name}}</view>
+          <view class="tile-chip-row">
+            <view wx:if="{{item.category_label}}" class="tile-chip tile-chip-highlight">{{item.category_label}}</view>
+            <view wx:if="{{item.style_line_label}}" class="tile-chip">{{item.style_line_label}}</view>
+          </view>
+          <view wx:if="{{item.reason}}" class="recommend-tile-reason">{{item.reason}}</view>
+          <view class="recommend-tile-action">{{item.actionText}}</view>
         </view>
       </view>
     </view>
@@ -79,30 +82,36 @@
         <view class="section-title">推荐场景</view>
       </view>
       <view wx:if="{{!recommendedScenes.length}}" class="empty-copy">暂无场景推荐</view>
-      <view
-        wx:for="{{recommendedScenes}}"
-        wx:key="id"
-        class="scene-row {{item.selectedClass}}"
-        data-id="{{item.id}}"
-        bindtap="applyRecommendedScene"
-      >
-        <view class="recommend-cover-shell">
-          <image
-            wx:if="{{item.cover_url}}"
-            class="scene-cover"
-            src="{{item.cover_url}}"
-            mode="aspectFit"
-            catchtap="previewRecommendedScene"
-            data-id="{{item.id}}"
-          ></image>
-          <view class="preview-pill preview-pill-top" catchtap="previewRecommendedScene" data-id="{{item.id}}">预览全图</view>
-        </view>
-        <view class="scene-row-body">
-          <view class="scene-name">{{item.name}}</view>
-          <view class="scene-reason">{{item.reason}}</view>
-          <view class="recommend-action-row">
-            <view class="recommend-preview-tip">点图片看全貌，点卡片应用</view>
-            <view class="scene-action">{{item.actionText}}</view>
+      <view class="scene-list">
+        <view
+          wx:for="{{recommendedScenes}}"
+          wx:key="id"
+          class="scene-card {{item.selectedClass}}"
+          data-id="{{item.id}}"
+          bindtap="applyRecommendedScene"
+        >
+          <view class="scene-cover-shell">
+            <image
+              wx:if="{{item.cover_url}}"
+              class="scene-cover"
+              src="{{item.cover_url}}"
+              mode="aspectFill"
+              lazy-load="true"
+              catchtap="previewRecommendedScene"
+              data-id="{{item.id}}"
+            ></image>
+            <view class="preview-pill" catchtap="previewRecommendedScene" data-id="{{item.id}}">预览</view>
+            <view class="scene-check {{item.selected ? 'active' : ''}}">✓</view>
+          </view>
+          <view class="scene-body">
+            <view class="scene-name">{{item.name}}</view>
+            <view class="scene-desc">{{item.displayDescription}}</view>
+            <view wx:if="{{item.reasonNote}}" class="scene-reason-note">{{item.reasonNote}}</view>
+            <view class="scene-chip-row">
+              <view wx:if="{{item.style_line_label}}" class="scene-chip">{{item.style_line_label}}</view>
+              <view wx:if="{{item.primaryTag}}" class="scene-chip">{{item.primaryTag}}</view>
+              <view class="scene-chip scene-chip-accent">{{item.actionText}}</view>
+            </view>
           </view>
         </view>
       </view>

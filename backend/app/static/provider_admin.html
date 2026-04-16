@@ -110,6 +110,24 @@
         background: var(--accent-soft);
         color: var(--accent);
       }
+      .btn-loading {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .btn-loading::before {
+        content: "";
+        width: 12px;
+        height: 12px;
+        border-radius: 999px;
+        border: 2px solid currentColor;
+        border-right-color: transparent;
+        animation: spin 0.85s linear infinite;
+      }
+      .pill-busy {
+        background: rgba(13, 107, 95, 0.12);
+        color: var(--accent);
+      }
       button:disabled {
         opacity: 0.55;
         cursor: not-allowed;
@@ -280,6 +298,10 @@
         text-align: center;
         background: rgba(255, 255, 255, 0.28);
       }
+      @keyframes spin {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+      }
       @media (max-width: 1180px) {
         .toolbar-grid,
         .summary-grid,
@@ -366,6 +388,7 @@
       const state = {
         session: null,
         data: null,
+        activeEntryTests: new Set(),
       };
 
       const promptInput = document.getElementById("promptInput");
@@ -404,6 +427,17 @@
 
       function setStatus(text) {
         statusMetaEl.textContent = "状态: " + text;
+        statusMetaEl.classList.remove("pill-busy");
+      }
+
+      function setBusyStatus(text) {
+        statusMetaEl.textContent = "状态: " + text;
+        statusMetaEl.classList.add("pill-busy");
+      }
+
+      function clearBusyStatus(text) {
+        statusMetaEl.textContent = "状态: " + text;
+        statusMetaEl.classList.remove("pill-busy");
       }
 
       async function readJson(response) {
@@ -510,6 +544,14 @@
         }) || null;
       }
 
+      function buildEntryTestKey(providerId, entryId) {
+        return providerId + ":" + entryId;
+      }
+
+      function isEntryTesting(providerId, entryId) {
+        return state.activeEntryTests.has(buildEntryTestKey(providerId, entryId));
+      }
+
       function moveEntry(providerId, entryId, offset) {
         const provider = getProvider(providerId);
         if (!provider || provider.supports_reorder === false) return;
@@ -575,25 +617,36 @@
       }
 
       async function runEntryTest(providerId, entryId) {
-        setStatus("正在测试 " + providerId + "." + entryId + " ...");
-        const payload = await request("/api/provider-admin/providers/" + providerId + "/entries/" + entryId + "/test", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            entry_id: entryId,
-            prompt: promptInput.value.trim(),
-            aspect_ratio: aspectInput.value,
-            resolution: resolutionInput.value,
-          }),
-        });
-        const provider = getProvider(providerId);
-        if (provider) {
-          provider.entries = provider.entries.map(function (entry) {
-            return entry.entry_id === entryId ? { ...entry, last_test: payload } : entry;
-          });
-        }
+        const entryKey = buildEntryTestKey(providerId, entryId);
+        state.activeEntryTests.add(entryKey);
+        setBusyStatus("正在测试 " + providerId + "." + entryId + " ...");
         render();
-        setStatus(providerId + "." + entryId + " 测试完成");
+        try {
+          const payload = await request("/api/provider-admin/providers/" + providerId + "/entries/" + entryId + "/test", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              entry_id: entryId,
+              prompt: promptInput.value.trim(),
+              aspect_ratio: aspectInput.value,
+              resolution: resolutionInput.value,
+            }),
+          });
+          const provider = getProvider(providerId);
+          if (provider) {
+            provider.entries = provider.entries.map(function (entry) {
+              return entry.entry_id === entryId ? { ...entry, last_test: payload } : entry;
+            });
+          }
+          clearBusyStatus(providerId + "." + entryId + " 测试完成");
+          return payload;
+        } catch (error) {
+          clearBusyStatus(providerId + "." + entryId + " 测试失败");
+          throw error;
+        } finally {
+          state.activeEntryTests.delete(entryKey);
+          render();
+        }
       }
 
       function render() {
@@ -612,6 +665,7 @@
               }).join("") + "</div>"
             : "";
           const entryHtml = (provider.entries || []).map(function (entry, index) {
+            const testing = isEntryTesting(provider.provider_id, entry.entry_id);
             return `
               <article class="entry-card">
                 <div class="entry-head">
@@ -652,7 +706,7 @@
                   </div>
                 </div>
                 <div class="entry-actions">
-                  <button class="btn-secondary" type="button" data-test-provider="${escapeHtml(provider.provider_id)}" data-test-entry="${escapeHtml(entry.entry_id)}">真实测试</button>
+                  <button class="btn-secondary ${testing ? "btn-loading" : ""}" type="button" data-test-provider="${escapeHtml(provider.provider_id)}" data-test-entry="${escapeHtml(entry.entry_id)}" ${testing ? "disabled" : ""}>${testing ? "测试中..." : "真实测试"}</button>
                   <button class="btn-ghost" type="button" data-up-provider="${escapeHtml(provider.provider_id)}" data-up-entry="${escapeHtml(entry.entry_id)}" ${index === 0 ? "disabled" : ""}>上移</button>
                   <button class="btn-ghost" type="button" data-down-provider="${escapeHtml(provider.provider_id)}" data-down-entry="${escapeHtml(entry.entry_id)}" ${index === provider.entries.length - 1 ? "disabled" : ""}>下移</button>
                 </div>
