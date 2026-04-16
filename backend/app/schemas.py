@@ -372,12 +372,28 @@ class AdminUserQuotaGrantRequest(BaseModel):
 class AdminUserQuotaResponse(BaseModel):
     user_id: int
     nickname: str
+    user_openid: str | None = None
     free_quota_total: int
     free_quota_used: int
     free_remaining: int
     paid_remaining: int
     total_remaining: int
+    total_jobs: int = 0
+    completed_jobs: int = 0
+    processing_jobs: int = 0
+    last_job_created_at: str | None = None
     created_at: str
+
+
+class AdminUserItem(AdminUserQuotaResponse):
+    pass
+
+
+class AdminUserListResponse(BaseModel):
+    page: int
+    page_size: int
+    total: int
+    items: list[AdminUserItem] = Field(default_factory=list)
 
 
 class MeResponse(BaseModel):

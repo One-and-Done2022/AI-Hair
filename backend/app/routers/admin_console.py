@@ -15,6 +15,8 @@ from app.schemas import (
     AdminFeedbackSummary,
     AdminHistoryItem,
     AdminHistoryResponse,
+    AdminUserItem,
+    AdminUserListResponse,
     AdminSessionLoginRequest,
     AdminSessionResponse,
     AdminUserQuotaGrantRequest,
@@ -28,6 +30,7 @@ _STATIC_DIR = Path(__file__).resolve().parents[1] / "static"
 _HOME_PAGE_PATH = _STATIC_DIR / "admin_home.html"
 _FEEDBACK_PAGE_PATH = _STATIC_DIR / "admin_feedback.html"
 _HISTORY_PAGE_PATH = _STATIC_DIR / "admin_history.html"
+_USERS_PAGE_PATH = _STATIC_DIR / "admin_users.html"
 
 
 def _utc_now() -> datetime:
@@ -293,11 +296,16 @@ def _admin_user_quota_response(summary: dict) -> AdminUserQuotaResponse:
     return AdminUserQuotaResponse(
         user_id=int(summary["user_id"]),
         nickname=str(summary.get("nickname") or ""),
+        user_openid=str(summary.get("user_openid") or "").strip() or None,
         free_quota_total=int(summary.get("free_quota_total") or 0),
         free_quota_used=int(summary.get("free_quota_used") or 0),
         free_remaining=int(summary.get("free_remaining") or 0),
         paid_remaining=int(summary.get("paid_remaining") or 0),
         total_remaining=int(summary.get("total_remaining") or 0),
+        total_jobs=int(summary.get("total_jobs") or 0),
+        completed_jobs=int(summary.get("completed_jobs") or 0),
+        processing_jobs=int(summary.get("processing_jobs") or 0),
+        last_job_created_at=str(summary.get("last_job_created_at") or "").strip() or None,
         created_at=str(summary.get("created_at") or ""),
     )
 
@@ -322,6 +330,15 @@ def admin_feedback_page(request: Request) -> Response:
         request,
         page_path=_FEEDBACK_PAGE_PATH,
         next_path="/admin/feedback",
+    )
+
+
+@router.get("/admin/users", response_class=FileResponse)
+def admin_users_page(request: Request) -> Response:
+    return _protected_page_response(
+        request,
+        page_path=_USERS_PAGE_PATH,
+        next_path="/admin/users",
     )
 
 
@@ -426,6 +443,33 @@ def get_admin_history(
         items=[
             _admin_history_item_response(request, job)
             for job in query_result["items"]
+        ],
+    )
+
+
+@router.get("/api/admin/users", response_model=AdminUserListResponse)
+def get_admin_users(
+    page: int = Query(default=1, ge=1),
+    page_size: int = Query(default=20, ge=1, le=200),
+    user_id: int | None = Query(default=None),
+    keyword: str | None = Query(default=None),
+    current_admin: dict = Depends(get_current_admin),
+) -> AdminUserListResponse:
+    del current_admin
+
+    query_result = repository.list_admin_users(
+        page=page,
+        page_size=page_size,
+        user_id=user_id,
+        keyword=keyword,
+    )
+    return AdminUserListResponse(
+        page=query_result["page"],
+        page_size=query_result["page_size"],
+        total=query_result["total"],
+        items=[
+            AdminUserItem.model_validate(item)
+            for item in query_result["items"]
         ],
     )
 

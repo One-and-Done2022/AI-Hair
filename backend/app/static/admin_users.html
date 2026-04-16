@@ -1,0 +1,703 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>用户次数管理</title>
+    <style>
+      :root {
+        --bg: #efe4d4;
+        --panel: rgba(255, 250, 243, 0.88);
+        --panel-strong: #fffdf8;
+        --text: #1f1b18;
+        --muted: #6f6256;
+        --line: rgba(31, 27, 24, 0.12);
+        --accent: #0d6b5f;
+        --accent-soft: rgba(13, 107, 95, 0.1);
+        --ok: #177245;
+        --warn: #a86a12;
+        --danger: #b04332;
+        --shadow: 0 24px 70px rgba(70, 45, 25, 0.12);
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        font-family: "IBM Plex Sans", "PingFang SC", "Microsoft YaHei", sans-serif;
+        color: var(--text);
+        background:
+          radial-gradient(circle at 12% 0%, rgba(13, 107, 95, 0.18), transparent 24%),
+          radial-gradient(circle at 100% 12%, rgba(176, 67, 50, 0.16), transparent 25%),
+          linear-gradient(180deg, #fbf6ee 0%, var(--bg) 100%);
+      }
+      .page {
+        max-width: 1480px;
+        margin: 0 auto;
+        padding: 28px 18px 56px;
+      }
+      .shell,
+      .toolbar,
+      .list-panel,
+      .detail-panel,
+      .metric,
+      .table-wrap,
+      .quota-panel,
+      .detail-item {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 24px;
+        box-shadow: var(--shadow);
+        backdrop-filter: blur(18px);
+      }
+      .shell {
+        padding: 24px;
+        margin-bottom: 18px;
+      }
+      .topbar {
+        display: flex;
+        justify-content: space-between;
+        gap: 18px;
+        align-items: flex-start;
+      }
+      .eyebrow {
+        margin: 0 0 10px;
+        font-size: 12px;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        color: var(--accent);
+      }
+      h1, h2, h3, p { margin: 0; }
+      h1 {
+        font-size: clamp(32px, 5vw, 52px);
+        line-height: 0.95;
+        margin-bottom: 12px;
+      }
+      .muted {
+        color: var(--muted);
+        line-height: 1.65;
+      }
+      .nav,
+      .actions,
+      .meta-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        align-items: center;
+      }
+      .nav a,
+      .nav button,
+      button {
+        font: inherit;
+        border: 0;
+        border-radius: 999px;
+        padding: 11px 16px;
+        text-decoration: none;
+        cursor: pointer;
+      }
+      .nav a,
+      .nav button,
+      .btn-ghost {
+        background: rgba(31, 27, 24, 0.06);
+        color: var(--text);
+      }
+      .nav a.active,
+      .btn-primary {
+        background: var(--accent);
+        color: #f4fffd;
+      }
+      .btn-secondary {
+        background: var(--accent-soft);
+        color: var(--accent);
+      }
+      button:disabled {
+        opacity: 0.55;
+        cursor: not-allowed;
+      }
+      .toolbar {
+        padding: 18px;
+        margin-bottom: 18px;
+      }
+      .form-grid,
+      .metrics,
+      .content,
+      .detail-grid,
+      .quota-grid {
+        display: grid;
+        gap: 14px;
+      }
+      .form-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+      .field {
+        display: grid;
+        gap: 8px;
+      }
+      .field label {
+        font-size: 13px;
+        color: var(--muted);
+      }
+      input,
+      select {
+        width: 100%;
+        border-radius: 16px;
+        border: 1px solid var(--line);
+        background: var(--panel-strong);
+        padding: 12px 14px;
+        color: var(--text);
+        font: inherit;
+      }
+      .pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        border-radius: 999px;
+        padding: 8px 12px;
+        background: rgba(31, 27, 24, 0.06);
+        color: var(--muted);
+      }
+      .metrics {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        margin-bottom: 18px;
+      }
+      .metric {
+        padding: 18px;
+        display: grid;
+        gap: 8px;
+      }
+      .metric strong {
+        font-size: 12px;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--muted);
+      }
+      .metric-value {
+        font-size: 30px;
+        font-weight: 700;
+      }
+      .content {
+        grid-template-columns: minmax(0, 1.05fr) minmax(360px, 0.95fr);
+      }
+      .list-panel,
+      .detail-panel {
+        padding: 18px;
+      }
+      .table-wrap {
+        overflow: auto;
+        border-radius: 20px;
+        margin-top: 16px;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+      th, td {
+        padding: 14px 12px;
+        text-align: left;
+        border-bottom: 1px solid var(--line);
+        vertical-align: top;
+      }
+      th {
+        font-size: 12px;
+        color: var(--muted);
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+      }
+      tr[data-user-id] {
+        cursor: pointer;
+      }
+      tr[data-user-id]:hover {
+        background: rgba(13, 107, 95, 0.06);
+      }
+      tr.selected {
+        background: rgba(13, 107, 95, 0.1);
+      }
+      .row-title {
+        display: grid;
+        gap: 6px;
+      }
+      .row-sub {
+        color: var(--muted);
+        font-size: 13px;
+        word-break: break-all;
+      }
+      .pagination {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        gap: 10px;
+        margin-top: 14px;
+        align-items: center;
+      }
+      .detail-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        margin-top: 16px;
+      }
+      .detail-item {
+        padding: 14px;
+      }
+      .detail-item strong {
+        display: block;
+        font-size: 12px;
+        color: var(--muted);
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        margin-bottom: 6px;
+      }
+      .detail-item code {
+        word-break: break-all;
+        white-space: pre-wrap;
+      }
+      .quota-panel {
+        padding: 16px;
+        margin-top: 16px;
+      }
+      .quota-grid {
+        grid-template-columns: minmax(0, 180px) minmax(0, 1fr);
+        align-items: end;
+        margin-top: 12px;
+      }
+      .empty {
+        padding: 28px;
+        border-radius: 20px;
+        border: 1px dashed var(--line);
+        text-align: center;
+        color: var(--muted);
+        background: rgba(255, 255, 255, 0.35);
+      }
+      @media (max-width: 1220px) {
+        .form-grid,
+        .metrics,
+        .content,
+        .detail-grid,
+        .quota-grid {
+          grid-template-columns: 1fr 1fr;
+        }
+      }
+      @media (max-width: 920px) {
+        .topbar,
+        .form-grid,
+        .metrics,
+        .content,
+        .detail-grid,
+        .quota-grid {
+          grid-template-columns: 1fr;
+          display: grid;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="page">
+      <section class="shell">
+        <div class="topbar">
+          <div>
+            <p class="eyebrow">Admin Users</p>
+            <h1>用户次数管理</h1>
+            <p class="muted">按用户维度直接查昵称、OpenID 和剩余次数，不需要再从历史任务里找人。支持直接补发次数。</p>
+          </div>
+          <div class="nav">
+            <a href="/admin">后台首页</a>
+            <a href="/admin/providers">线路管理台</a>
+            <a href="/admin/history">用户历史后台</a>
+            <a href="/admin/users" class="active">用户次数管理</a>
+            <a href="/admin/feedback">体验反馈后台</a>
+            <button id="logoutBtn" type="button">退出登录</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="toolbar">
+        <div class="form-grid">
+          <div class="field">
+            <label for="userIdInput">用户 ID</label>
+            <input id="userIdInput" type="number" min="1" placeholder="例如 12" />
+          </div>
+          <div class="field">
+            <label for="keywordInput">关键词</label>
+            <input id="keywordInput" type="text" placeholder="微信名 / OpenID / 用户 ID" />
+          </div>
+          <div class="field">
+            <label for="pageSizeInput">分页大小</label>
+            <select id="pageSizeInput">
+              <option value="20">20</option>
+              <option value="50" selected>50</option>
+              <option value="100">100</option>
+            </select>
+          </div>
+        </div>
+        <div class="actions" style="margin-top: 14px;">
+          <button id="searchBtn" class="btn-primary" type="button">查询用户</button>
+          <button id="resetBtn" class="btn-secondary" type="button">重置筛选</button>
+        </div>
+        <div class="meta-row" style="margin-top: 14px;">
+          <span id="sessionPill" class="pill">管理员: -</span>
+          <span id="statusPill" class="pill">状态: 初始化中</span>
+        </div>
+      </section>
+
+      <section class="metrics">
+        <article class="metric">
+          <strong>用户总数</strong>
+          <div id="totalMetric" class="metric-value">0</div>
+          <div class="muted">当前筛选条件下的用户数</div>
+        </article>
+        <article class="metric">
+          <strong>当前页</strong>
+          <div id="pageMetric" class="metric-value">1</div>
+          <div class="muted">列表按最近任务时间排序</div>
+        </article>
+        <article class="metric">
+          <strong>本页记录</strong>
+          <div id="pageCountMetric" class="metric-value">0</div>
+          <div class="muted">快速定位待处理用户</div>
+        </article>
+        <article class="metric">
+          <strong>已选用户</strong>
+          <div id="selectedMetric" class="metric-value">-</div>
+          <div class="muted">点击左侧任一用户查看详情</div>
+        </article>
+      </section>
+
+      <section class="content">
+        <section class="list-panel">
+          <h2>用户列表</h2>
+          <p class="muted" style="margin-top: 8px;">显示微信名、OpenID、剩余次数和任务统计，适合直接找到人再补次数。</p>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>用户</th>
+                  <th>剩余次数</th>
+                  <th>任务统计</th>
+                  <th>最近任务</th>
+                </tr>
+              </thead>
+              <tbody id="tableBody">
+                <tr><td colspan="4"><div class="empty">正在加载...</div></td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="pagination">
+            <div id="paginationInfo" class="muted">-</div>
+            <div class="actions" style="margin-top: 0;">
+              <button id="prevBtn" class="btn-ghost" type="button">上一页</button>
+              <button id="nextBtn" class="btn-ghost" type="button">下一页</button>
+            </div>
+          </div>
+        </section>
+
+        <section class="detail-panel">
+          <h2>用户详情</h2>
+          <p class="muted" style="margin-top: 8px;">这里会把微信名、OpenID、剩余次数和任务统计都展开，并支持直接补发次数。</p>
+          <div id="detailRoot">
+            <div class="empty" style="margin-top: 16px;">请选择一位用户。</div>
+          </div>
+        </section>
+      </section>
+    </main>
+
+    <script>
+      const state = {
+        session: null,
+        page: 1,
+        total: 0,
+        pageSize: 50,
+        items: [],
+        selectedUserId: null,
+        quotaGrantBusy: false,
+      };
+
+      const userIdInput = document.getElementById("userIdInput");
+      const keywordInput = document.getElementById("keywordInput");
+      const pageSizeInput = document.getElementById("pageSizeInput");
+      const sessionPill = document.getElementById("sessionPill");
+      const statusPill = document.getElementById("statusPill");
+      const tableBody = document.getElementById("tableBody");
+      const detailRoot = document.getElementById("detailRoot");
+      const totalMetric = document.getElementById("totalMetric");
+      const pageMetric = document.getElementById("pageMetric");
+      const pageCountMetric = document.getElementById("pageCountMetric");
+      const selectedMetric = document.getElementById("selectedMetric");
+      const paginationInfo = document.getElementById("paginationInfo");
+      const prevBtn = document.getElementById("prevBtn");
+      const nextBtn = document.getElementById("nextBtn");
+
+      function escapeHtml(value) {
+        return String(value || "")
+          .replaceAll("&", "&amp;")
+          .replaceAll("<", "&lt;")
+          .replaceAll(">", "&gt;")
+          .replaceAll("\"", "&quot;");
+      }
+
+      function formatDateTime(value) {
+        if (!value) return "-";
+        const date = new Date(value);
+        if (Number.isNaN(date.getTime())) return String(value);
+        return new Intl.DateTimeFormat("zh-CN", {
+          timeZone: "Asia/Shanghai",
+          year: "numeric",
+          month: "2-digit",
+          day: "2-digit",
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit",
+          hour12: false,
+        }).format(date);
+      }
+
+      function setStatus(text) {
+        statusPill.textContent = "状态: " + text;
+      }
+
+      async function readJson(response) {
+        try {
+          return await response.json();
+        } catch (error) {
+          return null;
+        }
+      }
+
+      async function requestJson(url, options) {
+        const response = await fetch(url, {
+          credentials: "same-origin",
+          ...(options || {}),
+        });
+        const payload = await readJson(response);
+        if (response.status === 401) {
+          window.location.href = "/admin?next=/admin/users";
+          throw new Error("管理员登录已失效。");
+        }
+        if (!response.ok) {
+          throw new Error((payload && payload.detail) || ("HTTP " + response.status));
+        }
+        return payload;
+      }
+
+      async function ensureSession() {
+        const payload = await requestJson("/api/admin/session");
+        if (!payload.authenticated) {
+          window.location.href = "/admin?next=/admin/users";
+          throw new Error("管理员未登录。");
+        }
+        state.session = payload;
+        sessionPill.textContent = "管理员: " + (payload.username || "-");
+      }
+
+      function currentFilters() {
+        return {
+          user_id: userIdInput.value.trim(),
+          keyword: keywordInput.value.trim(),
+          page_size: pageSizeInput.value,
+        };
+      }
+
+      function selectedItem() {
+        return state.items.find(function (item) {
+          return item.user_id === state.selectedUserId;
+        }) || state.items[0] || null;
+      }
+
+      function syncUserItem(updated) {
+        state.items = state.items.map(function (item) {
+          return item.user_id === updated.user_id ? { ...item, ...updated } : item;
+        });
+      }
+
+      async function grantSelectedUserQuota() {
+        const item = selectedItem();
+        if (!item) return;
+        const input = document.getElementById("grantCountInput");
+        const count = Number(input ? input.value : "");
+        if (!Number.isFinite(count) || count <= 0) {
+          throw new Error("请输入大于 0 的补发次数。");
+        }
+        state.quotaGrantBusy = true;
+        renderDetail();
+        setStatus("正在为用户 " + item.user_id + " 补发次数...");
+        try {
+          const payload = await requestJson("/api/admin/users/" + item.user_id + "/quota/grant", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ count: Math.floor(count) }),
+          });
+          syncUserItem(payload);
+          renderTable();
+          renderDetail();
+          setStatus("已为用户 " + item.user_id + " 增加 " + Math.floor(count) + " 次，剩余 " + payload.total_remaining + " 次");
+        } finally {
+          state.quotaGrantBusy = false;
+          renderDetail();
+        }
+      }
+
+      function renderTable() {
+        if (!state.items.length) {
+          tableBody.innerHTML = '<tr><td colspan="4"><div class="empty">当前筛选条件下没有用户记录。</div></td></tr>';
+          return;
+        }
+        let html = "";
+        state.items.forEach(function (item) {
+          const isSelected = item.user_id === state.selectedUserId;
+          html += `
+            <tr data-user-id="${escapeHtml(item.user_id)}" class="${isSelected ? "selected" : ""}">
+              <td>
+                <div class="row-title">
+                  <strong>${escapeHtml(item.nickname)}</strong>
+                  <span class="row-sub">UID ${escapeHtml(item.user_id)} · ${escapeHtml(item.user_openid || "-")}</span>
+                </div>
+              </td>
+              <td>
+                <div class="row-title">
+                  <strong>${escapeHtml(item.total_remaining)} 次</strong>
+                  <span class="row-sub">免费 ${escapeHtml(item.free_remaining)} / 补发 ${escapeHtml(item.paid_remaining)}</span>
+                </div>
+              </td>
+              <td>
+                <div class="row-title">
+                  <strong>${escapeHtml(item.total_jobs)} / ${escapeHtml(item.completed_jobs)} / ${escapeHtml(item.processing_jobs)}</strong>
+                  <span class="row-sub">总任务 / 已完成 / 处理中</span>
+                </div>
+              </td>
+              <td>${escapeHtml(formatDateTime(item.last_job_created_at || item.created_at))}</td>
+            </tr>
+          `;
+        });
+        tableBody.innerHTML = html;
+        Array.from(document.querySelectorAll("tr[data-user-id]")).forEach(function (row) {
+          row.addEventListener("click", function () {
+            state.selectedUserId = Number(row.getAttribute("data-user-id"));
+            renderTable();
+            renderDetail();
+          });
+        });
+      }
+
+      function renderDetail() {
+        const item = selectedItem();
+        if (!item) {
+          detailRoot.innerHTML = '<div class="empty" style="margin-top: 16px;">请选择一位用户。</div>';
+          selectedMetric.textContent = "-";
+          return;
+        }
+        state.selectedUserId = item.user_id;
+        selectedMetric.textContent = String(item.user_id);
+        detailRoot.innerHTML = `
+          <div class="detail-grid">
+            <div class="detail-item"><strong>微信名</strong><code>${escapeHtml(item.nickname)}</code></div>
+            <div class="detail-item"><strong>用户 ID</strong><code>${escapeHtml(item.user_id)}</code></div>
+            <div class="detail-item"><strong>OpenID</strong><code>${escapeHtml(item.user_openid || "-")}</code></div>
+            <div class="detail-item"><strong>注册时间</strong><code>${escapeHtml(formatDateTime(item.created_at))}</code></div>
+            <div class="detail-item"><strong>总剩余次数</strong><code>${escapeHtml(item.total_remaining)} 次</code></div>
+            <div class="detail-item"><strong>免费剩余 / 已用 / 总免费</strong><code>${escapeHtml(item.free_remaining)} / ${escapeHtml(item.free_quota_used)} / ${escapeHtml(item.free_quota_total)}</code></div>
+            <div class="detail-item"><strong>补发 / 付费剩余</strong><code>${escapeHtml(item.paid_remaining)} 次</code></div>
+            <div class="detail-item"><strong>总任务 / 已完成 / 处理中</strong><code>${escapeHtml(item.total_jobs)} / ${escapeHtml(item.completed_jobs)} / ${escapeHtml(item.processing_jobs)}</code></div>
+            <div class="detail-item"><strong>最近任务时间</strong><code>${escapeHtml(formatDateTime(item.last_job_created_at || item.created_at))}</code></div>
+          </div>
+          <section class="quota-panel">
+            <h3>补发次数</h3>
+            <p class="muted" style="margin-top: 8px;">这里只增加额外可用次数，不改免费总次数。适合内测补偿或人工赠送。</p>
+            <div class="quota-grid">
+              <div class="field">
+                <label for="grantCountInput">补发次数</label>
+                <input id="grantCountInput" type="number" min="1" step="1" value="1" ${state.quotaGrantBusy ? "disabled" : ""} />
+              </div>
+              <div class="actions" style="margin-top: 0;">
+                <button id="grantQuotaBtn" class="btn-primary" type="button" ${state.quotaGrantBusy ? "disabled" : ""}>${state.quotaGrantBusy ? "正在补发..." : "给该用户加次数"}</button>
+              </div>
+            </div>
+          </section>
+        `;
+
+        const grantQuotaBtn = document.getElementById("grantQuotaBtn");
+        if (grantQuotaBtn) {
+          grantQuotaBtn.addEventListener("click", function () {
+            grantSelectedUserQuota().catch(function (error) {
+              setStatus(error.message || "补发次数失败");
+            });
+          });
+        }
+      }
+
+      async function loadUsers(page) {
+        state.page = page;
+        state.pageSize = Number(pageSizeInput.value || 50);
+        const params = new URLSearchParams();
+        const filters = currentFilters();
+        params.set("page", String(page));
+        params.set("page_size", String(state.pageSize));
+        if (filters.user_id) params.set("user_id", filters.user_id);
+        if (filters.keyword) params.set("keyword", filters.keyword);
+        setStatus("正在查询用户数据...");
+        const payload = await requestJson("/api/admin/users?" + params.toString());
+        state.total = payload.total;
+        state.items = payload.items || [];
+        state.quotaGrantBusy = false;
+        if (!state.items.find(function (item) { return item.user_id === state.selectedUserId; })) {
+          state.selectedUserId = state.items[0] ? state.items[0].user_id : null;
+        }
+        totalMetric.textContent = String(payload.total || 0);
+        pageMetric.textContent = String(payload.page || 1);
+        pageCountMetric.textContent = String((payload.items || []).length);
+        paginationInfo.textContent = "第 " + payload.page + " 页 / 每页 " + payload.page_size + " 条";
+        prevBtn.disabled = payload.page <= 1;
+        nextBtn.disabled = payload.page * payload.page_size >= payload.total;
+        renderTable();
+        renderDetail();
+        setStatus("用户数据已刷新");
+      }
+
+      function resetFilters() {
+        userIdInput.value = "";
+        keywordInput.value = "";
+        pageSizeInput.value = "50";
+      }
+
+      document.getElementById("searchBtn").addEventListener("click", function () {
+        loadUsers(1).catch(function (error) {
+          setStatus(error.message || "查询失败");
+        });
+      });
+
+      document.getElementById("resetBtn").addEventListener("click", function () {
+        resetFilters();
+        loadUsers(1).catch(function (error) {
+          setStatus(error.message || "查询失败");
+        });
+      });
+
+      prevBtn.addEventListener("click", function () {
+        if (state.page > 1) {
+          loadUsers(state.page - 1).catch(function (error) {
+            setStatus(error.message || "翻页失败");
+          });
+        }
+      });
+
+      nextBtn.addEventListener("click", function () {
+        if (state.page * state.pageSize < state.total) {
+          loadUsers(state.page + 1).catch(function (error) {
+            setStatus(error.message || "翻页失败");
+          });
+        }
+      });
+
+      document.getElementById("logoutBtn").addEventListener("click", async function () {
+        try {
+          await requestJson("/api/admin/session/logout", { method: "POST" });
+        } finally {
+          window.location.href = "/admin";
+        }
+      });
+
+      resetFilters();
+      ensureSession()
+        .then(function () {
+          return loadUsers(1);
+        })
+        .catch(function (error) {
+          setStatus(error.message || "初始化失败");
+        });
+    </script>
+  </body>
+</html>

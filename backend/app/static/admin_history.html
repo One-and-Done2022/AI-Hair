@@ -425,6 +425,7 @@
             <a href="/admin">后台首页</a>
             <a href="/admin/providers">线路管理台</a>
             <a href="/admin/history" class="active">用户历史后台</a>
+            <a href="/admin/users">用户次数管理</a>
             <a href="/admin/feedback">体验反馈后台</a>
             <button id="logoutBtn" type="button">退出登录</button>
           </div>
@@ -655,12 +656,60 @@
         return (seconds / 60).toFixed(1) + "m";
       }
 
+      function normalizeDurationValue(value) {
+        const normalized = Number(value);
+        if (!Number.isFinite(normalized) || normalized < 0) return null;
+        return normalized;
+      }
+
       function averageOf(items, key) {
         const values = items
-          .map(function (item) { return Number(item[key]); })
-          .filter(function (value) { return Number.isFinite(value) && value >= 0; });
+          .map(function (item) { return normalizeDurationValue(item[key]); })
+          .filter(function (value) { return value !== null; });
         if (!values.length) return null;
         return values.reduce(function (sum, value) { return sum + value; }, 0) / values.length;
+      }
+
+      function quantileOfSorted(values, ratio) {
+        if (!values.length) return null;
+        if (values.length === 1) return values[0];
+        const position = (values.length - 1) * ratio;
+        const lower = Math.floor(position);
+        const upper = Math.ceil(position);
+        if (lower === upper) return values[lower];
+        const weight = position - lower;
+        return values[lower] + (values[upper] - values[lower]) * weight;
+      }
+
+      function buildOutlierRange(items, key) {
+        const values = items
+          .map(function (item) { return normalizeDurationValue(item[key]); })
+          .filter(function (value) { return value !== null; })
+          .sort(function (left, right) { return left - right; });
+        if (values.length < 4) {
+          return { min: Number.NEGATIVE_INFINITY, max: Number.POSITIVE_INFINITY };
+        }
+        const q1 = quantileOfSorted(values, 0.25);
+        const q3 = quantileOfSorted(values, 0.75);
+        if (!Number.isFinite(q1) || !Number.isFinite(q3)) {
+          return { min: Number.NEGATIVE_INFINITY, max: Number.POSITIVE_INFINITY };
+        }
+        const iqr = q3 - q1;
+        if (!Number.isFinite(iqr) || iqr <= 0) {
+          return { min: Number.NEGATIVE_INFINITY, max: Number.POSITIVE_INFINITY };
+        }
+        return {
+          min: q1 - iqr * 1.5,
+          max: q3 + iqr * 1.5,
+        };
+      }
+
+      function normalizeValueWithRange(value, range) {
+        const normalized = normalizeDurationValue(value);
+        if (normalized === null) return null;
+        if (!range) return normalized;
+        if (normalized < range.min || normalized > range.max) return null;
+        return normalized;
       }
 
       function bucketDateParts(value) {
@@ -817,6 +866,7 @@
               <td>
                 <div class="row-title">
                   <strong>${escapeHtml(item.nickname)}</strong>
+                  <span class="row-sub">UID ${escapeHtml(item.user_id)} · ${escapeHtml(item.user_openid || "-")}</span>
                   <span class="row-sub">剩余 ${escapeHtml(item.total_remaining)} 次 · ${escapeHtml(formatDuration(item.first_image_duration_seconds))} / ${escapeHtml(formatDuration(item.first_scene_duration_seconds))}</span>
                 </div>
               </td>
@@ -946,26 +996,43 @@
         const items = state.items
           .slice()
           .filter(function (item) {
-            return Number.isFinite(Number(item.first_image_duration_seconds))
-              || Number.isFinite(Number(item.first_scene_duration_seconds))
-              || Number.isFinite(Number(item.completed_duration_seconds));
+            return normalizeDurationValue(item.first_image_duration_seconds) !== null
+              || normalizeDurationValue(item.first_scene_duration_seconds) !== null
+              || normalizeDurationValue(item.completed_duration_seconds) !== null;
           })
           .sort(function (left, right) {
             return new Date(left.created_at).getTime() - new Date(right.created_at).getTime();
           });
 
-        const avgFirst = averageOf(items, "first_image_duration_seconds");
-        const avgScene = averageOf(items, "first_scene_duration_seconds");
+        const firstRange = buildOutlierRange(items, "first_image_duration_seconds");
+        const sceneRange = buildOutlierRange(items, "first_scene_duration_seconds");
+        const completeRange = buildOutlierRange(items, "completed_duration_seconds");
+
+        const filteredItems = items.map(function (item) {
+          return {
+            ...item,
+            filtered_first_image_duration_seconds: normalizeValueWithRange(item.first_image_duration_seconds, firstRange),
+            filtered_first_scene_duration_seconds: normalizeValueWithRange(item.first_scene_duration_seconds, sceneRange),
+            filtered_completed_duration_seconds: normalizeValueWithRange(item.completed_duration_seconds, completeRange),
+          };
+        }).filter(function (item) {
+          return item.filtered_first_image_duration_seconds !== null
+            || item.filtered_first_scene_duration_seconds !== null
+            || item.filtered_completed_duration_seconds !== null;
+        });
+
+        const avgFirst = averageOf(filteredItems, "filtered_first_image_duration_seconds");
+        const avgScene = averageOf(filteredItems, "filtered_first_scene_duration_seconds");
         avgFirstMetric.textContent = formatDuration(avgFirst);
         avgSceneMetric.textContent = formatDuration(avgScene);
 
-        if (!items.length) {
+        if (!filteredItems.length) {
           chartWrap.innerHTML = '<div class="empty">当前页还没有可用的耗时数据。</div>';
           return;
         }
 
         const bucketMap = new Map();
-        items.forEach(function (item) {
+        filteredItems.forEach(function (item) {
           const bucket = bucketKeyForSixHours(item.created_at);
           if (!bucket) return;
           const record = bucketMap.get(bucket.key) || {
@@ -977,12 +1044,12 @@
             completeValues: [],
           };
           record.count += 1;
-          const firstValue = Number(item.first_image_duration_seconds);
-          const sceneValue = Number(item.first_scene_duration_seconds);
-          const completeValue = Number(item.completed_duration_seconds);
-          if (Number.isFinite(firstValue) && firstValue >= 0) record.firstValues.push(firstValue);
-          if (Number.isFinite(sceneValue) && sceneValue >= 0) record.sceneValues.push(sceneValue);
-          if (Number.isFinite(completeValue) && completeValue >= 0) record.completeValues.push(completeValue);
+          const firstValue = normalizeDurationValue(item.filtered_first_image_duration_seconds);
+          const sceneValue = normalizeDurationValue(item.filtered_first_scene_duration_seconds);
+          const completeValue = normalizeDurationValue(item.filtered_completed_duration_seconds);
+          if (firstValue !== null) record.firstValues.push(firstValue);
+          if (sceneValue !== null) record.sceneValues.push(sceneValue);
+          if (completeValue !== null) record.completeValues.push(completeValue);
           bucketMap.set(bucket.key, record);
         });
 
@@ -1025,8 +1092,8 @@
         const values = [];
         points.forEach(function (item) {
           ["first_image_duration_seconds", "first_scene_duration_seconds", "completed_duration_seconds"].forEach(function (key) {
-            const value = Number(item[key]);
-            if (Number.isFinite(value) && value >= 0) values.push(value);
+            const value = normalizeDurationValue(item[key]);
+            if (value !== null) values.push(value);
           });
         });
         const maxValue = Math.max.apply(null, values.concat([10]));
@@ -1044,8 +1111,8 @@
           let started = false;
           let path = "";
           points.forEach(function (item, index) {
-            const value = Number(item[key]);
-            if (!Number.isFinite(value)) return;
+            const value = normalizeDurationValue(item[key]);
+            if (value === null) return;
             const x = xFor(index);
             const y = yFor(value);
             path += (started ? " L " : "M ") + x.toFixed(2) + " " + y.toFixed(2);
@@ -1073,8 +1140,8 @@
             { key: "first_scene_duration_seconds", color: "#b04332", title: "场景首图平均" },
             { key: "completed_duration_seconds", color: "#a86a12", title: "完成平均" },
           ].forEach(function (series) {
-            const value = Number(item[series.key]);
-            if (!Number.isFinite(value)) return;
+            const value = normalizeDurationValue(item[series.key]);
+            if (value === null) return;
             const y = yFor(value);
             pointHtml += '<circle cx="' + x.toFixed(2) + '" cy="' + y.toFixed(2) + '" r="4" fill="' + series.color + '"><title>' + escapeHtml(label + ' ' + series.title + ': ' + formatDuration(value)) + '</title></circle>';
           });
@@ -1091,7 +1158,7 @@
             <path d="${buildPath("completed_duration_seconds")}" fill="none" stroke="#a86a12" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"></path>
             ${pointHtml}
           </svg>
-          <div class="chart-caption">当前页共 ${items.length} 条有耗时数据的任务，聚合为 ${points.length} 个 6 小时时间桶。鼠标悬停圆点可查看该时间桶的平均耗时。</div>
+          <div class="chart-caption">当前页原始共有 ${items.length} 条有耗时数据的任务，按 IQR 规则剔除单指标极端值后保留 ${filteredItems.length} 条，聚合为 ${points.length} 个 6 小时时间桶。极端值不会再按 0 秒参与平均，鼠标悬停圆点可查看该时间桶的平均耗时。</div>
         `;
       }
 

@@ -337,9 +337,14 @@ def test_admin_can_grant_user_quota_and_history_reflects_remaining_times(tmp_pat
         payload = grant_response.json()
         assert payload["user_id"] == seeded["user_id"]
         assert payload["nickname"] == "阿澈"
+        assert payload["user_openid"] == "history-grant-user"
         assert payload["free_remaining"] == 10
         assert payload["paid_remaining"] == 3
         assert payload["total_remaining"] == 13
+        assert payload["total_jobs"] == 1
+        assert payload["completed_jobs"] == 1
+        assert payload["processing_jobs"] == 0
+        assert payload["last_job_created_at"] == now.isoformat()
 
         history_response = client.get(f"/api/admin/history?user_id={seeded['user_id']}")
         assert history_response.status_code == 200
@@ -350,6 +355,98 @@ def test_admin_can_grant_user_quota_and_history_reflects_remaining_times(tmp_pat
         assert item["free_remaining"] == 10
         assert item["paid_remaining"] == 3
         assert item["total_remaining"] == 13
+
+
+def test_admin_users_requires_login_and_lists_user_summaries(tmp_path, monkeypatch):
+    client = _create_client(tmp_path, monkeypatch)
+    now = datetime.now(timezone.utc).replace(microsecond=0)
+    primary_old = (now - timedelta(hours=2)).isoformat()
+    primary_new = now.isoformat()
+    secondary_time = (now - timedelta(minutes=30)).isoformat()
+
+    primary_first = _seed_job(
+        openid="admin-users-primary",
+        created_at=primary_old,
+        nickname="林夏",
+        job_status="succeeded",
+        with_media=True,
+    )
+    _seed_job(
+        openid="admin-users-primary",
+        created_at=primary_new,
+        nickname="林夏",
+        job_status="failed",
+        error_code="provider_error",
+        error_message="primary follow-up failed",
+        with_media=False,
+    )
+    secondary = _seed_job(
+        openid="admin-users-secondary",
+        created_at=secondary_time,
+        nickname="周周",
+        job_status="failed",
+        error_code="provider_error",
+        error_message="upstream failed",
+        with_media=False,
+    )
+
+    with client:
+        users_response = client.get("/api/admin/users")
+        assert users_response.status_code == 401
+
+        page_response = client.get("/admin/users", follow_redirects=False)
+        assert page_response.status_code == 303
+        assert page_response.headers["location"] == "/admin?next=/admin/users"
+
+        _login_admin(client)
+
+        grant_response = client.post(
+            f"/api/admin/users/{primary_first['user_id']}/quota/grant",
+            json={"count": 5},
+        )
+        assert grant_response.status_code == 200
+
+        list_response = client.get("/api/admin/users")
+        assert list_response.status_code == 200
+        payload = list_response.json()
+        assert payload["total"] == 2
+        assert payload["page"] == 1
+        assert payload["page_size"] == 20
+        assert len(payload["items"]) == 2
+
+        primary_item = next(
+            item for item in payload["items"] if item["user_id"] == primary_first["user_id"]
+        )
+        assert primary_item["nickname"] == "林夏"
+        assert primary_item["user_openid"] == "admin-users-primary"
+        assert primary_item["free_remaining"] == 10
+        assert primary_item["paid_remaining"] == 5
+        assert primary_item["total_remaining"] == 15
+        assert primary_item["total_jobs"] == 2
+        assert primary_item["completed_jobs"] == 1
+        assert primary_item["processing_jobs"] == 0
+        assert primary_item["last_job_created_at"] == primary_new
+
+        secondary_item = next(
+            item for item in payload["items"] if item["user_id"] == secondary["user_id"]
+        )
+        assert secondary_item["nickname"] == "周周"
+        assert secondary_item["user_openid"] == "admin-users-secondary"
+        assert secondary_item["total_jobs"] == 1
+        assert secondary_item["completed_jobs"] == 0
+        assert secondary_item["processing_jobs"] == 0
+
+        keyword_response = client.get("/api/admin/users?keyword=%E6%9E%97%E5%A4%8F")
+        assert keyword_response.status_code == 200
+        keyword_payload = keyword_response.json()
+        assert keyword_payload["total"] == 1
+        assert keyword_payload["items"][0]["user_id"] == primary_first["user_id"]
+
+        user_filter_response = client.get(f"/api/admin/users?user_id={secondary['user_id']}")
+        assert user_filter_response.status_code == 200
+        user_filter_payload = user_filter_response.json()
+        assert user_filter_payload["total"] == 1
+        assert user_filter_payload["items"][0]["user_id"] == secondary["user_id"]
 
 
 def test_admin_feedback_requires_login_and_supports_filters(tmp_path, monkeypatch):

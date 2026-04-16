@@ -218,7 +218,7 @@ def grant_user_paid_quota(user_id: int, count: int) -> dict:
             .values(paid_quota_balance=current_balance + normalized_count)
         )
 
-    summary = get_user_profile_summary(user_id)
+    summary = get_admin_user_quota_summary(user_id)
     if not summary:
         raise ValueError(f"User not found: {user_id}")
     return summary
@@ -499,6 +499,136 @@ def list_admin_jobs(
         "page_size": page_size,
         "total": total,
         "items": [dict(row) for row in rows],
+    }
+
+
+def _admin_user_stats_subquery():
+    return (
+        select(
+            jobs.c.user_id.label("user_id"),
+            func.count(jobs.c.id).label("total_jobs"),
+            func.sum(
+                case(
+                    (jobs.c.status == "succeeded", 1),
+                    else_=0,
+                )
+            ).label("completed_jobs"),
+            func.sum(
+                case(
+                    (jobs.c.status.in_(ACTIVE_JOB_STATUSES), 1),
+                    else_=0,
+                )
+            ).label("processing_jobs"),
+            func.max(jobs.c.created_at).label("last_job_created_at"),
+        )
+        .group_by(jobs.c.user_id)
+        .subquery()
+    )
+
+
+def _build_admin_user_quota_summary_from_row(row: dict) -> dict:
+    quota = _build_quota_snapshot(row)
+    return {
+        "user_id": int(row["id"]),
+        "nickname": _resolved_nickname(row["id"], row.get("nickname")),
+        "user_openid": str(row.get("openid") or "").strip() or None,
+        "free_quota_total": quota["free_quota_total"],
+        "free_quota_used": quota["free_quota_used"],
+        "free_remaining": quota["free_remaining"],
+        "paid_remaining": quota["paid_remaining"],
+        "total_remaining": quota["total_remaining"],
+        "total_jobs": int(row.get("total_jobs") or 0),
+        "completed_jobs": int(row.get("completed_jobs") or 0),
+        "processing_jobs": int(row.get("processing_jobs") or 0),
+        "last_job_created_at": str(row.get("last_job_created_at") or "").strip() or None,
+        "created_at": row["created_at"],
+    }
+
+
+def get_admin_user_quota_summary(user_id: int) -> dict | None:
+    stats_subquery = _admin_user_stats_subquery()
+    with session_scope() as session:
+        row = session.execute(
+            select(
+                users,
+                stats_subquery.c.total_jobs,
+                stats_subquery.c.completed_jobs,
+                stats_subquery.c.processing_jobs,
+                stats_subquery.c.last_job_created_at,
+            )
+            .select_from(
+                users.outerjoin(stats_subquery, stats_subquery.c.user_id == users.c.id)
+            )
+            .where(users.c.id == user_id)
+        ).mappings().one_or_none()
+        if row is None:
+            return None
+        return _build_admin_user_quota_summary_from_row(dict(row))
+
+
+def list_admin_users(
+    *,
+    page: int = 1,
+    page_size: int = 20,
+    user_id: int | None = None,
+    keyword: str | None = None,
+) -> dict[str, Any]:
+    stats_subquery = _admin_user_stats_subquery()
+    filters = []
+    if user_id is not None:
+        filters.append(users.c.id == user_id)
+
+    normalized_keyword = str(keyword or "").strip().lower()
+    if normalized_keyword:
+        pattern = f"%{normalized_keyword}%"
+        filters.append(
+            or_(
+                func.lower(cast(users.c.id, String)).like(pattern),
+                func.lower(cast(users.c.nickname, String)).like(pattern),
+                func.lower(cast(users.c.openid, String)).like(pattern),
+            )
+        )
+
+    joined_tables = users.outerjoin(stats_subquery, stats_subquery.c.user_id == users.c.id)
+    where_clause = and_(*filters) if filters else None
+
+    total_statement = select(func.count()).select_from(joined_tables)
+    list_statement = (
+        select(
+            users,
+            stats_subquery.c.total_jobs,
+            stats_subquery.c.completed_jobs,
+            stats_subquery.c.processing_jobs,
+            stats_subquery.c.last_job_created_at,
+        )
+        .select_from(joined_tables)
+        .order_by(
+            case(
+                (stats_subquery.c.last_job_created_at.is_(None), 1),
+                else_=0,
+            ),
+            stats_subquery.c.last_job_created_at.desc(),
+            users.c.created_at.desc(),
+        )
+        .limit(page_size)
+        .offset(max(0, page - 1) * page_size)
+    )
+    if where_clause is not None:
+        total_statement = total_statement.where(where_clause)
+        list_statement = list_statement.where(where_clause)
+
+    with session_scope() as session:
+        total = int(session.execute(total_statement).scalar_one() or 0)
+        rows = session.execute(list_statement).mappings().all()
+
+    return {
+        "page": page,
+        "page_size": page_size,
+        "total": total,
+        "items": [
+            _build_admin_user_quota_summary_from_row(dict(row))
+            for row in rows
+        ],
     }
 
 
