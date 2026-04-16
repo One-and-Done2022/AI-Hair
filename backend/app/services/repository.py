@@ -572,6 +572,9 @@ def list_admin_users(
     page_size: int = 20,
     user_id: int | None = None,
     keyword: str | None = None,
+    sort_by: str = "last_active",
+    sort_direction: str = "desc",
+    account_scope: str = "all",
 ) -> dict[str, Any]:
     stats_subquery = _admin_user_stats_subquery()
     filters = []
@@ -589,8 +592,64 @@ def list_admin_users(
             )
         )
 
+    normalized_scope = str(account_scope or "all").strip().lower()
+    if normalized_scope == "wechat_only":
+        filters.append(users.c.openid.like("og%"))
+    elif normalized_scope == "internal_only":
+        filters.append(
+            or_(
+                users.c.openid.like("dev\\_%", escape="\\"),
+                users.c.openid.like("provider-admin-%"),
+            )
+        )
+
     joined_tables = users.outerjoin(stats_subquery, stats_subquery.c.user_id == users.c.id)
     where_clause = and_(*filters) if filters else None
+
+    free_quota_total_expr = func.coalesce(users.c.free_quota_total, DEFAULT_FREE_QUOTA_TOTAL)
+    free_quota_used_expr = func.coalesce(users.c.free_quota_used, 0)
+    paid_quota_balance_expr = func.coalesce(users.c.paid_quota_balance, 0)
+    free_remaining_expr = case(
+        (free_quota_used_expr >= free_quota_total_expr, 0),
+        else_=free_quota_total_expr - free_quota_used_expr,
+    )
+    total_remaining_expr = free_remaining_expr + paid_quota_balance_expr
+    total_jobs_expr = func.coalesce(stats_subquery.c.total_jobs, 0)
+    last_active_expr = stats_subquery.c.last_job_created_at
+
+    normalized_sort_by = str(sort_by or "last_active").strip().lower()
+    normalized_sort_direction = str(sort_direction or "desc").strip().lower()
+    sort_is_asc = normalized_sort_direction == "asc"
+
+    sort_expression_map = {
+        "last_active": last_active_expr,
+        "usage_count": total_jobs_expr,
+        "user_id": users.c.id,
+        "remaining_quota": total_remaining_expr,
+        "created_at": users.c.created_at,
+    }
+    primary_sort_expr = sort_expression_map.get(normalized_sort_by, last_active_expr)
+    primary_sort_clause = primary_sort_expr.asc() if sort_is_asc else primary_sort_expr.desc()
+
+    order_clauses = []
+    if normalized_sort_by == "last_active":
+        order_clauses.extend(
+            [
+                case(
+                    (last_active_expr.is_(None), 1),
+                    else_=0,
+                ),
+                primary_sort_clause,
+                users.c.id.desc(),
+            ]
+        )
+    else:
+        order_clauses.extend(
+            [
+                primary_sort_clause,
+                users.c.id.desc() if not sort_is_asc else users.c.id.asc(),
+            ]
+        )
 
     total_statement = select(func.count()).select_from(joined_tables)
     list_statement = (
@@ -602,14 +661,7 @@ def list_admin_users(
             stats_subquery.c.last_job_created_at,
         )
         .select_from(joined_tables)
-        .order_by(
-            case(
-                (stats_subquery.c.last_job_created_at.is_(None), 1),
-                else_=0,
-            ),
-            stats_subquery.c.last_job_created_at.desc(),
-            users.c.created_at.desc(),
-        )
+        .order_by(*order_clauses)
         .limit(page_size)
         .offset(max(0, page - 1) * page_size)
     )

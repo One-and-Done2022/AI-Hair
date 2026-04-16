@@ -126,7 +126,7 @@
         gap: 14px;
       }
       .form-grid {
-        grid-template-columns: repeat(3, minmax(0, 1fr));
+        grid-template-columns: repeat(5, minmax(0, 1fr));
       }
       .field {
         display: grid;
@@ -324,6 +324,31 @@
               <option value="100">100</option>
             </select>
           </div>
+          <div class="field">
+            <label for="accountScopeInput">账号范围</label>
+            <select id="accountScopeInput">
+              <option value="wechat_only" selected>仅微信用户</option>
+              <option value="all">全部账号</option>
+              <option value="internal_only">仅内部测试账号</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="sortByInput">排序方式</label>
+            <select id="sortByInput">
+              <option value="last_active" selected>最近活跃</option>
+              <option value="usage_count">使用次数</option>
+              <option value="remaining_quota">剩余次数</option>
+              <option value="user_id">用户 ID</option>
+              <option value="created_at">注册时间</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="sortDirectionInput">排序方向</label>
+            <select id="sortDirectionInput">
+              <option value="desc" selected>从大到小 / 最新优先</option>
+              <option value="asc">从小到大 / 最早优先</option>
+            </select>
+          </div>
         </div>
         <div class="actions" style="margin-top: 14px;">
           <button id="searchBtn" class="btn-primary" type="button">查询用户</button>
@@ -410,6 +435,9 @@
       const userIdInput = document.getElementById("userIdInput");
       const keywordInput = document.getElementById("keywordInput");
       const pageSizeInput = document.getElementById("pageSizeInput");
+      const accountScopeInput = document.getElementById("accountScopeInput");
+      const sortByInput = document.getElementById("sortByInput");
+      const sortDirectionInput = document.getElementById("sortDirectionInput");
       const sessionPill = document.getElementById("sessionPill");
       const statusPill = document.getElementById("statusPill");
       const tableBody = document.getElementById("tableBody");
@@ -489,6 +517,9 @@
           user_id: userIdInput.value.trim(),
           keyword: keywordInput.value.trim(),
           page_size: pageSizeInput.value,
+          account_scope: accountScopeInput.value,
+          sort_by: sortByInput.value,
+          sort_direction: sortDirectionInput.value,
         };
       }
 
@@ -628,6 +659,9 @@
         params.set("page_size", String(state.pageSize));
         if (filters.user_id) params.set("user_id", filters.user_id);
         if (filters.keyword) params.set("keyword", filters.keyword);
+        if (filters.account_scope) params.set("account_scope", filters.account_scope);
+        if (filters.sort_by) params.set("sort_by", filters.sort_by);
+        if (filters.sort_direction) params.set("sort_direction", filters.sort_direction);
         setStatus("正在查询用户数据...");
         const payload = await requestJson("/api/admin/users?" + params.toString());
         state.total = payload.total;
@@ -651,6 +685,9 @@
         userIdInput.value = "";
         keywordInput.value = "";
         pageSizeInput.value = "50";
+        accountScopeInput.value = "wechat_only";
+        sortByInput.value = "last_active";
+        sortDirectionInput.value = "desc";
       }
 
       document.getElementById("searchBtn").addEventListener("click", function () {

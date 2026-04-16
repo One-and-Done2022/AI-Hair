@@ -449,6 +449,75 @@ def test_admin_users_requires_login_and_lists_user_summaries(tmp_path, monkeypat
         assert user_filter_payload["items"][0]["user_id"] == secondary["user_id"]
 
 
+def test_admin_users_support_scope_and_sorting(tmp_path, monkeypatch):
+    client = _create_client(tmp_path, monkeypatch)
+    now = datetime.now(timezone.utc).replace(microsecond=0)
+    wechat_low = _seed_job(
+        openid="og-wechat-low",
+        created_at=(now - timedelta(hours=3)).isoformat(),
+        nickname="低频微信用户",
+        job_status="succeeded",
+        with_media=True,
+    )
+    wechat_high = _seed_job(
+        openid="og-wechat-high",
+        created_at=(now - timedelta(hours=2)).isoformat(),
+        nickname="高频微信用户",
+        job_status="succeeded",
+        with_media=True,
+    )
+    _seed_job(
+        openid="og-wechat-high",
+        created_at=(now - timedelta(hours=1)).isoformat(),
+        nickname="高频微信用户",
+        job_status="failed",
+        error_code="provider_error",
+        error_message="scene failed",
+        with_media=False,
+    )
+    internal_user = _seed_job(
+        openid="dev_internal_only",
+        created_at=now.isoformat(),
+        nickname="内部测试",
+        job_status="succeeded",
+        with_media=True,
+    )
+
+    with client:
+        _login_admin(client)
+
+        grant_response = client.post(
+            f"/api/admin/users/{wechat_low['user_id']}/quota/grant",
+            json={"count": 2},
+        )
+        assert grant_response.status_code == 200
+
+        wechat_only_response = client.get(
+            "/api/admin/users?account_scope=wechat_only&sort_by=usage_count&sort_direction=desc"
+        )
+        assert wechat_only_response.status_code == 200
+        wechat_only_payload = wechat_only_response.json()
+        assert wechat_only_payload["total"] == 2
+        assert [item["user_id"] for item in wechat_only_payload["items"]] == [
+            wechat_high["user_id"],
+            wechat_low["user_id"],
+        ]
+
+        remaining_sorted_response = client.get(
+            "/api/admin/users?account_scope=wechat_only&sort_by=remaining_quota&sort_direction=desc"
+        )
+        assert remaining_sorted_response.status_code == 200
+        remaining_sorted_payload = remaining_sorted_response.json()
+        assert remaining_sorted_payload["items"][0]["user_id"] == wechat_low["user_id"]
+        assert remaining_sorted_payload["items"][0]["total_remaining"] == 12
+
+        internal_only_response = client.get("/api/admin/users?account_scope=internal_only")
+        assert internal_only_response.status_code == 200
+        internal_only_payload = internal_only_response.json()
+        assert internal_only_payload["total"] == 1
+        assert internal_only_payload["items"][0]["user_id"] == internal_user["user_id"]
+
+
 def test_admin_feedback_requires_login_and_supports_filters(tmp_path, monkeypatch):
     client = _create_client(tmp_path, monkeypatch)
     now = datetime.now(timezone.utc).replace(microsecond=0)

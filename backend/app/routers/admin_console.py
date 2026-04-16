@@ -453,6 +453,9 @@ def get_admin_users(
     page_size: int = Query(default=20, ge=1, le=200),
     user_id: int | None = Query(default=None),
     keyword: str | None = Query(default=None),
+    sort_by: str = Query(default="last_active"),
+    sort_direction: str = Query(default="desc"),
+    account_scope: str = Query(default="all"),
     current_admin: dict = Depends(get_current_admin),
 ) -> AdminUserListResponse:
     del current_admin
@@ -462,6 +465,9 @@ def get_admin_users(
         page_size=page_size,
         user_id=user_id,
         keyword=keyword,
+        sort_by=sort_by,
+        sort_direction=sort_direction,
+        account_scope=account_scope,
     )
     return AdminUserListResponse(
         page=query_result["page"],
