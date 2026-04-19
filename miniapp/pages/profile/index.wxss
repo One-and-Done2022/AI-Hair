@@ -173,6 +173,10 @@
   margin-top: 24rpx;
 }
 
+.member-secondary-button {
+  margin-top: 16rpx;
+}
+
 .tool-list {
   margin-top: 12rpx;
 }

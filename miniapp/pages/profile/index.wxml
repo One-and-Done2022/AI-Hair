@@ -56,6 +56,9 @@
     <button class="primary-button member-button" loading="{{purchasing}}" bindtap="purchaseOnePack">
       {{purchaseItem ? ('购买 1 次 · ' + purchaseItem.price_label) : '购买 1 次生成'}}
     </button>
+    <button wx:if="{{hasActiveCreation}}" class="secondary-button member-button member-secondary-button" bindtap="continueCreation">
+      继续当前创作
+    </button>
   </view>
 
   <view wx:if="{{profile}}" class="panel tools-card">

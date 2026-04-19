@@ -10,10 +10,7 @@ const {
   resolveProfessionalMappedSelection
 } = require("../../utils/hair-color");
 const { upsertPendingHistoryJob } = require("../../utils/pending-history");
-const {
-  getDefaultPurchaseItem,
-  quickPurchaseDefaultGenerationPack
-} = require("../../utils/purchase");
+const { getDefaultPurchaseItem } = require("../../utils/purchase");
 const { request } = require("../../utils/request");
 const {
   ensureCurrentUpload,
@@ -84,8 +81,7 @@ Page({
     purchaseItem: null,
     rewardedAdEnabled: isRewardedVideoAdEnabled(),
     adUnlocking: false,
-    submitting: false,
-    purchasing: false
+    submitting: false
   },
 
   async onLoad() {
@@ -247,48 +243,31 @@ Page({
     return purchaseItem;
   },
 
-  async promptPurchaseForQuota() {
+  openProfilePurchase() {
+    wx.switchTab({
+      url: "/pages/profile/index"
+    });
+    return false;
+  },
+
+  async promptGoProfilePurchase() {
     const purchaseItem = await this.ensurePurchaseItem();
     if (!purchaseItem) {
       wx.showToast({
-        title: "当前没有可购买商品",
+        title: "当前支付暂未开放",
         icon: "none"
       });
       return false;
     }
     const confirmed = await showConfirmModal({
-      title: "购买生成包",
-      content: `当前可用次数已用完。确认购买 ${purchaseItem.name}（${purchaseItem.price_label}）后，会进入支付页，支付完成后继续本次生成。`,
-      confirmText: "立即购买"
+      title: "去我的购买",
+      content: `当前可用次数已用完。请前往“我的”页购买 ${purchaseItem.name}（${purchaseItem.price_label}），购买完成后再回来继续本次生成。`,
+      confirmText: "前往我的"
     });
     if (!confirmed) {
       return false;
     }
-
-    this.setData({ purchasing: true });
-    wx.showLoading({ title: "正在购买" });
-    try {
-      await quickPurchaseDefaultGenerationPack(purchaseItem.product_id);
-      wx.showToast({
-        title: "已增加 1 次生成",
-        icon: "success"
-      });
-      const profileSummary = await this.refreshQuotaSummary().catch(() => null);
-      return getTotalRemaining(profileSummary || this.data.profileSummary) > 0;
-    } catch (error) {
-      showError(error, {
-        fallback: "购买失败，请稍后再试",
-        preferModal: true
-      });
-      return false;
-    } finally {
-      wx.hideLoading();
-      this.setData({ purchasing: false });
-    }
-  },
-
-  async purchaseOnePack() {
-    await this.promptPurchaseForQuota();
+    return this.openProfilePurchase();
   },
 
   async unlockOneQuotaByAd() {
@@ -325,7 +304,7 @@ Page({
     if (canUnlockByAd(profileSummary) && this.data.rewardedAdEnabled) {
       const tapIndex = await new Promise((resolve) => {
         wx.showActionSheet({
-          itemList: ["看广告解锁 1 次", "直接购买 1 次"],
+          itemList: ["看广告解锁 1 次", "去我的购买"],
           success: (result) => resolve(result.tapIndex),
           fail: () => resolve(-1)
         });
@@ -334,11 +313,11 @@ Page({
         return this.unlockOneQuotaByAd();
       }
       if (tapIndex === 1) {
-        return this.promptPurchaseForQuota();
+        return this.openProfilePurchase();
       }
       return false;
     }
-    return this.promptPurchaseForQuota();
+    return this.promptGoProfilePurchase();
   },
 
   async ensureQuotaBeforeCreateJob() {

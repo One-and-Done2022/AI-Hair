@@ -1,4 +1,5 @@
 const { ensureLogin, clearLogin } = require("../../utils/auth");
+const { readCreationDraft } = require("../../utils/creation-draft");
 const { showError } = require("../../utils/errors");
 const {
   getDefaultPurchaseItem,
@@ -37,6 +38,7 @@ Page({
     profile: null,
     purchaseItem: null,
     purchasing: false,
+    hasActiveCreation: false,
     enableInternalSceneTool
   },
 
@@ -60,7 +62,8 @@ Page({
           joined_label: formatJoinedAt(profile.created_at),
           avatar_text: "AI"
         },
-        purchaseItem
+        purchaseItem,
+        hasActiveCreation: this.hasActiveCreationDraft()
       });
     } catch (error) {
       showError(error, { fallback: "加载失败" });
@@ -86,6 +89,36 @@ Page({
       title: "额度说明",
       content: "每个用户先赠送 1 次初始免费完整生成。用完后，最多还可以看 2 次激励广告，再各解锁 1 次完整生成。广告次数用完后，可按 1 元 1 次继续购买。",
       showCancel: false
+    });
+  },
+
+  hasActiveCreationDraft() {
+    const draft = readCreationDraft();
+    return !!(draft.imagePath || draft.hairstyle || draft.scene);
+  },
+
+  continueCreation() {
+    const draft = readCreationDraft();
+    if (!draft.imagePath) {
+      wx.switchTab({
+        url: "/pages/index/index"
+      });
+      return;
+    }
+    if (!draft.hairstyle) {
+      wx.navigateTo({
+        url: "/pages/templates/index"
+      });
+      return;
+    }
+    if (!draft.scene) {
+      wx.navigateTo({
+        url: "/pages/scenes/index"
+      });
+      return;
+    }
+    wx.navigateTo({
+      url: "/pages/review/index"
     });
   },
 
@@ -119,6 +152,17 @@ Page({
         icon: "success"
       });
       await this.loadProfile();
+      if (this.hasActiveCreationDraft()) {
+        const shouldContinue = await showConfirmModal({
+          title: "购买成功",
+          content: "已为你增加 1 次生成，是否回到当前创作继续生成？",
+          confirmText: "继续创作",
+          cancelText: "稍后再说"
+        });
+        if (shouldContinue) {
+          this.continueCreation();
+        }
+      }
     } catch (error) {
       showError(error, {
         fallback: "购买失败，请稍后再试",
