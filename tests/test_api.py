@@ -704,6 +704,8 @@ def test_build_scene_only_prompt_locks_existing_hairstyle_and_updates_scene():
     assert "场景系统：" in prompt
     assert "人物表现系统：" in prompt
     assert "抬手整理窗边发丝" not in prompt
+    assert "边缘碎发与极少数表层发丝轻微摆动" not in prompt
+    assert "不要额外制造飞发、散发、风吹效果或二次定型痕迹" in prompt
 
 
 
@@ -785,7 +787,8 @@ def test_scene_only_prompt_assembly_exposes_hair_lock_blocks():
     assert len(bangs_blocks) == 1
     motion_blocks = [block.text for block in assembly.blocks if block.key == "hair_motion_constraint"]
     assert len(motion_blocks) == 1
-    assert "禁止风力、动作或镜头变化改变主发型结构" in motion_blocks[0]
+    assert "不要额外制造飞发、散发、风吹效果或二次定型痕迹" in motion_blocks[0]
+    assert "禁止动作、表情、服装、布光或镜头变化改变主发型结构" in motion_blocks[0]
     hair_color_blocks = [block.text for block in assembly.blocks if block.key == "hair_color_lock"]
     assert len(hair_color_blocks) == 1
     assert "不要二次改色" in hair_color_blocks[0]
@@ -854,8 +857,11 @@ def test_rooftop_wind_scene_only_prompt_sanitizes_hair_motion_conflicts():
     assert "突出风感发丝" not in prompt
     assert "头部轻微转动让发丝被风掀起" not in prompt
     assert "风感约束：" in prompt
-    assert "风主要作用于衣角与空气流动，只允许极少量边缘碎发轻微摆动" in prompt
-    assert "禁止风力、动作或镜头变化改变主发型结构" in prompt
+    assert "当前场景按静态完成发型处理，不要额外制造飞发、散发、风吹效果或二次定型痕迹" in prompt
+    assert "只允许极少量边缘碎发轻微摆动" not in prompt
+    assert "服装和发型都要为轮廓服务" not in prompt
+    assert "风吹发丝与衣角必须自然统一" not in prompt
+    assert "禁止动作、表情、服装、布光或镜头变化改变主发型结构" in prompt
 
 
 
@@ -899,6 +905,30 @@ def test_scene_only_prompt_sanitizes_dynamic_scene_lighting_language():
     assert "单侧硬光切过脸部和发型" not in prompt
     assert "发丝纹理被明显勾出" not in prompt
     assert "单侧硬光切过脸部与肩颈轮廓" in prompt
+    assert "发型纹理要清晰可辨" not in prompt
+    assert "人物轮廓与面部结构要清晰可辨" in prompt
+
+
+def test_scene_only_prompt_sanitizes_neckline_constraints_that_redefine_hair_fall():
+    from app.services import templates
+
+    scene = templates.get_scene("modern-cherry-blossom-spring")
+    hairstyle = templates.get_hairstyle("female-black-long-straight")
+
+    assert scene is not None
+    assert hairstyle is not None
+
+    prompt = templates.build_scene_only_prompt(
+        scene,
+        hairstyle=hairstyle,
+        preferred_gender="female",
+        seed_source="spring-neckline-hair-lock",
+    )
+
+    assert "头发不要贴在脖子上" not in prompt
+    assert "零散发丝垂落" not in prompt
+    assert "缠绕在脖颈和锁骨处" not in prompt
+    assert "靠近镜头一侧的脖颈与锁骨区域需要清晰可读" in prompt
 
 def test_build_prompt_uses_one_subject_action_and_one_compatible_detail_action():
     from app.services import templates
