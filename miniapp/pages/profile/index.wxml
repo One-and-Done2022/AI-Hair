@@ -24,26 +24,14 @@
     <view class="quota-grid">
       <view class="quota-item emphasis">
         <view class="quota-value">{{profile.total_remaining}}</view>
-        <view class="quota-label">总剩余次数</view>
-      </view>
-      <view class="quota-item">
-        <view class="quota-value">{{profile.initial_free_remaining || profile.free_remaining}}</view>
-        <view class="quota-label">初始免费剩余</view>
-      </view>
-      <view class="quota-item">
-        <view class="quota-value">{{profile.ad_unlock_remaining}}</view>
-        <view class="quota-label">广告可再解锁</view>
-      </view>
-      <view class="quota-item">
-        <view class="quota-value">{{profile.paid_remaining}}</view>
-        <view class="quota-label">已购剩余</view>
+        <view class="quota-label">剩余可用次数</view>
       </view>
       <view class="quota-item">
         <view class="quota-value">{{profile.completed_jobs}}</view>
         <view class="quota-label">完成作品</view>
       </view>
     </view>
-    <view class="quota-footnote">新规则：先送 {{profile.initial_free_total || profile.free_quota_total}} 次初始免费；最多还能通过广告解锁 {{profile.reward_ad_max || 0}} 次；本月已创建 {{profile.monthly_used}} 次任务。</view>
+    <view class="quota-footnote">每次完整看完免费广告或成功充值后，剩余可用次数都会 +1。</view>
   </view>
 
 
