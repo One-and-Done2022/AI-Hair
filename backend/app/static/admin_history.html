@@ -947,8 +947,9 @@
             <div class="detail-item"><strong>完成场景数</strong><code>${escapeHtml(item.completed_scene_count)}</code></div>
             <div class="detail-item"><strong>用户 ID / OpenID</strong><code>${escapeHtml(item.user_id)} / ${escapeHtml(item.user_openid || "-")}</code></div>
             <div class="detail-item"><strong>用户剩余总次数</strong><code>${escapeHtml(item.total_remaining)} 次</code></div>
-            <div class="detail-item"><strong>免费剩余 / 已用</strong><code>${escapeHtml(item.free_remaining)} / ${escapeHtml(item.free_quota_used)} （总免费 ${escapeHtml(item.free_quota_total)}）</code></div>
-            <div class="detail-item"><strong>补发 / 付费剩余</strong><code>${escapeHtml(item.paid_remaining)} 次</code></div>
+            <div class="detail-item"><strong>初始免费剩余 / 已用</strong><code>${escapeHtml(item.initial_free_remaining || item.free_remaining)} / ${escapeHtml(item.initial_free_used || item.free_quota_used)} （总免费 ${escapeHtml(item.initial_free_total || item.free_quota_total)}）</code></div>
+            <div class="detail-item"><strong>广告已领 / 已用 / 剩余</strong><code>${escapeHtml(item.reward_ad_grant_total || 0)} / ${escapeHtml(item.reward_ad_used || 0)} / ${escapeHtml(item.reward_ad_remaining || 0)}</code></div>
+            <div class="detail-item"><strong>已购剩余</strong><code>${escapeHtml(item.paid_remaining)} 次</code></div>
             <div class="detail-item"><strong>上传 ID</strong><code>${escapeHtml(item.upload_id || "-")}</code></div>
             <div class="detail-item"><strong>媒体过期时间</strong><code>${escapeHtml(formatDateTime(item.media_expires_at))}</code></div>
             <div class="detail-item"><strong>错误码</strong><code>${escapeHtml(item.error_code || "-")}</code></div>

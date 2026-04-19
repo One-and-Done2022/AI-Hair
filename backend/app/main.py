@@ -17,6 +17,7 @@ from app.routers import (
     me,
     provider_admin,
     purchase,
+    quota,
     recommendations,
     scene_understanding,
     templates,
@@ -107,6 +108,7 @@ def create_app() -> FastAPI:
     app.include_router(jobs.router, prefix=settings.api_prefix)
     app.include_router(history.router, prefix=settings.api_prefix)
     app.include_router(me.router, prefix=settings.api_prefix)
+    app.include_router(quota.router, prefix=settings.api_prefix)
     app.include_router(purchase.router, prefix=settings.api_prefix)
     app.include_router(feedback.router, prefix=settings.api_prefix)
     app.include_router(provider_admin.router)

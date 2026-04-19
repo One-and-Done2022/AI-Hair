@@ -44,7 +44,35 @@ const UPLOAD_ERROR_MESSAGES = {
 const GENERIC_ERROR_MESSAGES = {
   quota_exhausted: {
     title: "次数已用完",
-    content: "你的免费次数已经用完，请先购买 1 次生成包，再继续本次完整生成。"
+    content: "当前免费次数已用完。你可以先看广告再解锁 1 次生成，也可以直接购买 1 次生成包。"
+  },
+  reward_ad_limit_reached: {
+    title: "广告次数已用完",
+    content: "你最多只能通过广告解锁 2 次生成，请直接购买 1 次生成包继续。"
+  },
+  rewarded_ad_unavailable: {
+    title: "广告暂不可用",
+    content: "激励广告暂未开放或加载失败，请直接购买 1 次生成包。"
+  },
+  rewarded_ad_not_completed: {
+    title: "广告未看完",
+    content: "完整观看广告后才能解锁本次生成。"
+  },
+  quota_still_available: {
+    title: "当前还有次数",
+    content: "你当前还有可用次数，无需通过广告解锁。"
+  },
+  ad_unlock_session_not_found: {
+    title: "解锁会话失效",
+    content: "未找到本次广告解锁会话，请重新开始。"
+  },
+  ad_unlock_session_expired: {
+    title: "解锁已过期",
+    content: "广告解锁会话已过期，请重新观看广告。"
+  },
+  ad_unlock_session_already_claimed: {
+    title: "奖励已领取",
+    content: "本次广告奖励已领取，请勿重复提交。"
   },
   invalid_purchase_product: {
     title: "商品不可用",
@@ -62,6 +90,22 @@ const GENERIC_ERROR_MESSAGES = {
     title: "拉起支付失败",
     content: "微信支付下单失败，请稍后再试。"
   },
+  payment_provider_unavailable: {
+    title: "支付暂不可用",
+    content: "当前支付通道尚未配置完成，请稍后再试。"
+  },
+  payment_disabled: {
+    title: "支付暂未开放",
+    content: "当前支付入口暂未开放，请稍后再试。"
+  },
+  payment_prepare_failed: {
+    title: "拉起支付失败",
+    content: "当前支付下单失败，请稍后再试。"
+  },
+  payment_qrcode_unavailable: {
+    title: "二维码暂不可用",
+    content: "当前二维码加载失败，请稍后重新发起支付。"
+  },
   payment_cancelled: {
     title: "已取消支付",
     content: "你已取消本次支付。"
@@ -69,6 +113,10 @@ const GENERIC_ERROR_MESSAGES = {
   payment_confirm_timeout: {
     title: "支付确认中",
     content: "支付已发起成功，到账确认稍有延迟，请稍后刷新额度。"
+  },
+  download_failed: {
+    title: "下载失败",
+    content: "资源下载失败，请稍后再试。"
   }
 };
 

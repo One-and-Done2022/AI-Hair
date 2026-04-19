@@ -1,0 +1,49 @@
+<view class="screen payment-screen">
+  <view class="payment-head">
+    <view class="title payment-title">扫码支付</view>
+    <view class="subtitle payment-subtitle">支付完成后会自动返回并解锁 1 次完整生成。</view>
+  </view>
+
+  <view wx:if="{{loading}}" class="panel payment-panel">
+    <view class="section-title">正在准备二维码</view>
+    <view class="payment-note">请稍候，系统正在生成支付信息。</view>
+  </view>
+
+  <block wx:else>
+    <view class="panel payment-panel">
+      <view class="payment-row">
+        <view class="payment-label">商品</view>
+        <view class="payment-value">{{order.product_name}}</view>
+      </view>
+      <view class="payment-row">
+        <view class="payment-label">金额</view>
+        <view class="payment-value payment-value-strong">{{order.amount_label}}</view>
+      </view>
+      <view class="payment-row" wx:if="{{expiresAtLabel}}">
+        <view class="payment-label">有效期</view>
+        <view class="payment-value">到 {{expiresAtLabel}}，剩余 {{secondsRemaining}} 秒</view>
+      </view>
+
+      <view class="qrcode-shell">
+        <image
+          wx:if="{{qrcodeReady}}"
+          class="qrcode-image"
+          src="{{qrcodeTempFile}}"
+          mode="aspectFit"
+          bindtap="previewQrcode"
+        ></image>
+        <view wx:elif="{{qrcodeLoading}}" class="qrcode-placeholder">二维码加载中</view>
+        <view wx:else class="qrcode-placeholder">二维码暂不可用</view>
+      </view>
+
+      <view class="payment-status">{{statusText}}</view>
+      <view class="payment-note">长按二维码可识别支付，也可以复制支付链接到微信内打开。</view>
+
+      <view class="payment-action-row">
+        <button class="secondary-button payment-action" bindtap="copyPayLink">复制支付链接</button>
+        <button class="secondary-button payment-action" loading="{{refreshing}}" bindtap="refreshOrderStatus">我已支付，刷新状态</button>
+      </view>
+      <button class="ghost-button payment-cancel" bindtap="goBack">取消支付</button>
+    </view>
+  </block>
+</view>

@@ -77,6 +77,7 @@ def _configure_wechat_pay_env(tmp_path, monkeypatch) -> dict[str, Path | str]:
     monkeypatch.setenv("WECHAT_PAY_TIMEOUT_SECONDS", "15")
     monkeypatch.setenv("WECHAT_PAY_PLATFORM_PUBLIC_KEY_PATH", str(platform_public))
     monkeypatch.setenv("WECHAT_PAY_PLATFORM_SERIAL", "platform-serial-001")
+    monkeypatch.setenv("PAYMENT_PROVIDER", "wechat_pay")
 
     return {
         "merchant_private": merchant_private,
@@ -85,6 +86,19 @@ def _configure_wechat_pay_env(tmp_path, monkeypatch) -> dict[str, Path | str]:
         "platform_public": platform_public,
         "api_v3_key": api_v3_key,
     }
+
+
+def _configure_xunhu_pay_env(monkeypatch) -> None:
+    monkeypatch.setenv("PAYMENT_PROVIDER", "xunhu")
+    monkeypatch.setenv("PAYMENT_ENABLED", "true")
+    monkeypatch.setenv("XUNHU_PAY_APP_ID", "201906179120")
+    monkeypatch.setenv("XUNHU_PAY_API_KEY", "test-xunhu-secret")
+    monkeypatch.setenv("XUNHU_PAY_GATEWAY_URL", "https://api.xunhupay.com/payment/do.html")
+    monkeypatch.setenv("XUNHU_PAY_NOTIFY_URL", "https://api.lcynas.me/api/purchase/xunhu/notify")
+    monkeypatch.setenv("XUNHU_PAY_RETURN_URL", "https://api.lcynas.me/payment/success")
+    monkeypatch.setenv("XUNHU_PAY_CALLBACK_URL", "https://api.lcynas.me/payment/retry")
+    monkeypatch.setenv("XUNHU_PAY_PLUGINS", "AIFaceMiniapp")
+    monkeypatch.setenv("XUNHU_PAY_TIMEOUT_SECONDS", "15")
 
 
 def _configure_runtime_env(tmp_path, monkeypatch, *, use_mock_generator: str = "true") -> None:
@@ -130,6 +144,8 @@ def _configure_runtime_env(tmp_path, monkeypatch, *, use_mock_generator: str = "
     monkeypatch.delenv("IMAGE_UNDERSTANDING_MAX_CONCURRENCY", raising=False)
     monkeypatch.delenv("IMAGE_UNDERSTANDING_TIMEOUT_SECONDS", raising=False)
     monkeypatch.delenv("WECHAT_PAY_MCH_ID", raising=False)
+    monkeypatch.delenv("PAYMENT_ENABLED", raising=False)
+    monkeypatch.delenv("PAYMENT_PROVIDER", raising=False)
     monkeypatch.delenv("WECHAT_PAY_CERTIFICATE_SERIAL_NO", raising=False)
     monkeypatch.delenv("WECHAT_PAY_PRIVATE_KEY_PATH", raising=False)
     monkeypatch.delenv("WECHAT_PAY_API_V3_KEY", raising=False)
@@ -138,6 +154,14 @@ def _configure_runtime_env(tmp_path, monkeypatch, *, use_mock_generator: str = "
     monkeypatch.delenv("WECHAT_PAY_TIMEOUT_SECONDS", raising=False)
     monkeypatch.delenv("WECHAT_PAY_PLATFORM_PUBLIC_KEY_PATH", raising=False)
     monkeypatch.delenv("WECHAT_PAY_PLATFORM_SERIAL", raising=False)
+    monkeypatch.delenv("XUNHU_PAY_APP_ID", raising=False)
+    monkeypatch.delenv("XUNHU_PAY_API_KEY", raising=False)
+    monkeypatch.delenv("XUNHU_PAY_GATEWAY_URL", raising=False)
+    monkeypatch.delenv("XUNHU_PAY_NOTIFY_URL", raising=False)
+    monkeypatch.delenv("XUNHU_PAY_RETURN_URL", raising=False)
+    monkeypatch.delenv("XUNHU_PAY_CALLBACK_URL", raising=False)
+    monkeypatch.delenv("XUNHU_PAY_PLUGINS", raising=False)
+    monkeypatch.delenv("XUNHU_PAY_TIMEOUT_SECONDS", raising=False)
     monkeypatch.delenv("JOB_WORKER_CONCURRENCY", raising=False)
     monkeypatch.delenv("DB_POOL_SIZE", raising=False)
     monkeypatch.delenv("DB_MAX_OVERFLOW", raising=False)
@@ -185,6 +209,16 @@ def _build_app_with_wechat_pay(tmp_path, monkeypatch):
     from app.main import create_app
 
     return create_app(), key_paths
+
+
+def _build_app_with_xunhu_pay(tmp_path, monkeypatch):
+    _configure_runtime_env(tmp_path, monkeypatch, use_mock_generator="true")
+    _configure_xunhu_pay_env(monkeypatch)
+    _clear_runtime_caches()
+
+    from app.main import create_app
+
+    return create_app()
 
 
 def _create_job_fixture(tmp_path, monkeypatch, *, ark_api_keys: str | None = None) -> dict:
@@ -1058,16 +1092,21 @@ def test_auth_upload_job_history_flow(tmp_path, monkeypatch):
         assert me_payload["user_id"] == login.json()["user_id"]
         assert me_payload["nickname"] == f"微信用户 {login.json()['user_id']}"
         assert me_payload["member_status"] == "内测用户"
-        assert me_payload["free_quota_total"] == 10
+        assert me_payload["free_quota_total"] == 1
         assert me_payload["free_quota_used"] == 1
-        assert me_payload["free_remaining"] == 9
+        assert me_payload["free_remaining"] == 0
+        assert me_payload["initial_free_remaining"] == 0
+        assert me_payload["reward_ad_grant_total"] == 0
+        assert me_payload["reward_ad_remaining"] == 0
+        assert me_payload["reward_ad_max"] == 2
+        assert me_payload["can_unlock_by_ad"] is True
         assert me_payload["paid_remaining"] == 0
-        assert me_payload["total_remaining"] == 9
+        assert me_payload["total_remaining"] == 0
         assert me_payload["monthly_used"] == 1
         assert me_payload["total_jobs"] == 1
         assert me_payload["completed_jobs"] == 1
         assert me_payload["processing_jobs"] == 0
-        assert me_payload["remaining_quota"] == 9
+        assert me_payload["remaining_quota"] == 0
         assert me_payload["provider_alerts"] == []
 
         delete_response = client.delete(f"/api/jobs/{job_id}", headers=headers)
@@ -1388,11 +1427,11 @@ def test_generation_quota_and_purchase_flow(tmp_path, monkeypatch):
 
         me_before = client.get("/api/me", headers=headers)
         assert me_before.status_code == 200
-        assert me_before.json()["free_remaining"] == 10
+        assert me_before.json()["free_remaining"] == 1
         assert me_before.json()["paid_remaining"] == 0
-        assert me_before.json()["total_remaining"] == 10
+        assert me_before.json()["total_remaining"] == 1
 
-        for _ in range(10):
+        for _ in range(1):
             job_create = client.post(
                 "/api/jobs",
                 headers=headers,
@@ -1408,6 +1447,8 @@ def test_generation_quota_and_purchase_flow(tmp_path, monkeypatch):
         me_exhausted = client.get("/api/me", headers=headers)
         assert me_exhausted.status_code == 200
         assert me_exhausted.json()["free_remaining"] == 0
+        assert me_exhausted.json()["reward_ad_remaining"] == 0
+        assert me_exhausted.json()["can_unlock_by_ad"] is True
         assert me_exhausted.json()["paid_remaining"] == 0
         assert me_exhausted.json()["total_remaining"] == 0
         assert me_exhausted.json()["remaining_quota"] == 0
@@ -1427,7 +1468,9 @@ def test_generation_quota_and_purchase_flow(tmp_path, monkeypatch):
 
         purchase_catalog = client.get("/api/purchase/catalog")
         assert purchase_catalog.status_code == 200
-        catalog_items = purchase_catalog.json()["items"]
+        purchase_catalog_payload = purchase_catalog.json()
+        assert purchase_catalog_payload["payment_enabled"] is True
+        catalog_items = purchase_catalog_payload["items"]
         assert len(catalog_items) == 1
         assert catalog_items[0]["product_id"] == "single-generation-pack"
         assert catalog_items[0]["price_cents"] == 100
@@ -1478,6 +1521,209 @@ def test_generation_quota_and_purchase_flow(tmp_path, monkeypatch):
         assert me_after_paid_use.json()["total_remaining"] == 0
 
 
+def test_rewarded_ad_unlock_flow(tmp_path, monkeypatch):
+    app = _build_app(tmp_path, monkeypatch)
+
+    with TestClient(app) as client:
+        login = client.post("/api/auth/wechat/login", json={"code": "dev-ad-flow"})
+        assert login.status_code == 200
+        headers = {"Authorization": f"Bearer {login.json()['token']}"}
+
+        upload = client.post(
+            "/api/uploads",
+            headers=headers,
+            files={"file": ("portrait.png", _build_test_image(), "image/png")},
+        )
+        assert upload.status_code == 200
+        upload_id = upload.json()["upload_id"]
+
+        catalog = client.get("/api/templates").json()
+        hairstyle_id = catalog["hairstyles"][0]["id"]
+        scene_id = catalog["scenes"][0]["id"]
+
+        first_job = client.post(
+            "/api/jobs",
+            headers=headers,
+            json={
+                "upload_id": upload_id,
+                "hairstyle_id": hairstyle_id,
+                "scene_id": scene_id,
+                "generator_backend": "premium",
+            },
+        )
+        assert first_job.status_code == 201
+
+        exhausted_me = client.get("/api/me", headers=headers)
+        assert exhausted_me.status_code == 200
+        assert exhausted_me.json()["total_remaining"] == 0
+        assert exhausted_me.json()["can_unlock_by_ad"] is True
+        assert exhausted_me.json()["reward_ad_grant_total"] == 0
+
+        session_create = client.post("/api/quota/ad-unlock/session", headers=headers)
+        assert session_create.status_code == 200
+        session_id = session_create.json()["session_id"]
+
+        claim = client.post(
+            "/api/quota/ad-unlock/claim",
+            headers=headers,
+            json={"session_id": session_id},
+        )
+        assert claim.status_code == 200
+        claim_payload = claim.json()
+        assert claim_payload["reward_ad_grant_total"] == 1
+        assert claim_payload["reward_ad_remaining"] == 1
+        assert claim_payload["total_remaining"] == 1
+        assert claim_payload["can_unlock_by_ad"] is False
+
+        duplicate_claim = client.post(
+            "/api/quota/ad-unlock/claim",
+            headers=headers,
+            json={"session_id": session_id},
+        )
+        assert duplicate_claim.status_code == 409
+        assert duplicate_claim.json()["detail"]["code"] == "ad_unlock_session_already_claimed"
+
+        ad_consumed_job = client.post(
+            "/api/jobs",
+            headers=headers,
+            json={
+                "upload_id": upload_id,
+                "hairstyle_id": hairstyle_id,
+                "scene_id": scene_id,
+                "generator_backend": "premium",
+            },
+        )
+        assert ad_consumed_job.status_code == 201
+
+        second_session = client.post("/api/quota/ad-unlock/session", headers=headers)
+        assert second_session.status_code == 200
+        second_claim = client.post(
+            "/api/quota/ad-unlock/claim",
+            headers=headers,
+            json={"session_id": second_session.json()["session_id"]},
+        )
+        assert second_claim.status_code == 200
+        assert second_claim.json()["reward_ad_grant_total"] == 2
+        assert second_claim.json()["reward_ad_remaining"] == 1
+
+        second_ad_job = client.post(
+            "/api/jobs",
+            headers=headers,
+            json={
+                "upload_id": upload_id,
+                "hairstyle_id": hairstyle_id,
+                "scene_id": scene_id,
+                "generator_backend": "premium",
+            },
+        )
+        assert second_ad_job.status_code == 201
+
+        exhausted_after_ads = client.get("/api/me", headers=headers)
+        assert exhausted_after_ads.status_code == 200
+        assert exhausted_after_ads.json()["reward_ad_grant_total"] == 2
+        assert exhausted_after_ads.json()["reward_ad_remaining"] == 0
+        assert exhausted_after_ads.json()["can_unlock_by_ad"] is False
+
+        blocked_session = client.post("/api/quota/ad-unlock/session", headers=headers)
+        assert blocked_session.status_code == 409
+        assert blocked_session.json()["detail"]["code"] == "reward_ad_limit_reached"
+
+
+def test_prepare_xunhu_payment_returns_qrcode_session(tmp_path, monkeypatch):
+    app = _build_app_with_xunhu_pay(tmp_path, monkeypatch)
+
+    from app.services.xunhu_pay import generate_xunhu_hash
+
+    class _FakeResponse:
+        status_code = 200
+
+        @staticmethod
+        def json():
+            payload = {
+                "openid": "xh-open-order-001",
+                "url_qrcode": "https://api.xunhupay.com/qrcode/demo.png",
+                "url": "https://api.xunhupay.com/pay/demo",
+                "errcode": 0,
+                "errmsg": "success!"
+            }
+            payload["hash"] = generate_xunhu_hash(payload, "test-xunhu-secret")
+            return payload
+
+    def fake_post(url, data=None, timeout=None, follow_redirects=None):
+        assert url == "https://api.xunhupay.com/payment/do.html"
+        assert data["version"] == "1.1"
+        assert data["appid"] == "201906179120"
+        assert data["notify_url"].endswith("/api/purchase/xunhu/notify")
+        assert data["callback_url"] == "https://api.lcynas.me/payment/retry"
+        assert data["return_url"] == "https://api.lcynas.me/payment/success"
+        assert data["plugins"] == "AIFaceMiniapp"
+        assert data["title"] == "1 次完整生成"
+        assert data["total_fee"] == "1"
+        assert data["trade_order_id"]
+        assert data["nonce_str"]
+        assert data["hash"] == generate_xunhu_hash(data, "test-xunhu-secret")
+        return _FakeResponse()
+
+    monkeypatch.setattr("app.services.xunhu_pay.httpx.post", fake_post)
+
+    class _FakeGetResponse:
+        headers = {"content-type": "image/png"}
+        content = b"png-demo"
+
+        @staticmethod
+        def raise_for_status():
+            return None
+
+    def fake_get(url, timeout=None, follow_redirects=None):
+        assert url == "https://api.xunhupay.com/qrcode/demo.png"
+        return _FakeGetResponse()
+
+    monkeypatch.setattr("app.routers.purchase.httpx.get", fake_get)
+
+    with TestClient(app) as client:
+        login = client.post("/api/auth/wechat/login", json={"code": "dev-test"})
+        headers = {"Authorization": f"Bearer {login.json()['token']}"}
+
+        catalog_response = client.get("/api/purchase/catalog")
+        assert catalog_response.status_code == 200
+        catalog_payload = catalog_response.json()
+        assert catalog_payload["payment_enabled"] is True
+        assert catalog_payload["default_provider"] == "xunhu"
+        assert catalog_payload["default_payment_mode"] == "qrcode"
+
+        order_create = client.post(
+            "/api/purchase/orders",
+            headers=headers,
+            json={"product_id": "single-generation-pack"},
+        )
+        assert order_create.status_code == 201
+        order_id = order_create.json()["order_id"]
+
+        pay_prepare = client.post(
+            f"/api/purchase/orders/{order_id}/pay",
+            headers=headers,
+        )
+        assert pay_prepare.status_code == 200
+        payload = pay_prepare.json()
+        assert payload["order"]["status"] == "payment_prepared"
+        assert payload["order"]["payment_provider"] == "xunhu"
+        assert payload["order"]["payment_mode"] == "qrcode"
+        assert payload["order"]["provider_order_id"] == "xh-open-order-001"
+        assert payload["payment"]["provider"] == "xunhu"
+        assert payload["payment"]["payment_mode"] == "qrcode"
+        assert payload["payment"]["qrcode_url"] == "https://api.xunhupay.com/qrcode/demo.png"
+        assert payload["payment"]["pay_url"] == "https://api.xunhupay.com/pay/demo"
+        assert payload["payment"]["qrcode_download_url"] == f"/api/purchase/orders/{order_id}/qrcode"
+
+        qrcode_response = client.get(
+            f"/api/purchase/orders/{order_id}/qrcode",
+            headers=headers,
+        )
+        assert qrcode_response.status_code == 200
+        assert qrcode_response.content == b"png-demo"
+        assert qrcode_response.headers["content-type"].startswith("image/png")
+
+
 def test_prepare_wechat_payment_returns_request_payment_params(tmp_path, monkeypatch):
     app, _key_paths = _build_app_with_wechat_pay(tmp_path, monkeypatch)
 
@@ -1520,12 +1766,15 @@ def test_prepare_wechat_payment_returns_request_payment_params(tmp_path, monkeyp
         assert pay_prepare.status_code == 200
         payload = pay_prepare.json()
         assert payload["order"]["status"] == "payment_prepared"
+        assert payload["order"]["payment_mode"] == "jsapi"
         assert payload["order"]["wechat_prepay_id"] == "wx-prepay-001"
-        assert payload["payment"]["package"] == "prepay_id=wx-prepay-001"
-        assert payload["payment"]["signType"] == "RSA"
-        assert payload["payment"]["timeStamp"]
-        assert payload["payment"]["nonceStr"]
-        assert payload["payment"]["paySign"]
+        assert payload["payment"]["payment_mode"] == "jsapi"
+        assert payload["payment"]["provider"] == "wechat_pay"
+        assert payload["payment"]["jsapi"]["package"] == "prepay_id=wx-prepay-001"
+        assert payload["payment"]["jsapi"]["signType"] == "RSA"
+        assert payload["payment"]["jsapi"]["timeStamp"]
+        assert payload["payment"]["jsapi"]["nonceStr"]
+        assert payload["payment"]["jsapi"]["paySign"]
 
 
 def test_wechat_payment_notify_confirms_order_and_recharges_quota(tmp_path, monkeypatch):
@@ -1572,7 +1821,93 @@ def test_wechat_payment_notify_confirms_order_and_recharges_quota(tmp_path, monk
         me_after = client.get("/api/me", headers=headers)
         assert me_after.status_code == 200
         assert me_after.json()["paid_remaining"] == 1
-        assert me_after.json()["total_remaining"] == 11
+        assert me_after.json()["free_remaining"] == 1
+        assert me_after.json()["total_remaining"] == 2
+
+
+def test_xunhu_payment_notify_confirms_order_and_recharges_quota(tmp_path, monkeypatch):
+    app = _build_app_with_xunhu_pay(tmp_path, monkeypatch)
+
+    from app.services.xunhu_pay import generate_xunhu_hash
+
+    with TestClient(app) as client:
+        login = client.post("/api/auth/wechat/login", json={"code": "dev-test"})
+        headers = {"Authorization": f"Bearer {login.json()['token']}"}
+
+        order_create = client.post(
+            "/api/purchase/orders",
+            headers=headers,
+            json={"product_id": "single-generation-pack"},
+        )
+        assert order_create.status_code == 201
+        order_id = order_create.json()["order_id"]
+
+        me_before = client.get("/api/me", headers=headers)
+        assert me_before.status_code == 200
+        assert me_before.json()["paid_remaining"] == 0
+
+        form_payload = {
+            "trade_order_id": order_id,
+            "total_fee": "1",
+            "transaction_id": "txn-demo-001",
+            "open_order_id": "xh-order-001",
+            "order_title": "1 次完整生成",
+            "status": "OD",
+            "plugins": "AIFaceMiniapp",
+            "attach": "{\"user_id\":1,\"product_id\":\"single-generation-pack\"}",
+            "appid": "201906179120"
+        }
+        form_payload["hash"] = generate_xunhu_hash(form_payload, "test-xunhu-secret")
+
+        notify_response = client.post(
+            "/api/purchase/xunhu/notify",
+            data=form_payload,
+        )
+        assert notify_response.status_code == 200
+        assert notify_response.text == "success"
+
+        order_detail = client.get(f"/api/purchase/orders/{order_id}", headers=headers)
+        assert order_detail.status_code == 200
+        order_payload = order_detail.json()
+        assert order_payload["status"] == "confirmed"
+        assert order_payload["payment_provider"] == "xunhu"
+        assert order_payload["provider_order_id"] == "xh-order-001"
+        assert order_payload["provider_transaction_id"] == "txn-demo-001"
+        assert order_payload["confirmed_at"]
+
+        me_after = client.get("/api/me", headers=headers)
+        assert me_after.status_code == 200
+        assert me_after.json()["paid_remaining"] == 1
+        assert me_after.json()["free_remaining"] == 1
+        assert me_after.json()["total_remaining"] == 2
+
+
+def test_purchase_catalog_returns_empty_items_when_payment_disabled(tmp_path, monkeypatch):
+    _configure_runtime_env(tmp_path, monkeypatch, use_mock_generator="true")
+    monkeypatch.setenv("PAYMENT_PROVIDER", "xunhu")
+    monkeypatch.setenv("PAYMENT_ENABLED", "false")
+    _clear_runtime_caches()
+
+    from app.main import create_app
+
+    app = create_app()
+
+    with TestClient(app) as client:
+        catalog_response = client.get("/api/purchase/catalog")
+        assert catalog_response.status_code == 200
+        payload = catalog_response.json()
+        assert payload["payment_enabled"] is False
+        assert payload["items"] == []
+
+        login = client.post("/api/auth/wechat/login", json={"code": "dev-test"})
+        headers = {"Authorization": f"Bearer {login.json()['token']}"}
+        order_create = client.post(
+            "/api/purchase/orders",
+            headers=headers,
+            json={"product_id": "single-generation-pack"},
+        )
+        assert order_create.status_code == 503
+        assert order_create.json()["detail"]["code"] == "payment_disabled"
 
 
 def test_normalize_hair_color_selection_allows_non_recommended_professional_color(monkeypatch):

@@ -31,8 +31,10 @@ users = Table(
     Column("openid", String(255), nullable=False, unique=True),
     Column("nickname", String(255)),
     Column("created_at", String(64), nullable=False),
-    Column("free_quota_total", Integer, nullable=False, server_default=text("10")),
+    Column("free_quota_total", Integer, nullable=False, server_default=text("1")),
     Column("free_quota_used", Integer, nullable=False, server_default=text("0")),
+    Column("reward_ad_grant_total", Integer, nullable=False, server_default=text("0")),
+    Column("reward_ad_used", Integer, nullable=False, server_default=text("0")),
     Column("paid_quota_balance", Integer, nullable=False, server_default=text("0")),
 )
 
@@ -94,12 +96,26 @@ purchase_orders = Table(
     Column("unit_price_cents", Integer, nullable=False),
     Column("amount_cents", Integer, nullable=False),
     Column("status", String(32), nullable=False),
+    Column("payment_provider", String(64)),
+    Column("provider_order_id", String(255)),
+    Column("provider_transaction_id", String(255)),
     Column("wechat_prepay_id", String(255)),
     Column("wechat_transaction_id", String(255)),
     Column("payment_payload", Text),
     Column("created_at", String(64), nullable=False),
     Column("updated_at", String(64), nullable=False),
     Column("confirmed_at", String(64)),
+)
+
+ad_unlock_sessions = Table(
+    "ad_unlock_sessions",
+    metadata,
+    Column("id", String(64), primary_key=True),
+    Column("user_id", Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False),
+    Column("status", String(32), nullable=False),
+    Column("created_at", String(64), nullable=False),
+    Column("expires_at", String(64), nullable=False),
+    Column("claimed_at", String(64)),
 )
 
 feedback_submissions = Table(
@@ -125,6 +141,8 @@ Index("idx_uploads_user_id", uploads.c.user_id)
 Index("idx_jobs_user_id", jobs.c.user_id)
 Index("idx_jobs_status", jobs.c.status)
 Index("idx_purchase_orders_user_id", purchase_orders.c.user_id)
+Index("idx_ad_unlock_sessions_user_id", ad_unlock_sessions.c.user_id)
+Index("idx_ad_unlock_sessions_status", ad_unlock_sessions.c.status)
 Index("idx_feedback_submissions_user_id", feedback_submissions.c.user_id)
 Index("idx_feedback_submissions_created_at", feedback_submissions.c.created_at)
 Index(
@@ -202,14 +220,25 @@ def _migrate_users_table(engine: Engine) -> None:
         existing_columns = set()
 
     statements: list[str] = []
+    should_reset_quota_model = False
     if "free_quota_total" not in existing_columns:
         statements.append(
-            "ALTER TABLE users ADD COLUMN free_quota_total INTEGER NOT NULL DEFAULT 10"
+            "ALTER TABLE users ADD COLUMN free_quota_total INTEGER NOT NULL DEFAULT 1"
         )
     if "free_quota_used" not in existing_columns:
         statements.append(
             "ALTER TABLE users ADD COLUMN free_quota_used INTEGER NOT NULL DEFAULT 0"
         )
+    if "reward_ad_grant_total" not in existing_columns:
+        statements.append(
+            "ALTER TABLE users ADD COLUMN reward_ad_grant_total INTEGER NOT NULL DEFAULT 0"
+        )
+        should_reset_quota_model = True
+    if "reward_ad_used" not in existing_columns:
+        statements.append(
+            "ALTER TABLE users ADD COLUMN reward_ad_used INTEGER NOT NULL DEFAULT 0"
+        )
+        should_reset_quota_model = True
     if "paid_quota_balance" not in existing_columns:
         statements.append(
             "ALTER TABLE users ADD COLUMN paid_quota_balance INTEGER NOT NULL DEFAULT 0"
@@ -223,6 +252,16 @@ def _migrate_users_table(engine: Engine) -> None:
     with engine.begin() as connection:
         for statement in statements:
             connection.exec_driver_sql(statement)
+        if should_reset_quota_model:
+            connection.exec_driver_sql(
+                """
+                UPDATE users
+                SET free_quota_total = 1,
+                    free_quota_used = 0,
+                    reward_ad_grant_total = 0,
+                    reward_ad_used = 0
+                """
+            )
 
 
 def _migrate_jobs_table(engine: Engine) -> None:
@@ -262,6 +301,18 @@ def _migrate_purchase_orders_table(engine: Engine) -> None:
         existing_columns = set()
 
     statements: list[str] = []
+    if "payment_provider" not in existing_columns:
+        statements.append(
+            "ALTER TABLE purchase_orders ADD COLUMN payment_provider VARCHAR(64)"
+        )
+    if "provider_order_id" not in existing_columns:
+        statements.append(
+            "ALTER TABLE purchase_orders ADD COLUMN provider_order_id VARCHAR(255)"
+        )
+    if "provider_transaction_id" not in existing_columns:
+        statements.append(
+            "ALTER TABLE purchase_orders ADD COLUMN provider_transaction_id VARCHAR(255)"
+        )
     if "wechat_prepay_id" not in existing_columns:
         statements.append(
             "ALTER TABLE purchase_orders ADD COLUMN wechat_prepay_id VARCHAR(255)"

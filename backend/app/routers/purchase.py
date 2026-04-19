@@ -1,7 +1,11 @@
 from __future__ import annotations
 
+import json
+from typing import Any
+
+import httpx
 from fastapi import APIRouter, Depends, HTTPException, Request, status
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, PlainTextResponse, Response
 
 from app.config import get_settings
 from app.dependencies import get_current_user
@@ -12,7 +16,7 @@ from app.schemas import (
     PurchaseOrderCreateRequest,
     PurchaseOrderResponse,
 )
-from app.services import billing, repository, wechat_pay
+from app.services import billing, payment_provider, repository, wechat_pay, xunhu_pay
 
 
 router = APIRouter(prefix="/purchase", tags=["purchase"])
@@ -24,7 +28,54 @@ def _format_amount_label(amount_cents: int) -> str:
     return f"{amount_cents / 100:.2f} 元"
 
 
+def _parse_order_payment_payload(order: dict) -> dict[str, Any]:
+    raw_payload = order.get("payment_payload")
+    if isinstance(raw_payload, dict):
+        return dict(raw_payload)
+    if not raw_payload:
+        return {}
+    try:
+        parsed = json.loads(raw_payload)
+    except (TypeError, ValueError):
+        return {}
+    return parsed if isinstance(parsed, dict) else {}
+
+
+def _build_payment_session(order_id: str, payment: dict[str, Any]) -> dict[str, Any]:
+    session = dict(payment)
+    if session.get("payment_mode") == "qrcode" and session.get("qrcode_url"):
+        session["qrcode_download_url"] = f"/api/purchase/orders/{order_id}/qrcode"
+    return session
+
+
+def _extract_existing_payment_session(order: dict) -> dict[str, Any] | None:
+    payload = _parse_order_payment_payload(order)
+    if payload.get("payment_mode"):
+        return _build_payment_session(str(order["id"]), payload)
+    return None
+
+
+def _derive_payment_mode(order: dict) -> str | None:
+    payload = _parse_order_payment_payload(order)
+    if payload.get("payment_mode"):
+        return str(payload["payment_mode"])
+    if order.get("wechat_prepay_id"):
+        return "jsapi"
+    return None
+
+
+def _derive_payment_status_hint(order: dict, payment_mode: str | None) -> str | None:
+    if order.get("status") == repository.PURCHASE_ORDER_CONFIRMED:
+        return "paid"
+    if payment_mode == "qrcode":
+        return "scan_to_pay"
+    if payment_mode == "jsapi":
+        return "request_payment"
+    return None
+
+
 def _order_response(order: dict) -> PurchaseOrderResponse:
+    payment_mode = _derive_payment_mode(order)
     return PurchaseOrderResponse(
         order_id=order["id"],
         product_id=order["product_id"],
@@ -34,6 +85,13 @@ def _order_response(order: dict) -> PurchaseOrderResponse:
         amount_cents=int(order["amount_cents"] or 0),
         amount_label=_format_amount_label(int(order["amount_cents"] or 0)),
         status=order["status"],
+        payment_provider=str(order.get("payment_provider") or "").strip() or None,
+        payment_mode=payment_mode,
+        payment_status_hint=_derive_payment_status_hint(order, payment_mode),
+        provider_order_id=str(order.get("provider_order_id") or "").strip() or None,
+        provider_transaction_id=(
+            str(order.get("provider_transaction_id") or "").strip() or None
+        ),
         wechat_prepay_id=order.get("wechat_prepay_id"),
         wechat_transaction_id=order.get("wechat_transaction_id"),
         created_at=order["created_at"],
@@ -42,10 +100,34 @@ def _order_response(order: dict) -> PurchaseOrderResponse:
     )
 
 
+def _payment_disabled_error() -> HTTPException:
+    return HTTPException(
+        status_code=503,
+        detail={
+            "code": "payment_disabled",
+            "message": "当前支付入口暂未开放。",
+        },
+    )
+
+
+def _ensure_payment_enabled() -> None:
+    if not get_settings().payment_enabled:
+        raise _payment_disabled_error()
+
+
 @router.get("/catalog", response_model=PurchaseCatalogResponse)
 def get_catalog() -> PurchaseCatalogResponse:
+    settings = get_settings()
+    payment_mode = "qrcode" if settings.payment_provider == "xunhu" else "jsapi"
     return PurchaseCatalogResponse(
-        items=[PurchaseCatalogItem(**item) for item in billing.list_products()]
+        items=(
+            [PurchaseCatalogItem(**item) for item in billing.list_products()]
+            if settings.payment_enabled
+            else []
+        ),
+        payment_enabled=settings.payment_enabled,
+        default_provider=settings.payment_provider,
+        default_payment_mode=payment_mode,
     )
 
 
@@ -54,6 +136,7 @@ def create_order(
     payload: PurchaseOrderCreateRequest,
     current_user: dict = Depends(get_current_user),
 ) -> PurchaseOrderResponse:
+    _ensure_payment_enabled()
     try:
         order = billing.create_order_for_product(
             user_id=current_user["id"],
@@ -92,6 +175,7 @@ def prepare_order_payment(
     order_id: str,
     current_user: dict = Depends(get_current_user),
 ) -> PurchasePaymentPrepareResponse:
+    _ensure_payment_enabled()
     order = repository.get_purchase_order_for_user(order_id, current_user["id"])
     if order is None:
         raise HTTPException(
@@ -109,30 +193,47 @@ def prepare_order_payment(
                 "message": "该订单已支付成功，无需重复支付。",
             },
         )
+
+    existing_payment = _extract_existing_payment_session(order)
+    if order["status"] == repository.PURCHASE_ORDER_PAYMENT_PREPARED and existing_payment:
+        return PurchasePaymentPrepareResponse(
+            order=_order_response(order),
+            payment=existing_payment,
+        )
+
     try:
-        prepared = wechat_pay.prepare_jsapi_payment(
+        prepared = payment_provider.prepare_payment(
             order=order,
             openid=str(current_user.get("openid") or "").strip(),
         )
-    except wechat_pay.WechatPayConfigurationError as exc:
+    except payment_provider.PaymentProviderConfigurationError as exc:
         raise HTTPException(
             status_code=503,
             detail={
-                "code": "wechat_pay_not_configured",
+                "code": "payment_provider_unavailable",
                 "message": str(exc),
             },
         ) from exc
-    except wechat_pay.WechatPayRequestError as exc:
+    except payment_provider.PaymentProviderRequestError as exc:
         raise HTTPException(
             status_code=502,
             detail={
-                "code": "wechat_pay_prepare_failed",
+                "code": "payment_prepare_failed",
                 "message": str(exc),
             },
         ) from exc
+
     refreshed_order = repository.mark_purchase_order_payment_prepared(
         order_id,
-        wechat_prepay_id=prepared["prepay_id"],
+        payment_provider=prepared["provider"],
+        provider_order_id=prepared.get("provider_order_id"),
+        provider_transaction_id=prepared.get("provider_transaction_id"),
+        wechat_prepay_id=(
+            prepared.get("provider_order_id")
+            if prepared["provider"] == "wechat_pay"
+            else None
+        ),
+        payment_payload=prepared["payment"],
     )
     if refreshed_order is None:
         raise HTTPException(
@@ -144,8 +245,51 @@ def prepare_order_payment(
         )
     return PurchasePaymentPrepareResponse(
         order=_order_response(refreshed_order),
-        payment=prepared["payment"],
+        payment=_build_payment_session(order_id, prepared["payment"]),
     )
+
+
+@router.get("/orders/{order_id}/qrcode")
+def download_order_qrcode(
+    order_id: str,
+    current_user: dict = Depends(get_current_user),
+) -> Response:
+    order = repository.get_purchase_order_for_user(order_id, current_user["id"])
+    if order is None:
+        raise HTTPException(
+            status_code=404,
+            detail={
+                "code": "purchase_order_not_found",
+                "message": "订单不存在，请重新发起购买。",
+            },
+        )
+    payment_session = _extract_existing_payment_session(order)
+    qrcode_url = str((payment_session or {}).get("qrcode_url") or "").strip()
+    if not qrcode_url:
+        raise HTTPException(
+            status_code=404,
+            detail={
+                "code": "payment_qrcode_unavailable",
+                "message": "当前订单还没有可用二维码，请重新发起支付。",
+            },
+        )
+    try:
+        response = httpx.get(
+            qrcode_url,
+            timeout=get_settings().xunhu_pay_timeout_seconds,
+            follow_redirects=True,
+        )
+        response.raise_for_status()
+    except httpx.HTTPError as exc:
+        raise HTTPException(
+            status_code=502,
+            detail={
+                "code": "payment_qrcode_unavailable",
+                "message": f"二维码拉取失败：{exc}",
+            },
+        ) from exc
+    media_type = response.headers.get("content-type", "image/png")
+    return Response(content=response.content, media_type=media_type)
 
 
 @router.post("/orders/{order_id}/confirm", response_model=PurchaseOrderResponse)
@@ -187,7 +331,9 @@ async def wechat_notify(request: Request) -> JSONResponse:
         transaction_id = str(resource.get("transaction_id") or "").strip()
         trade_state = str(resource.get("trade_state") or "").strip()
         amount_payload = resource.get("amount") or {}
-        paid_amount_cents = int(amount_payload.get("payer_total") or amount_payload.get("total") or 0)
+        paid_amount_cents = int(
+            amount_payload.get("payer_total") or amount_payload.get("total") or 0
+        )
         order = repository.get_purchase_order(order_id)
         if order is None:
             raise wechat_pay.WechatPayNotificationError("订单不存在。")
@@ -197,6 +343,7 @@ async def wechat_notify(request: Request) -> JSONResponse:
         if trade_state == "SUCCESS":
             repository.finalize_purchase_order_payment(
                 order_id,
+                provider_transaction_id=transaction_id,
                 wechat_transaction_id=transaction_id,
                 payment_payload=resource,
             )
@@ -215,3 +362,36 @@ async def wechat_notify(request: Request) -> JSONResponse:
         status_code=200,
         content={"code": "SUCCESS", "message": "成功"},
     )
+
+
+@router.post("/xunhu/notify")
+async def xunhu_notify(request: Request) -> PlainTextResponse:
+    form = await request.form()
+    try:
+        parsed = xunhu_pay.parse_payment_notification(
+            {key: value for key, value in form.items()}
+        )
+        order_id = str(parsed.get("trade_order_id") or "").strip()
+        order = repository.get_purchase_order(order_id)
+        if order is None:
+            raise xunhu_pay.XunhuPayNotificationError("订单不存在。")
+        expected_amount_cents = int(order.get("amount_cents") or 0)
+        paid_amount_cents = xunhu_pay.parse_amount_cents(
+            str(parsed.get("total_fee") or "")
+        )
+        if expected_amount_cents != paid_amount_cents:
+            raise xunhu_pay.XunhuPayNotificationError("支付金额与订单金额不一致。")
+        if str(parsed.get("status") or "").strip() == "OD":
+            repository.finalize_purchase_order_payment(
+                order_id,
+                provider_order_id=str(parsed.get("open_order_id") or "").strip() or None,
+                provider_transaction_id=(
+                    str(parsed.get("transaction_id") or "").strip() or None
+                ),
+                payment_payload=parsed,
+            )
+    except xunhu_pay.XunhuPayNotificationError:
+        return PlainTextResponse("fail", status_code=400)
+    except Exception:
+        return PlainTextResponse("fail", status_code=500)
+    return PlainTextResponse("success")

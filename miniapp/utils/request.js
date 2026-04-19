@@ -152,8 +152,62 @@ function uploadFile(options) {
   });
 }
 
+function downloadFile(options) {
+  const {
+    url,
+    header = {},
+    withAuth = true,
+    timeout,
+    _retriedAfterAuthRefresh = false
+  } = options;
+
+  return new Promise((resolve, reject) => {
+    const downloadTask = wx.downloadFile({
+      url: `${baseUrl}${url}`,
+      timeout,
+      header: getHeaders(withAuth, header),
+      success(response) {
+        if (response.statusCode >= 200 && response.statusCode < 300) {
+          resolve(response);
+          return;
+        }
+        if (withAuth && !_retriedAfterAuthRefresh && isUnauthorized(response)) {
+          refreshAuthToken()
+            .then(() => downloadFile({
+              url,
+              header,
+              withAuth,
+              timeout,
+              _retriedAfterAuthRefresh: true
+            }))
+            .then(resolve)
+            .catch(reject);
+          return;
+        }
+        reject({
+          detail: {
+            code: "download_failed",
+            message: "资源下载失败，请稍后再试。"
+          },
+          statusCode: response.statusCode
+        });
+      },
+      fail(error) {
+        reject(error);
+      }
+    });
+
+    if (downloadTask && typeof downloadTask.onProgressUpdate === "function" && typeof options.onProgress === "function") {
+      downloadTask.onProgressUpdate((progressEvent) => {
+        options.onProgress(progressEvent || {});
+      });
+    }
+  });
+}
+
 module.exports = {
   baseUrl,
   request,
-  uploadFile
+  uploadFile,
+  downloadFile
 };

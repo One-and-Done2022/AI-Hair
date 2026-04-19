@@ -12,6 +12,7 @@
     "pages/options/index",
     "pages/review/index",
     "pages/confirm/index",
+    "pages/payment/index",
     "pages/result/index"
   ],
   "window": {

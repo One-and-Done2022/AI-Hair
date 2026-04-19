@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from app.services import repository
+from app.services import payment_provider, repository
 
 DEFAULT_PRODUCT_ID = "single-generation-pack"
 
@@ -41,6 +41,7 @@ def create_order_for_product(*, user_id: int, product_id: str) -> dict:
         product_name=product["name"],
         quantity=product["generation_count"],
         unit_price_cents=product["price_cents"],
+        payment_provider=payment_provider.current_provider(),
     )
 
 

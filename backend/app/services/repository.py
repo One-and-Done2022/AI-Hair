@@ -11,6 +11,7 @@ from sqlalchemy import String, and_, case, cast, delete, func, insert, not_, or_
 
 from app.config import get_settings
 from app.db import (
+    ad_unlock_sessions,
     auth_tokens,
     feedback_submissions,
     jobs,
@@ -20,7 +21,11 @@ from app.db import (
     users,
 )
 
-DEFAULT_FREE_QUOTA_TOTAL = 10
+DEFAULT_FREE_QUOTA_TOTAL = 1
+MAX_REWARDED_AD_GRANTS = 2
+AD_UNLOCK_SESSION_PENDING = "pending"
+AD_UNLOCK_SESSION_CLAIMED = "claimed"
+AD_UNLOCK_SESSION_TTL_SECONDS = 15 * 60
 _ASIA_SHANGHAI = ZoneInfo("Asia/Shanghai")
 
 
@@ -122,13 +127,34 @@ def _build_quota_snapshot(user_row: dict) -> dict:
         _normalize_quota_int(user_row.get("free_quota_used"), 0),
         free_quota_total,
     )
+    reward_ad_grant_total = min(
+        _normalize_quota_int(user_row.get("reward_ad_grant_total"), 0),
+        MAX_REWARDED_AD_GRANTS,
+    )
+    reward_ad_used = min(
+        _normalize_quota_int(user_row.get("reward_ad_used"), 0),
+        reward_ad_grant_total,
+    )
     paid_quota_balance = _normalize_quota_int(user_row.get("paid_quota_balance"), 0)
     free_remaining = max(0, free_quota_total - free_quota_used)
-    total_remaining = free_remaining + paid_quota_balance
+    reward_ad_remaining = max(0, reward_ad_grant_total - reward_ad_used)
+    total_remaining = free_remaining + reward_ad_remaining + paid_quota_balance
     return {
         "free_quota_total": free_quota_total,
         "free_quota_used": free_quota_used,
         "free_remaining": free_remaining,
+        "initial_free_total": free_quota_total,
+        "initial_free_used": free_quota_used,
+        "initial_free_remaining": free_remaining,
+        "reward_ad_grant_total": reward_ad_grant_total,
+        "reward_ad_used": reward_ad_used,
+        "reward_ad_remaining": reward_ad_remaining,
+        "reward_ad_max": MAX_REWARDED_AD_GRANTS,
+        "reward_ad_available_to_claim": max(
+            0, MAX_REWARDED_AD_GRANTS - reward_ad_grant_total
+        ),
+        "can_unlock_by_ad": total_remaining <= 0
+        and reward_ad_grant_total < MAX_REWARDED_AD_GRANTS,
         "paid_remaining": paid_quota_balance,
         "paid_quota_balance": paid_quota_balance,
         "total_remaining": total_remaining,
@@ -165,6 +191,8 @@ def get_or_create_user(openid: str, nickname: str | None = None) -> dict:
                 created_at=created_at,
                 free_quota_total=DEFAULT_FREE_QUOTA_TOTAL,
                 free_quota_used=0,
+                reward_ad_grant_total=0,
+                reward_ad_used=0,
                 paid_quota_balance=0,
             )
         )
@@ -176,6 +204,8 @@ def get_or_create_user(openid: str, nickname: str | None = None) -> dict:
             "created_at": created_at,
             "free_quota_total": DEFAULT_FREE_QUOTA_TOTAL,
             "free_quota_used": 0,
+            "reward_ad_grant_total": 0,
+            "reward_ad_used": 0,
             "paid_quota_balance": 0,
         }
 
@@ -358,6 +388,12 @@ def create_job_consuming_quota(
                 update(users)
                 .where(users.c.id == user_id)
                 .values(free_quota_used=quota["free_quota_used"] + 1)
+            )
+        elif quota["reward_ad_remaining"] > 0:
+            session.execute(
+                update(users)
+                .where(users.c.id == user_id)
+                .values(reward_ad_used=quota["reward_ad_used"] + 1)
             )
         else:
             session.execute(
@@ -543,6 +579,8 @@ def list_admin_jobs(
             users.c.openid.label("user_openid"),
             users.c.free_quota_total.label("user_free_quota_total"),
             users.c.free_quota_used.label("user_free_quota_used"),
+            users.c.reward_ad_grant_total.label("user_reward_ad_grant_total"),
+            users.c.reward_ad_used.label("user_reward_ad_used"),
             users.c.paid_quota_balance.label("user_paid_quota_balance"),
             uploads.c.original_name.label("upload_original_name"),
             uploads.c.stored_path.label("upload_stored_path"),
@@ -606,6 +644,14 @@ def _build_admin_user_quota_summary_from_row(row: dict) -> dict:
         "free_quota_total": quota["free_quota_total"],
         "free_quota_used": quota["free_quota_used"],
         "free_remaining": quota["free_remaining"],
+        "initial_free_total": quota["initial_free_total"],
+        "initial_free_used": quota["initial_free_used"],
+        "initial_free_remaining": quota["initial_free_remaining"],
+        "reward_ad_grant_total": quota["reward_ad_grant_total"],
+        "reward_ad_used": quota["reward_ad_used"],
+        "reward_ad_remaining": quota["reward_ad_remaining"],
+        "reward_ad_max": quota["reward_ad_max"],
+        "can_unlock_by_ad": quota["can_unlock_by_ad"],
         "paid_remaining": quota["paid_remaining"],
         "total_remaining": quota["total_remaining"],
         "total_jobs": int(row.get("total_jobs") or 0),
@@ -679,12 +725,20 @@ def list_admin_users(
 
     free_quota_total_expr = func.coalesce(users.c.free_quota_total, DEFAULT_FREE_QUOTA_TOTAL)
     free_quota_used_expr = func.coalesce(users.c.free_quota_used, 0)
+    reward_ad_grant_total_expr = func.coalesce(users.c.reward_ad_grant_total, 0)
+    reward_ad_used_expr = func.coalesce(users.c.reward_ad_used, 0)
     paid_quota_balance_expr = func.coalesce(users.c.paid_quota_balance, 0)
     free_remaining_expr = case(
         (free_quota_used_expr >= free_quota_total_expr, 0),
         else_=free_quota_total_expr - free_quota_used_expr,
     )
-    total_remaining_expr = free_remaining_expr + paid_quota_balance_expr
+    reward_ad_remaining_expr = case(
+        (reward_ad_used_expr >= reward_ad_grant_total_expr, 0),
+        else_=reward_ad_grant_total_expr - reward_ad_used_expr,
+    )
+    total_remaining_expr = (
+        free_remaining_expr + reward_ad_remaining_expr + paid_quota_balance_expr
+    )
     total_jobs_expr = func.coalesce(stats_subquery.c.total_jobs, 0)
     last_active_expr = stats_subquery.c.last_job_created_at
 
@@ -793,6 +847,15 @@ def get_user_profile_summary(user_id: int) -> dict:
         "free_quota_total": quota["free_quota_total"],
         "free_quota_used": quota["free_quota_used"],
         "free_remaining": quota["free_remaining"],
+        "initial_free_total": quota["initial_free_total"],
+        "initial_free_used": quota["initial_free_used"],
+        "initial_free_remaining": quota["initial_free_remaining"],
+        "reward_ad_grant_total": quota["reward_ad_grant_total"],
+        "reward_ad_used": quota["reward_ad_used"],
+        "reward_ad_remaining": quota["reward_ad_remaining"],
+        "reward_ad_max": quota["reward_ad_max"],
+        "reward_ad_available_to_claim": quota["reward_ad_available_to_claim"],
+        "can_unlock_by_ad": quota["can_unlock_by_ad"],
         "paid_remaining": quota["paid_remaining"],
         "total_remaining": quota["total_remaining"],
         "total_jobs": total_jobs,
@@ -1113,6 +1176,100 @@ def clear_upload_media(upload_id: str) -> None:
         )
 
 
+def create_ad_unlock_session(user_id: int) -> dict:
+    session_id = uuid.uuid4().hex
+    created_at = utc_now()
+    expires_at = (
+        datetime.now(timezone.utc) + timedelta(seconds=AD_UNLOCK_SESSION_TTL_SECONDS)
+    ).replace(microsecond=0).isoformat()
+
+    with session_scope() as session:
+        user_row = session.execute(
+            select(users).where(users.c.id == user_id)
+        ).mappings().one_or_none()
+        if user_row is None:
+            raise ValueError(f"User not found: {user_id}")
+
+        quota = _build_quota_snapshot(dict(user_row))
+        if quota["total_remaining"] > 0:
+            raise ValueError("quota_still_available")
+        if quota["reward_ad_grant_total"] >= MAX_REWARDED_AD_GRANTS:
+            raise ValueError("reward_ad_limit_reached")
+
+        session.execute(
+            insert(ad_unlock_sessions).values(
+                id=session_id,
+                user_id=user_id,
+                status=AD_UNLOCK_SESSION_PENDING,
+                created_at=created_at,
+                expires_at=expires_at,
+                claimed_at=None,
+            )
+        )
+
+    return {
+        "session_id": session_id,
+        "created_at": created_at,
+        "expires_at": expires_at,
+    }
+
+
+def claim_ad_unlock_session(*, user_id: int, session_id: str) -> dict:
+    normalized_session_id = str(session_id or "").strip()
+    if not normalized_session_id:
+        raise ValueError("ad_unlock_session_not_found")
+
+    now_dt = datetime.now(timezone.utc).replace(microsecond=0)
+    now_iso = now_dt.isoformat()
+
+    with session_scope() as session:
+        unlock_row = session.execute(
+            select(ad_unlock_sessions).where(
+                and_(
+                    ad_unlock_sessions.c.id == normalized_session_id,
+                    ad_unlock_sessions.c.user_id == user_id,
+                )
+            )
+        ).mappings().one_or_none()
+        if unlock_row is None:
+            raise ValueError("ad_unlock_session_not_found")
+        unlock_session = dict(unlock_row)
+        if unlock_session["status"] != AD_UNLOCK_SESSION_PENDING:
+            raise ValueError("ad_unlock_session_already_claimed")
+
+        expires_at = _parse_iso_datetime(unlock_session.get("expires_at"))
+        if expires_at is None or expires_at < now_dt:
+            raise ValueError("ad_unlock_session_expired")
+
+        user_row = session.execute(
+            select(users).where(users.c.id == user_id)
+        ).mappings().one_or_none()
+        if user_row is None:
+            raise ValueError(f"User not found: {user_id}")
+
+        quota = _build_quota_snapshot(dict(user_row))
+        if quota["total_remaining"] > 0:
+            raise ValueError("quota_still_available")
+        if quota["reward_ad_grant_total"] >= MAX_REWARDED_AD_GRANTS:
+            raise ValueError("reward_ad_limit_reached")
+
+        session.execute(
+            update(users)
+            .where(users.c.id == user_id)
+            .values(reward_ad_grant_total=quota["reward_ad_grant_total"] + 1)
+        )
+        session.execute(
+            update(ad_unlock_sessions)
+            .where(ad_unlock_sessions.c.id == normalized_session_id)
+            .values(
+                status=AD_UNLOCK_SESSION_CLAIMED,
+                claimed_at=now_iso,
+            )
+        )
+
+    return get_user_profile_summary(user_id)
+
+
 def create_purchase_order(
     *,
     user_id: int,
@@ -1120,6 +1277,7 @@ def create_purchase_order(
     product_name: str,
     quantity: int,
     unit_price_cents: int,
+    payment_provider: str | None = None,
 ) -> dict:
     order_id = uuid.uuid4().hex
     created_at = utc_now()
@@ -1135,6 +1293,9 @@ def create_purchase_order(
                 unit_price_cents=unit_price_cents,
                 amount_cents=amount_cents,
                 status=PURCHASE_ORDER_PENDING,
+                payment_provider=str(payment_provider or "").strip() or None,
+                provider_order_id=None,
+                provider_transaction_id=None,
                 wechat_prepay_id=None,
                 wechat_transaction_id=None,
                 payment_payload=None,
@@ -1170,7 +1331,11 @@ def get_purchase_order_for_user(order_id: str, user_id: int) -> dict | None:
 def mark_purchase_order_payment_prepared(
     order_id: str,
     *,
-    wechat_prepay_id: str,
+    payment_provider: str | None = None,
+    provider_order_id: str | None = None,
+    provider_transaction_id: str | None = None,
+    wechat_prepay_id: str | None = None,
+    payment_payload: dict[str, Any] | None = None,
 ) -> dict | None:
     updated_at = utc_now()
     with session_scope() as session:
@@ -1179,7 +1344,17 @@ def mark_purchase_order_payment_prepared(
             .where(purchase_orders.c.id == order_id)
             .values(
                 status=PURCHASE_ORDER_PAYMENT_PREPARED,
-                wechat_prepay_id=wechat_prepay_id,
+                payment_provider=str(payment_provider or "").strip() or None,
+                provider_order_id=str(provider_order_id or "").strip() or None,
+                provider_transaction_id=(
+                    str(provider_transaction_id or "").strip() or None
+                ),
+                wechat_prepay_id=str(wechat_prepay_id or "").strip() or None,
+                payment_payload=(
+                    json.dumps(payment_payload, ensure_ascii=False)
+                    if payment_payload is not None
+                    else None
+                ),
                 updated_at=updated_at,
             )
         )
@@ -1212,6 +1387,8 @@ def confirm_purchase_order_for_user(order_id: str, user_id: int) -> dict | None:
 def finalize_purchase_order_payment(
     order_id: str,
     *,
+    provider_order_id: str | None = None,
+    provider_transaction_id: str | None = None,
     wechat_transaction_id: str | None = None,
     payment_payload: dict[str, Any] | None = None,
 ) -> dict | None:
@@ -1246,6 +1423,14 @@ def finalize_purchase_order_payment(
             .where(purchase_orders.c.id == order_id)
             .values(
                 status=PURCHASE_ORDER_CONFIRMED,
+                provider_order_id=(
+                    str(provider_order_id or "").strip()
+                    or order.get("provider_order_id")
+                ),
+                provider_transaction_id=(
+                    str(provider_transaction_id or "").strip()
+                    or order.get("provider_transaction_id")
+                ),
                 wechat_transaction_id=wechat_transaction_id or order.get("wechat_transaction_id"),
                 payment_payload=(
                     json.dumps(payment_payload, ensure_ascii=False)

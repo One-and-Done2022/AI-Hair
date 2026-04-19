@@ -55,6 +55,7 @@ Page({
       this.setData({
         profile: {
           ...profile,
+          ad_unlock_remaining: Number(profile.reward_ad_available_to_claim || 0),
           provider_alerts: [],
           joined_label: formatJoinedAt(profile.created_at),
           avatar_text: "AI"
@@ -83,7 +84,7 @@ Page({
   showQuotaHelp() {
     wx.showModal({
       title: "额度说明",
-      content: "新用户会一次性获得 10 次免费完整生成。每次完整生成会返回 1 张换发预览和 2 张场景成片。免费次数用完后，可按 1 元 1 次继续购买。",
+      content: "每个用户先赠送 1 次初始免费完整生成。用完后，最多还可以看 2 次激励广告，再各解锁 1 次完整生成。广告次数用完后，可按 1 元 1 次继续购买。",
       showCancel: false
     });
   },
@@ -104,7 +105,7 @@ Page({
       }
       const confirmed = await showConfirmModal({
         title: "购买生成包",
-        content: `确认购买 ${purchaseItem.name}（${purchaseItem.price_label}）？确认后会拉起微信支付。`,
+        content: `确认购买 ${purchaseItem.name}（${purchaseItem.price_label}）？确认后会进入支付页。`,
         confirmText: "立即购买"
       });
       if (!confirmed) {

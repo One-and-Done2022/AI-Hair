@@ -9,7 +9,6 @@
   <view wx:if="{{showcases.length}}" class="showcase-section">
     <view class="section-row">
       <view class="section-title">精选示例</view>
-      <view class="section-note">服务端固定保留的历史成片，所有内测用户都可见并可一键套用</view>
     </view>
     <view class="showcase-grid">
       <view

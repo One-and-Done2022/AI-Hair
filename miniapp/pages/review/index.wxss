@@ -60,11 +60,31 @@
   color: #5d6670;
 }
 
+.preview-breakdown {
+  margin-top: 12rpx;
+}
+
+.preview-breakdown-line {
+  margin-top: 8rpx;
+  font-size: 22rpx;
+  color: #5d6670;
+}
+
 .preview-warning {
   margin-top: 12rpx;
   font-size: 22rpx;
   line-height: 1.5;
   color: #8a4b00;
+}
+
+.preview-action-row {
+  margin-top: 18rpx;
+  display: flex;
+  gap: 14rpx;
+}
+
+.preview-action-button {
+  flex: 1;
 }
 
 .preview-purchase-button {

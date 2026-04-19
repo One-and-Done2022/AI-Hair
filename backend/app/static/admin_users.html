@@ -581,7 +581,7 @@
               <td>
                 <div class="row-title">
                   <strong>${escapeHtml(item.total_remaining)} 次</strong>
-                  <span class="row-sub">免费 ${escapeHtml(item.free_remaining)} / 补发 ${escapeHtml(item.paid_remaining)}</span>
+                  <span class="row-sub">初始免费 ${escapeHtml(item.initial_free_remaining || item.free_remaining)} / 广告 ${escapeHtml(item.reward_ad_remaining || 0)} / 已购 ${escapeHtml(item.paid_remaining)}</span>
                 </div>
               </td>
               <td>
@@ -620,8 +620,9 @@
             <div class="detail-item"><strong>OpenID</strong><code>${escapeHtml(item.user_openid || "-")}</code></div>
             <div class="detail-item"><strong>注册时间</strong><code>${escapeHtml(formatDateTime(item.created_at))}</code></div>
             <div class="detail-item"><strong>总剩余次数</strong><code>${escapeHtml(item.total_remaining)} 次</code></div>
-            <div class="detail-item"><strong>免费剩余 / 已用 / 总免费</strong><code>${escapeHtml(item.free_remaining)} / ${escapeHtml(item.free_quota_used)} / ${escapeHtml(item.free_quota_total)}</code></div>
-            <div class="detail-item"><strong>补发 / 付费剩余</strong><code>${escapeHtml(item.paid_remaining)} 次</code></div>
+            <div class="detail-item"><strong>初始免费剩余 / 已用 / 总免费</strong><code>${escapeHtml(item.initial_free_remaining || item.free_remaining)} / ${escapeHtml(item.initial_free_used || item.free_quota_used)} / ${escapeHtml(item.initial_free_total || item.free_quota_total)}</code></div>
+            <div class="detail-item"><strong>广告已领 / 已用 / 剩余</strong><code>${escapeHtml(item.reward_ad_grant_total || 0)} / ${escapeHtml(item.reward_ad_used || 0)} / ${escapeHtml(item.reward_ad_remaining || 0)}</code></div>
+            <div class="detail-item"><strong>已购剩余</strong><code>${escapeHtml(item.paid_remaining)} 次</code></div>
             <div class="detail-item"><strong>总任务 / 已完成 / 处理中</strong><code>${escapeHtml(item.total_jobs)} / ${escapeHtml(item.completed_jobs)} / ${escapeHtml(item.processing_jobs)}</code></div>
             <div class="detail-item"><strong>最近任务时间</strong><code>${escapeHtml(formatDateTime(item.last_job_created_at || item.created_at))}</code></div>
           </div>

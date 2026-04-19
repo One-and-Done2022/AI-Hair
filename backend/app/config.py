@@ -187,6 +187,8 @@ class Settings:
     use_mock_generator: bool
     wechat_app_id: str
     wechat_app_secret: str
+    payment_enabled: bool
+    payment_provider: str
     wechat_pay_mch_id: str
     wechat_pay_certificate_serial_no: str
     wechat_pay_private_key_path: Path
@@ -196,6 +198,14 @@ class Settings:
     wechat_pay_timeout_seconds: int
     wechat_pay_platform_public_key_path: Path
     wechat_pay_platform_serial: str
+    xunhu_pay_app_id: str
+    xunhu_pay_api_key: str
+    xunhu_pay_gateway_url: str
+    xunhu_pay_notify_url: str
+    xunhu_pay_return_url: str
+    xunhu_pay_callback_url: str
+    xunhu_pay_plugins: str
+    xunhu_pay_timeout_seconds: int
     allow_dev_login: bool
     admin_console_username: str
     admin_console_password: str
@@ -249,6 +259,16 @@ class Settings:
         return self.wechat_pay_enabled and (
             self.wechat_pay_platform_public_key_path != Path()
         )
+
+    @property
+    def xunhu_pay_enabled(self) -> bool:
+        required_text = (
+            self.xunhu_pay_app_id,
+            self.xunhu_pay_api_key,
+            self.xunhu_pay_gateway_url,
+            self.xunhu_pay_notify_url,
+        )
+        return all(item.strip() for item in required_text)
 
     def ensure_directories(self) -> None:
         self.storage_dir.mkdir(parents=True, exist_ok=True)
@@ -392,6 +412,10 @@ def get_settings() -> Settings:
         raise ValueError(
             "OBJECT_STORAGE_BACKEND must be either 'local' or 'aliyun_oss'."
         )
+
+    payment_provider = os.getenv("PAYMENT_PROVIDER", "xunhu").strip().lower()
+    if payment_provider not in {"wechat_pay", "xunhu"}:
+        raise ValueError("PAYMENT_PROVIDER must be either 'wechat_pay' or 'xunhu'.")
 
     image_generator_backend = os.getenv(
         "IMAGE_GENERATOR_BACKEND",
@@ -551,6 +575,8 @@ def get_settings() -> Settings:
         ),
         wechat_app_id=os.getenv("WECHAT_APP_ID", "").strip(),
         wechat_app_secret=os.getenv("WECHAT_APP_SECRET", "").strip(),
+        payment_enabled=_env_bool("PAYMENT_ENABLED", True),
+        payment_provider=payment_provider,
         wechat_pay_mch_id=os.getenv("WECHAT_PAY_MCH_ID", "").strip(),
         wechat_pay_certificate_serial_no=os.getenv(
             "WECHAT_PAY_CERTIFICATE_SERIAL_NO", ""
@@ -571,6 +597,19 @@ def get_settings() -> Settings:
         wechat_pay_platform_serial=os.getenv(
             "WECHAT_PAY_PLATFORM_SERIAL", ""
         ).strip(),
+        xunhu_pay_app_id=os.getenv("XUNHU_PAY_APP_ID", "").strip(),
+        xunhu_pay_api_key=os.getenv("XUNHU_PAY_API_KEY", "").strip(),
+        xunhu_pay_gateway_url=os.getenv(
+            "XUNHU_PAY_GATEWAY_URL", "https://api.xunhupay.com/payment/do.html"
+        ).strip(),
+        xunhu_pay_notify_url=os.getenv("XUNHU_PAY_NOTIFY_URL", "").strip(),
+        xunhu_pay_return_url=os.getenv("XUNHU_PAY_RETURN_URL", "").strip(),
+        xunhu_pay_callback_url=os.getenv("XUNHU_PAY_CALLBACK_URL", "").strip(),
+        xunhu_pay_plugins=os.getenv("XUNHU_PAY_PLUGINS", "AIFaceMiniapp").strip(),
+        xunhu_pay_timeout_seconds=max(
+            5,
+            _env_int("XUNHU_PAY_TIMEOUT_SECONDS", 15),
+        ),
         allow_dev_login=_env_bool("ALLOW_DEV_LOGIN", True),
         admin_console_username=os.getenv("ADMIN_CONSOLE_USERNAME", "").strip(),
         admin_console_password=os.getenv("ADMIN_CONSOLE_PASSWORD", "").strip(),

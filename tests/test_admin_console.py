@@ -248,11 +248,12 @@ def test_admin_history_filters_and_pagination(tmp_path, monkeypatch):
         assert len(first_item["result_image_urls"]) == 2
         assert first_item["result_dir_absolute_path"].endswith(first_item["job_id"])
         assert first_item["nickname"] == "阿青"
-        assert first_item["free_quota_total"] == 10
+        assert first_item["free_quota_total"] == 1
         assert first_item["free_quota_used"] == 0
-        assert first_item["free_remaining"] == 10
+        assert first_item["free_remaining"] == 1
+        assert first_item["reward_ad_remaining"] == 0
         assert first_item["paid_remaining"] == 0
-        assert first_item["total_remaining"] == 10
+        assert first_item["total_remaining"] == 1
         assert first_item["first_image_duration_seconds"] == 45.0
         assert first_item["first_scene_duration_seconds"] == 120.0
         assert first_item["completed_duration_seconds"] == 150.0
@@ -338,9 +339,10 @@ def test_admin_can_grant_user_quota_and_history_reflects_remaining_times(tmp_pat
         assert payload["user_id"] == seeded["user_id"]
         assert payload["nickname"] == "阿澈"
         assert payload["user_openid"] == "history-grant-user"
-        assert payload["free_remaining"] == 10
+        assert payload["free_remaining"] == 1
+        assert payload["reward_ad_remaining"] == 0
         assert payload["paid_remaining"] == 3
-        assert payload["total_remaining"] == 13
+        assert payload["total_remaining"] == 4
         assert payload["total_jobs"] == 1
         assert payload["completed_jobs"] == 1
         assert payload["processing_jobs"] == 0
@@ -352,9 +354,10 @@ def test_admin_can_grant_user_quota_and_history_reflects_remaining_times(tmp_pat
         assert history_payload["total"] == 1
         item = history_payload["items"][0]
         assert item["user_id"] == seeded["user_id"]
-        assert item["free_remaining"] == 10
+        assert item["free_remaining"] == 1
+        assert item["reward_ad_remaining"] == 0
         assert item["paid_remaining"] == 3
-        assert item["total_remaining"] == 13
+        assert item["total_remaining"] == 4
 
 
 def test_admin_users_requires_login_and_lists_user_summaries(tmp_path, monkeypatch):
@@ -419,9 +422,10 @@ def test_admin_users_requires_login_and_lists_user_summaries(tmp_path, monkeypat
         )
         assert primary_item["nickname"] == "林夏"
         assert primary_item["user_openid"] == "admin-users-primary"
-        assert primary_item["free_remaining"] == 10
+        assert primary_item["free_remaining"] == 1
+        assert primary_item["reward_ad_remaining"] == 0
         assert primary_item["paid_remaining"] == 5
-        assert primary_item["total_remaining"] == 15
+        assert primary_item["total_remaining"] == 6
         assert primary_item["total_jobs"] == 2
         assert primary_item["completed_jobs"] == 1
         assert primary_item["processing_jobs"] == 0
@@ -509,7 +513,7 @@ def test_admin_users_support_scope_and_sorting(tmp_path, monkeypatch):
         assert remaining_sorted_response.status_code == 200
         remaining_sorted_payload = remaining_sorted_response.json()
         assert remaining_sorted_payload["items"][0]["user_id"] == wechat_low["user_id"]
-        assert remaining_sorted_payload["items"][0]["total_remaining"] == 12
+        assert remaining_sorted_payload["items"][0]["total_remaining"] == 3
 
         internal_only_response = client.get("/api/admin/users?account_scope=internal_only")
         assert internal_only_response.status_code == 200

@@ -29,15 +29,18 @@ function doRequestPayment(payment) {
 }
 
 async function getPurchaseCatalog() {
-  const payload = await request({
+  return request({
     url: "/api/purchase/catalog",
     withAuth: false
   });
-  return payload.items || [];
 }
 
 async function getDefaultPurchaseItem() {
-  const items = await getPurchaseCatalog();
+  const payload = await getPurchaseCatalog();
+  const items = payload.items || [];
+  if (!payload.payment_enabled) {
+    return null;
+  }
   return items.find((item) => item.is_default) || items[0] || null;
 }
 
@@ -67,13 +70,48 @@ async function waitForPurchaseOrderConfirmed(orderId, options = {}) {
   };
 }
 
+function openQrPaymentPage(paymentPreparation) {
+  const orderId = paymentPreparation && paymentPreparation.order
+    ? paymentPreparation.order.order_id
+    : "";
+  return new Promise((resolve, reject) => {
+    wx.navigateTo({
+      url: `/pages/payment/index?orderId=${encodeURIComponent(orderId)}`,
+      events: {
+        purchaseConfirmed(payload) {
+          resolve(payload);
+        },
+        purchaseCancelled(error) {
+          reject(error || {
+            detail: {
+              code: "payment_cancelled",
+              message: "你已取消本次支付。"
+            }
+          });
+        }
+      },
+      success(res) {
+        res.eventChannel.emit("paymentSession", paymentPreparation);
+      },
+      fail(error) {
+        reject(error);
+      }
+    });
+  });
+}
+
 async function quickPurchaseDefaultGenerationPack(productId = "") {
   const purchaseItem = productId
     ? { product_id: productId }
     : await getDefaultPurchaseItem();
   const selectedProductId = purchaseItem && purchaseItem.product_id;
   if (!selectedProductId) {
-    throw new Error("当前没有可用的购买商品");
+    throw {
+      detail: {
+        code: "payment_disabled",
+        message: "当前支付暂未开放。"
+      }
+    };
   }
 
   const order = await request({
@@ -89,8 +127,23 @@ async function quickPurchaseDefaultGenerationPack(productId = "") {
     method: "POST"
   });
 
-  await doRequestPayment(paymentPreparation.payment);
-  const confirmedOrder = await waitForPurchaseOrderConfirmed(order.order_id);
+  const payment = paymentPreparation.payment || {};
+  let confirmedOrder = null;
+  if (payment.payment_mode === "jsapi" && payment.jsapi) {
+    await doRequestPayment(payment.jsapi);
+    confirmedOrder = await waitForPurchaseOrderConfirmed(order.order_id);
+  } else if (payment.payment_mode === "qrcode") {
+    const pagePayload = await openQrPaymentPage(paymentPreparation);
+    confirmedOrder = (pagePayload && pagePayload.order) || pagePayload;
+  } else {
+    throw {
+      detail: {
+        code: "payment_prepare_failed",
+        message: "当前支付通道返回了不支持的支付方式。"
+      }
+    };
+  }
+
   return {
     item: purchaseItem.product_id ? purchaseItem : null,
     order: confirmedOrder

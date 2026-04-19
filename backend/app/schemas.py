@@ -350,6 +350,14 @@ class AdminHistoryItem(JobResponse):
     free_quota_total: int = 0
     free_quota_used: int = 0
     free_remaining: int = 0
+    initial_free_total: int = 0
+    initial_free_used: int = 0
+    initial_free_remaining: int = 0
+    reward_ad_grant_total: int = 0
+    reward_ad_used: int = 0
+    reward_ad_remaining: int = 0
+    reward_ad_max: int = 0
+    can_unlock_by_ad: bool = False
     paid_remaining: int = 0
     total_remaining: int = 0
     model_name: str
@@ -392,6 +400,14 @@ class AdminUserQuotaResponse(BaseModel):
     free_quota_total: int
     free_quota_used: int
     free_remaining: int
+    initial_free_total: int = 0
+    initial_free_used: int = 0
+    initial_free_remaining: int = 0
+    reward_ad_grant_total: int = 0
+    reward_ad_used: int = 0
+    reward_ad_remaining: int = 0
+    reward_ad_max: int = 0
+    can_unlock_by_ad: bool = False
     paid_remaining: int
     total_remaining: int
     total_jobs: int = 0
@@ -421,6 +437,15 @@ class MeResponse(BaseModel):
     free_quota_total: int
     free_quota_used: int
     free_remaining: int
+    initial_free_total: int = 0
+    initial_free_used: int = 0
+    initial_free_remaining: int = 0
+    reward_ad_grant_total: int = 0
+    reward_ad_used: int = 0
+    reward_ad_remaining: int = 0
+    reward_ad_max: int = 0
+    reward_ad_available_to_claim: int = 0
+    can_unlock_by_ad: bool = False
     paid_remaining: int
     total_remaining: int
     total_jobs: int
@@ -511,6 +536,9 @@ class PurchaseCatalogItem(BaseModel):
 
 class PurchaseCatalogResponse(BaseModel):
     items: list[PurchaseCatalogItem] = Field(default_factory=list)
+    payment_enabled: bool = True
+    default_provider: str | None = None
+    default_payment_mode: str | None = None
 
 
 class PurchaseOrderCreateRequest(BaseModel):
@@ -526,6 +554,11 @@ class PurchaseOrderResponse(BaseModel):
     amount_cents: int
     amount_label: str
     status: Literal["pending", "payment_prepared", "confirmed"]
+    payment_provider: str | None = None
+    payment_mode: Literal["jsapi", "qrcode"] | None = None
+    payment_status_hint: str | None = None
+    provider_order_id: str | None = None
+    provider_transaction_id: str | None = None
     wechat_prepay_id: str | None = None
     wechat_transaction_id: str | None = None
     created_at: str
@@ -541,9 +574,48 @@ class WechatPaymentParams(BaseModel):
     paySign: str
 
 
+class PurchasePaymentSession(BaseModel):
+    provider: str
+    payment_mode: Literal["jsapi", "qrcode"]
+    display_text: str | None = None
+    expires_at: str | None = None
+    pay_url: str | None = None
+    qrcode_url: str | None = None
+    qrcode_download_url: str | None = None
+    jsapi: WechatPaymentParams | None = None
+
+
 class PurchasePaymentPrepareResponse(BaseModel):
     order: PurchaseOrderResponse
-    payment: WechatPaymentParams
+    payment: PurchasePaymentSession
+
+
+class AdUnlockSessionResponse(BaseModel):
+    session_id: str
+    created_at: str
+    expires_at: str
+
+
+class AdUnlockClaimRequest(BaseModel):
+    session_id: str = Field(min_length=1)
+
+
+class QuotaSnapshotResponse(BaseModel):
+    remaining_quota: int
+    free_quota_total: int
+    free_quota_used: int
+    free_remaining: int
+    initial_free_total: int = 0
+    initial_free_used: int = 0
+    initial_free_remaining: int = 0
+    reward_ad_grant_total: int = 0
+    reward_ad_used: int = 0
+    reward_ad_remaining: int = 0
+    reward_ad_max: int = 0
+    reward_ad_available_to_claim: int = 0
+    can_unlock_by_ad: bool = False
+    paid_remaining: int
+    total_remaining: int
 
 class ProviderAdminAlertRecord(BaseModel):
     alert_id: str
