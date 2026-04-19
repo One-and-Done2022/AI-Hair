@@ -888,14 +888,7 @@ def _feedback_prompt_for_success_ordinal(success_ordinal: int) -> dict[str, Any]
             "survey_type": FEEDBACK_SURVEY_FIRST_SUCCESS,
             "trigger_completed_jobs": 1,
             "title": "首次使用体验反馈",
-            "description": "这是你第一次成功出图，想收集一下首次使用体验。",
-        }
-    if success_ordinal == 4:
-        return {
-            "survey_type": FEEDBACK_SURVEY_FOURTH_SUCCESS,
-            "trigger_completed_jobs": 4,
-            "title": "多次使用体验反馈",
-            "description": "你已经累计成功出图 4 次，想了解你连续使用后的真实感受。",
+            "description": "这是你第一次成功出图，填写反馈后会赠送你 1 次新的使用机会。",
         }
     return None
 
@@ -972,6 +965,12 @@ def create_feedback_submission(
     submission_id = uuid.uuid4().hex
     created_at = utc_now()
     with session_scope() as session:
+        user_row = session.execute(
+            select(users).where(users.c.id == user_id)
+        ).mappings().one_or_none()
+        if user_row is None:
+            raise ValueError(f"User not found: {user_id}")
+
         existing = session.execute(
             select(feedback_submissions.c.id).where(
                 and_(
@@ -1000,9 +999,22 @@ def create_feedback_submission(
                 created_at=created_at,
             )
         )
-    return get_feedback_submission_by_id(submission_id) or {
+        current_paid_balance = _normalize_quota_int(
+            user_row.get("paid_quota_balance"),
+            0,
+        )
+        session.execute(
+            update(users)
+            .where(users.c.id == user_id)
+            .values(paid_quota_balance=current_paid_balance + 1)
+        )
+    summary = get_user_profile_summary(user_id)
+    return (get_feedback_submission_by_id(submission_id) or {
         "id": submission_id,
         "created_at": created_at,
+    }) | {
+        "granted_quota_count": 1,
+        "total_remaining": int(summary.get("total_remaining") or 0),
     }
 
 

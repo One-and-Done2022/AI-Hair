@@ -486,6 +486,8 @@ class FeedbackSubmissionResponse(BaseModel):
     created_at: str
     survey_type: Literal["first_success", "fourth_success"]
     trigger_completed_jobs: int
+    granted_quota_count: int = 0
+    total_remaining: int = 0
 
 
 class AdminFeedbackItem(BaseModel):

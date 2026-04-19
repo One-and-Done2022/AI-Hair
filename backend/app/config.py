@@ -610,7 +610,7 @@ def get_settings() -> Settings:
             5,
             _env_int("XUNHU_PAY_TIMEOUT_SECONDS", 15),
         ),
-        allow_dev_login=_env_bool("ALLOW_DEV_LOGIN", True),
+        allow_dev_login=_env_bool("ALLOW_DEV_LOGIN", False),
         admin_console_username=os.getenv("ADMIN_CONSOLE_USERNAME", "").strip(),
         admin_console_password=os.getenv("ADMIN_CONSOLE_PASSWORD", "").strip(),
         admin_console_session_secret=os.getenv("ADMIN_CONSOLE_SESSION_SECRET", "").strip(),

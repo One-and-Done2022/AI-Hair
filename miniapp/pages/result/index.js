@@ -753,7 +753,7 @@ Page({
 
     this.setData({ feedbackSubmitting: true });
     try {
-      await request({
+      const submissionPayload = await request({
         url: "/api/feedback/submissions",
         method: "POST",
         data: {
@@ -780,8 +780,11 @@ Page({
         feedbackForm: buildEmptyFeedbackForm(),
         feedbackSuggestionLength: 0
       });
+      const grantedQuotaCount = Number(
+        (submissionPayload && submissionPayload.granted_quota_count) || 0
+      );
       wx.showToast({
-        title: "反馈已提交",
+        title: grantedQuotaCount > 0 ? `已赠送 ${grantedQuotaCount} 次` : "反馈已提交",
         icon: "success"
       });
     } catch (error) {

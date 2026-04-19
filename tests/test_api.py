@@ -4434,6 +4434,14 @@ def test_feedback_pending_and_submission_flow(tmp_path, monkeypatch):
         submission_payload = submission_response.json()
         assert submission_payload["survey_type"] == "first_success"
         assert submission_payload["trigger_completed_jobs"] == 1
+        assert submission_payload["granted_quota_count"] == 1
+        assert submission_payload["total_remaining"] == 2
+
+        me_after_feedback = client.get("/api/me", headers=headers)
+        assert me_after_feedback.status_code == 200
+        me_after_feedback_payload = me_after_feedback.json()
+        assert me_after_feedback_payload["paid_remaining"] == 1
+        assert me_after_feedback_payload["total_remaining"] == 2
 
         duplicate_submission = client.post(
             "/api/feedback/submissions",
@@ -4461,7 +4469,7 @@ def test_feedback_pending_and_submission_flow(tmp_path, monkeypatch):
         assert pending_after_submit_payload["survey_type"] is None
 
 
-def test_feedback_pending_only_on_first_and_fourth_success(tmp_path, monkeypatch):
+def test_feedback_pending_only_on_first_success(tmp_path, monkeypatch):
     app = _build_app(tmp_path, monkeypatch)
 
     with TestClient(app) as client:
@@ -4524,10 +4532,8 @@ def test_feedback_pending_only_on_first_and_fourth_success(tmp_path, monkeypatch
         )
         assert fourth_pending.status_code == 200
         fourth_payload = fourth_pending.json()
-        assert fourth_payload["pending"] is True
-        assert fourth_payload["survey_type"] == "fourth_success"
-        assert fourth_payload["trigger_completed_jobs"] == 4
-        assert fourth_payload["success_ordinal"] == 4
+        assert fourth_payload["pending"] is False
+        assert fourth_payload["survey_type"] is None
 
         failed_pending = client.get(
             f"/api/feedback/pending?job_id={failed_job['id']}",

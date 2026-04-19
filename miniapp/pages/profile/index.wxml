@@ -31,7 +31,7 @@
         <view class="quota-label">完成作品</view>
       </view>
     </view>
-    <view class="quota-footnote">新用户默认可免费生成 1 次；后续每成功购买 1 次生成包，剩余可用次数都会 +1。</view>
+    <view class="quota-footnote">新用户默认可免费生成 1 次；首次成功后填写反馈会再赠送 1 次，后续每成功购买 1 次生成包，剩余可用次数都会 +1。</view>
   </view>
 
 
@@ -40,7 +40,7 @@
       <view class="section-title">购买生成包</view>
       <view wx:if="{{purchaseItem}}" class="mini-note">{{purchaseItem.price_label}}</view>
     </view>
-    <view class="membership-copy">新用户默认可免费生成 1 次。免费次数用完后，可继续按次购买，每次新增 1 次完整生成额度。</view>
+    <view class="membership-copy">新用户默认可免费生成 1 次。首次成功后填写体验反馈还会赠送 1 次；免费次数用完后，可继续按次购买，每次新增 1 次完整生成额度。</view>
     <button class="primary-button member-button" loading="{{purchasing}}" bindtap="purchaseOnePack">
       {{purchaseItem ? ('购买 1 次 · ' + purchaseItem.price_label) : '购买 1 次生成'}}
     </button>

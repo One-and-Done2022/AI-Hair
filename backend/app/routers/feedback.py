@@ -80,4 +80,6 @@ def create_feedback_submission(
         created_at=submission["created_at"],
         survey_type=submission["survey_type"],
         trigger_completed_jobs=int(submission["trigger_completed_jobs"]),
+        granted_quota_count=int(submission.get("granted_quota_count") or 0),
+        total_remaining=int(submission.get("total_remaining") or 0),
     )
