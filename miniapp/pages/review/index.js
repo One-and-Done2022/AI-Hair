@@ -1,10 +1,6 @@
 const { ensureLogin } = require("../../utils/auth");
 const { getErrorCode, showError } = require("../../utils/errors");
 const {
-  isRewardedVideoAdEnabled,
-  unlockQuotaByRewardedAd
-} = require("../../utils/ad-unlock");
-const {
   findProfessionalHairColorById,
   resolveHairColorSelection,
   resolveProfessionalMappedSelection
@@ -50,10 +46,6 @@ function getTotalRemaining(profileSummary) {
   return Number.isNaN(fallback) ? 0 : fallback;
 }
 
-function canUnlockByAd(profileSummary) {
-  return !!(profileSummary && profileSummary.can_unlock_by_ad);
-}
-
 function showConfirmModal(options) {
   return new Promise((resolve) => {
     wx.showModal({
@@ -79,8 +71,6 @@ Page({
     selectedHairColorProfessionalSummary: "",
     profileSummary: null,
     purchaseItem: null,
-    rewardedAdEnabled: isRewardedVideoAdEnabled(),
-    adUnlocking: false,
     submitting: false
   },
 
@@ -270,68 +260,14 @@ Page({
     return this.openProfilePurchase();
   },
 
-  async unlockOneQuotaByAd() {
-    if (this.data.adUnlocking) {
-      return false;
-    }
-    this.setData({ adUnlocking: true });
-    wx.showLoading({ title: "正在准备广告" });
-    try {
-      const quotaSnapshot = await unlockQuotaByRewardedAd();
-      const profileSummary = await this.refreshQuotaSummary().catch(() => ({
-        ...(this.data.profileSummary || {}),
-        ...quotaSnapshot
-      }));
-      this.setData({ profileSummary });
-      wx.showToast({
-        title: "已解锁 1 次生成",
-        icon: "success"
-      });
-      return getTotalRemaining(profileSummary) > 0;
-    } catch (error) {
-      showError(error, {
-        fallback: "广告解锁失败，请稍后再试",
-        preferModal: true
-      });
-      return false;
-    } finally {
-      wx.hideLoading();
-      this.setData({ adUnlocking: false });
-    }
-  },
-
-  async promptUnlockAction(profileSummary) {
-    if (canUnlockByAd(profileSummary) && this.data.rewardedAdEnabled) {
-      const tapIndex = await new Promise((resolve) => {
-        wx.showActionSheet({
-          itemList: ["看广告解锁 1 次", "去我的购买"],
-          success: (result) => resolve(result.tapIndex),
-          fail: () => resolve(-1)
-        });
-      });
-      if (tapIndex === 0) {
-        return this.unlockOneQuotaByAd();
-      }
-      if (tapIndex === 1) {
-        return this.openProfilePurchase();
-      }
-      return false;
-    }
-    return this.promptGoProfilePurchase();
-  },
-
   async ensureQuotaBeforeCreateJob() {
     const profileSummary = await this.refreshQuotaSummary().catch(() => this.data.profileSummary);
     if (getTotalRemaining(profileSummary) > 0) {
       return true;
     }
     wx.hideLoading();
-    const unlocked = await this.promptUnlockAction(profileSummary);
-    if (!unlocked) {
-      return false;
-    }
-    wx.showLoading({ title: "正在提交任务" });
-    return true;
+    await this.promptGoProfilePurchase();
+    return false;
   },
 
   async submitJobRequest() {
@@ -407,13 +343,9 @@ Page({
           throw error;
         }
         wx.hideLoading();
-        const profileSummary = await this.refreshQuotaSummary().catch(() => this.data.profileSummary);
-        const unlocked = await this.promptUnlockAction(profileSummary);
-        if (!unlocked) {
-          return;
-        }
-        wx.showLoading({ title: "正在提交任务" });
-        job = await this.submitJobRequest();
+        await this.refreshQuotaSummary().catch(() => this.data.profileSummary);
+        await this.promptGoProfilePurchase();
+        return;
       }
 
       wx.navigateTo({

@@ -57,7 +57,6 @@ Page({
       this.setData({
         profile: {
           ...profile,
-          ad_unlock_remaining: Number(profile.reward_ad_available_to_claim || 0),
           provider_alerts: [],
           joined_label: formatJoinedAt(profile.created_at),
           avatar_text: "AI"
@@ -87,7 +86,7 @@ Page({
   showQuotaHelp() {
     wx.showModal({
       title: "额度说明",
-      content: "剩余可用次数是你当前还能生成的总次数。每次完整看完一次免费广告，或成功购买一次生成包后，剩余可用次数都会 +1。",
+      content: "新用户默认可免费生成 1 次。免费次数用完后，可以在“我的”页按次购买生成包；每次购买成功后，剩余可用次数都会 +1。",
       showCancel: false
     });
   },

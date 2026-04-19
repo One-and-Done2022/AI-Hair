@@ -35,47 +35,16 @@
         <view wx:if="{{profileSummary}}" class="preview-meta">当前剩余 {{profileSummary.total_remaining || profileSummary.remaining_quota}} 次</view>
         <view wx:if="{{profileSummary}}" class="preview-breakdown">
           <view class="preview-breakdown-line">初始免费剩余 {{profileSummary.initial_free_remaining || profileSummary.free_remaining}} / {{profileSummary.initial_free_total || profileSummary.free_quota_total}}</view>
-          <view class="preview-breakdown-line">广告还可解锁 {{profileSummary.reward_ad_available_to_claim || 0}} 次</view>
           <view class="preview-breakdown-line">已购剩余 {{profileSummary.paid_remaining || 0}} 次</view>
         </view>
         <view
-          wx:if="{{profileSummary && (profileSummary.total_remaining || profileSummary.remaining_quota) <= 0 && profileSummary.can_unlock_by_ad && rewardedAdEnabled}}"
+          wx:if="{{profileSummary && (profileSummary.total_remaining || profileSummary.remaining_quota) <= 0}}"
           class="preview-warning"
         >
-          初始免费已用完。你还可以看广告再解锁 {{profileSummary.reward_ad_available_to_claim || 0}} 次，购买入口统一放在“我的”页。
-        </view>
-        <view
-          wx:if="{{profileSummary && (profileSummary.total_remaining || profileSummary.remaining_quota) <= 0 && profileSummary.can_unlock_by_ad && !rewardedAdEnabled}}"
-          class="preview-warning"
-        >
-          你还有广告解锁次数，但当前小程序尚未配置激励广告。请前往“我的”页购买次数。
-        </view>
-        <view
-          wx:if="{{profileSummary && (profileSummary.total_remaining || profileSummary.remaining_quota) <= 0 && !profileSummary.can_unlock_by_ad}}"
-          class="preview-warning"
-        >
-          {{purchaseItem ? '初始免费和广告解锁次数都已用完，请前往“我的”页购买 1 次生成包后继续。' : '当前支付暂未开放，请稍后再试。'}}
-        </view>
-        <view
-          wx:if="{{profileSummary && (profileSummary.total_remaining || profileSummary.remaining_quota) <= 0 && profileSummary.can_unlock_by_ad && rewardedAdEnabled}}"
-          class="preview-action-row"
-        >
-          <button
-            class="secondary-button preview-action-button"
-            loading="{{adUnlocking}}"
-            bindtap="unlockOneQuotaByAd"
-          >
-            看广告解锁
-          </button>
-          <button
-            class="secondary-button preview-action-button"
-            bindtap="openProfilePurchase"
-          >
-            去我的购买
-          </button>
+          {{purchaseItem ? '免费次数已用完，请前往“我的”页购买 1 次生成包后继续。' : '当前支付暂未开放，请稍后再试。'}}
         </view>
         <button
-          wx:if="{{purchaseItem && profileSummary && (profileSummary.total_remaining || profileSummary.remaining_quota) <= 0 && (!profileSummary.can_unlock_by_ad || !rewardedAdEnabled)}}"
+          wx:if="{{purchaseItem && profileSummary && (profileSummary.total_remaining || profileSummary.remaining_quota) <= 0}}"
           class="secondary-button preview-purchase-button"
           bindtap="openProfilePurchase"
         >
@@ -113,7 +82,7 @@
 
     <view class="floating-bar">
       <button class="primary-button" loading="{{submitting}}" bindtap="createJob">
-        {{(profileSummary && (profileSummary.total_remaining || profileSummary.remaining_quota) <= 0 && profileSummary.can_unlock_by_ad && rewardedAdEnabled) ? '先解锁本次' : ((profileSummary && (profileSummary.total_remaining || profileSummary.remaining_quota) <= 0) ? '去我的购买' : '开始生成')}}
+        {{(profileSummary && (profileSummary.total_remaining || profileSummary.remaining_quota) <= 0) ? '去我的购买' : '开始生成'}}
       </button>
     </view>
   </block>

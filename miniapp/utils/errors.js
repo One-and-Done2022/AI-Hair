@@ -44,11 +44,15 @@ const UPLOAD_ERROR_MESSAGES = {
 const GENERIC_ERROR_MESSAGES = {
   quota_exhausted: {
     title: "次数已用完",
-    content: "当前免费次数已用完。你可以先看广告再解锁 1 次生成，也可以直接购买 1 次生成包。"
+    content: "当前免费次数已用完，请前往“我的”页购买 1 次生成包后继续。"
   },
   reward_ad_limit_reached: {
     title: "广告次数已用完",
     content: "你最多只能通过广告解锁 2 次生成，请直接购买 1 次生成包继续。"
+  },
+  reward_ad_disabled: {
+    title: "广告暂未开放",
+    content: "当前免费广告入口未开放，请直接购买 1 次生成包。"
   },
   rewarded_ad_unavailable: {
     title: "广告暂不可用",
