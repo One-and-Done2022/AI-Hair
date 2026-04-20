@@ -53,23 +53,38 @@
     <view class="section-title">工具入口</view>
     <view class="tool-list">
       <view class="tool-row" bindtap="openWorks">
-        <view class="tool-label">作品记录</view>
+        <view class="tool-main">
+          <view class="tool-label">作品记录</view>
+          <view class="tool-subtitle">查看历史生成结果与保存的作品</view>
+        </view>
         <view class="tool-arrow">›</view>
       </view>
       <view wx:if="{{enableInternalSceneTool}}" class="tool-row" bindtap="openSceneTool">
-        <view class="tool-label">场景草案工具</view>
+        <view class="tool-main">
+          <view class="tool-label">场景草案工具</view>
+          <view class="tool-subtitle">内部场景录入与审核工具</view>
+        </view>
         <view class="tool-arrow">›</view>
       </view>
-      <view class="tool-row" bindtap="showComingSoon" data-label="帮助反馈">
-        <view class="tool-label">帮助反馈</view>
+      <view class="tool-row" bindtap="openHelpFeedback">
+        <view class="tool-main">
+          <view class="tool-label">帮助反馈</view>
+          <view class="tool-subtitle">常见说明、问题反馈与客服微信</view>
+        </view>
         <view class="tool-arrow">›</view>
       </view>
-      <view class="tool-row" bindtap="showComingSoon" data-label="设置">
-        <view class="tool-label">设置</view>
+      <view class="tool-row" bindtap="showSettingsInfo">
+        <view class="tool-main">
+          <view class="tool-label">设置</view>
+          <view class="tool-subtitle">查看版本、UID、图片保留与额度规则</view>
+        </view>
         <view class="tool-arrow">›</view>
       </view>
       <view class="tool-row" bindtap="relogin">
-        <view class="tool-label">刷新登录</view>
+        <view class="tool-main">
+          <view class="tool-label">刷新登录</view>
+          <view class="tool-subtitle">重新拉取账号状态与剩余额度</view>
+        </view>
         <view class="tool-arrow">›</view>
       </view>
     </view>

@@ -182,7 +182,8 @@
 }
 
 .tool-row {
-  height: 92rpx;
+  min-height: 108rpx;
+  padding: 14rpx 0;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -193,13 +194,27 @@
   border-bottom: none;
 }
 
+.tool-main {
+  min-width: 0;
+  flex: 1;
+}
+
 .tool-label {
   font-size: 26rpx;
   font-weight: 600;
   color: #20242a;
 }
 
+.tool-subtitle {
+  margin-top: 8rpx;
+  font-size: 21rpx;
+  line-height: 1.4;
+  color: #7a828b;
+}
+
 .tool-arrow {
+  margin-left: 20rpx;
+  flex-shrink: 0;
   font-size: 34rpx;
   color: #8a9198;
 }

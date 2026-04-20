@@ -8,6 +8,9 @@ const {
 const { request } = require("../../utils/request");
 const { enableInternalSceneTool } = require("../../utils/config");
 
+const SERVICE_WECHAT_ID = "look4ward";
+const APP_VERSION_LABEL = "正式版";
+
 function formatJoinedAt(value) {
   if (!value) {
     return "";
@@ -28,6 +31,16 @@ function showConfirmModal(options) {
       ...options,
       success: ({ confirm }) => resolve(!!confirm),
       fail: () => resolve(false)
+    });
+  });
+}
+
+function showActionSheet(items = []) {
+  return new Promise((resolve) => {
+    wx.showActionSheet({
+      itemList: items,
+      success: (result) => resolve(result.tapIndex),
+      fail: () => resolve(-1)
     });
   });
 }
@@ -215,16 +228,84 @@ Page({
     }
   },
 
-  showComingSoon(event) {
-    const { label } = event.currentTarget.dataset;
-    wx.showToast({
-      title: `${label}即将开放`,
-      icon: "none"
+  async copyServiceWechat() {
+    try {
+      await new Promise((resolve, reject) => {
+        wx.setClipboardData({
+          data: SERVICE_WECHAT_ID,
+          success: resolve,
+          fail: reject
+        });
+      });
+      wx.showToast({
+        title: "客服微信已复制",
+        icon: "success"
+      });
+    } catch (error) {
+      showError(error, { fallback: "复制客服微信失败" });
+    }
+  },
+
+  async openHelpFeedback() {
+    const tapIndex = await showActionSheet([
+      "使用说明",
+      "复制客服微信",
+      "联系人工支持"
+    ]);
+
+    if (tapIndex === 0) {
+      wx.showModal({
+        title: "帮助反馈",
+        content:
+          "1. 先上传清晰单人照片，再依次选择发型、场景和参数。\n2. 生成成功后可保存图片，也可以在作品记录里回看。\n3. 遇到问题可添加客服微信 look4ward，并附上 UID、截图和问题描述。",
+        showCancel: false,
+        confirmText: "我知道了"
+      });
+      return;
+    }
+
+    if (tapIndex === 1) {
+      this.copyServiceWechat();
+      return;
+    }
+
+    if (tapIndex === 2) {
+      const confirmed = await showConfirmModal({
+        title: "联系人工支持",
+        content: `客服微信：${SERVICE_WECHAT_ID}\n建议同时发送你的 UID、问题截图和出现时间，方便更快定位问题。`,
+        confirmText: "复制微信",
+        cancelText: "关闭"
+      });
+      if (confirmed) {
+        this.copyServiceWechat();
+      }
+    }
+  },
+
+  showSettingsInfo() {
+    const uid = this.data.profile ? this.data.profile.user_id : "";
+    wx.showModal({
+      title: "设置",
+      content:
+        `版本：${APP_VERSION_LABEL}\nUID：${uid || "未登录"}\n图片保留：7 天后自动清理\n额度规则：首次免费 1 次，首次反馈再赠送 1 次\n如遇异常可先尝试“刷新登录”。`,
+      showCancel: false,
+      confirmText: "知道了"
     });
   },
 
-  relogin() {
-    clearLogin();
-    this.loadProfile();
+  async relogin() {
+    wx.showLoading({ title: "刷新中" });
+    try {
+      clearLogin();
+      await this.loadProfile();
+      wx.showToast({
+        title: "登录状态已刷新",
+        icon: "success"
+      });
+    } catch (error) {
+      showError(error, { fallback: "刷新登录失败" });
+    } finally {
+      wx.hideLoading();
+    }
   }
 });
