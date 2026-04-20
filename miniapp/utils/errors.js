@@ -44,23 +44,23 @@ const UPLOAD_ERROR_MESSAGES = {
 const GENERIC_ERROR_MESSAGES = {
   quota_exhausted: {
     title: "次数已用完",
-    content: "当前免费次数已用完，请前往“我的”页购买 1 次生成包后继续。"
+    content: "当前体验次数已用完，请前往“我的”页联系内测支持补充次数后继续。"
   },
   reward_ad_limit_reached: {
     title: "额外免费次数已用完",
-    content: "当前额外免费次数已用完，请直接购买 1 次生成包继续。"
+    content: "当前额外免费次数已用完，请联系内测支持处理。"
   },
   reward_ad_disabled: {
     title: "额外免费暂未开放",
-    content: "当前额外免费入口暂未开放，请直接购买 1 次生成包。"
+    content: "当前额外免费入口暂未开放，请联系内测支持处理。"
   },
   rewarded_ad_unavailable: {
     title: "额外免费暂不可用",
-    content: "当前额外免费入口暂不可用，请直接购买 1 次生成包。"
+    content: "当前额外免费入口暂不可用，请联系内测支持处理。"
   },
   rewarded_ad_not_completed: {
     title: "额外免费未完成",
-    content: "当前额外免费流程未完成，请直接购买 1 次生成包或稍后再试。"
+    content: "当前额外免费流程未完成，请稍后再试或联系内测支持。"
   },
   quota_still_available: {
     title: "当前还有次数",
@@ -79,44 +79,44 @@ const GENERIC_ERROR_MESSAGES = {
     content: "本次额外免费次数已领取，请勿重复提交。"
   },
   invalid_purchase_product: {
-    title: "商品不可用",
-    content: "当前购买项暂不可用，请稍后刷新后重试。"
+    title: "功能暂未开放",
+    content: "当前购买入口在审核版本中未开放。"
   },
   purchase_order_not_found: {
-    title: "订单不存在",
-    content: "未找到当前订单，请重新发起购买。"
+    title: "功能暂未开放",
+    content: "当前购买入口在审核版本中未开放。"
   },
   wechat_pay_not_configured: {
-    title: "支付暂不可用",
-    content: "当前微信支付尚未配置完成，请稍后再试。"
+    title: "功能暂未开放",
+    content: "当前审核版本未开放支付能力。"
   },
   wechat_pay_prepare_failed: {
-    title: "拉起支付失败",
-    content: "微信支付下单失败，请稍后再试。"
+    title: "功能暂未开放",
+    content: "当前审核版本未开放支付能力。"
   },
   payment_provider_unavailable: {
-    title: "支付暂不可用",
-    content: "当前支付通道尚未配置完成，请稍后再试。"
+    title: "功能暂未开放",
+    content: "当前审核版本未开放支付能力。"
   },
   payment_disabled: {
-    title: "支付暂未开放",
-    content: "当前支付入口暂未开放，请稍后再试。"
+    title: "功能暂未开放",
+    content: "当前审核版本未开放支付能力。"
   },
   payment_prepare_failed: {
-    title: "拉起支付失败",
-    content: "当前支付下单失败，请稍后再试。"
+    title: "功能暂未开放",
+    content: "当前审核版本未开放支付能力。"
   },
   payment_qrcode_unavailable: {
-    title: "二维码暂不可用",
-    content: "当前二维码加载失败，请稍后重新发起支付。"
+    title: "功能暂未开放",
+    content: "当前审核版本未开放支付能力。"
   },
   payment_cancelled: {
-    title: "已取消支付",
-    content: "你已取消本次支付。"
+    title: "功能暂未开放",
+    content: "当前审核版本未开放支付能力。"
   },
   payment_confirm_timeout: {
-    title: "支付确认中",
-    content: "支付已发起成功，到账确认稍有延迟，请稍后刷新额度。"
+    title: "功能暂未开放",
+    content: "当前审核版本未开放支付能力。"
   },
   download_failed: {
     title: "下载失败",

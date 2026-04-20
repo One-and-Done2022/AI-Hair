@@ -6,7 +6,6 @@ const {
   resolveProfessionalMappedSelection
 } = require("../../utils/hair-color");
 const { upsertPendingHistoryJob } = require("../../utils/pending-history");
-const { getDefaultPurchaseItem } = require("../../utils/purchase");
 const { request } = require("../../utils/request");
 const {
   ensureCurrentUpload,
@@ -70,7 +69,6 @@ Page({
     selectedHairColorTechniqueLabel: "",
     selectedHairColorProfessionalSummary: "",
     profileSummary: null,
-    purchaseItem: null,
     submitting: false
   },
 
@@ -104,10 +102,9 @@ Page({
     this.setData({ loading: true });
     try {
       await ensureLogin();
-      const [catalog, profileSummary, purchaseItem] = await Promise.all([
+      const [catalog, profileSummary] = await Promise.all([
         request({ url: "/api/templates" }),
-        request({ url: "/api/me" }).catch(() => null),
-        getDefaultPurchaseItem().catch(() => null)
+        request({ url: "/api/me" }).catch(() => null)
       ]);
       const generationBackends = formatGenerationBackends(catalog.generation_backends || []);
       const generationSelection = buildGenerationSelection(generationBackends, draft);
@@ -174,8 +171,7 @@ Page({
         selectedHairColorToneLabel: selectedHairColor ? selectedHairColor.label : "",
         selectedHairColorTechniqueLabel: selectedHairTechnique ? selectedHairTechnique.label : "",
         selectedHairColorProfessionalSummary: buildProfessionalSummary(selectedProfessionalHairColor),
-        profileSummary,
-        purchaseItem
+        profileSummary
       });
     } catch (error) {
       this.setData({ loading: false });
@@ -222,42 +218,23 @@ Page({
     return profileSummary;
   },
 
-  async ensurePurchaseItem() {
-    if (this.data.purchaseItem) {
-      return this.data.purchaseItem;
-    }
-    const purchaseItem = await getDefaultPurchaseItem().catch(() => null);
-    if (purchaseItem) {
-      this.setData({ purchaseItem });
-    }
-    return purchaseItem;
-  },
-
-  openProfilePurchase() {
+  openProfileSupport() {
     wx.switchTab({
       url: "/pages/profile/index"
     });
     return false;
   },
 
-  async promptGoProfilePurchase() {
-    const purchaseItem = await this.ensurePurchaseItem();
-    if (!purchaseItem) {
-      wx.showToast({
-        title: "当前支付暂未开放",
-        icon: "none"
-      });
-      return false;
-    }
+  async promptGoProfileSupport() {
     const confirmed = await showConfirmModal({
-      title: "去我的购买",
-      content: `当前可用次数已用完。请前往“我的”页购买 ${purchaseItem.name}（${purchaseItem.price_label}），购买完成后再回来继续本次生成。`,
+      title: "体验次数已用完",
+      content: "当前可用次数已用完。请前往“我的”页联系内测支持补充体验次数，处理完成后再回来继续本次生成。",
       confirmText: "前往我的"
     });
     if (!confirmed) {
       return false;
     }
-    return this.openProfilePurchase();
+    return this.openProfileSupport();
   },
 
   async ensureQuotaBeforeCreateJob() {
@@ -266,7 +243,7 @@ Page({
       return true;
     }
     wx.hideLoading();
-    await this.promptGoProfilePurchase();
+    await this.promptGoProfileSupport();
     return false;
   },
 
@@ -344,7 +321,7 @@ Page({
         }
         wx.hideLoading();
         await this.refreshQuotaSummary().catch(() => this.data.profileSummary);
-        await this.promptGoProfilePurchase();
+        await this.promptGoProfileSupport();
         return;
       }
 

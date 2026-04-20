@@ -1,10 +1,6 @@
 const { ensureLogin, clearLogin } = require("../../utils/auth");
 const { readCreationDraft } = require("../../utils/creation-draft");
 const { showError } = require("../../utils/errors");
-const {
-  getDefaultPurchaseItem,
-  quickPurchaseDefaultGenerationPack
-} = require("../../utils/purchase");
 const { request } = require("../../utils/request");
 const { enableInternalSceneTool } = require("../../utils/config");
 
@@ -47,8 +43,6 @@ Page({
   data: {
     loading: false,
     profile: null,
-    purchaseItem: null,
-    purchasing: false,
     hasActiveCreation: false,
     enableInternalSceneTool
   },
@@ -61,10 +55,7 @@ Page({
     this.setData({ loading: true });
     try {
       await ensureLogin();
-      const [profile, purchaseItem] = await Promise.all([
-        request({ url: "/api/me" }),
-        getDefaultPurchaseItem().catch(() => null)
-      ]);
+      const profile = await request({ url: "/api/me" });
       this.setData({
         profile: {
           ...profile,
@@ -72,7 +63,6 @@ Page({
           joined_label: formatJoinedAt(profile.created_at),
           avatar_text: "AI"
         },
-        purchaseItem,
         hasActiveCreation: this.hasActiveCreationDraft()
       });
     } catch (error) {
@@ -97,7 +87,7 @@ Page({
   showQuotaHelp() {
     wx.showModal({
       title: "额度说明",
-      content: "新用户默认可免费生成 1 次。首次成功出图后填写体验反馈，还会再赠送 1 次使用机会；后续也可以在“我的”页按次购买生成包，每次购买成功后剩余可用次数都会 +1。",
+      content: "新用户默认可免费生成 1 次。首次成功出图后填写体验反馈，还会再赠送 1 次使用机会；如需更多体验次数，请联系内测支持处理。",
       showCancel: false
     });
   },
@@ -130,58 +120,6 @@ Page({
     wx.navigateTo({
       url: "/pages/review/index"
     });
-  },
-
-  async purchaseOnePack() {
-    if (this.data.purchasing) {
-      return;
-    }
-    try {
-      await ensureLogin();
-      const purchaseItem = this.data.purchaseItem || await getDefaultPurchaseItem();
-      if (!purchaseItem) {
-        wx.showToast({
-          title: "当前没有可购买商品",
-          icon: "none"
-        });
-        return;
-      }
-      const confirmed = await showConfirmModal({
-        title: "购买生成包",
-        content: `确认购买 ${purchaseItem.name}（${purchaseItem.price_label}）？确认后会进入支付页。`,
-        confirmText: "立即购买"
-      });
-      if (!confirmed) {
-        return;
-      }
-      this.setData({ purchasing: true });
-      wx.showLoading({ title: "正在购买" });
-      await quickPurchaseDefaultGenerationPack(purchaseItem.product_id);
-      wx.showToast({
-        title: "已增加 1 次生成",
-        icon: "success"
-      });
-      await this.loadProfile();
-      if (this.hasActiveCreationDraft()) {
-        const shouldContinue = await showConfirmModal({
-          title: "购买成功",
-          content: "已为你增加 1 次生成，是否回到当前创作继续生成？",
-          confirmText: "继续创作",
-          cancelText: "稍后再说"
-        });
-        if (shouldContinue) {
-          this.continueCreation();
-        }
-      }
-    } catch (error) {
-      showError(error, {
-        fallback: "购买失败，请稍后再试",
-        preferModal: true
-      });
-    } finally {
-      wx.hideLoading();
-      this.setData({ purchasing: false });
-    }
   },
 
   async syncWechatNickname() {

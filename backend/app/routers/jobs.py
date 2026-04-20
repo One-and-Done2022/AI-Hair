@@ -175,7 +175,7 @@ def create_job(
         )
     except repository.QuotaExceededError as exc:
         quota = exc.quota
-        message = "当前可用次数已用完，请前往“我的”页购买 1 次生成包后继续。"
+        message = "当前可用次数已用完，请前往“我的”页联系内测支持补充体验次数后继续。"
         raise HTTPException(
             status_code=status.HTTP_402_PAYMENT_REQUIRED,
             detail={

@@ -51,7 +51,7 @@ def _quota_error(exc: ValueError) -> HTTPException:
             status_code=409,
             detail={
                 "code": "reward_ad_limit_reached",
-                "message": "当前额外免费次数已用完，请直接购买 1 次生成包。",
+                "message": "当前额外免费次数已用完，请联系内测支持处理。",
             },
         )
     if code == "ad_unlock_session_not_found":

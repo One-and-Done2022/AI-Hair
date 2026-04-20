@@ -10,7 +10,6 @@
     "pages/scenes/index",
     "pages/options/index",
     "pages/review/index",
-    "pages/payment/index",
     "pages/result/index"
   ],
   "window": {

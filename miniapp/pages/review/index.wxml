@@ -35,20 +35,19 @@
         <view wx:if="{{profileSummary}}" class="preview-meta">当前剩余 {{profileSummary.total_remaining || profileSummary.remaining_quota}} 次</view>
         <view wx:if="{{profileSummary}}" class="preview-breakdown">
           <view class="preview-breakdown-line">初始免费剩余 {{profileSummary.initial_free_remaining || profileSummary.free_remaining}} / {{profileSummary.initial_free_total || profileSummary.free_quota_total}}</view>
-          <view class="preview-breakdown-line">已购剩余 {{profileSummary.paid_remaining || 0}} 次</view>
         </view>
         <view
           wx:if="{{profileSummary && (profileSummary.total_remaining || profileSummary.remaining_quota) <= 0}}"
           class="preview-warning"
         >
-          {{purchaseItem ? '免费次数已用完，请前往“我的”页购买 1 次生成包后继续。' : '当前支付暂未开放，请稍后再试。'}}
+          当前体验次数已用完，请前往“我的”页联系内测支持补充次数后继续。
         </view>
         <button
-          wx:if="{{purchaseItem && profileSummary && (profileSummary.total_remaining || profileSummary.remaining_quota) <= 0}}"
+          wx:if="{{profileSummary && (profileSummary.total_remaining || profileSummary.remaining_quota) <= 0}}"
           class="secondary-button preview-purchase-button"
-          bindtap="openProfilePurchase"
+          bindtap="openProfileSupport"
         >
-          去我的购买
+          去我的查看
         </button>
       </view>
     </view>
@@ -82,7 +81,7 @@
 
     <view class="floating-bar">
       <button class="primary-button" loading="{{submitting}}" bindtap="createJob">
-        {{(profileSummary && (profileSummary.total_remaining || profileSummary.remaining_quota) <= 0) ? '去我的购买' : '开始生成'}}
+        {{(profileSummary && (profileSummary.total_remaining || profileSummary.remaining_quota) <= 0) ? '去我的查看' : '开始生成'}}
       </button>
     </view>
   </block>
