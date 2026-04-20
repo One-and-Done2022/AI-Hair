@@ -8,9 +8,7 @@ const {
 const { request } = require("../../utils/request");
 const { enableInternalSceneTool } = require("../../utils/config");
 
-const SERVICE_WECHAT_ID = "look4ward";
-const APP_VERSION_LABEL = "正式版";
-
+const SERVICE_WECHAT_ID = "look4warding";
 function formatJoinedAt(value) {
   if (!value) {
     return "";
@@ -257,7 +255,7 @@ Page({
       wx.showModal({
         title: "帮助反馈",
         content:
-          "1. 先上传清晰单人照片，再依次选择发型、场景和参数。\n2. 生成成功后可保存图片，也可以在作品记录里回看。\n3. 遇到问题可添加客服微信 look4ward，并附上 UID、截图和问题描述。",
+          `1. 先上传清晰单人照片，再依次选择发型、场景和参数。\n2. 生成成功后可保存图片，也可以在作品记录里回看。\n3. 遇到问题可添加客服微信 ${SERVICE_WECHAT_ID}，并附上 UID、截图和问题描述。`,
         showCancel: false,
         confirmText: "我知道了"
       });
@@ -280,17 +278,6 @@ Page({
         this.copyServiceWechat();
       }
     }
-  },
-
-  showSettingsInfo() {
-    const uid = this.data.profile ? this.data.profile.user_id : "";
-    wx.showModal({
-      title: "设置",
-      content:
-        `版本：${APP_VERSION_LABEL}\nUID：${uid || "未登录"}\n图片保留：7 天后自动清理\n额度规则：首次免费 1 次，首次反馈再赠送 1 次\n如遇异常可先尝试“刷新登录”。`,
-      showCancel: false,
-      confirmText: "知道了"
-    });
   },
 
   async relogin() {

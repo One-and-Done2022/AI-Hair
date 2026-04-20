@@ -73,13 +73,6 @@
         </view>
         <view class="tool-arrow">›</view>
       </view>
-      <view class="tool-row" bindtap="showSettingsInfo">
-        <view class="tool-main">
-          <view class="tool-label">设置</view>
-          <view class="tool-subtitle">查看版本、UID、图片保留与额度规则</view>
-        </view>
-        <view class="tool-arrow">›</view>
-      </view>
       <view class="tool-row" bindtap="relogin">
         <view class="tool-main">
           <view class="tool-label">刷新登录</view>
