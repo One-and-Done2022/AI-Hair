@@ -47,6 +47,10 @@ NANO_PROFILE_RETRY_BACKOFF_SECONDS = 180
 SEEDREAM_REST_TIMEOUT_SECONDS = 180
 _PROVIDER_BACKOFF_UNTIL: dict[str, float] = {}
 _PROVIDER_BACKOFF_LOCK = Lock()
+SCENE_ONLY_FROZEN_HAIR_GUARD = (
+    "场景阶段执行优先级：直接沿用参考图中已经完成的当前头发成片，把整个头发区域视为冻结区域，"
+    "不要重新生成、不要重新设计、不要重新定型；只允许修改场景、服装、妆容和人物微表情。"
+)
 
 
 class ImageGenerationError(Exception):
@@ -286,6 +290,50 @@ class BaseGenerator:
         on_candidate: CandidateCallback | None = None,
     ) -> GenerationResult:
         raise NotImplementedError
+
+
+def _normalize_prompt_text(value: str | None) -> str:
+    return re.sub(r"\s+", " ", str(value or "").strip())
+
+
+def _is_scene_only_generation(prompt: str, context: GenerationContext | None) -> bool:
+    scene_only_prompt = _normalize_prompt_text(getattr(context, "scene_only_prompt", ""))
+    if not scene_only_prompt:
+        return False
+    current_prompt = _normalize_prompt_text(prompt)
+    return (
+        current_prompt == scene_only_prompt
+        or current_prompt.endswith(scene_only_prompt)
+        or scene_only_prompt in current_prompt
+    )
+
+
+def _build_generation_prompt(
+    prompt: str,
+    context: GenerationContext | None,
+    *,
+    candidate_index: int = 1,
+) -> str:
+    base_prompt = str(prompt or "")
+    if _is_scene_only_generation(base_prompt, context):
+        if SCENE_ONLY_FROZEN_HAIR_GUARD not in base_prompt:
+            base_prompt = f"{SCENE_ONLY_FROZEN_HAIR_GUARD}\n{base_prompt}"
+        if candidate_index > 1:
+            return (
+                f"{base_prompt}\n"
+                f"候选图补充说明：这是第 {candidate_index} 张候选图，继续保持同一人物、同一头发成片和同一头部大轮廓；"
+                "只允许表情、视线、手势和场景细节有轻微自然差异，"
+                "不要改变头部朝向幅度，不要改变发型、刘海、分线、发色、发尾落点和头发遮挡关系。"
+            )
+        return base_prompt
+
+    if candidate_index > 1:
+        return (
+            f"{base_prompt}\n"
+            f"候选图补充说明：这是第 {candidate_index} 张候选图，保持同一人物与核心设定一致，"
+            "允许表情、动作、头部角度和视线方向有自然差异。"
+        )
+    return base_prompt
 
 
 def _decode_image(image_bytes: bytes) -> np.ndarray:
@@ -580,13 +628,11 @@ class SeedreamGenerator(BaseGenerator):
         requested_count = max(1, int(context.image_count or CANDIDATE_IMAGE_COUNT))
 
         for index in range(requested_count):
-            candidate_prompt = prompt
-            if index > 0:
-                candidate_prompt = (
-                    f"{prompt}\n"
-                    f"候选图补充说明：这是第 {index + 1} 张候选图，保持同一人物与核心设定一致，"
-                    "允许表情、动作、头部角度和视线方向有自然差异。"
-                )
+            candidate_prompt = _build_generation_prompt(
+                prompt,
+                context,
+                candidate_index=index + 1,
+            )
             candidate_bytes = self._generate_single_rest_candidate(
                 provider_key=provider_key,
                 prompt=candidate_prompt,
@@ -674,6 +720,7 @@ class SeedreamGenerator(BaseGenerator):
         client: OpenAI,
         prompt: str,
         image_data: str,
+        context: GenerationContext,
         existing_count: int,
         target_count: int,
         on_first_candidate: PreviewCallback | None = None,
@@ -681,10 +728,10 @@ class SeedreamGenerator(BaseGenerator):
     ) -> list[bytes]:
         topped_up: list[bytes] = []
         for index in range(existing_count + 1, target_count + 1):
-            variant_prompt = (
-                f"{prompt}\n"
-                f"候选图补充说明：这是第 {index} 张候选图，保持同一人物与核心设定一致，"
-                "允许表情、动作、头部角度和视线方向有自然差异。"
+            variant_prompt = _build_generation_prompt(
+                prompt,
+                context,
+                candidate_index=index,
             )
             extra_candidates = self._collect_stream_candidates(
                 client=client,
@@ -745,10 +792,11 @@ class SeedreamGenerator(BaseGenerator):
         suffix = Path(source_image_path).suffix.lower()
         mime_type = "image/png" if suffix == ".png" else "image/jpeg"
         image_data = f"data:{mime_type};base64,{image_base64}"
+        prepared_prompt = _build_generation_prompt(prompt, context, candidate_index=1)
         if self._uses_rest_generation_api():
             return self._generate_via_rest_api(
                 provider_key=provider_key,
-                prompt=prompt,
+                prompt=prepared_prompt,
                 image_data=image_data,
                 context=context,
                 on_preview=emit_preview,
@@ -760,7 +808,7 @@ class SeedreamGenerator(BaseGenerator):
         try:
             candidates = self._collect_stream_candidates(
                 client=client,
-                prompt=prompt,
+                prompt=prepared_prompt,
                 image_data=image_data,
                 max_images=min(PRIMARY_PREVIEW_IMAGE_COUNT, requested_count),
                 on_first_candidate=emit_preview,
@@ -787,8 +835,9 @@ class SeedreamGenerator(BaseGenerator):
                 candidates.extend(
                     self._top_up_candidates(
                         client=client,
-                        prompt=prompt,
+                        prompt=prepared_prompt,
                         image_data=image_data,
+                        context=context,
                         existing_count=len(candidates),
                         target_count=requested_count,
                         on_first_candidate=emit_preview,

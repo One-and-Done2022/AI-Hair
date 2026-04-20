@@ -216,6 +216,8 @@ SCENE_ONLY_IDENTITY_LOCK_SECTION = (
     "第一优先级是严格保留参考人物的真实身份特征，保证一眼看出是同一个人。"
     "以上传照片中的人物为原型，不改变人物的脸型、五官比例、眼距、鼻梁、嘴型、肤色、年龄感和整体气质和发型，"
     "不改变性别表达，不换脸，不生成第二个人。"
+    "参考图中的当前头发已经是第一阶段确认完成的成片结果，在本阶段必须被视为冻结区域直接沿用，"
+    "不要重新生成、不要重新设计、不要重新定型。"
     "忽略原照片中的背景、原服饰、原有动作，仅保留参考人物本身，进行换背景创作。"
     "主体必须始终是同一位单人肖像，仅对场景、动作、表情和服装进行艺术化创作。"
 )
@@ -242,9 +244,11 @@ HAIRSTYLE_ONLY_CONSTRAINTS_SECTION = (
 )
 
 SCENE_ONLY_CONSTRAINTS_SECTION = (
+    "人物头发区域必须当作参考图中已经完成的冻结结果直接沿用，不要把当前头发当成可重做草稿；"
     "人物发型必须保持参考图中已经生成完成的现有发型，不要二次修改发型种类；"
     "不要改变发长、顶部体积、刘海、分线、鬓角、后颈发区、卷度、发色和整体轮廓；"
-    "动作、表情、服装、场景和布光变化不能破坏既有发型结构、头皮贴合关系、发丝走向和发色过渡。"
+    "动作、表情、服装、场景和布光变化不能破坏既有发型结构、头皮贴合关系、发丝走向和发色过渡；"
+    "禁止为了适配场景去重新分区、重新吹整、重新定型或重画头发边界。"
 )
 
 NEGATIVE_IDENTITY_ARTIFACT_SECTION = (
@@ -332,6 +336,8 @@ HAIR_MOTION_REDEFINITION_KEYWORDS = (
 )
 
 LOCKED_HAIR_TEXT_REPLACEMENTS = (
+    ("服饰必须配合利落发型和高反差布光，不要出现松垮家居感", "服饰必须配合利落人物气质和高反差布光，不要出现松垮家居感"),
+    ("服饰必须配合利落发型", "服饰必须配合利落人物气质"),
     ("发型动态是视觉关键", "服装动态与空气流动感是视觉重点，主发型结构必须严格锁定为参考图中的静态完成状态"),
     ("突出风感发丝", "突出空气流动感与人物轮廓"),
     ("风吹起发丝和衣角", "风主要作用于衣角与空气流动，不要让风力改写当前头发轮廓"),
@@ -2310,34 +2316,11 @@ def _build_hair_color_technique_text(selection: dict[str, str]) -> str:
 
 
 def _build_hair_color_lock_text(selection: dict[str, str] | None) -> str:
-    if selection is None:
-        return (
-            "发色锁定：保持参考图中静态完成的当前发色、明度层级与染发层次不变，"
-            "不要二次改色，不要改变冷暖倾向、亮度层级、挑染位置和过渡关系。"
-        )
-    professional_id = str(selection.get("professional_id") or "").strip()
-    note = _normalize_sentence(str(selection.get("professional_note") or ""))
-    if professional_id:
-        professional_label = _build_professional_hair_color_prompt_label(selection)
-        hex_reference = _build_professional_hair_color_hex_reference_text(selection, lock_mode=True)
-        segments = []
-        if professional_label:
-            segments.append(f"保持参考图中静态完成的{professional_label}这一专业色号效果不变")
-        if selection["tone_label"]:
-            segments.append(f"整体仍保持{selection['tone_label']}方向")
-        if selection["technique_label"]:
-            segments.append(f"保持{selection['technique_label']}层次不变")
-        if note:
-            segments.append(f"持续保留{note}的专业色感表达")
-        if hex_reference:
-            segments.append(hex_reference)
-        segments.append("不要二次改色，不要改变冷暖倾向、亮度层级、挑染位置和过渡关系")
-        return f"发色锁定：{'；'.join(segments)}。"
-
+    del selection
     return (
-        "发色锁定：保持参考图中静态完成的"
-        f"{selection['tone_label']}发色和{selection['technique_label']}层次不变，"
-        "不要二次改色，不要改变冷暖倾向、亮度层级、挑染位置和过渡关系。"
+        "发色锁定：保持参考图中静态完成的当前发色、明度层级与染发层次不变；"
+        "不要二次改色，不要改变冷暖倾向、亮度层级、挑染位置和过渡关系；"
+        "不要把当前综合色相锁成新的单一纯色块或额外追加新的染发设计。"
     )
 
 
@@ -2726,86 +2709,29 @@ def _build_subject_performance_text(
 
 def _build_hair_shape_lock_text(hairstyle: dict | None, hair_policy: str = "strict_lock") -> str:
     resolved_hair_policy = _normalize_hair_policy(hair_policy) or "strict_lock"
-    if hairstyle is None:
-        segments = [
-            "保持参考图中已经生成完成的当前主发型结构不变",
-            "同时保持参考图中静态打理完成的当前主发型结构不变",
-            "不要改变发长、外轮廓、卷度、顶部体积、分线、鬓角与后颈区",
-        ]
-        if resolved_hair_policy == "soft_lock":
-            segments.append("只允许做极轻微表层顺发与体积微调，但不得改成新的主发型")
-        elif resolved_hair_policy == "ornament_only":
-            segments.append("仅允许增加或替换非结构性发饰，不允许改动主发型结构和分区")
-        else:
-            segments.append("不允许因场景、动作或妆造需要改写主发型种类、层次和分区")
-        return f"发型锁定：{'；'.join(segments)}。"
-    block = _preset_block(hairstyle, "hair_shape")
+    del hairstyle
     segments: list[str] = [
         "保持参考图中已经生成完成的当前主发型结构不变",
         "同时保持参考图中静态打理完成的当前主发型结构不变",
+        "不要改变发长、外轮廓、卷度、顶部体积、分线、鬓角与后颈区",
     ]
-    mapping = (
-        ("hair_length", "发长"),
-        ("hair_silhouette", "轮廓"),
-        ("hair_texture", "纹理"),
-        ("hair_volume", "顶部与侧区体积"),
-        ("hair_parting", "分线"),
-        ("sideburn_nape", "鬓角与后颈区"),
-    )
-    for field, label in mapping:
-        value = _safe_value(block.get(field))
-        if value:
-            segments.append(f"{label}保持为{value}")
     if resolved_hair_policy == "soft_lock":
         segments.append("允许基于同一发型做极轻微表层顺发、边缘服帖和体积微调，但不能改成另一种发型")
     elif resolved_hair_policy == "ornament_only":
-        segments.append("仅允许增加或替换非结构性发饰，不允许修改主发型种类、层次、卷度和分区")
+        segments.append("仅允许增加或替换非结构性发饰，不允许修改主发型结构、卷度和分区")
     else:
-        segments.append("不允许因场景、动作或妆造需要改写主发型种类、层次和分区")
+        segments.append("不允许因场景、动作或妆造需要改写主发型结构、层次和分区")
     return f"发型锁定：{'；'.join(segments)}。"
 
 
 def _build_bangs_lock_text(hairstyle: dict | None, hair_policy: str = "strict_lock") -> str:
     resolved_hair_policy = _normalize_hair_policy(hair_policy) or "strict_lock"
-    if hairstyle is None:
-        segments = [
-            "保持参考图中静态完成的当前刘海状态不变",
-            "如果当前为无刘海，额前不要新增刘海或大片落额发",
-        ]
-        if resolved_hair_policy == "ornament_only":
-            segments.append("发饰或头饰不得牵连刘海分区和脸侧修饰位置")
-        elif resolved_hair_policy == "soft_lock":
-            segments.append("只允许刘海做极轻微顺发与贴合微调，不得改写刘海结构")
-        return f"刘海锁定：{'；'.join(segments)}。"
-    block = _preset_block(hairstyle, "bangs")
-    values = {
-        "bangs_type": _safe_value(block.get("bangs_type")),
-        "bangs_density": _safe_value(block.get("bangs_density")),
-        "bangs_length": _safe_value(block.get("bangs_length")),
-        "bangs_split": _safe_value(block.get("bangs_split")),
-        "bangs_face_framing": _safe_value(block.get("bangs_face_framing")),
-    }
-    is_no_bangs = not any(value and value != "不适用" for value in values.values())
-    if is_no_bangs:
-        segments = [
-            "保持参考图中静态完成的当前无刘海状态不变",
-            "额前不要生成新的刘海或大片落额发",
-        ]
-        if resolved_hair_policy == "ornament_only":
-            segments.append("发饰或头饰不得在额前制造新的刘海遮挡感")
-        return f"刘海锁定：{'；'.join(segments)}。"
-    segments: list[str] = ["保持参考图中静态完成的当前刘海系统不变"]
-    mapping = (
-        ("bangs_type", "刘海类型"),
-        ("bangs_density", "厚薄"),
-        ("bangs_length", "长度"),
-        ("bangs_split", "开合方式"),
-        ("bangs_face_framing", "脸侧修饰"),
-    )
-    for field, label in mapping:
-        value = _safe_value(block.get(field))
-        if value and value != "不适用":
-            segments.append(f"{label}保持为{value}")
+    del hairstyle
+    segments = [
+        "保持参考图中静态完成的当前刘海或额前状态不变",
+        "如果当前为无刘海，额前不要新增刘海或大片落额发",
+        "如果当前已有刘海，不要改变厚薄、长度、开合方式和脸侧修饰",
+    ]
     segments.append("不要新增第二套刘海分区或额前大面积垂落")
     if resolved_hair_policy == "soft_lock":
         segments.append("只允许极轻微顺发与贴合微调，不得改变厚薄、长度和开合方式")

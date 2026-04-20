@@ -515,10 +515,11 @@ def test_build_and_parse_job_prompt_payload_supports_professional_hair_color_sel
     assert parsed["hair_color_selection"]["professional_note"] == "偏灰棕、轻烟熏、低饱和冷雾感"
     assert "发色以烟熏冷雾系列 5/72为唯一目标色号" in parsed["full_prompt"]
     assert "发色以烟熏冷雾系列 5/72为唯一目标色号" in parsed["hairstyle_only_prompt"]
-    assert "保持参考图中静态完成的烟熏冷雾系列 5/72这一专业色号效果不变" in parsed["scene_only_prompt"]
+    assert "保持参考图中静态完成的当前发色、明度层级与染发层次不变" in parsed["scene_only_prompt"]
     assert "色感表现为偏灰棕、轻烟熏、低饱和冷雾感" in parsed["full_prompt"]
     assert "综合色相可辅助参考接近 HEX #5F5F4F的雾灰棕区间" in parsed["full_prompt"]
-    assert "综合色相继续辅助参考接近 HEX #5F5F4F的雾灰棕区间" in parsed["scene_only_prompt"]
+    assert "保持参考图中静态完成的烟熏冷雾系列 5/72这一专业色号效果不变" not in parsed["scene_only_prompt"]
+    assert "综合色相继续辅助参考接近 HEX #5F5F4F的雾灰棕区间" not in parsed["scene_only_prompt"]
     assert "发色调整为雾灰棕；" not in parsed["full_prompt"]
     assert "补充色感为偏灰棕、轻烟熏、低饱和冷雾感" not in parsed["full_prompt"]
 
@@ -700,9 +701,13 @@ def test_build_scene_only_prompt_locks_existing_hairstyle_and_updates_scene():
     assert "发色锁定：" in prompt
     assert "风感约束：" in prompt
     assert "不要二次改色" in prompt
+    assert "冻结区域直接沿用" in prompt
     assert "妆造系统：" in prompt
     assert "场景系统：" in prompt
     assert "人物表现系统：" in prompt
+    assert "发长保持为" not in prompt
+    assert "刘海类型保持为" not in prompt
+    assert "保持参考图中静态完成的烟熏冷雾系列" not in prompt
     assert "抬手整理窗边发丝" not in prompt
     assert "边缘碎发与极少数表层发丝轻微摆动" not in prompt
     assert "不要额外制造飞发、散发、风吹效果或二次定型痕迹" in prompt
@@ -783,8 +788,11 @@ def test_scene_only_prompt_assembly_exposes_hair_lock_blocks():
     hair_blocks = [block.text for block in assembly.blocks if block.key == "hair_shape_lock"]
     assert len(hair_blocks) == 1
     assert "保持参考图中静态打理完成的当前主发型结构不变" in hair_blocks[0]
+    assert "发长保持为" not in hair_blocks[0]
     bangs_blocks = [block.text for block in assembly.blocks if block.key == "bangs_lock"]
     assert len(bangs_blocks) == 1
+    assert "如果当前已有刘海，不要改变厚薄、长度、开合方式和脸侧修饰" in bangs_blocks[0]
+    assert "刘海类型保持为" not in bangs_blocks[0]
     motion_blocks = [block.text for block in assembly.blocks if block.key == "hair_motion_constraint"]
     assert len(motion_blocks) == 1
     assert "不要额外制造飞发、散发、风吹效果或二次定型痕迹" in motion_blocks[0]
@@ -907,6 +915,7 @@ def test_scene_only_prompt_sanitizes_dynamic_scene_lighting_language():
     assert "单侧硬光切过脸部与肩颈轮廓" in prompt
     assert "发型纹理要清晰可辨" not in prompt
     assert "人物轮廓与面部结构要清晰可辨" in prompt
+    assert "服饰必须配合利落发型" not in prompt
 
 
 def test_scene_only_prompt_sanitizes_neckline_constraints_that_redefine_hair_fall():
@@ -2448,6 +2457,7 @@ def test_seedream_generator_requests_preview_first_then_tops_up(tmp_path, monkey
         client,
         prompt,
         image_data,
+        context,
         existing_count,
         target_count,
         on_first_candidate=None,
@@ -2470,6 +2480,34 @@ def test_seedream_generator_requests_preview_first_then_tops_up(tmp_path, monkey
     assert call_log == [("collect", 1), ("top_up", 1, 3)]
     assert preview_events == ["callback", "preview"]
     assert len(result.candidate_image_bytes) == 3
+
+
+def test_build_generation_prompt_strengthens_scene_only_hair_freeze_guard():
+    from app.services.generation import GenerationContext, _build_generation_prompt
+
+    context = GenerationContext(
+        hairstyle_name="前刺头",
+        scene_name="天台风感",
+        scene_only_prompt="scene-only prompt body",
+    )
+
+    first_prompt = _build_generation_prompt(
+        "scene-only prompt body",
+        context,
+        candidate_index=1,
+    )
+    second_prompt = _build_generation_prompt(
+        "scene-only prompt body",
+        context,
+        candidate_index=2,
+    )
+
+    assert "把整个头发区域视为冻结区域" in first_prompt
+    assert "不要重新生成、不要重新设计、不要重新定型" in first_prompt
+    assert "只允许表情、视线、手势和场景细节有轻微自然差异" in second_prompt
+    assert "不要改变头部朝向幅度" in second_prompt
+    assert "不要改变发型、刘海、分线、发色、发尾落点和头发遮挡关系" in second_prompt
+    assert "允许表情、动作、头部角度和视线方向有自然差异" not in second_prompt
 
 
 def test_seedream_5_generator_uses_rest_images_generation_api(tmp_path, monkeypatch):
@@ -2526,7 +2564,10 @@ def test_seedream_5_generator_uses_rest_images_generation_api(tmp_path, monkeypa
     monkeypatch.setattr("app.services.generation.httpx.get", fake_get)
 
     previews = []
-    result = SeedreamGenerator().generate(
+    result = SeedreamGenerator(
+        model_name="doubao-seedream-5-0-260128",
+        entry_id="premium",
+    ).generate(
         source_image_path=str(source_path),
         prompt="test seedream 5 prompt",
         context=GenerationContext(
