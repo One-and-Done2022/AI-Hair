@@ -38,13 +38,13 @@
       </view>
 
       <view class="payment-status">{{statusText}}</view>
-      <view class="payment-note">点击二维码可放大查看，长按原图可弹出识别二维码菜单，也可以复制支付链接到微信内打开。</view>
+      <view class="payment-note">请直接长按本页二维码图片并保存到相册，再使用微信扫一扫识别；也可以直接复制支付链接到微信内打开。</view>
 
       <view class="payment-action-row">
         <button class="secondary-button payment-action" bindtap="copyPayLink">复制支付链接</button>
         <button class="secondary-button payment-action" loading="{{refreshing}}" bindtap="refreshOrderStatus">我已支付，刷新状态</button>
       </view>
-      <button class="ghost-button payment-cancel" bindtap="goBack">取消支付</button>
+      <button class="secondary-button payment-action payment-action-danger payment-cancel" bindtap="goBack">取消支付</button>
     </view>
   </block>
 </view>

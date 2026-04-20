@@ -107,7 +107,11 @@
 
 .payment-cancel {
   margin-top: 18rpx;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.payment-action-danger {
   color: #c73b3b;
-  border: 2rpx solid rgba(199, 59, 59, 0.35);
-  background: #fff6f6;
+  background: rgba(199, 59, 59, 0.1);
 }
