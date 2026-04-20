@@ -405,10 +405,10 @@ function buildStatusHint(status, remainingSeconds, hasHairPreview, completedScen
     return "发型预览已准备好，接下来会继续生成两张场景成片。";
   }
   if (status === "scene_generating") {
-    return `正在生成第 1 张场景成片，预计还需 ${remainingSeconds} 秒。`;
+    return "正在生成第 1 张场景成片，请稍候。";
   }
   if (status === "scene_partial") {
-    return `第 1 张已经可以先看，预计还需 ${remainingSeconds} 秒完成第 2 张。`;
+    return "第 1 张已经可以先看，正在继续生成第 2 张。";
   }
   return "任务已进入队列，生成完成后会自动刷新。";
 }

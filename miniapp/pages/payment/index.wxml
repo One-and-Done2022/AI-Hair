@@ -30,6 +30,7 @@
           class="qrcode-image"
           src="{{qrcodeTempFile}}"
           mode="aspectFit"
+          show-menu-by-longpress="true"
           bindtap="previewQrcode"
         ></image>
         <view wx:elif="{{qrcodeLoading}}" class="qrcode-placeholder">二维码加载中</view>
@@ -37,7 +38,7 @@
       </view>
 
       <view class="payment-status">{{statusText}}</view>
-      <view class="payment-note">长按二维码可识别支付，也可以复制支付链接到微信内打开。</view>
+      <view class="payment-note">点击二维码可放大查看，长按原图可弹出识别二维码菜单，也可以复制支付链接到微信内打开。</view>
 
       <view class="payment-action-row">
         <button class="secondary-button payment-action" bindtap="copyPayLink">复制支付链接</button>
