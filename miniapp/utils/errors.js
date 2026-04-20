@@ -47,36 +47,36 @@ const GENERIC_ERROR_MESSAGES = {
     content: "当前免费次数已用完，请前往“我的”页购买 1 次生成包后继续。"
   },
   reward_ad_limit_reached: {
-    title: "广告次数已用完",
-    content: "你最多只能通过广告解锁 2 次生成，请直接购买 1 次生成包继续。"
+    title: "额外免费次数已用完",
+    content: "当前额外免费次数已用完，请直接购买 1 次生成包继续。"
   },
   reward_ad_disabled: {
-    title: "广告暂未开放",
-    content: "当前免费广告入口未开放，请直接购买 1 次生成包。"
+    title: "额外免费暂未开放",
+    content: "当前额外免费入口暂未开放，请直接购买 1 次生成包。"
   },
   rewarded_ad_unavailable: {
-    title: "广告暂不可用",
-    content: "激励广告暂未开放或加载失败，请直接购买 1 次生成包。"
+    title: "额外免费暂不可用",
+    content: "当前额外免费入口暂不可用，请直接购买 1 次生成包。"
   },
   rewarded_ad_not_completed: {
-    title: "广告未看完",
-    content: "完整观看广告后才能解锁本次生成。"
+    title: "额外免费未完成",
+    content: "当前额外免费流程未完成，请直接购买 1 次生成包或稍后再试。"
   },
   quota_still_available: {
     title: "当前还有次数",
-    content: "你当前还有可用次数，无需通过广告解锁。"
+    content: "你当前还有可用次数，无需额外解锁。"
   },
   ad_unlock_session_not_found: {
     title: "解锁会话失效",
-    content: "未找到本次广告解锁会话，请重新开始。"
+    content: "未找到本次额外免费会话，请重新开始。"
   },
   ad_unlock_session_expired: {
     title: "解锁已过期",
-    content: "广告解锁会话已过期，请重新观看广告。"
+    content: "本次额外免费会话已过期，请重新开始。"
   },
   ad_unlock_session_already_claimed: {
     title: "奖励已领取",
-    content: "本次广告奖励已领取，请勿重复提交。"
+    content: "本次额外免费次数已领取，请勿重复提交。"
   },
   invalid_purchase_product: {
     title: "商品不可用",

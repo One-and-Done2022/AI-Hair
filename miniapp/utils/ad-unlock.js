@@ -28,7 +28,7 @@ function showRewardedVideoAd() {
       reject({
         detail: {
           code: "rewarded_ad_unavailable",
-          message: "激励广告暂未配置，请直接购买 1 次生成包。"
+          message: "当前额外免费入口暂未配置，请直接购买 1 次生成包。"
         }
       });
       return;
@@ -37,7 +37,7 @@ function showRewardedVideoAd() {
       reject({
         detail: {
           code: "rewarded_ad_unavailable",
-          message: "当前微信版本不支持激励广告，请直接购买 1 次生成包。"
+          message: "当前微信版本不支持额外免费入口，请直接购买 1 次生成包。"
         }
       });
       return;
@@ -65,7 +65,7 @@ function showRewardedVideoAd() {
       reject({
         detail: {
           code: "rewarded_ad_not_completed",
-          message: "完整观看广告后才能解锁本次生成。"
+          message: "当前额外免费流程未完成，请直接购买 1 次生成包或稍后再试。"
         }
       });
     };
@@ -75,7 +75,7 @@ function showRewardedVideoAd() {
       reject({
         detail: {
           code: "rewarded_ad_unavailable",
-          message: "激励广告加载失败，请稍后再试或直接购买。"
+          message: "当前额外免费入口加载失败，请稍后再试或直接购买。"
         }
       });
     };

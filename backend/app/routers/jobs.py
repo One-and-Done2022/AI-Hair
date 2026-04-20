@@ -175,10 +175,7 @@ def create_job(
         )
     except repository.QuotaExceededError as exc:
         quota = exc.quota
-        if quota.get("can_unlock_by_ad"):
-            message = "当前免费次数已用完。你可以先看广告再解锁 1 次生成，也可以直接购买 1 次生成包。"
-        else:
-            message = "当前免费次数和广告解锁次数都已用完，请购买 1 次生成包后继续。"
+        message = "当前可用次数已用完，请前往“我的”页购买 1 次生成包后继续。"
         raise HTTPException(
             status_code=status.HTTP_402_PAYMENT_REQUIRED,
             detail={

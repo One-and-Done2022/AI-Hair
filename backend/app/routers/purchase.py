@@ -5,7 +5,7 @@ from typing import Any
 
 import httpx
 from fastapi import APIRouter, Depends, HTTPException, Request, status
-from fastapi.responses import JSONResponse, PlainTextResponse, Response
+from fastapi.responses import HTMLResponse, JSONResponse, PlainTextResponse, Response
 
 from app.config import get_settings
 from app.dependencies import get_current_user
@@ -20,6 +20,7 @@ from app.services import billing, payment_provider, repository, wechat_pay, xunh
 
 
 router = APIRouter(prefix="/purchase", tags=["purchase"])
+public_router = APIRouter(tags=["purchase"])
 
 
 def _format_amount_label(amount_cents: int) -> str:
@@ -113,6 +114,108 @@ def _payment_disabled_error() -> HTTPException:
 def _ensure_payment_enabled() -> None:
     if not get_settings().payment_enabled:
         raise _payment_disabled_error()
+
+
+def _payment_status_page(*, title: str, description: str) -> HTMLResponse:
+    html = f"""<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <style>
+      :root {{
+        color-scheme: light;
+        --bg: #f4f7fb;
+        --card: rgba(255, 255, 255, 0.92);
+        --text: #14213d;
+        --muted: #61708a;
+        --line: rgba(20, 33, 61, 0.12);
+        --accent: #0058ba;
+      }}
+      * {{ box-sizing: border-box; }}
+      body {{
+        margin: 0;
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 24px;
+        font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
+        color: var(--text);
+        background:
+          radial-gradient(circle at top right, rgba(0, 88, 186, 0.12), transparent 28%),
+          radial-gradient(circle at bottom left, rgba(80, 145, 255, 0.14), transparent 26%),
+          linear-gradient(180deg, #f8fbff 0%, var(--bg) 100%);
+      }}
+      .card {{
+        width: min(560px, 100%);
+        padding: 28px 24px;
+        border-radius: 28px;
+        background: var(--card);
+        border: 1px solid var(--line);
+        box-shadow: 0 18px 46px rgba(0, 88, 186, 0.08);
+      }}
+      .eyebrow {{
+        margin: 0 0 12px;
+        color: var(--accent);
+        font-size: 12px;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+      }}
+      h1 {{
+        margin: 0 0 12px;
+        font-size: 28px;
+        line-height: 1.2;
+      }}
+      p {{
+        margin: 0;
+        line-height: 1.75;
+        color: var(--muted);
+      }}
+      .tips {{
+        margin-top: 18px;
+        padding: 16px 18px;
+        border-radius: 18px;
+        background: rgba(0, 88, 186, 0.06);
+        color: var(--text);
+      }}
+      .tips strong {{
+        display: block;
+        margin-bottom: 8px;
+      }}
+    </style>
+  </head>
+  <body>
+    <main class="card">
+      <p class="eyebrow">AIFace Payment</p>
+      <h1>{title}</h1>
+      <p>{description}</p>
+      <section class="tips">
+        <strong>接下来怎么做</strong>
+        <p>请返回微信小程序，回到支付页点击“我已支付，刷新状态”，或进入“我的”页查看剩余次数是否已增加。</p>
+      </section>
+    </main>
+  </body>
+</html>
+"""
+    return HTMLResponse(content=html)
+
+
+@public_router.get("/payment/success", include_in_schema=False)
+def payment_success_page() -> HTMLResponse:
+    return _payment_status_page(
+        title="支付已完成",
+        description="如果你已经完成付款，这个页面只是支付回跳提示页，不需要继续操作网页端。",
+    )
+
+
+@public_router.get("/payment/retry", include_in_schema=False)
+def payment_retry_page() -> HTMLResponse:
+    return _payment_status_page(
+        title="支付处理中",
+        description="如果网页没有自动返回，请直接回到微信小程序继续确认支付状态。",
+    )
 
 
 @router.get("/catalog", response_model=PurchaseCatalogResponse)

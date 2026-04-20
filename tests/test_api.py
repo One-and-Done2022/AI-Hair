@@ -1495,6 +1495,7 @@ def test_generation_quota_and_purchase_flow(tmp_path, monkeypatch):
         )
         assert blocked_job.status_code == 402
         assert blocked_job.json()["detail"]["code"] == "quota_exhausted"
+        assert "前往“我的”页购买 1 次生成包后继续" in blocked_job.json()["detail"]["message"]
 
         purchase_catalog = client.get("/api/purchase/catalog")
         assert purchase_catalog.status_code == 200
@@ -1853,6 +1854,8 @@ def test_wechat_payment_notify_confirms_order_and_recharges_quota(tmp_path, monk
         assert me_after.json()["paid_remaining"] == 1
         assert me_after.json()["free_remaining"] == 1
         assert me_after.json()["total_remaining"] == 2
+        assert me_after.json()["free_remaining"] == 1
+        assert me_after.json()["total_remaining"] == 2
 
 
 def test_xunhu_payment_notify_confirms_order_and_recharges_quota(tmp_path, monkeypatch):
@@ -1908,8 +1911,21 @@ def test_xunhu_payment_notify_confirms_order_and_recharges_quota(tmp_path, monke
         me_after = client.get("/api/me", headers=headers)
         assert me_after.status_code == 200
         assert me_after.json()["paid_remaining"] == 1
-        assert me_after.json()["free_remaining"] == 1
-        assert me_after.json()["total_remaining"] == 2
+
+
+def test_xunhu_payment_return_pages_are_available(tmp_path, monkeypatch):
+    app = _build_app_with_xunhu_pay(tmp_path, monkeypatch)
+
+    with TestClient(app) as client:
+        success_page = client.get("/payment/success")
+        assert success_page.status_code == 200
+        assert "支付已完成" in success_page.text
+        assert "刷新状态" in success_page.text
+
+        retry_page = client.get("/payment/retry")
+        assert retry_page.status_code == 200
+        assert "支付处理中" in retry_page.text
+        assert "回到微信小程序" in retry_page.text
 
 
 def test_purchase_catalog_returns_empty_items_when_payment_disabled(tmp_path, monkeypatch):

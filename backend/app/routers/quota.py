@@ -43,7 +43,7 @@ def _quota_error(exc: ValueError) -> HTTPException:
             status_code=409,
             detail={
                 "code": "quota_still_available",
-                "message": "你当前还有可用次数，无需通过广告解锁。",
+                "message": "你当前还有可用次数，无需额外解锁。",
             },
         )
     if code == "reward_ad_limit_reached":
@@ -51,7 +51,7 @@ def _quota_error(exc: ValueError) -> HTTPException:
             status_code=409,
             detail={
                 "code": "reward_ad_limit_reached",
-                "message": "广告解锁次数已用完，请直接购买 1 次生成包。",
+                "message": "当前额外免费次数已用完，请直接购买 1 次生成包。",
             },
         )
     if code == "ad_unlock_session_not_found":
@@ -59,7 +59,7 @@ def _quota_error(exc: ValueError) -> HTTPException:
             status_code=404,
             detail={
                 "code": "ad_unlock_session_not_found",
-                "message": "未找到本次广告解锁会话，请重新开始。",
+                "message": "未找到本次额外免费会话，请重新开始。",
             },
         )
     if code == "ad_unlock_session_expired":
@@ -67,7 +67,7 @@ def _quota_error(exc: ValueError) -> HTTPException:
             status_code=409,
             detail={
                 "code": "ad_unlock_session_expired",
-                "message": "广告解锁会话已过期，请重新观看广告。",
+                "message": "本次额外免费会话已过期，请重新开始。",
             },
         )
     if code == "ad_unlock_session_already_claimed":
@@ -75,14 +75,14 @@ def _quota_error(exc: ValueError) -> HTTPException:
             status_code=409,
             detail={
                 "code": "ad_unlock_session_already_claimed",
-                "message": "本次广告奖励已领取，请勿重复提交。",
+                "message": "本次额外免费次数已领取，请勿重复提交。",
             },
         )
     raise HTTPException(
         status_code=400,
         detail={
             "code": "ad_unlock_failed",
-            "message": "广告解锁失败，请稍后再试。",
+            "message": "额外免费次数领取失败，请稍后再试。",
         },
     )
 

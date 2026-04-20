@@ -213,7 +213,7 @@
   <view wx:if="{{feedbackVisible && feedbackPrompt}}" class="feedback-layer" catchtouchmove="noop">
     <view class="feedback-mask" catchtap="noop"></view>
     <view class="feedback-sheet" catchtap="noop">
-      <view class="feedback-kicker">{{feedbackPrompt.survey_type === 'first_success' ? '首次成功反馈' : '多次使用反馈'}}</view>
+      <view class="feedback-kicker">首次成功反馈</view>
       <view class="feedback-title">{{feedbackPrompt.title}}</view>
       <view class="feedback-copy">{{feedbackPrompt.description}}</view>
       <view class="feedback-meta">当前是你第 {{feedbackPrompt.trigger_completed_jobs}} 次成功出图后的反馈</view>

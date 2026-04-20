@@ -92,7 +92,7 @@
           <div>
             <p class="eyebrow">Admin Feedback</p>
             <h1>体验反馈后台</h1>
-            <p class="muted">这里汇总首次成功出图和第 4 次成功出图后弹出的用户反馈表，便于内测阶段快速看满意度与改进建议。</p>
+            <p class="muted">这里汇总当前的首次成功反馈，并兼容展示旧版本遗留的多次反馈记录，便于统一查看满意度与改进建议。</p>
           </div>
           <div class="nav">
             <a href="/admin">后台首页</a>
@@ -112,7 +112,7 @@
             <select id="surveyTypeInput">
               <option value="">全部</option>
               <option value="first_success">首次成功反馈</option>
-              <option value="fourth_success">第 4 次成功反馈</option>
+              <option value="fourth_success">历史多次反馈（旧版）</option>
             </select>
           </div>
           <div class="field">
@@ -150,9 +150,9 @@
           <div class="muted">首次成功出图后的反馈数</div>
         </article>
         <article class="metric">
-          <strong>多次反馈</strong>
+          <strong>历史旧反馈</strong>
           <div id="fourthMetric" class="metric-value">0</div>
-          <div class="muted">第 4 次成功出图后的反馈数</div>
+          <div class="muted">旧版本多次反馈记录数</div>
         </article>
         <article class="metric">
           <strong>已选反馈</strong>
@@ -284,7 +284,7 @@
           return `
             <tr data-id="${escapeHtml(item.submission_id)}" class="${item.submission_id === state.selectedId ? "selected" : ""}">
               <td><strong>${escapeHtml(item.nickname)}</strong><div class="muted">${escapeHtml(item.user_openid || "")}</div></td>
-              <td><span class="badge">${item.survey_type === "first_success" ? "首次成功反馈" : "第 4 次成功反馈"}</span></td>
+              <td><span class="badge">${item.survey_type === "first_success" ? "首次成功反馈" : "历史多次反馈（旧版）"}</span></td>
               <td><div>${escapeHtml(item.job_id || "-")}</div><div class="muted">${escapeHtml(item.hairstyle_id || "-")} / ${escapeHtml(item.scene_id || "-")}</div></td>
               <td>${escapeHtml(formatDateTime(item.created_at))}</td>
               <td>${escapeHtml((item.improvement_suggestion || "-").slice(0, 60))}</td>
@@ -311,7 +311,7 @@
         detailRoot.innerHTML = `
           <div class="detail-grid">
             <div class="detail-item"><strong>用户</strong><code>${escapeHtml(item.nickname)}${item.user_openid ? " / " + escapeHtml(item.user_openid) : ""}</code></div>
-            <div class="detail-item"><strong>反馈阶段</strong><code>${item.survey_type === "first_success" ? "首次成功反馈" : "第 4 次成功反馈"} / 第 ${escapeHtml(item.trigger_completed_jobs)} 次成功</code></div>
+            <div class="detail-item"><strong>反馈阶段</strong><code>${item.survey_type === "first_success" ? "首次成功反馈" : "历史多次反馈（旧版）"} / 第 ${escapeHtml(item.trigger_completed_jobs)} 次成功</code></div>
             <div class="detail-item"><strong>关联任务</strong><code>${escapeHtml(item.job_id || "-")}</code></div>
             <div class="detail-item"><strong>任务模板</strong><code>${escapeHtml(item.hairstyle_id || "-")} / ${escapeHtml(item.scene_id || "-")}</code></div>
             <div class="detail-item"><strong>发型效果</strong><code>${escapeHtml(answerLabel("hairstyle_expectation", item.hairstyle_expectation))}</code></div>

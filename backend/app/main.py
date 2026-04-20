@@ -110,6 +110,7 @@ def create_app() -> FastAPI:
     app.include_router(me.router, prefix=settings.api_prefix)
     app.include_router(quota.router, prefix=settings.api_prefix)
     app.include_router(purchase.router, prefix=settings.api_prefix)
+    app.include_router(purchase.public_router)
     app.include_router(feedback.router, prefix=settings.api_prefix)
     app.include_router(provider_admin.router)
     app.include_router(admin_console.router)
